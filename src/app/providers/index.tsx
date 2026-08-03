@@ -1,15 +1,9 @@
 import React from 'react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { createQueryClient } from '@/app/composition/create-query-client';
 
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 1000 * 60 * 5,
-      gcTime: 1000 * 60 * 10,
-    },
-  },
-});
+const queryClient = createQueryClient();
 
-export function Providers({ children }: { children: React.ReactNode }): React.ReactElement {
+export function AppProviders({ children }: { children: React.ReactNode }): React.ReactElement {
   return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
 }

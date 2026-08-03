@@ -76,23 +76,36 @@ npm --version   # Should be 11.6.0+
 
 ```
 src/
-  app/           # Application root and composition
-    config/      # Configuration (base path, constants)
-    providers/   # Context/provider setup
-    routing/     # React Router configuration
-    shell/       # Root shell component and pages
-  shared/        # Reusable shared components
-    ui/          # UI components
-  styles/        # Global styles
-    foundations/ # Reset, typography, color, accessibility
-    tools/       # Mixins and utilities
-  mocks/         # MSW mock setup
-tests/           # Tests
-  e2e/           # Playwright E2E tests
-  support/       # Test utilities
+  app/                   # Application root and composition
+    bootstrap.tsx        # Bootstrap function, MSW startup
+    App.tsx              # Root component with providers and router
+    config/              # Configuration (base path, constants)
+      public-config.ts   # Validated public config with Zod
+    composition/         # Application composition (router, query client)
+      create-query-client.ts
+      create-runtime.ts  # Data Router creation
+    providers/           # Context/provider setup
+    routing/             # React Router configuration and registry
+      registry.ts        # Route metadata and validation
+      loaders.ts         # Route param validation
+    shell/               # Root layout and error boundaries
+  routes/                # Route modules
+    home/                # Home route
+    catalog/             # Catalog routes
+    commerce/            # Commerce routes
+    error/               # Error routes
+  shared/                # Reusable shared components
+    ui/                  # UI components
+  styles/                # Global styles
+    foundations/         # Reset, typography, color, accessibility
+    tools/               # Mixins and utilities
+  mocks/                 # MSW mock setup
+tests/                   # Tests
+  e2e/                   # Playwright E2E tests
+  support/               # Test utilities
 .github/
-  workflows/     # CI/CD workflows
-scripts/         # Build/deployment scripts
+  workflows/             # CI/CD workflows
+scripts/                 # Build/deployment scripts
 ```
 
 ## GitHub Pages Deployment
@@ -171,9 +184,23 @@ MSW is configured for development/testing only:
 - Worker script is **not** included in production builds
 - Validated by build artifact checker
 
+## Routing Architecture
+
+M1 uses React Router 7 Data Router with:
+
+- Explicit route registry with metadata (title, access, lazy flag)
+- Routing-owned lifecycle for document titles, focus, and scroll management
+- Representative lazy-loaded routes (Home, Category, Product, Cart, 404)
+- Param validation with Zod
+- Error boundary hierarchy (root, catalog-family, catch-all)
+- Accessible routing with skip link and live region announcements
+
+For details, see [M1 Routing Report](docs/05-implementation/m1-routing-report.md).
+
 ## See Also
 
 - [M0 Bootstrap Implementation Report](docs/05-implementation/bootstrap-report.md)
+- [M1 Routing Report](docs/05-implementation/m1-routing-report.md)
 - [Repository State](docs/05-implementation/repository-state.md)
 - [Tooling Versions](docs/05-implementation/tooling-versions.md)
 

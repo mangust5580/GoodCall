@@ -1,29 +1,88 @@
 import { describe, it, expect } from 'vitest';
-import { render, screen } from '@testing-library/react';
-import { App } from '@/app/App';
+import { render, screen, waitFor } from '@testing-library/react';
+import { createMemoryRouter, RouterProvider } from 'react-router-dom';
+import { RootLayout } from '@/app/shell/RootLayout';
+import { HomePage } from '@/routes/home/HomePage';
+import { RootErrorBoundary } from '@/app/shell/RootErrorBoundary';
 
 describe('App Smoke Tests', () => {
-  it('renders without crashing', () => {
-    render(<App />);
-    expect(screen.getByText(/GoodCall Bootstrap/i)).toBeDefined();
+  it('renders without crashing', async () => {
+    const router = createMemoryRouter(
+      [
+        {
+          element: <RootLayout />,
+          errorElement: <RootErrorBoundary />,
+          children: [{ index: true, element: <HomePage /> }],
+        },
+      ],
+      { initialEntries: ['/'] }
+    );
+
+    render(<RouterProvider router={router} />);
+
+    await waitFor(() => {
+      expect(screen.getByText(/GoodCall/i)).toBeDefined();
+    });
   });
 
-  it('has accessible h1', () => {
-    render(<App />);
-    const heading = screen.getByRole('heading', { level: 1 });
-    expect(heading).toHaveTextContent(/GoodCall Bootstrap/i);
+  it('has accessible h1', async () => {
+    const router = createMemoryRouter(
+      [
+        {
+          element: <RootLayout />,
+          errorElement: <RootErrorBoundary />,
+          children: [{ index: true, element: <HomePage /> }],
+        },
+      ],
+      { initialEntries: ['/'] }
+    );
+
+    render(<RouterProvider router={router} />);
+
+    await waitFor(() => {
+      const heading = screen.getByRole('heading', { level: 1 });
+      expect(heading).toHaveTextContent(/GoodCall/i);
+    });
   });
 
-  it('has main landmark', () => {
-    const { container } = render(<App />);
-    const main = container.querySelector('main#main');
-    expect(main).toBeTruthy();
+  it('has main landmark with id main-content', async () => {
+    const router = createMemoryRouter(
+      [
+        {
+          element: <RootLayout />,
+          errorElement: <RootErrorBoundary />,
+          children: [{ index: true, element: <HomePage /> }],
+        },
+      ],
+      { initialEntries: ['/'] }
+    );
+
+    const { container } = render(<RouterProvider router={router} />);
+
+    await waitFor(() => {
+      const main = container.querySelector('main#main-content');
+      expect(main).toBeTruthy();
+    });
   });
 
-  it('has skip link', () => {
-    const { container } = render(<App />);
-    const skipLink = container.querySelector('a[href="#main"]');
-    expect(skipLink).toBeTruthy();
-    expect(skipLink?.textContent).toContain('Skip to main content');
+  it('has skip link', async () => {
+    const router = createMemoryRouter(
+      [
+        {
+          element: <RootLayout />,
+          errorElement: <RootErrorBoundary />,
+          children: [{ index: true, element: <HomePage /> }],
+        },
+      ],
+      { initialEntries: ['/'] }
+    );
+
+    const { container } = render(<RouterProvider router={router} />);
+
+    await waitFor(() => {
+      const skipLink = container.querySelector('a[href="#main-content"]');
+      expect(skipLink).toBeTruthy();
+      expect(skipLink?.textContent).toContain('Skip to main content');
+    });
   });
 });

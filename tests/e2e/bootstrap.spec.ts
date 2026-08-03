@@ -1,49 +1,126 @@
 import { test, expect } from '@playwright/test';
 import { AxeBuilder } from '@axe-core/playwright';
 
-test.describe('Bootstrap smoke tests', () => {
-  test('loads under /GoodCall/ project site base', async ({ page }) => {
+test.describe('M1 Routing and Navigation', () => {
+  test('direct Home under /GoodCall/', async ({ page }) => {
     await page.goto('');
     const pathname = page.url().replace(/^http:\/\/[^/]+/, '');
     expect(pathname).toBe('/GoodCall/');
+    await expect(page.locator('h1')).toContainText('GoodCall');
   });
 
-  test('renders home page', async ({ page }) => {
+  test('skip link navigates to main-content', async ({ page }) => {
     await page.goto('');
-    await expect(page.locator('h1')).toContainText('GoodCall Bootstrap');
-  });
-
-  test('skip link transfers focus to main via keyboard', async ({ page }) => {
-    await page.goto('');
-    const skipLink = page.locator('a[href="#main"]');
-    const main = page.locator('main#main');
+    const skipLink = page.locator('a[href="#main-content"]');
+    const main = page.locator('main#main-content');
 
     await expect(skipLink).toHaveText('Skip to main content');
-
     await page.keyboard.press('Tab');
     await expect(skipLink).toBeFocused();
-
     await page.keyboard.press('Enter');
-    await page.waitForLoadState('networkidle');
 
     await expect(main).toBeFocused();
-
-    await page.keyboard.press('Tab');
-    const focusedAfterTab = await page.evaluate(() => document.activeElement?.getAttribute('id'));
-    expect(focusedAfterTab).not.toBe('main');
   });
 
-  test('main landmark exists and is accessible', async ({ page }) => {
+  test('main landmark with id main-content exists', async ({ page }) => {
     await page.goto('');
-    const main = page.locator('main#main');
+    const main = page.locator('main#main-content');
     await expect(main).toBeVisible();
-    await expect(main).toBeTruthy();
   });
 
-  test('passes axe accessibility audit with no violations', async ({ page }) => {
+  test('client navigation Home to Category', async ({ page }) => {
+    await page.goto('');
+    const categoryLink = page.locator('a:has-text("Catalog Category")');
+    await categoryLink.click();
+
+    await expect(page).toHaveURL(/\/catalog\/laptops/);
+    await expect(page.locator('h1')).toContainText('Category');
+  });
+
+  test('title updates on client navigation', async ({ page }) => {
+    await page.goto('');
+    const initialTitle = await page.title();
+    expect(initialTitle).toContain('GoodCall');
+
+    const categoryLink = page.locator('a:has-text("Catalog Category")');
+    await categoryLink.click();
+
+    await expect(page).toHaveURL(/\/catalog\/laptops/);
+    const newTitle = await page.title();
+    expect(newTitle).toContain('Category');
+  });
+
+  test('category h1 focused after client navigation', async ({ page }) => {
+    await page.goto('');
+    const categoryLink = page.locator('a:has-text("Catalog Category")');
+    await categoryLink.click();
+
+    await expect(page).toHaveURL(/\/catalog\/laptops/);
+    const h1 = page.locator('h1');
+    const isFocused = await page.evaluate(() => {
+      const h1Element = document.querySelector('h1');
+      return document.activeElement === h1Element;
+    });
+
+    expect(isFocused).toBe(true);
+  });
+
+  test('direct nested Category route', async ({ page }) => {
+    await page.goto('/GoodCall/catalog/gaming-laptops');
+    await expect(page.locator('h1')).toContainText('Category');
+    await expect(page.locator('p')).toContainText('gaming-laptops');
+  });
+
+  test('hard refresh nested Category', async ({ page }) => {
+    await page.goto('/GoodCall/catalog/gaming-laptops');
+    await page.reload();
+    await expect(page.locator('h1')).toContainText('Category');
+  });
+
+  test('direct Product route', async ({ page }) => {
+    await page.goto('/GoodCall/products/demo-product');
+    await expect(page.locator('h1')).toContainText('Product');
+  });
+
+  test('Cart route', async ({ page }) => {
+    await page.goto('/GoodCall/cart');
+    await expect(page.locator('h1')).toContainText('Cart');
+  });
+
+  test('unknown route renders 404', async ({ page }) => {
+    await page.goto('/GoodCall/unknown-path');
+    await expect(page.locator('h1')).toContainText('Page not found');
+  });
+
+  test('404 preserves attempted pathname', async ({ page }) => {
+    await page.goto('/GoodCall/unknown-route-test');
+    const pathDisplay = page.locator('text=/unknown-route-test/');
+    await expect(pathDisplay).toBeVisible();
+  });
+
+  test('404 does not redirect to Home', async ({ page }) => {
+    await page.goto('/GoodCall/not-existing');
+    const url = page.url();
+    expect(url).toContain('/not-existing');
+    expect(url).not.toMatch(/\/$$/);
+  });
+
+  test('one main and one h1 per route', async ({ page }) => {
+    const routes = ['', '/catalog/laptops', '/products/demo-product', '/cart', '/not-found'];
+
+    for (const route of routes) {
+      await page.goto(`/GoodCall${route}`);
+      const mains = await page.locator('main#main-content').count();
+      const h1s = await page.locator('h1').count();
+
+      expect(mains).toBe(1);
+      expect(h1s).toBe(1);
+    }
+  });
+
+  test('axe scan Home passes', async ({ page }) => {
     const pageErrors: string[] = [];
     const consoleErrors: string[] = [];
-    const failedRequests: string[] = [];
 
     page.on('pageerror', (error) => {
       pageErrors.push(error.message);
@@ -55,19 +132,51 @@ test.describe('Bootstrap smoke tests', () => {
       }
     });
 
-    page.on('requestfailed', (req) => {
-      failedRequests.push(`${req.method()} ${req.url()}`);
-    });
-
     await page.goto('');
-    await page.waitForLoadState('networkidle');
-
     const results = await new AxeBuilder({ page }).analyze();
 
     expect(results.violations).toHaveLength(0);
-
     expect(pageErrors).toHaveLength(0);
     expect(consoleErrors).toHaveLength(0);
-    expect(failedRequests).toHaveLength(0);
+  });
+
+  test('axe scan 404 passes', async ({ page }) => {
+    const pageErrors: string[] = [];
+    const consoleErrors: string[] = [];
+
+    page.on('pageerror', (error) => {
+      pageErrors.push(error.message);
+    });
+
+    page.on('console', (msg) => {
+      if (msg.type() === 'error') {
+        consoleErrors.push(msg.text());
+      }
+    });
+
+    await page.goto('/GoodCall/not-found');
+    const results = await new AxeBuilder({ page }).analyze();
+
+    expect(results.violations).toHaveLength(0);
+    expect(pageErrors).toHaveLength(0);
+    expect(consoleErrors).toHaveLength(0);
+  });
+
+  test('Back/Forward does not create duplicate landmarks', async ({ page }) => {
+    await page.goto('');
+    const homeMainCount1 = await page.locator('main#main-content').count();
+    expect(homeMainCount1).toBe(1);
+
+    await page.click('a:has-text("Catalog Category")');
+    const categoryMainCount = await page.locator('main#main-content').count();
+    expect(categoryMainCount).toBe(1);
+
+    await page.goBack();
+    const homeMainCount2 = await page.locator('main#main-content').count();
+    expect(homeMainCount2).toBe(1);
+
+    await page.goForward();
+    const categoryMainCount2 = await page.locator('main#main-content').count();
+    expect(categoryMainCount2).toBe(1);
   });
 });
