@@ -22,13 +22,19 @@ npm --version   # Should be 11.6.0+
    npm ci
    ```
 
-2. Start development server:
+2. Install Playwright browsers (required for E2E tests):
+
+   ```bash
+   npx playwright install --with-deps chromium
+   ```
+
+3. Start development server:
 
    ```bash
    npm run dev
    ```
 
-3. Open http://localhost:5173 in your browser.
+4. Open http://localhost:5173 in your browser.
 
 ## Available Scripts
 
@@ -46,7 +52,7 @@ npm --version   # Should be 11.6.0+
 - `npm run format` — Format code with Prettier
 - `npm run format:check` — Check formatting without changes
 - `npm run check` — Run typecheck, lint, and format check
-- `npm run check:full` — Complete check suite including tests and build
+- `npm run check:full` — Complete check suite including tests, build, and E2E (requires Playwright browser installation)
 
 ### Testing
 
