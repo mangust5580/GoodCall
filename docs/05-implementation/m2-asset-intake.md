@@ -51,19 +51,19 @@
 
 For future asset handoff to design system, require canonical metadata:
 
-```
-Asset ID:              gc-logo-horizontal-primary
-Source Design File:    FND-001 (reference) or Figma ID
-Source Filename:       goodcall-logo-h.svg
-Provenance:            Canonical brand reference
-Semantic Role:         Site identity / header brand mark
-Dimensions/ViewBox:    [360x120] or equiv.
-Format:                SVG (scalable vector)
-Alt Text Ownership:    Semantic (page heading provides context)
-Crop/Fit Policy:       Preserve aspect ratio, no letterbox
-Responsive Metadata:   [mobile: 48px width, tablet: 80px width, desktop: 120px width]
-Review Status:         Pending design review
-```
+**Required Fields**:
+
+- Asset ID (canonical identifier)
+- Source Design File (design system reference or Figma ID)
+- Source Filename (original file name)
+- Provenance (source/origin)
+- Semantic Role (functional use)
+- Dimensions/ViewBox (if applicable)
+- Format (SVG, PNG, etc.)
+- Alt Text Ownership (decorative vs. semantic)
+- Crop/Fit Policy (sizing constraints)
+- Responsive Metadata (viewport-specific derivatives)
+- Review Status (approval tracking)
 
 ## Next Steps
 

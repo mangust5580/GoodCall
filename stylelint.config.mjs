@@ -27,5 +27,6 @@ export default {
         ],
       },
     ],
+    'at-rule-disallowed-list': ['import'],
   },
 };

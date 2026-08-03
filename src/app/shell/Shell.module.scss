@@ -27,10 +27,6 @@
     outline-offset: 2px;
   }
 
-  @media (prefers-reduced-motion: no-preference) {
-    scroll-behavior: smooth;
-  }
-
   @media (forced-colors: active) {
     outline: 1px solid;
   }

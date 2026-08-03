@@ -25,7 +25,8 @@ src/styles/
 ### Module System
 
 - **index.scss**: Single `@use 'foundations'` import (no legacy @import)
-- **_index.scss**: Forwards primitives and breakpoints; uses semantic, reset, document, typography, accessibility
+- **\_index.scss**: Forwards breakpoints only; uses semantic, reset, document, typography, accessibility
+- **Primitive layer**: Private internal (not exported via foundation entry point)
 - **No circular dependencies**: Modules follow consumption flow (primitives → semantic → components)
 - **Stylelint enforces**: No @import in owned code
 
@@ -48,41 +49,50 @@ Compile-time Sass variables only for internal use:
 Runtime CSS custom properties with `--gc-` prefix:
 
 **Surface/Background**:
+
 - `--gc-surface` (white)
 - `--gc-surface-elevated` (white, reserved for future layering)
 
 **Text**:
+
 - `--gc-text-primary` (black)
 - `--gc-text-secondary` (#666)
 - `--gc-text-disabled` (#999)
 
 **Interaction**:
+
 - `--gc-action` (#06c, technical accent)
 - `--gc-action-visited` (#703080)
 - `--gc-focus-ring` (#06c)
 
 **Error/Status**:
+
 - `--gc-error` (#c00)
 - `--gc-error-subtle` (#fdd)
 
 **Disabled States**:
+
 - `--gc-disabled-text` (#999)
 - `--gc-disabled-surface` (#f5f5f5)
 - `--gc-disabled-border` (#ddd)
 
 **Spacing** (CSS custom properties):
+
 - `--gc-spacing-xs` through `--gc-spacing-xl`
 
 **Typography** (CSS custom properties):
+
 - `--gc-font-family`
 - `--gc-font-size-body`, `--gc-font-size-heading-page`, `--gc-font-size-heading-section`
 - `--gc-line-height-body`, `--gc-line-height-heading`
 
 **Motion**:
+
 - `--gc-motion-short`, `--gc-motion-standard`
 - `--gc-easing-ease-in-out`
 
 **Accessibility**:
+
 - `--gc-focus-scroll-offset` (2rem, for :focus-visible scroll margin)
 
 ### Breakpoints (_breakpoints.scss)
@@ -123,7 +133,6 @@ a {
 - No `prefers-color-scheme: dark` media query
 - Semantic token consumption at document root
 - Forced-colors media query preserved for high-contrast mode
-- No smooth scrolling by default (opt-in via route owner)
 
 ## Typography Foundation
 
@@ -143,9 +152,9 @@ All sizing uses relative units. Font family inheritance via CSS custom property.
 - `box-sizing: border-box` on all elements
 - Font family inheritance for form controls (button, input, textarea, select)
 - Image/video max-inline-size baseline (not enforcing fixed dimensions)
-- No visual styles on buttons (border, padding, background removed)
+- Buttons and form controls: inheritance behavior preserved (no global visual reset)
 - Link color inheritance (no forced color)
-- Preserved semantic meaning of lists, headings, paragraphs
+- Preserved semantic meaning of headings and paragraphs
 
 ## Accessibility Foundation
 
@@ -156,31 +165,33 @@ All sizing uses relative units. Font family inheritance via CSS custom property.
 - Fallback outline in forced-colors mode for buttons/links
 
 **Motion**:
+
 - `prefers-reduced-motion: reduce` disables animations/transitions
-- No smooth scrolling by default (motion decision owned by route)
 - scroll-behavior removed in reduced-motion context
 
 **Sticky-Safe Scroll Margins**:
+
 - `[data-route-focus]:focus` sets scroll-margin-block-start
 - `#main-content:focus` sets scroll-margin-block-start
 - Value: `--gc-focus-scroll-offset` (2rem)
 
-**Visually Hidden Utility**:
-- `.visually-hidden` class for accessible content
-- Used by route announcement region, skip link target
-
 **Forced-Colors Support**:
+
 - Links underlined
 - Buttons bordered
 - No color overrides that would break high-contrast mode
 
 ## Applied to Existing Technical UI
 
+### Global Foundation Consumption
+
+All foundation modules provide baseline styles for document structure, typography, accessibility, and theme. Semantic tokens are available for component usage.
+
 ### Shell Styles (Shell.module.scss)
 
-- **Skip link**: Uses `var(--gc-text-primary)` and `var(--gc-surface)` instead of #000/#fff
+- **Skip link**: Uses `var(--gc-text-primary)` and `var(--gc-surface)` for semantic theming
 - **Main element**: Uses `var(--gc-spacing-md)` for padding
-- **SR-only class**: Preserved from M1 (semantic visually-hidden utility)
+- **SR-only class**: Module-scoped utility for accessible content
 
 **No route structure changed**: Skip link functionality, main landmark, focus handling remain identical.
 
@@ -224,10 +235,12 @@ Updated rules to support foundation architecture:
   'lower',
   { ignoreKeywords: [font family names] }
 ]
+'at-rule-disallowed-list': ['import']
 ```
 
 Enforces:
-- No legacy @import in owned code
+
+- Disallows `@import` (legacy Sass imports)
 - No cross-component @extend
 - No invalid nesting
 - No avoidable !important
@@ -256,29 +269,23 @@ Feature styles do NOT reference primitive tokens directly. All runtime styling c
 
 ## Non-Canonical Values & Deferred Work
 
-### M2B+ (Deferred, NOT Started)
+### M2B (Deferred, NOT Started)
 
 - Component-specific token aliases (e.g., `--gc-button-bg`)
-- Dark theme implementation
-- Responsive typography scaling
-- Animation library
 - Color contrast validation
 - Icon system integration
-- Header/Footer styling
-- Product UI components
 
-### M3+ (Deferred, NOT Started)
+### M3 (Deferred, NOT Started)
 
-- Business domain styling
-- Form styling and validation states
-- Micro-interaction library
-- Theming strategy refinement
+- Shared UI components
 
-### M4+ (Deferred, NOT Started)
+### M4 (Deferred, NOT Started)
 
-- Authentication UI
-- Advanced layouts
-- Complex component libraries
+- Canonical shell (Header/Footer)
+
+### M5 (Deferred, NOT Started)
+
+- First vertical slice: Category → Product → Cart
 
 ## Acceptance Criteria Met
 
