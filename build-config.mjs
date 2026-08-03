@@ -31,4 +31,9 @@ export const BUILD_CONFIG = {
     const normalized = base.endsWith('/') ? base : `${base}/`;
     return normalized;
   },
+
+  getBase(command, mode) {
+    const isProduction = command === 'build' || (command === 'serve' && mode === 'production');
+    return isProduction ? this.getProductionBase() : this.getDevelopmentBase();
+  },
 };

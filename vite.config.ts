@@ -6,9 +6,8 @@ import { BUILD_CONFIG } from './build-config.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-export default defineConfig(({ command }) => {
-  const isProduction = command === 'build';
-  const base = isProduction ? BUILD_CONFIG.getProductionBase() : BUILD_CONFIG.getDevelopmentBase();
+export default defineConfig(({ command, mode }) => {
+  const base = BUILD_CONFIG.getBase(command, mode);
 
   return {
     base,
