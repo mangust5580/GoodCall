@@ -46,8 +46,7 @@ test.describe('M1 Routing and Navigation', () => {
     await categoryLink.click();
 
     await expect(page).toHaveURL(/\/catalog\/laptops/);
-    const newTitle = await page.title();
-    expect(newTitle).toContain('Category');
+    await expect(page).toHaveTitle('Category — GoodCall');
   });
 
   test('category h1 focused after client navigation', async ({ page }) => {
@@ -110,11 +109,17 @@ test.describe('M1 Routing and Navigation', () => {
 
     for (const route of routes) {
       await page.goto(`/GoodCall${route}`);
-      const mains = await page.locator('main#main-content').count();
-      const h1s = await page.locator('h1').count();
+      const main = page.locator('main#main-content');
+      const h1 = page.locator('h1');
 
-      expect(mains).toBe(1);
-      expect(h1s).toBe(1);
+      await expect(main).toBeVisible();
+      await expect(h1).toBeVisible();
+
+      const mainCount = await main.count();
+      const h1Count = await h1.count();
+
+      expect(mainCount).toBe(1);
+      expect(h1Count).toBe(1);
     }
   });
 
@@ -164,19 +169,22 @@ test.describe('M1 Routing and Navigation', () => {
 
   test('Back/Forward does not create duplicate landmarks', async ({ page }) => {
     await page.goto('');
-    const homeMainCount1 = await page.locator('main#main-content').count();
-    expect(homeMainCount1).toBe(1);
+    await expect(page.locator('main#main-content')).toHaveCount(1);
+    await expect(page.locator('h1')).toContainText('GoodCall');
 
     await page.click('a:has-text("Catalog Category")');
-    const categoryMainCount = await page.locator('main#main-content').count();
-    expect(categoryMainCount).toBe(1);
+    await expect(page).toHaveURL(/\/catalog\/laptops/);
+    await expect(page.locator('main#main-content')).toHaveCount(1);
+    await expect(page.locator('h1')).toContainText('Category');
 
     await page.goBack();
-    const homeMainCount2 = await page.locator('main#main-content').count();
-    expect(homeMainCount2).toBe(1);
+    await expect(page).toHaveURL(/\/$/);
+    await expect(page.locator('main#main-content')).toHaveCount(1);
+    await expect(page.locator('h1')).toContainText('GoodCall');
 
     await page.goForward();
-    const categoryMainCount2 = await page.locator('main#main-content').count();
-    expect(categoryMainCount2).toBe(1);
+    await expect(page).toHaveURL(/\/catalog\/laptops/);
+    await expect(page.locator('main#main-content')).toHaveCount(1);
+    await expect(page.locator('h1')).toContainText('Category');
   });
 });

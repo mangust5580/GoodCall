@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 
 export function CartPage(): React.ReactElement {
   return (
-    <main id="main-content">
+    <main id="main-content" tabIndex={-1}>
       <h1 tabIndex={-1} data-route-focus>
         Cart
       </h1>

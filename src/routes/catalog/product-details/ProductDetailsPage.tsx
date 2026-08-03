@@ -5,7 +5,7 @@ export function ProductDetailsPage(): React.ReactElement {
   const { productSlug } = useParams<{ productSlug: string }>();
 
   return (
-    <main id="main-content">
+    <main id="main-content" tabIndex={-1}>
       <h1 tabIndex={-1} data-route-focus>
         Product
       </h1>

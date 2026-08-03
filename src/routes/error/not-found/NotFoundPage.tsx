@@ -12,7 +12,7 @@ export function NotFoundPage(): React.ReactElement {
   }, []);
 
   return (
-    <main id="main-content">
+    <main id="main-content" tabIndex={-1}>
       <h1 ref={headingRef} tabIndex={-1} data-route-focus>
         Page not found
       </h1>

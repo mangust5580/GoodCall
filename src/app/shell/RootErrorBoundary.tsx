@@ -16,7 +16,7 @@ export function RootErrorBoundary(): React.ReactElement {
 
   return (
     <div>
-      <main id="main-content">
+      <main id="main-content" tabIndex={-1}>
         <h1 ref={headingRef} tabIndex={-1} data-route-focus>
           Application error
         </h1>

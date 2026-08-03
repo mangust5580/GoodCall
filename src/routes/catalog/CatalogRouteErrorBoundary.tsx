@@ -11,7 +11,7 @@ export function CatalogErrorBoundary(): React.ReactElement {
   }, []);
 
   return (
-    <main id="main-content">
+    <main id="main-content" tabIndex={-1}>
       <h1 ref={headingRef} tabIndex={-1} data-route-focus>
         Resource not found
       </h1>
