@@ -167,8 +167,16 @@ No suppression comments allowed without escalation.
 ### Styling
 
 - **SCSS Modules**: Component-scoped styles (`.module.scss`)
-- **Global foundations**: `src/styles/foundations/`
-  - Reset, typography, color, accessibility
+- **Global foundations**: `src/styles/foundations/` (Sass module system, no legacy @import)
+  - **Primitives** (_primitives.scss): Neutral colors, technical accent, spacing, motion
+  - **Semantic tokens** (_semantic.scss): CSS custom properties with `--gc-` prefix
+  - **Breakpoints** (_breakpoints.scss): Compile-time Sass values (48rem, 64rem, 80rem)
+  - **Reset** (_reset.scss): Border-box, inherited fonts, semantic HTML preservation
+  - **Document** (_document.scss): Light-only theme baseline (no dark mode)
+  - **Typography** (_typography.scss): Semantic typography roles (body, headings)
+  - **Accessibility** (_accessibility.scss): Focus management, motion, forced-colors support
+
+For details, see [M2A Foundations Report](docs/05-implementation/m2-foundations-report.md).
 
 ### Testing
 
@@ -201,6 +209,8 @@ For details, see [M1 Routing Report](docs/05-implementation/m1-routing-report.md
 
 - [M0 Bootstrap Implementation Report](docs/05-implementation/bootstrap-report.md)
 - [M1 Routing Report](docs/05-implementation/m1-routing-report.md)
+- [M2A Foundations Report](docs/05-implementation/m2-foundations-report.md)
+- [M2A Asset Intake Handoff](docs/05-implementation/m2-asset-intake.md)
 - [Repository State](docs/05-implementation/repository-state.md)
 - [Tooling Versions](docs/05-implementation/tooling-versions.md)
 

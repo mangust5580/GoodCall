@@ -1,0 +1,36 @@
+@use './primitives' as prim;
+
+:root {
+  --gc-surface: #{prim.$neutral-white};
+  --gc-surface-elevated: #{prim.$neutral-white};
+  --gc-text-primary: #{prim.$neutral-black};
+  --gc-text-secondary: #666;
+  --gc-text-disabled: #999;
+  --gc-border: #ddd;
+  --gc-border-subtle: #e8e8e8;
+  --gc-action: #{prim.$technical-accent};
+  --gc-action-visited: #{prim.$technical-accent-visited};
+  --gc-focus-ring: #{prim.$technical-accent};
+  --gc-error: #{prim.$status-error};
+  --gc-error-subtle: #fdd;
+  --gc-disabled-text: #999;
+  --gc-disabled-surface: #f5f5f5;
+  --gc-disabled-border: #ddd;
+  --gc-spacing-xs: #{prim.$spacing-xs};
+  --gc-spacing-sm: #{prim.$spacing-sm};
+  --gc-spacing-md: #{prim.$spacing-md};
+  --gc-spacing-lg: #{prim.$spacing-lg};
+  --gc-spacing-xl: #{prim.$spacing-xl};
+  --gc-font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Fira Sans',
+    'Droid Sans', 'Helvetica Neue', sans-serif;
+  --gc-font-size-body: 1rem;
+  --gc-font-size-heading-page: 2rem;
+  --gc-font-size-heading-section: 1.5rem;
+  --gc-line-height-body: 1.5;
+  --gc-line-height-heading: 1.2;
+  --gc-motion-short: #{prim.$motion-short};
+  --gc-motion-standard: #{prim.$motion-standard};
+  --gc-easing-ease-in-out: #{prim.$easing-ease-in-out};
+  --gc-focus-scroll-offset: 2rem;
+}

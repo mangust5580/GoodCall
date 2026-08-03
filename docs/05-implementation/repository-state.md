@@ -49,12 +49,16 @@ src/
   shared/
     ui/                         (empty, placeholder for future components)
   styles/
-    index.scss                  Imports foundations
+    index.scss                  Imports foundations via @use
     foundations/
-      reset.scss                * reset, html, body, a, button, input
-      typography.scss           h1-h6, p sizing
-      color.scss                Light/dark color-scheme support, link colors
-      accessibility.scss        Focus-visible, reduced-motion, forced-colors
+      _index.scss               Forwards/uses all foundation modules
+      _primitives.scss          Neutral colors, technical accent, spacing, motion
+      _semantic.scss            CSS custom properties (--gc-* prefix)
+      _breakpoints.scss         Compile-time Sass breakpoint values
+      _reset.scss               Border-box, inherited fonts, semantic baseline
+      _document.scss            Light-only theme baseline
+      _typography.scss          Semantic typography roles
+      _accessibility.scss       Focus, motion, forced-colors
     tools/                      (empty, placeholder for future mixins)
   mocks/
     index.ts                    MSW setupWorker (no handlers in M0)

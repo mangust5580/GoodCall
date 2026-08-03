@@ -1,0 +1,42 @@
+body {
+  font-size: var(--gc-font-size-body);
+  line-height: var(--gc-line-height-body);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  line-height: var(--gc-line-height-heading);
+}
+
+h1 {
+  font-size: var(--gc-font-size-heading-page);
+  margin-bottom: 0.5em;
+}
+
+h2 {
+  font-size: var(--gc-font-size-heading-section);
+  margin-bottom: 0.5em;
+}
+
+h3,
+h4,
+h5,
+h6 {
+  margin-bottom: 0.5em;
+}
+
+p {
+  margin-bottom: 1em;
+}
+
+small {
+  font-size: 0.875rem;
+}
+
+strong {
+  font-weight: 600;
+}

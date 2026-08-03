@@ -1,0 +1,16 @@
+:root {
+  color-scheme: light;
+}
+
+body {
+  background-color: var(--gc-surface);
+  color: var(--gc-text-primary);
+}
+
+a {
+  color: var(--gc-action);
+
+  &:visited {
+    color: var(--gc-action-visited);
+  }
+}
