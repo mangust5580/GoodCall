@@ -285,7 +285,8 @@ None identified. All M1 requirements met.
 
 - M2: Design system and canonical Header/Footer.
 - M3: Business domain features.
-- M4/M5: Authentication, advanced state management, performance optimizations.
+- M4: Authentication and authorization.
+- M5: Performance optimizations and build analysis.
 - Chunk grouping: OQ-05-EVD-03 noted but decision deferred to M5 build analysis.
 
 ## Acceptance Criteria Met

@@ -16,16 +16,24 @@ export function RootLayout(): React.ReactElement {
   const navigation = useNavigation();
   const isInitialLoad = useRef(true);
   const previousPathname = useRef<string | null>(null);
+  const previousPathnameForFocus = useRef<string | null>(null);
   const pendingTimerRef = useRef<number | null>(null);
   const [showPendingIndicator, setShowPendingIndicator] = React.useState(false);
 
   useEffect(() => {
     if (isInitialLoad.current) {
       isInitialLoad.current = false;
+      previousPathnameForFocus.current = location.pathname;
       return;
     }
 
     if (navigationType === 'POP') {
+      previousPathnameForFocus.current = location.pathname;
+      return;
+    }
+
+    const isPathnameChanged = location.pathname !== previousPathnameForFocus.current;
+    if (!isPathnameChanged) {
       return;
     }
 
@@ -38,6 +46,8 @@ export function RootLayout(): React.ReactElement {
         });
       }
     }
+
+    previousPathnameForFocus.current = location.pathname;
   }, [location.pathname, navigationType]);
 
   useEffect(() => {
@@ -92,12 +102,7 @@ export function RootLayout(): React.ReactElement {
           Loading page
         </div>
       )}
-      <ScrollRestoration
-        getKey={(location) => {
-          const pathname = location.pathname.replace(/#.*$/, '');
-          return pathname;
-        }}
-      />
+      <ScrollRestoration getKey={(location) => location.pathname} />
       <Outlet />
     </div>
   );
