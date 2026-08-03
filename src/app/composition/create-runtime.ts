@@ -1,5 +1,5 @@
 import React from 'react';
-import { createBrowserRouter, type RouteObject, ScrollRestoration } from 'react-router-dom';
+import { createBrowserRouter, type RouteObject } from 'react-router-dom';
 import { publicConfig } from '@/app/config';
 import { createQueryClient } from '@/app/composition/create-query-client';
 import { RootLayout } from '@/app/shell/RootLayout';
@@ -22,9 +22,6 @@ export function createApplicationRuntime(): ApplicationRuntime {
       element: React.createElement(RootLayout),
       errorElement: React.createElement(RootErrorBoundary),
       children: [
-        {
-          element: React.createElement(ScrollRestoration),
-        },
         {
           id: 'home',
           index: true,

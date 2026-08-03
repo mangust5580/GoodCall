@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import {
   Outlet,
+  ScrollRestoration,
   useLocation,
   useMatches,
   useNavigationType,
@@ -91,6 +92,12 @@ export function RootLayout(): React.ReactElement {
           Loading page
         </div>
       )}
+      <ScrollRestoration
+        getKey={(location) => {
+          const pathname = location.pathname.replace(/#.*$/, '');
+          return pathname;
+        }}
+      />
       <Outlet />
     </div>
   );
