@@ -27,10 +27,10 @@ describe('Comment Checker', () => {
       fs.writeFileSync(fullPath, content, 'utf-8');
     }
 
-    const result = spawnSync('node', [path.join(process.cwd(), 'scripts/check-comments.mjs')], {
-      cwd: testDir,
-      env: { ...process.env, PWD: testDir },
-    });
+    const result = spawnSync('node', [
+      path.join(process.cwd(), 'scripts/check-comments.mjs'),
+      testDir,
+    ]);
 
     return {
       exitCode: result.status,

@@ -134,6 +134,14 @@ function detectSCSSComment(line) {
     }
   }
 
+  const lineCommentIdx = line.indexOf('//');
+  if (lineCommentIdx !== -1 && !isInString(line, lineCommentIdx)) {
+    const beforeComment = line.substring(0, lineCommentIdx);
+    if (beforeComment.trim().length > 0) {
+      return true;
+    }
+  }
+
   return false;
 }
 
@@ -215,7 +223,13 @@ function scanDirectory(dir) {
 }
 
 function main() {
-  const results = scanDirectory(rootDir);
+  let scanRoot = rootDir;
+
+  if (process.argv[2]) {
+    scanRoot = path.resolve(process.argv[2]);
+  }
+
+  const results = scanDirectory(scanRoot);
 
   if (results.length === 0) {
     console.log('✓ No authored comments found\n');
