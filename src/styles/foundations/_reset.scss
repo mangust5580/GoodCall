@@ -35,3 +35,9 @@ a {
   color: inherit;
   text-decoration: inherit;
 }
+
+ul,
+ol {
+  margin-block: 1em;
+  padding-inline-start: 2em;
+}

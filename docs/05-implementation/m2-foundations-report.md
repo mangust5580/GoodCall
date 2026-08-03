@@ -154,6 +154,7 @@ All sizing uses relative units. Font family inheritance via CSS custom property.
 - Image/video max-inline-size baseline (not enforcing fixed dimensions)
 - Buttons and form controls: inheritance behavior preserved (no global visual reset)
 - Link color inheritance (no forced color)
+- Native list markers and indentation preserved (ul, ol)
 - Preserved semantic meaning of headings and paragraphs
 
 ## Accessibility Foundation
