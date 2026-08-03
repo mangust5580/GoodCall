@@ -13,7 +13,7 @@ export default defineConfig({
     open: true,
   },
   build: {
-    target: 'esnext',
+    target: 'es2020',
     sourcemap: false,
     outDir: 'dist',
     emptyOutDir: true,
