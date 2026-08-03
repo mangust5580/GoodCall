@@ -10,7 +10,7 @@ test.describe('M1 Routing and Navigation', () => {
   });
 
   test('skip link navigates to main-content', async ({ page }) => {
-    await page.goto('');
+    await page.goto('/GoodCall/');
     const skipLink = page.locator('a[href="#main-content"]');
     const main = page.locator('main#main-content');
 
@@ -20,6 +20,8 @@ test.describe('M1 Routing and Navigation', () => {
     await page.keyboard.press('Enter');
 
     await expect(main).toBeFocused();
+    const url = page.url();
+    expect(url).toContain('#main-content');
   });
 
   test('main landmark with id main-content exists', async ({ page }) => {
@@ -66,8 +68,11 @@ test.describe('M1 Routing and Navigation', () => {
 
   test('direct nested Category route', async ({ page }) => {
     await page.goto('/GoodCall/catalog/gaming-laptops');
+    await expect(page).toHaveURL('/GoodCall/catalog/gaming-laptops');
+    await expect(page.locator('main#main-content')).toHaveCount(1);
+    await expect(page.locator('h1')).toHaveCount(1);
     await expect(page.locator('h1')).toContainText('Category');
-    await expect(page.locator('p')).toContainText('gaming-laptops');
+    await expect(page.getByText('Category: gaming-laptops', { exact: true })).toBeVisible();
   });
 
   test('hard refresh nested Category', async ({ page }) => {
@@ -105,7 +110,7 @@ test.describe('M1 Routing and Navigation', () => {
   });
 
   test('one main and one h1 per route', async ({ page }) => {
-    const routes = ['', '/catalog/laptops', '/products/demo-product', '/cart', '/not-found'];
+    const routes = ['/', '/catalog/laptops', '/products/demo-product', '/cart', '/not-found'];
 
     for (const route of routes) {
       await page.goto(`/GoodCall${route}`);

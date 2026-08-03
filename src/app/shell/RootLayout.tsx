@@ -8,14 +8,13 @@ import {
 } from 'react-router-dom';
 import styles from './Shell.module.scss';
 
-const scrollPositions: Record<string, number> = {};
-
 export function RootLayout(): React.ReactElement {
   const location = useLocation();
   const matches = useMatches();
   const navigationType = useNavigationType();
   const navigation = useNavigation();
   const isInitialLoad = useRef(true);
+  const previousPathname = useRef<string | null>(null);
   const pendingTimerRef = useRef<number | null>(null);
   const [showPendingIndicator, setShowPendingIndicator] = React.useState(false);
 
@@ -46,13 +45,12 @@ export function RootLayout(): React.ReactElement {
 
     document.title = title;
 
+    const isPathChanged = location.pathname !== previousPathname.current;
+    previousPathname.current = location.pathname;
+
     const announcement = document.getElementById('route-announcement');
-    if (announcement && navigationType !== 'POP') {
-      const isQueryOnly =
-        location.pathname === (matches[matches.length - 1]?.pathname || location.pathname);
-      if (!isQueryOnly) {
-        announcement.textContent = title;
-      }
+    if (announcement && isPathChanged && navigationType !== 'POP') {
+      announcement.textContent = title;
     }
   }, [location.pathname, matches, navigationType]);
 
@@ -76,40 +74,9 @@ export function RootLayout(): React.ReactElement {
     };
   }, [navigation.state]);
 
-  useEffect(() => {
-    if (navigationType === 'POP') {
-      const savedPosition = scrollPositions[location.pathname];
-      if (typeof savedPosition === 'number') {
-        window.scrollTo(0, savedPosition);
-      }
-    } else {
-      window.scrollTo(0, 0);
-    }
-  }, [location.pathname, navigationType]);
-
-  useEffect(() => {
-    const handleBeforeUnload = () => {
-      scrollPositions[location.pathname] = window.scrollY;
-    };
-
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-      scrollPositions[location.pathname] = window.scrollY;
-    };
-  }, [location.pathname]);
-
-  const handleSkipLinkClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
-    e.preventDefault();
-    const mainElement = document.getElementById('main-content');
-    if (mainElement) {
-      mainElement.focus();
-    }
-  };
-
   return (
-    <div className={styles.shell} role="application" aria-busy={navigation.state === 'loading'}>
-      <a href="#main-content" className={styles['skip-link']} onClick={handleSkipLinkClick}>
+    <div className={styles.shell} aria-busy={navigation.state === 'loading'}>
+      <a href="#main-content" className={styles['skip-link']}>
         Skip to main content
       </a>
       <div
