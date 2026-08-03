@@ -23,8 +23,9 @@
     "validate:build": "node scripts/validate-build.mjs",
     "preview": "vite preview",
     "test:e2e": "playwright test",
-    "check": "npm run typecheck && npm run lint && npm run lint:styles && npm run format:check",
-    "check:full": "npm run typecheck && npm run lint && npm run lint:styles && npm run format:check && npm test && npm run build && npm run validate:build && npm run test:e2e"
+    "check:comments": "node scripts/check-comments.mjs",
+    "check": "npm run typecheck && npm run lint && npm run lint:styles && npm run format:check && npm run check:comments",
+    "check:full": "npm run typecheck && npm run lint && npm run lint:styles && npm run format:check && npm run check:comments && npm test && npm run build && npm run validate:build"
   },
   "dependencies": {
     "react": "^19.2.8",

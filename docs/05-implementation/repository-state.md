@@ -15,13 +15,15 @@ tsconfig.app.json               App-specific TypeScript config
 tsconfig.node.json              Build/config file TypeScript config
 vite.config.ts                  React plugin, alias, /GoodCall/ base
 vitest.config.ts                jsdom, setup file, coverage config
-playwright.config.ts            Chromium, /GoodCall/ preview base
+playwright.config.ts            Chromium, /GoodCall/ preview base, conditional webServer
 postcss.config.mjs              Autoprefixer
 prettier.config.mjs             2-space, single quotes, no semicolons (false)
 stylelint.config.mjs            SCSS, selector nesting limits
 eslint.config.js                Flat config, TypeScript, React hooks, a11y
-index.html                      Root entry point, module type script
-README.md                        Setup, scripts, architecture, Pages notes
+index.html                       Root entry point, module type script
+README.md                        Setup, scripts, architecture, Pages notes, policies
+AGENTS.md                        Canonical agent policies (comments, servers, testing)
+CLAUDE.md                        Claude Code working instructions
 ```
 
 ### Source Code (`src/`)
@@ -64,6 +66,9 @@ src/
 tests/
   setup.ts                      Vitest globals, RTL cleanup, jest-dom
   smoke.test.tsx                4 tests: render, h1 role, main landmark, skip link
+  fallback.test.ts              Tests for URL restore fallback logic
+  validate-build.test.ts        Tests for build artifact validation
+  check-comments.test.ts        Tests for comment scanner
   e2e/
     bootstrap.spec.ts           Playwright: render, skip link, landmark, axe scan
   support/
@@ -74,6 +79,8 @@ tests/
 
 ```
 scripts/
+  check-comments.mjs            Scanner for authored comments (enforced in CI)
+  build-validation.d.mts        Type definitions for build-validation.mjs
   prepare-pages-artifact.mjs    Creates dist/404.html (SPA fallback), .nojekyll
   report-bundle-sizes.mjs       Reports JS/CSS sizes (raw + gzipped)
   validate-build.mjs            Checks required files, forbidden patterns
@@ -159,6 +166,8 @@ GoodCall/
 ├── .env.example
 ├── .gitignore
 ├── .nvmrc
+├── AGENTS.md
+├── CLAUDE.md
 ├── eslint.config.js
 ├── index.html
 ├── package.json

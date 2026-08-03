@@ -1,20 +1,14 @@
 import fs from 'fs';
 import path from 'path';
 
-/**
- * Production validator for build artifacts.
- * Ensures dist contains all required files for GitHub Pages deployment.
- */
 export function validateBuildArtifact(distPath) {
   const errors = [];
 
-  // Must exist
   if (!fs.existsSync(distPath)) {
     errors.push('dist directory does not exist');
     return { valid: false, errors };
   }
 
-  // Required files
   const requiredFiles = ['index.html', '404.html', '.nojekyll'];
   for (const file of requiredFiles) {
     if (!fs.existsSync(path.join(distPath, file))) {
@@ -22,7 +16,6 @@ export function validateBuildArtifact(distPath) {
     }
   }
 
-  // Scan for source maps (recursive)
   try {
     const scanRecursive = (dir) => {
       const entries = fs.readdirSync(dir, { withFileTypes: true });
@@ -40,7 +33,6 @@ export function validateBuildArtifact(distPath) {
     errors.push(`Error scanning for source maps: ${e.message}`);
   }
 
-  // Scan for MSW worker (recursive)
   try {
     const scanRecursive = (dir) => {
       const entries = fs.readdirSync(dir, { withFileTypes: true });
@@ -58,7 +50,6 @@ export function validateBuildArtifact(distPath) {
     errors.push(`Error scanning for MSW: ${e.message}`);
   }
 
-  // Scan HTML files for dev URLs (JS bundles may have false positives from deps)
   try {
     const indexPath = path.join(distPath, 'index.html');
     if (fs.existsSync(indexPath)) {
@@ -71,7 +62,6 @@ export function validateBuildArtifact(distPath) {
     errors.push(`Error scanning HTML: ${e.message}`);
   }
 
-  // Check for duplicated base
   const indexPath = path.join(distPath, 'index.html');
   if (fs.existsSync(indexPath)) {
     try {
@@ -79,17 +69,13 @@ export function validateBuildArtifact(distPath) {
       if (content.includes('/GoodCall/GoodCall/')) {
         errors.push('Found duplicated base: /GoodCall/GoodCall/');
       }
-    } catch (_e) {
-      // Ignore read errors
-    }
+    } catch (_e) {}
   }
 
-  // Check fallback generation
   const fallbackPath = path.join(distPath, '404.html');
   if (fs.existsSync(fallbackPath)) {
     try {
       const content = fs.readFileSync(fallbackPath, 'utf-8');
-      // Must redirect to /GoodCall/ entry, not attempted missing URL
       if (
         content.includes("window.location.href = './'") ||
         content.includes('window.location.href = "../"')
@@ -99,9 +85,7 @@ export function validateBuildArtifact(distPath) {
       if (!content.includes('/GoodCall/')) {
         errors.push('Fallback does not reference /GoodCall/ base');
       }
-    } catch (_e) {
-      // Ignore read errors
-    }
+    } catch (_e) {}
   }
 
   return {

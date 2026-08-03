@@ -58,7 +58,7 @@ describe('Fallback Redirect/Restore Algorithm', () => {
       pathname: '/GoodCall/test',
       search: '',
       hash: '',
-      timestamp: Date.now() - 6000, // 6 seconds ago
+      timestamp: Date.now() - 6000,
     };
 
     const validation = validateRedirectPayload(payload, TEST_BASE);
@@ -71,7 +71,7 @@ describe('Fallback Redirect/Restore Algorithm', () => {
       pathname: '/GoodCall/test',
       search: '',
       hash: '',
-      timestamp: Date.now() + 1000, // 1 second in future
+      timestamp: Date.now() + 1000,
     };
 
     const validation = validateRedirectPayload(payload, TEST_BASE);

@@ -10,7 +10,6 @@ function validateBuild() {
 
   const result = validateBuildArtifact(distPath);
 
-  // Print status for each check
   if (result.valid) {
     console.log('✓ Found index.html');
     console.log('✓ Found 404.html');
@@ -18,7 +17,6 @@ function validateBuild() {
     console.log('ℹ Note: Verify base path is correctly configured');
   }
 
-  // Print any errors
   for (const error of result.errors) {
     console.error(`✗ ${error}`);
   }

@@ -22,10 +22,12 @@ export default defineConfig({
     },
   ],
 
-  webServer: {
-    command: 'npm run preview',
-    url: 'http://localhost:4173',
-    reuseExistingServer: !process.env.CI,
-    timeout: 120 * 1000,
-  },
+  webServer: process.env.CI
+    ? {
+        command: 'npm run preview',
+        url: 'http://localhost:4173',
+        reuseExistingServer: false,
+        timeout: 120 * 1000,
+      }
+    : undefined,
 });

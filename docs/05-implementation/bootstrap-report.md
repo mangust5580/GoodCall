@@ -141,16 +141,48 @@ Tested by Playwright preview mode under `/GoodCall/`.
 All scripts pass:
 
 ```bash
-npm run typecheck    # ✓ No errors
-npm run lint         # ✓ No errors
-npm run lint:styles  # ✓ No errors
-npm run format:check # ✓ Formatted
-npm test             # ✓ All pass
-npm run build        # ✓ Deterministic
+npm run typecheck      # ✓ No errors
+npm run lint           # ✓ No errors
+npm run lint:styles    # ✓ No errors
+npm run format:check   # ✓ Formatted
+npm run check:comments # ✓ No authored comments
+npm test               # ✓ All pass
+npm run build          # ✓ Deterministic
 npm run validate:build # ✓ All checks pass
-npm run test:e2e     # ✓ All pass
-npm run check:full   # ✓ Comprehensive
+npm run test:e2e       # ✓ All pass (with server running)
+npm run check:full     # ✓ Comprehensive (serverless)
 ```
+
+### Comment Policy
+
+Authored comments are prohibited in code. Enforced by `npm run check:comments`:
+
+- No line comments (`// ...`)
+- No block comments (`/* ... */`)
+- No JSDoc (`/** ... */`)
+- No suppression comments (`@ts-expect-error`, etc.)
+- No commented-out code
+
+Enforcement points:
+
+- Local: `npm run check` and `npm run check:full`
+- CI: Comment check step in GitHub Actions
+
+Why: Comment drift causes confusion. Code intent should be clear from names, types, and structure. Non-obvious "why" goes in commit messages.
+
+### Local Server Ownership
+
+Users (developers) own local server lifecycle. Agents never start/stop local servers:
+
+- `npm run dev` — User starts development server
+- `npm run preview` — User starts preview server (required before local E2E tests)
+- Local E2E: User must manually start preview server first
+
+CI automation:
+
+- E2E in CI is controlled by Playwright's conditional `webServer` configuration
+- Server starts before tests, stops after tests complete
+- Activated only when `process.env.CI` is true
 
 ## CI/CD Workflows
 

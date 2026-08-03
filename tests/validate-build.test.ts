@@ -2,7 +2,6 @@ import { describe, it, expect, afterEach } from 'vitest';
 import path from 'path';
 import fs from 'fs';
 import os from 'os';
-// @ts-expect-error - .mjs module import
 import { validateBuildArtifact } from '../scripts/build-validation.mjs';
 
 describe('Build Validator', () => {
@@ -13,7 +12,7 @@ describe('Build Validator', () => {
       try {
         fs.rmSync(tempDir, { recursive: true });
       } catch (_e: unknown) {
-        // Ignore cleanup errors
+        void _e;
       }
       tempDir = null;
     }

@@ -51,14 +51,20 @@ npm --version   # Should be 11.6.0+
 - `npm run lint:styles` — Run Stylelint
 - `npm run format` — Format code with Prettier
 - `npm run format:check` — Check formatting without changes
-- `npm run check` — Run typecheck, lint, and format check
-- `npm run check:full` — Complete check suite including tests, build, and E2E (requires Playwright browser installation)
+- `npm run check:comments` — Check for authored comments in code
+- `npm run check` — Run typecheck, lint, format check, and comment check
+- `npm run check:full` — Complete serverless check suite including typecheck, lint, tests, and build
 
 ### Testing
 
 - `npm test` — Run unit/component tests
 - `npm run test:watch` — Run tests in watch mode
-- `npm run test:e2e` — Run end-to-end tests with Playwright
+- **E2E testing (local)**: Start preview server first, then run E2E:
+  ```bash
+  npm run preview          # Start preview server (terminal 1)
+  npm run test:e2e         # Run E2E tests (terminal 2)
+  ```
+- **E2E testing (CI)**: Automated in GitHub Actions, server lifecycle managed by Playwright
 
 ### Build Artifacts
 
@@ -122,6 +128,16 @@ The workflow:
 **Note**: The deploy workflow does not run automatically on push. It must be triggered manually from the Actions tab.
 
 ## Development Notes
+
+### Agent and Code Policies
+
+**Read [AGENTS.md](./AGENTS.md)** for policies on:
+
+- No authored comments in code (enforced by `npm run check:comments`)
+- Local server management (developers only)
+- E2E testing workflow
+
+**Why no comments?** Code intent should be clear from names, types, and function boundaries. Non-obvious "why" goes in commit messages.
 
 ### TypeScript
 

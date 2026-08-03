@@ -5,14 +5,6 @@ import { BUILD_CONFIG } from '../build-config.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-/**
- * Generate fallback 404.html content for GitHub Pages SPA.
- * Exported for testing purposes.
- * @param {string} base - The app base path (e.g., '/GoodCall/')
- * @param {string} storageKey - Session storage key for redirect data
- * @param {number} timeoutMs - Timeout in milliseconds for redirect validity
- * @returns {string} The generated 404.html content
- */
 export function generateFallbackHTML(base, storageKey, timeoutMs) {
   return `<!doctype html>
 <html lang="en">
@@ -22,19 +14,16 @@ export function generateFallbackHTML(base, storageKey, timeoutMs) {
     <title>Redirecting...</title>
     <script>
       (function () {
-        // Extract attempted URL from 404 handler
         const attemptedPathname = window.location.pathname;
         const attemptedSearch = window.location.search;
         const attemptedHash = window.location.hash;
 
-        // Validate that URL is under app base to prevent external redirects
         if (!attemptedPathname.startsWith('${base}')) {
           console.error('Invalid 404 path');
           window.location.href = '${base}';
           throw new Error('Invalid redirect attempt');
         }
 
-        // Store in sessionStorage for SPA to restore
         const redirectData = {
           pathname: attemptedPathname,
           search: attemptedSearch,
@@ -43,7 +32,6 @@ export function generateFallbackHTML(base, storageKey, timeoutMs) {
         };
         sessionStorage.setItem('${storageKey}', JSON.stringify(redirectData));
 
-        // Redirect to SPA entry point
         window.location.href = '${base}';
       })();
     </script>

@@ -11,7 +11,6 @@ if (import.meta.env.DEV) {
   });
 }
 
-// Restore URL from GitHub Pages 404 fallback redirect
 restoreRedirectedURL();
 
 const root = document.getElementById('root');

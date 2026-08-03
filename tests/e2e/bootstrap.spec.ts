@@ -18,21 +18,16 @@ test.describe('Bootstrap smoke tests', () => {
     const skipLink = page.locator('a[href="#main"]');
     const main = page.locator('main#main');
 
-    // Verify skip link exists and is focusable
     await expect(skipLink).toHaveText('Skip to main content');
 
-    // First Tab should focus skip link (first focusable element)
     await page.keyboard.press('Tab');
     await expect(skipLink).toBeFocused();
 
-    // Activate skip link via Enter
     await page.keyboard.press('Enter');
     await page.waitForLoadState('networkidle');
 
-    // Verify focus is now on main element
     await expect(main).toBeFocused();
 
-    // Verify that Tab from focused main moves to next element, not back to main (main is not in tab order)
     await page.keyboard.press('Tab');
     const focusedAfterTab = await page.evaluate(() => document.activeElement?.getAttribute('id'));
     expect(focusedAfterTab).not.toBe('main');
@@ -42,7 +37,6 @@ test.describe('Bootstrap smoke tests', () => {
     await page.goto('');
     const main = page.locator('main#main');
     await expect(main).toBeVisible();
-    // main is a native landmark element
     await expect(main).toBeTruthy();
   });
 
@@ -70,10 +64,8 @@ test.describe('Bootstrap smoke tests', () => {
 
     const results = await new AxeBuilder({ page }).analyze();
 
-    // Verify axe violations
     expect(results.violations).toHaveLength(0);
 
-    // Verify no runtime errors or failed requests
     expect(pageErrors).toHaveLength(0);
     expect(consoleErrors).toHaveLength(0);
     expect(failedRequests).toHaveLength(0);
