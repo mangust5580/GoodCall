@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { AxeBuilder } from '@axe-core/playwright';
 
 test.describe('Bootstrap smoke tests', () => {
   test('renders home page', async ({ page }) => {
@@ -18,14 +19,27 @@ test.describe('Bootstrap smoke tests', () => {
     await expect(main).toBeVisible();
   });
 
-  test('accessibility: page renders with no console errors', async ({ page }) => {
+  test('passes axe accessibility audit', async ({ page }) => {
+    const pageErrors: string[] = [];
+    const consoleErrors: string[] = [];
+
+    page.on('pageerror', (error) => {
+      pageErrors.push(error.message);
+    });
+
     page.on('console', (msg) => {
       if (msg.type() === 'error') {
-        console.error(`Console error: ${msg.text()}`);
+        consoleErrors.push(msg.text());
       }
     });
 
     await page.goto('/');
-    await expect(page.locator('h1')).toBeVisible();
+    await page.waitForLoadState('networkidle');
+
+    const results = await new AxeBuilder({ page }).analyze();
+    expect(results.violations).toHaveLength(0);
+
+    expect(pageErrors).toHaveLength(0);
+    expect(consoleErrors).toHaveLength(0);
   });
 });

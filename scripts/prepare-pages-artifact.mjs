@@ -27,11 +27,29 @@ function preparePages() {
     <title>Redirecting...</title>
     <script>
       (function () {
-        const path = window.location.pathname.replace(/^\\/GoodCall/, '');
-        const search = window.location.search;
-        const hash = window.location.hash;
-        window.history.replaceState(null, '', '/GoodCall/' + path.slice(1) + search + hash);
-        window.location.href = '/GoodCall/' + path.slice(1) + search + hash;
+        // Extract attempted URL from 404 handler
+        const attemptedPathname = window.location.pathname;
+        const attemptedSearch = window.location.search;
+        const attemptedHash = window.location.hash;
+
+        // Validate that URL is under /GoodCall/ to prevent external redirects
+        if (!attemptedPathname.startsWith('/GoodCall/')) {
+          console.error('Invalid 404 path');
+          window.location.href = '/GoodCall/';
+          throw new Error('Invalid redirect attempt');
+        }
+
+        // Store in sessionStorage for SPA to restore
+        const redirectData = {
+          pathname: attemptedPathname,
+          search: attemptedSearch,
+          hash: attemptedHash,
+          timestamp: Date.now()
+        };
+        sessionStorage.setItem('__goodcall_redirect', JSON.stringify(redirectData));
+
+        // Redirect to SPA entry point (existing /GoodCall/index.html)
+        window.location.href = '/GoodCall/';
       })();
     </script>
   </head>

@@ -1,0 +1,18 @@
+# Local temporary handoff files
+AUDIT.md
+
+# Build and dependencies
+node_modules/
+dist/
+.vite/
+
+# Generated
+package-lock.json
+
+# IDE
+.idea/
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
