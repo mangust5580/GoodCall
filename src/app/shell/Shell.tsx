@@ -8,7 +8,7 @@ export function Shell(): React.ReactElement {
       <a href="#main" className={styles['skip-link']}>
         Skip to main content
       </a>
-      <main id="main" className={styles.main}>
+      <main id="main" className={styles.main} tabIndex={-1}>
         <Outlet />
       </main>
     </div>

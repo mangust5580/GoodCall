@@ -17,7 +17,7 @@
     "format:check": "prettier --check .",
     "test": "vitest run",
     "test:watch": "vitest",
-    "build": "vite build --base=/GoodCall/ && npm run prepare:pages && npm run report:sizes",
+    "build": "vite build && npm run prepare:pages && npm run report:sizes",
     "prepare:pages": "node scripts/prepare-pages-artifact.mjs",
     "report:sizes": "node scripts/report-bundle-sizes.mjs",
     "validate:build": "node scripts/validate-build.mjs",
