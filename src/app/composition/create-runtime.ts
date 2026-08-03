@@ -1,12 +1,21 @@
 import React from 'react';
 import { createBrowserRouter, type RouteObject } from 'react-router-dom';
 import { publicConfig } from '@/app/config';
+import { createQueryClient } from '@/app/composition/create-query-client';
 import { RootLayout } from '@/app/shell/RootLayout';
 import { RootErrorBoundary } from '@/app/shell/RootErrorBoundary';
 import { CatalogErrorBoundary } from '@/routes/catalog/CatalogRouteErrorBoundary';
 import { categoryLoader, productLoader } from '@/app/routing/loaders';
+import type { QueryClient } from '@tanstack/react-query';
 
-export function createDataRouter() {
+export interface ApplicationRuntime {
+  queryClient: QueryClient;
+  router: ReturnType<typeof createBrowserRouter>;
+}
+
+export function createApplicationRuntime(): ApplicationRuntime {
+  const queryClient = createQueryClient();
+
   const routes: RouteObject[] = [
     {
       id: 'root',
@@ -51,7 +60,9 @@ export function createDataRouter() {
     },
   ];
 
-  return createBrowserRouter(routes, {
+  const router = createBrowserRouter(routes, {
     basename: publicConfig.base,
   });
+
+  return { queryClient, router };
 }

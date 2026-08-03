@@ -1,16 +1,16 @@
-import React, { Suspense } from 'react';
+import React from 'react';
 import { RouterProvider } from 'react-router-dom';
 import { AppProviders } from '@/app/providers';
-import { createDataRouter } from '@/app/composition/create-runtime';
+import type { ApplicationRuntime } from '@/app/composition/create-runtime';
 
-const router = createDataRouter();
+interface AppProps {
+  runtime: ApplicationRuntime;
+}
 
-export function App(): React.ReactElement {
+export function App({ runtime }: AppProps): React.ReactElement {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <AppProviders>
-        <RouterProvider router={router} />
-      </AppProviders>
-    </Suspense>
+    <AppProviders queryClient={runtime.queryClient}>
+      <RouterProvider router={runtime.router} />
+    </AppProviders>
   );
 }
