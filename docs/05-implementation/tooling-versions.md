@@ -2,13 +2,13 @@
 
 ## Production Dependencies
 
-| Package               | Version | Purpose               |
-| --------------------- | ------- | --------------------- |
-| react                 | ^18.3.1 | UI library            |
-| react-dom             | ^18.3.1 | DOM rendering         |
-| react-router-dom      | ^6.26.0 | Routing               |
-| @tanstack/react-query | ^5.51.1 | Data fetching / cache |
-| zod                   | ^3.23.8 | Schema validation     |
+| Package               | Version  | Purpose               |
+| --------------------- | -------- | --------------------- |
+| react                 | ^19.2.8  | UI library            |
+| react-dom             | ^19.2.8  | DOM rendering         |
+| react-router-dom      | ^7.18.2  | Routing               |
+| @tanstack/react-query | ^5.101.4 | Data fetching / cache |
+| zod                   | ^4.4.3   | Schema validation     |
 
 ## Development Dependencies
 
@@ -16,58 +16,57 @@
 
 | Package              | Version | Purpose               |
 | -------------------- | ------- | --------------------- |
-| vite                 | ^5.2.11 | Build tool            |
-| @vitejs/plugin-react | ^4.3.0  | React plugin for Vite |
-| typescript           | ^5.4.5  | Type checking         |
+| vite                 | ^8.2.0  | Build tool            |
+| @vitejs/plugin-react | ^6.0.5  | React plugin for Vite |
+| typescript           | ^6.0.3  | Type checking         |
 
 ### Node/Type Definitions
 
 | Package          | Version  | Purpose         |
 | ---------------- | -------- | --------------- |
-| @types/node      | ^20.13.0 | Node.js types   |
-| @types/react     | ^18.3.1  | React types     |
-| @types/react-dom | ^18.3.0  | React DOM types |
+| @types/node      | ^24.13.3 | Node.js types   |
+| @types/react     | ^19.2.18 | React types     |
+| @types/react-dom | ^19.2.4  | React DOM types |
 
 ### Linting & Formatting
 
-| Package                          | Version | Purpose                 |
-| -------------------------------- | ------- | ----------------------- |
-| eslint                           | ^9.5.0  | JavaScript linter       |
-| @typescript-eslint/parser        | ^7.11.0 | TS parser for ESLint    |
-| @typescript-eslint/eslint-plugin | ^7.11.0 | TS rules for ESLint     |
-| eslint-plugin-react              | ^7.34.2 | React rules             |
-| eslint-plugin-react-hooks        | ^4.6.0  | React Hooks rules       |
-| eslint-plugin-jsx-a11y           | ^6.8.0  | JSX accessibility rules |
-| prettier                         | ^3.3.0  | Code formatter          |
-| stylelint                        | ^16.6.0 | CSS/SCSS linter         |
-| stylelint-config-standard-scss   | ^13.1.0 | SCSS config             |
+| Package                          | Version  | Purpose                 |
+| -------------------------------- | -------- | ----------------------- |
+| eslint                           | ^9.39.5  | JavaScript linter       |
+| @typescript-eslint/parser        | ^8.65.0  | TS parser for ESLint    |
+| @typescript-eslint/eslint-plugin | ^8.65.0  | TS rules for ESLint     |
+| eslint-plugin-react              | ^7.37.2  | React rules             |
+| eslint-plugin-react-hooks        | ^5.1.0   | React Hooks rules       |
+| eslint-plugin-jsx-a11y           | ^6.10.2  | JSX accessibility rules |
+| prettier                         | ^3.4.2   | Code formatter          |
+| stylelint                        | ^16.12.0 | CSS/SCSS linter         |
+| stylelint-config-standard-scss   | ^13.1.0  | SCSS config             |
 
 ### Styling
 
 | Package       | Version  | Purpose             |
 | ------------- | -------- | ------------------- |
-| sass-embedded | ^1.77.6  | SCSS compiler       |
-| postcss       | ^8.4.38  | CSS transformations |
-| autoprefixer  | ^10.4.19 | Browser prefixes    |
+| sass-embedded | ^1.83.0  | SCSS compiler       |
+| postcss       | ^8.4.49  | CSS transformations |
+| autoprefixer  | ^10.4.20 | Browser prefixes    |
 
 ### Testing
 
 | Package                     | Version | Purpose                     |
 | --------------------------- | ------- | --------------------------- |
-| vitest                      | ^1.6.0  | Unit test runner            |
-| @vitest/ui                  | ^1.6.0  | Vitest UI (optional)        |
-| jsdom                       | ^24.1.0 | DOM implementation          |
-| @testing-library/react      | ^15.0.7 | React component testing     |
-| @testing-library/jest-dom   | ^6.4.2  | Custom matchers             |
+| vitest                      | ^4.1.10 | Unit test runner            |
+| jsdom                       | ^29.1.1 | DOM implementation          |
+| @testing-library/react      | ^16.3.2 | React component testing     |
+| @testing-library/jest-dom   | ^6.8.1  | Custom matchers             |
 | @testing-library/user-event | ^14.5.2 | User interaction simulation |
-| playwright                  | ^1.45.0 | E2E testing                 |
-| @axe-core/playwright        | ^4.8.24 | Accessibility scanning      |
+| @playwright/test            | ^1.62.1 | E2E testing                 |
+| @axe-core/playwright        | ^4.12.1 | Accessibility scanning      |
 
 ### Mocking
 
 | Package | Version | Purpose             |
 | ------- | ------- | ------------------- |
-| msw     | ^2.2.8  | Mock Service Worker |
+| msw     | ^2.15.0 | Mock Service Worker |
 
 ## Node & npm Policy
 

@@ -10,7 +10,6 @@
 
 export const FALLBACK_KEY = '__goodcall_redirect';
 export const FALLBACK_TIMEOUT_MS = 5000; // 5 second window
-export const APP_BASE = '/GoodCall/';
 
 export interface RedirectPayload {
   pathname: string;
@@ -22,8 +21,13 @@ export interface RedirectPayload {
 /**
  * Validate redirect payload from 404 handler.
  * Ensures payload is safe before restoration.
+ * @param payload - The payload to validate
+ * @param base - The app base path (defaults to import.meta.env.BASE_URL)
  */
-export function validateRedirectPayload(payload: unknown): {
+export function validateRedirectPayload(
+  payload: unknown,
+  base: string = import.meta.env.BASE_URL
+): {
   valid: boolean;
   error?: string;
 } {
@@ -38,7 +42,7 @@ export function validateRedirectPayload(payload: unknown): {
   }
 
   // Must be under app base to prevent external redirects
-  if (!obj.pathname.startsWith(APP_BASE)) {
+  if (!obj.pathname.startsWith(base)) {
     return { valid: false, error: 'Pathname not under app base' };
   }
 
@@ -67,9 +71,14 @@ export function validateRedirectPayload(payload: unknown): {
 
 /**
  * Restore URL from validated payload.
+ * @param payload - The payload to restore from
+ * @param base - The app base path (defaults to import.meta.env.BASE_URL)
  */
-export function restoreURLFromPayload(payload: unknown): string | null {
-  const validation = validateRedirectPayload(payload);
+export function restoreURLFromPayload(
+  payload: unknown,
+  base: string = import.meta.env.BASE_URL
+): string | null {
+  const validation = validateRedirectPayload(payload, base);
   if (!validation.valid) {
     return null;
   }
@@ -83,6 +92,7 @@ export function restoreURLFromPayload(payload: unknown): string | null {
  * Called at runtime to handle GitHub Pages 404 redirect.
  */
 export function restoreRedirectedURL(): void {
+  const base = import.meta.env.BASE_URL;
   let payload: unknown;
   try {
     const stored = sessionStorage.getItem(FALLBACK_KEY);
@@ -99,7 +109,7 @@ export function restoreRedirectedURL(): void {
     return;
   }
 
-  const restoredURL = restoreURLFromPayload(payload);
+  const restoredURL = restoreURLFromPayload(payload, base);
   if (!restoredURL) {
     // Validation failed - clean up
     try {

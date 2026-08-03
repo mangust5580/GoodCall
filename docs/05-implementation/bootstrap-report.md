@@ -19,16 +19,19 @@ GoodCall M0 bootstrap successfully initialized a greenfield React SPA repository
 
 ### Base Path
 
-**Decision**: Use `APP_BASE_PATH = '/GoodCall/'` constant in `src/app/config/base.ts`.
+**Decision**: Single source of truth in `build-config.mjs` for production base `/GoodCall/`.
 
-**Why**: Single source of truth that can be reused as React Router basename and in build configuration. Deterministic and maintainable.
+**Why**: Centralized configuration prevents duplication and hardcoding across multiple files. Enables testing with parameterized base, runtime flexibility via `import.meta.env.BASE_URL`.
 
 **Implementation**:
 
-- `vite.config.ts`: `build.base` set to `/GoodCall/`
-- `playwright.config.ts`: Web server uses `baseURL: http://localhost:4173`
-- `src/app/routing/index.tsx`: `BrowserRouter basename={APP_BASE_PATH}`
-- All relative navigation automatically resolves correctly
+- `build-config.mjs`: Owns `production.base = '/GoodCall/'`, development `base = '/'`
+- `vite.config.ts`: Imports `BUILD_CONFIG`, applies base during build/dev via `config.base`
+- `playwright.config.ts`: Imports `BUILD_CONFIG`, computes preview `baseURL` dynamically
+- `src/app/routing/index.tsx`: Uses `import.meta.env.BASE_URL` directly for `BrowserRouter basename`
+- `src/app/fallback.ts`: Functions accept base as parameter, default to `import.meta.env.BASE_URL`
+- `scripts/prepare-pages-artifact.mjs`: Exports `generateFallbackHTML()`, uses `BUILD_CONFIG` for production 404.html
+- All CLI scripts import `BUILD_CONFIG` instead of duplicating base literals
 
 ### Storage/Deployment Identity
 

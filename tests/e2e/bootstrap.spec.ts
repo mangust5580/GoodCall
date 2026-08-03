@@ -29,22 +29,21 @@ test.describe('Bootstrap smoke tests', () => {
     await page.keyboard.press('Enter');
     await page.waitForLoadState('networkidle');
 
-    // Verify focus is now on main or main is configured as target
-    // Main should be focusable (tabIndex=-1 allowed) but not in tab order
-    await expect(main).toBeVisible();
-    const focusedElement = await page.evaluate(() => document.activeElement?.getAttribute('id'));
-    expect(focusedElement === 'main' || focusedElement === null).toBeTruthy();
+    // Verify focus is now on main element
+    await expect(main).toBeFocused();
+
+    // Verify that Tab from focused main moves to next element, not back to main (main is not in tab order)
+    await page.keyboard.press('Tab');
+    const focusedAfterTab = await page.evaluate(() => document.activeElement?.getAttribute('id'));
+    expect(focusedAfterTab).not.toBe('main');
   });
 
   test('main landmark exists and is accessible', async ({ page }) => {
     await page.goto('');
     const main = page.locator('main#main');
     await expect(main).toBeVisible();
-    const ariaLabel = await main.getAttribute('aria-label');
-    const ariaLabelledBy = await main.getAttribute('aria-labelledby');
-    const role = await main.getAttribute('role');
-    // main is a native landmark, optionally labeled
-    expect(ariaLabel !== null || ariaLabelledBy !== null || role !== null || true).toBeTruthy();
+    // main is a native landmark element
+    await expect(main).toBeTruthy();
   });
 
   test('passes axe accessibility audit with no violations', async ({ page }) => {

@@ -1,4 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
+import { BUILD_CONFIG } from './build-config.mjs';
+
+const baseURL = `http://localhost:4173${BUILD_CONFIG.production.base}`;
 
 export default defineConfig({
   testDir: './tests/e2e',
@@ -8,7 +11,7 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   reporter: 'html',
   use: {
-    baseURL: 'http://localhost:4173/GoodCall/',
+    baseURL,
     trace: 'on-first-retry',
   },
 

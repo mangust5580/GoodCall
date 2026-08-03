@@ -21,7 +21,7 @@
     "prepare:pages": "node scripts/prepare-pages-artifact.mjs",
     "report:sizes": "node scripts/report-bundle-sizes.mjs",
     "validate:build": "node scripts/validate-build.mjs",
-    "preview": "vite preview --base=/GoodCall/",
+    "preview": "vite preview",
     "test:e2e": "playwright test",
     "check": "npm run typecheck && npm run lint && npm run lint:styles && npm run format:check",
     "check:full": "npm run typecheck && npm run lint && npm run lint:styles && npm run format:check && npm test && npm run build && npm run validate:build && npm run test:e2e"

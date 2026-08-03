@@ -33,9 +33,6 @@ jobs:
       - name: Validate build
         run: npm run validate:build
 
-      - name: Prepare Pages artifact
-        run: npm run prepare:pages
-
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:

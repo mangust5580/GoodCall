@@ -32,15 +32,16 @@ src/
   app/
     App.tsx                     Root component with Suspense + providers
     config/
-      base.ts                   APP_BASE_PATH, STORAGE_ID, normalizeAssetPath
-      index.ts                  Exports
+      base.ts                   STORAGE_ID constant only (business-neutral)
+      index.ts                  Re-exports
+    fallback.ts                 GitHub Pages 404 fallback with parameterized base
     providers/
       index.tsx                 QueryClientProvider setup
     routing/
-      index.tsx                 BrowserRouter, Routes, BootstrapPage
+      index.tsx                 BrowserRouter using import.meta.env.BASE_URL
     shell/
-      Shell.tsx                 Main layout, skip link, Outlet
-      Shell.module.scss         Skip link + main styles
+      Shell.tsx                 Main layout, skip link with focus handling, Outlet
+      Shell.module.scss         Skip link + main styles (tabIndex=-1)
       pages/
         BootstrapPage.tsx       h1, nav with base-safe links
   shared/

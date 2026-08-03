@@ -93,11 +93,13 @@ scripts/         # Build/deployment scripts
 
 ### Base Path
 
-The application is deployed to GitHub Pages under `/GoodCall/`. This is configured in:
+The application is deployed to GitHub Pages under `/GoodCall/`. Single source of truth:
 
-- `vite.config.ts` — `build.base`
-- `playwright.config.ts` — `webServer.baseURL`
-- `src/app/config/base.ts` — `APP_BASE_PATH`
+- `build-config.mjs` — `production.base = '/GoodCall/'`
+- `vite.config.ts` — imports `BUILD_CONFIG` and applies base during build
+- `playwright.config.ts` — imports `BUILD_CONFIG` for preview URL
+- `src/app/routing/index.tsx` — uses `import.meta.env.BASE_URL` for React Router `basename`
+- Runtime uses `import.meta.env.BASE_URL` for fallback validation
 
 All internal links and asset URLs are automatically handled through the `APP_BASE_PATH` constant.
 
