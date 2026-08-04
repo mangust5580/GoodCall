@@ -2,14 +2,15 @@
 
 ## Status
 
-| Task                                                           | Status                                              |
-| -------------------------------------------------------------- | --------------------------------------------------- |
-| M3-01 — Shared UI scaffold, layout and accessibility utilities | **APPROVED AND CLOSED**                             |
-| M3-01A — VisuallyHidden accessibility contract correction      | **APPROVED AND CLOSED**                             |
-| M3-02 / M3-02A / M3-02B — Semantic action primitives           | **APPROVED AND CLOSED**                             |
-| M3-03 / M3-03A — Native form controls baseline                 | **APPROVED AND CLOSED**                             |
-| M3-03B — Shared UI directory organization                      | **APPROVED AND CLOSED**                             |
-| M3-04 — Feedback, status and validation-summary primitives     | **IMPLEMENTED — AWAITING INDEPENDENT AUDIT AND CI** |
+| Task                                                           | Status                                                                    |
+| -------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| M3-01 — Shared UI scaffold, layout and accessibility utilities | **APPROVED AND CLOSED**                                                   |
+| M3-01A — VisuallyHidden accessibility contract correction      | **APPROVED AND CLOSED**                                                   |
+| M3-02 / M3-02A / M3-02B — Semantic action primitives           | **APPROVED AND CLOSED**                                                   |
+| M3-03 / M3-03A — Native form controls baseline                 | **APPROVED AND CLOSED**                                                   |
+| M3-03B — Shared UI directory organization                      | **APPROVED AND CLOSED**                                                   |
+| M3-04 — Feedback, status and validation-summary primitives     | **APPROVED AND CLOSED**                                                   |
+| M3-05 — Shared UI runtime integration                          | **IMPLEMENTED — AWAITING INDEPENDENT AUDIT, CI, AND USER BROWSER REVIEW** |
 
 This report covers the Shared UI layer of milestone M3. It records local verification for the task under review. No approval is claimed for M3-04 and no later M3 task has started.
 
@@ -68,6 +69,21 @@ M3-03B was started only after that closure was confirmed.
 | Bundle baseline    | raw 371.38 KB, gzip 114.00 KB                                                                                                                  |
 
 M3-04 was started only after that closure was confirmed.
+
+### M3-04 closure evidence
+
+| Item               | Value                                                                                                                                                      |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Final commit       | `9ce8794b3e21117a694fc269f2d36cc6668665c8`                                                                                                                 |
+| Independent audit  | APPROVED                                                                                                                                                   |
+| GitHub Actions run | 30923398657                                                                                                                                                |
+| Run URL            | https://github.com/mangust5580/GoodCall/actions/runs/30923398657                                                                                           |
+| Job                | 92039458396 — `test (24.x)`                                                                                                                                |
+| Conclusion         | success                                                                                                                                                    |
+| CI scope           | TypeCheck, ESLint, Stylelint, Prettier, comment check, 504 unit/integration tests in 35 files, production build, build validation, 17 Playwright E2E tests |
+| Bundle baseline    | raw 371.38 KB, gzip 114.00 KB                                                                                                                              |
+
+M3-05 was started only after that closure was confirmed.
 
 ## M3-01 Scope
 
@@ -775,7 +791,7 @@ Git records the migration as renames rather than delete/create, so the history o
 
 ## M3-04 — Feedback, status and validation-summary primitives
 
-**Status: IMPLEMENTED — AWAITING INDEPENDENT AUDIT AND CI**
+**Status: APPROVED AND CLOSED** — see [M3-04 closure evidence](#m3-04-closure-evidence).
 
 ### Scope and non-goals
 
@@ -865,7 +881,9 @@ There is no motion anywhere in the family: no spinner, pulse, fade, auto-dismiss
 
 ### Tests
 
-84 new tests across seven files. `feedback-contract.test.tsx` drives the compact family table-driven; each component has its own file; `feedback-props.test.ts` holds the compile-time contract.
+M3-04 added **20 new files and modified 3 existing files** (`index.ts`, `public-api.test.ts` and this report).
+
+The seven files under `tests/shared/ui/feedback/` contain **80 tests**. The targeted run used during that task — the feedback directory plus `tests/shared/ui/public-api.test.ts` — is **84 tests across 8 files**, because the rewritten public-API file contributes **4 tests** of its own. `feedback-contract.test.tsx` drives the compact family table-driven; each component has its own file; `feedback-props.test.ts` holds the compile-time contract.
 
 Coverage includes native roots, absent default semantics, every tone, spread-object integrity for all conflict keys, safe-attribute survival, `className` merging, runtime tone/role/value/heading validation, `InlineStatus` role opt-in in both directions with tone/role independence, and the full `ErrorSummary` structure, validation, link and focus behaviour — including target focus for input, select and textarea, no `tabindex` mutation, no `scrollIntoView`, and a missing target not throwing.
 
@@ -877,8 +895,113 @@ A single universal `Alert`/`Notice`/`Callout`; a sixth `MessageBanner` alias; de
 
 The local info/success/warning colours are technical, not canonical. Tone differentiation beyond the visible text is border treatment only, pending design-system review. Nothing consumes these primitives at runtime, so the production bundle is unchanged. JSDOM cannot prove rendered size, forced-colors output or zoom behaviour — those remain for the browser review.
 
+## M3-05 — Shared UI runtime integration
+
+**Status: IMPLEMENTED — AWAITING INDEPENDENT AUDIT, CI, AND USER BROWSER REVIEW**
+
+### Purpose
+
+M3-05 adds no new primitives. It proves the already-approved Shared UI API works when consumed through the single public entry point in a real route module, and it produces the first route-level and browser-level evidence for M3-01 through M3-04.
+
+### Technical Home boundary
+
+The existing technical Home placeholder becomes a **verification surface**, not a storefront. The page states this in visible copy:
+
+> Technical Shared UI verification surface — not the canonical storefront Home page.
+
+It is not the canonical Home, not an implementation of RTE-001, and carries no Header, Footer, global or catalog navigation, logo component, brand asset, domain data or design-fidelity claim. Canonical Home belongs to a later milestone and will replace this page.
+
+Structure is unchanged where the routing contract depends on it: exactly one `<main id="main-content">` (now owned by `PageContainer as="main"`), exactly one `<h1>` retaining `tabIndex={-1}` and `data-route-focus`, and the three original navigation labels and targets — `Catalog Category`, `Product Details`, `Shopping Cart` — so every existing M1 selector keeps working.
+
+### Runtime integration matrix
+
+| Component        | Page section          | Purpose in the surface                                      | Runtime state    |
+| ---------------- | --------------------- | ----------------------------------------------------------- | ---------------- |
+| `PageContainer`  | root                  | owns `<main>`, width and gutters                            | static           |
+| `Stack`          | all sections          | vertical rhythm and wrapping inline rows                    | static           |
+| `Grid`           | layout evidence       | two intrinsically wrapping panels                           | static           |
+| `VisuallyHidden` | counter row           | labelled counter value for the accessibility tree           | reflects counter |
+| `Badge`          | compact feedback      | `Technical` categorical marker                              | static           |
+| `Status`         | compact feedback      | `Verification surface` current state                        | static           |
+| `Counter`        | compact feedback      | demonstration count, `aria-hidden`, tone shifts at > 0      | route state      |
+| `Button`         | actions, form         | increment, submit, reset                                    | interactive      |
+| `IconButton`     | actions               | counter reset, technical `↺` glyph                          | interactive      |
+| `Link`           | navigation            | the three existing route targets                            | static           |
+| `TextField`      | form                  | `m3-demo-name`, required, receives owner error              | uncontrolled     |
+| `Textarea`       | form                  | `m3-demo-notes`, description                                | uncontrolled     |
+| `Select`         | form                  | `m3-demo-category`, required, receives owner error          | uncontrolled     |
+| `Checkbox`       | form                  | `Receive demonstration updates`                             | uncontrolled     |
+| `Radio`          | form                  | two choices inside a native `fieldset`/`legend`             | uncontrolled     |
+| `Switch`         | form                  | `Enable compact notifications`                              | uncontrolled     |
+| `InlineStatus`   | identity, form result | static `info` notice; `success` result with `role="status"` | route state      |
+| `ErrorSummary`   | form                  | invalid-submit summary and focus target                     | route state      |
+
+The `↺` glyph in `IconButton` is a plain text character inside the component-owned decorative wrapper. **It is not a production icon asset and does not resolve the icon-system question.**
+
+### Route-local state
+
+Three `useState` values only: the counter, the field errors and the success result. Form values are read uncontrolled through `FormData` on submit. There is no context, provider, reducer framework, store, persistence, query cache, async simulation, artificial delay, timer, mock request or event bus.
+
+### Form validation owner
+
+The route owns validation, not the primitives. It checks two things — `Name` non-blank and `Category` selected — with no schema, no form library, no generic hook and no reusable validation layer. The form carries `noValidate` because the owner, not the browser, decides when and how errors surface. Nothing is submitted anywhere.
+
+### Announcement ownership
+
+This is the point of the exercise, and the page keeps exactly one announcement owner per event:
+
+- The route announcement region in `RootLayout` is untouched.
+- The counter is **silent**: `Counter` carries no role and no live region, and incrementing or resetting it announces nothing.
+- The initial technical `InlineStatus` has **no** role, so it never announces.
+- Invalid submit is **focus-based, not announcement-based**: `ErrorSummary` gets no `role="alert"` and no live region; the owner moves focus to it instead.
+- The success `InlineStatus role="status"` is the **sole** live owner, and only after a valid submit.
+
+There is no second live region, no toast and no duplicated announcement anywhere on the page.
+
+### ErrorSummary focus flow
+
+Invalid submit builds the error map, renders the summary, and the owner focuses it through the ref in an effect. Each summary item links to the real control id — `#m3-demo-name`, `#m3-demo-category` — and activating a link moves focus to that native control. Reset clears errors, the summary and the result **without** moving focus, so it cannot steal focus from the user.
+
+### Responsive and browser evidence
+
+Six new Playwright scenarios cover the runtime surface (no page or console errors), counter actions, the invalid-submit focus flow, the valid-submit single result, a seven-viewport layout and target sweep (320, 767, 768, 1023, 1024, 1279, 1280 px) asserting no horizontal overflow, unclipped labels and ≥ 44 px targets for `Button`, `IconButton` and the choice rows, and a reduced-motion plus forced-colors axe scan of the invalid state with zero violations.
+
+**Viewport width is not zoom.** These scenarios do not prove 200 % or 400 % reflow, real forced-colors rendering, coarse-pointer behaviour or screen-reader output — those remain the user's manual browser review.
+
+### Bundle delta
+
+| Artefact            | Before (M3-04)     | After (M3-05)      |
+| ------------------- | ------------------ | ------------------ |
+| Total raw / gzip    | 371.38 / 114.00 KB | 406.68 / 122.01 KB |
+| Entry JS raw / gzip | 365.60 / 111.08 KB | 365.80 / 111.20 KB |
+| Home route chunk    | 0.73 / 0.37 KB     | 20.07 / 5.81 KB    |
+| Global CSS          | 2.94 / 1.19 KB     | 2.94 / 1.19 KB     |
+| Route CSS chunk     | none               | 15.77 / 2.46 KB    |
+
+The important result: **Shared UI stayed inside the lazy Home boundary.** The entry chunk grew by 0.20 KB raw and 0.12 KB gzip — noise — while the Home route chunk and a new route CSS chunk absorbed the integration. Nothing eagerly imports Home from the app shell, the other four route chunks are unchanged, no duplicate chunk appeared, MSW stays excluded and no source maps are emitted. No budget is set and no manual chunking was added.
+
+### Automated tests
+
+`tests/routes/home/home-page.test.tsx` adds 18 route-level tests covering structure, evidence for all eighteen primitives, the counter flow, the invalid and valid submit flows and reset. The existing smoke suite needed **no** change. Full suite: **36 files, 522 tests**. Expected CI E2E after this change: **23** (17 preserved + 6 new).
+
+### Rejected variants
+
+A separate showcase route; a canonical Home implementation; Header/Footer/logo; a Storybook or component-explorer dependency; new shared `Card`, `Form` or `RadioGroup` abstractions; deep imports; importing `Link` from `react-router-dom`; a toast; an async mock submit; React Hook Form or Zod; visual snapshot baselines; an auto-announcing counter or error summary; and running a local server or E2E.
+
+### Known limitations
+
+The page is a technical surface with no visual-fidelity claim. The `↺` glyph is not an icon system. JSDOM and viewport sweeps cannot substitute for the manual browser review. Nothing here approves canonical Home, Header, Footer or logo consumption.
+
+### Closure gates
+
+M3 is **not** closed. Closure requires the independent diff audit of the M3-05 commit, a successful GitHub Actions run for that exact SHA, the user's browser review against the checklist, and any external canonical-source synchronisation the closure review identifies.
+
+### M4 boundary
+
+M4 remains the first milestone permitted to build the canonical shell — Header, Information Bar, Catalog Navigation, Footer — and to consume the brand logo at runtime. None of that is started here.
+
 ## Next Permitted Step
 
-The only permitted next step is an **independent diff audit of the M3-04 commit**, followed by GitHub Actions CI for it.
+The only permitted next step is an **independent diff audit of the M3-05 commit**, followed by GitHub Actions CI for it and the user's browser review.
 
-M3-05 must not begin until M3-04 is recorded as APPROVED AND CLOSED. No M4 work and no domain work is authorised by this report.
+M4 must not begin until M3 is recorded as APPROVED AND CLOSED. No domain work is authorised by this report.

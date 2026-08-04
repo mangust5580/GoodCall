@@ -193,3 +193,199 @@ test.describe('M1 Routing and Navigation', () => {
     await expect(page.locator('h1')).toContainText('Category');
   });
 });
+
+const TECHNICAL_NOTICE = 'Technical Shared UI verification surface';
+const SUCCESS_RESULT = 'Demonstration form validated. No data was sent.';
+const SUMMARY_TITLE = 'Fix these demonstration fields';
+
+const VERIFICATION_VIEWPORTS = [
+  { width: 320, height: 568 },
+  { width: 767, height: 800 },
+  { width: 768, height: 800 },
+  { width: 1023, height: 800 },
+  { width: 1024, height: 800 },
+  { width: 1279, height: 800 },
+  { width: 1280, height: 800 },
+];
+
+test.describe('M3 Shared UI integration', () => {
+  test('technical verification surface renders without runtime errors', async ({ page }) => {
+    const pageErrors: string[] = [];
+    const consoleErrors: string[] = [];
+
+    page.on('pageerror', (error) => {
+      pageErrors.push(error.message);
+    });
+
+    page.on('console', (msg) => {
+      if (msg.type() === 'error') {
+        consoleErrors.push(msg.text());
+      }
+    });
+
+    await page.goto('');
+
+    await expect(page.getByText(TECHNICAL_NOTICE)).toBeVisible();
+    await expect(page.getByRole('navigation', { name: 'Route navigation' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Compact feedback and actions' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Layout primitives' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Form controls' })).toBeVisible();
+    await expect(page.locator('main#main-content')).toHaveCount(1);
+    await expect(page.locator('h1')).toHaveCount(1);
+    expect(pageErrors).toHaveLength(0);
+    expect(consoleErrors).toHaveLength(0);
+  });
+
+  test('counter increments and resets without announcing', async ({ page }) => {
+    await page.goto('');
+
+    const counter = page.getByTestId('demo-counter');
+    const increment = page.getByRole('button', { name: 'Increment demonstration counter' });
+    const reset = page.getByRole('button', { name: 'Reset demonstration counter' });
+
+    await expect(counter).toHaveText('0');
+
+    await increment.focus();
+    await page.keyboard.press('Enter');
+    await increment.click();
+
+    await expect(counter).toHaveText('2');
+    await expect(counter).not.toHaveAttribute('role', /.*/);
+    await expect(counter).not.toHaveAttribute('aria-live', /.*/);
+    await expect(page.getByRole('status')).toHaveCount(0);
+
+    await reset.click();
+
+    await expect(counter).toHaveText('0');
+    await expect(page.getByRole('status')).toHaveCount(0);
+  });
+
+  test('invalid submit moves focus to the error summary', async ({ page }) => {
+    await page.goto('');
+
+    const submit = page.getByRole('button', { name: 'Validate demonstration form' });
+    await submit.focus();
+    await page.keyboard.press('Enter');
+
+    const summary = page.getByRole('region', { name: SUMMARY_TITLE });
+
+    await expect(summary).toBeVisible();
+    await expect(summary).toBeFocused();
+    await expect(page.getByRole('alert')).toHaveCount(0);
+
+    await summary.getByRole('link', { name: 'Enter a demonstration name' }).click();
+
+    await expect(page.locator('#m3-demo-name')).toBeFocused();
+  });
+
+  test('valid submit produces exactly one status result', async ({ page }) => {
+    await page.goto('');
+
+    await page.locator('#m3-demo-name').fill('Demonstration');
+    await page.locator('#m3-demo-category').selectOption('laptops');
+    await page.getByRole('button', { name: 'Validate demonstration form' }).click();
+
+    const results = page.getByRole('status');
+
+    await expect(results).toHaveCount(1);
+    await expect(results).toContainText(SUCCESS_RESULT);
+    await expect(page.getByRole('region', { name: SUMMARY_TITLE })).toHaveCount(0);
+    await expect(page.getByRole('alert')).toHaveCount(0);
+  });
+
+  test('layout and interactive targets hold across verification viewports', async ({ page }) => {
+    for (const viewport of VERIFICATION_VIEWPORTS) {
+      await page.setViewportSize(viewport);
+      await page.goto('');
+
+      const overflow = await page.evaluate(
+        () => document.documentElement.scrollWidth - document.documentElement.clientWidth
+      );
+      expect(overflow, `horizontal overflow at ${viewport.width}px`).toBeLessThanOrEqual(1);
+
+      await expect(page.locator('main#main-content')).toBeVisible();
+      await expect(page.locator('h1')).toBeVisible();
+
+      const labelClipping = await page.evaluate(() =>
+        Array.from(document.querySelectorAll('label')).some(
+          (label) => label.scrollWidth - label.clientWidth > 1
+        )
+      );
+      expect(labelClipping, `clipped label at ${viewport.width}px`).toBe(false);
+
+      const primaryButton = await page
+        .getByRole('button', { name: 'Increment demonstration counter' })
+        .boundingBox();
+      expect(primaryButton?.width, `button width at ${viewport.width}px`).toBeGreaterThanOrEqual(
+        44
+      );
+      expect(primaryButton?.height, `button height at ${viewport.width}px`).toBeGreaterThanOrEqual(
+        44
+      );
+
+      const iconButton = await page
+        .getByRole('button', { name: 'Reset demonstration counter' })
+        .boundingBox();
+      expect(iconButton?.width, `icon button width at ${viewport.width}px`).toBeGreaterThanOrEqual(
+        44
+      );
+      expect(
+        iconButton?.height,
+        `icon button height at ${viewport.width}px`
+      ).toBeGreaterThanOrEqual(44);
+
+      const choiceTargetsUsable = await page.evaluate(() =>
+        Array.from(document.querySelectorAll('input[type="checkbox"], input[type="radio"]')).every(
+          (input) => {
+            const label = input.closest('label');
+
+            if (label === null) {
+              return false;
+            }
+
+            const labelRect = label.getBoundingClientRect();
+            const inputRect = input.getBoundingClientRect();
+
+            return labelRect.height >= 44 && labelRect.width > inputRect.width;
+          }
+        )
+      );
+      expect(choiceTargetsUsable, `choice target too small at ${viewport.width}px`).toBe(true);
+    }
+  });
+
+  test('reduced motion and forced colors keep the invalid state accessible', async ({ page }) => {
+    const pageErrors: string[] = [];
+    const consoleErrors: string[] = [];
+
+    page.on('pageerror', (error) => {
+      pageErrors.push(error.message);
+    });
+
+    page.on('console', (msg) => {
+      if (msg.type() === 'error') {
+        consoleErrors.push(msg.text());
+      }
+    });
+
+    await page.emulateMedia({ reducedMotion: 'reduce', forcedColors: 'active' });
+    await page.goto('');
+
+    await page.getByRole('button', { name: 'Validate demonstration form' }).click();
+
+    const summary = page.getByRole('region', { name: SUMMARY_TITLE });
+    await expect(summary).toBeVisible();
+    await expect(summary).toBeFocused();
+
+    const results = await new AxeBuilder({ page }).analyze();
+
+    expect(results.violations).toHaveLength(0);
+    expect(pageErrors).toHaveLength(0);
+    expect(consoleErrors).toHaveLength(0);
+
+    const summaryLink = summary.getByRole('link', { name: 'Enter a demonstration name' });
+    await summaryLink.focus();
+    await expect(summaryLink).toBeFocused();
+    await expect(summaryLink).toBeVisible();
+  });
+});

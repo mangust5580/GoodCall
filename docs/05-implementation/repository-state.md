@@ -228,8 +228,49 @@ src/styles/foundations/_semantic.scss     Added --gc-brand-primary, --gc-brand-i
 - Assets are **not** consumed by the Shell or any component. No Header, Footer or shared logo component exists.
 - No route, dependency or lockfile change.
 - M2B awaits independent repository diff audit and GitHub Actions CI success.
-- M3 has not started.
 - M4 canonical shell integration, which owns runtime consumption of these assets, is deferred.
+
+The M2B section above is a **baseline snapshot** taken at that milestone; for the current Shared UI state see the M3 note below.
+
+## Milestone State Note — M3 Shared UI (2026-08-04)
+
+The "Created Files Summary" and "Directory Tree" sections at the top of this document describe the M0 baseline and are historical snapshots. `src/shared/ui` is **no longer empty** — it is the implemented Shared UI layer.
+
+### Structure
+
+`src/shared/ui` is organised by family, each component owning a directory with its `.tsx` and co-located `.module.scss`:
+
+```
+src/shared/ui/
+├── accessibility/VisuallyHidden/
+├── actions/          Button, IconButton, Link + internal/
+├── feedback/         Badge, Counter, ErrorSummary, InlineStatus, Status + internal/
+├── forms/            Checkbox, Radio, Select, Switch, Textarea, TextField + internal/
+├── internal/         class-names.ts
+├── layout/           Grid, PageContainer, Stack + internal/
+└── index.ts          the only barrel
+```
+
+Family-specific helpers live in that family's `internal/`; only `class-names.ts` is shared. There is no `index.ts` in any category, component or internal directory.
+
+### Public API
+
+`src/shared/ui/index.ts` is the **single** public entry point and exports exactly **18 runtime components**: `Badge`, `Button`, `Checkbox`, `Counter`, `ErrorSummary`, `Grid`, `IconButton`, `InlineStatus`, `Link`, `PageContainer`, `Radio`, `Select`, `Stack`, `Status`, `Switch`, `Textarea`, `TextField`, `VisuallyHidden`, plus their public types. Everything outside `src/shared/ui/**` imports from `@/shared/ui`; deep imports are prohibited and no private helper is exported.
+
+### Runtime consumption
+
+The technical Home placeholder (`src/routes/home/HomePage.tsx` and its route-local `HomePage.module.scss`) consumes all eighteen primitives as a **Shared UI verification surface**. It is explicitly not the canonical storefront Home and states so in visible copy.
+
+- No Header, Footer, navigation shell or logo component exists.
+- The six tracked brand SVGs remain **unconsumed** at runtime.
+- Route registry, paths, titles, loaders, error boundaries and `RootLayout` are unchanged.
+
+### State at report time
+
+- Test suite: **522 tests across 36 files**; expected CI E2E: **23**.
+- M3-01 through M3-04 are APPROVED AND CLOSED.
+- **M3-05 awaits independent diff audit, GitHub Actions CI and user browser review.** M3 is not closed.
+- M4 — canonical shell and runtime logo consumption — remains deferred.
 
 ## Next Repository Modifications
 

@@ -1,0 +1,49 @@
+.page {
+  padding-block: var(--gc-spacing-lg);
+}
+
+.page-title {
+  margin-block: 0;
+  overflow-wrap: break-word;
+}
+
+.notice {
+  margin: 0;
+  font-weight: 600;
+  overflow-wrap: break-word;
+}
+
+.section-title {
+  margin-block: 0;
+  overflow-wrap: break-word;
+}
+
+.panel {
+  min-inline-size: 0;
+  padding: var(--gc-spacing-md);
+  border: 1px solid var(--gc-border);
+  border-radius: 0.25rem;
+  background-color: var(--gc-surface);
+  overflow-wrap: break-word;
+
+  @media (forced-colors: active) {
+    border-color: canvastext;
+  }
+}
+
+.panel-title {
+  margin-block: 0 var(--gc-spacing-sm);
+  font-size: var(--gc-font-size-heading-section);
+  line-height: var(--gc-line-height-heading);
+}
+
+.fieldset {
+  min-inline-size: 0;
+  padding: var(--gc-spacing-md);
+  border: 1px solid var(--gc-border);
+  border-radius: 0.25rem;
+
+  @media (forced-colors: active) {
+    border-color: canvastext;
+  }
+}

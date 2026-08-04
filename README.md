@@ -97,7 +97,13 @@ src/
     commerce/            # Commerce routes
     error/               # Error routes
   shared/                # Reusable shared components
-    ui/                  # UI components
+    ui/                  # Shared UI layer — single public entry point (index.ts)
+      accessibility/     # VisuallyHidden
+      actions/           # Button, IconButton, Link
+      feedback/          # Badge, Counter, ErrorSummary, InlineStatus, Status
+      forms/             # Checkbox, Radio, Select, Switch, Textarea, TextField
+      layout/            # Grid, PageContainer, Stack
+      internal/          # private helpers (never exported)
   styles/                # Global styles
     foundations/         # Reset, typography, color, accessibility
     tools/               # Mixins and utilities
@@ -193,6 +199,26 @@ Notes:
 
 For details, see [M2A Foundations Report](docs/05-implementation/m2-foundations-report.md) and [M2B Brand Assets Report](docs/05-implementation/m2-brand-assets-report.md).
 
+## Shared UI
+
+`src/shared/ui` provides 18 native-semantic primitives grouped by family:
+
+- **Layout** — `PageContainer`, `Stack`, `Grid`
+- **Accessibility** — `VisuallyHidden`
+- **Actions** — `Button`, `Link`, `IconButton`
+- **Forms** — `TextField`, `Textarea`, `Select`, `Checkbox`, `Radio`, `Switch`
+- **Feedback** — `Badge`, `Counter`, `Status`, `InlineStatus`, `ErrorSummary`
+
+**Import rule:** always through the single public entry point. Deep imports into component or internal paths are prohibited.
+
+```tsx
+import { Button, Stack, TextField } from '@/shared/ui';
+```
+
+The Home route is currently a **technical Shared UI verification surface**, not the canonical storefront Home page — it exists to exercise these primitives and will be replaced in a later milestone. No Header, Footer or logo component exists yet.
+
+For details, see [M3 Shared UI Report](docs/05-implementation/m3-shared-ui-report.md).
+
 ### Testing
 
 - **Unit/Component**: Vitest + React Testing Library
@@ -228,6 +254,7 @@ For details, see [M1 Routing Report](docs/05-implementation/m1-routing-report.md
 - [M2A Asset Intake Handoff](docs/05-implementation/m2-asset-intake.md)
 - [M2B Brand Assets Report](docs/05-implementation/m2-brand-assets-report.md)
 - [M2B Brand Asset Manifest](docs/05-implementation/m2-brand-asset-manifest.json)
+- [M3 Shared UI Report](docs/05-implementation/m3-shared-ui-report.md)
 - [Repository State](docs/05-implementation/repository-state.md)
 - [Tooling Versions](docs/05-implementation/tooling-versions.md)
 
