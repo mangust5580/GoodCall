@@ -2,15 +2,15 @@
 
 ## Status
 
-| Task                                                           | Status                                            |
-| -------------------------------------------------------------- | ------------------------------------------------- |
-| M3-01 — Shared UI scaffold, layout and accessibility utilities | **APPROVED AND CLOSED**                           |
-| M3-01A — VisuallyHidden accessibility contract correction      | **APPROVED AND CLOSED**                           |
-| M3-02 / M3-02A / M3-02B — Semantic action primitives           | **APPROVED AND CLOSED**                           |
-| M3-03 — Native form controls baseline                          | superseded by M3-03A                              |
-| M3-03A — Form content ownership and choice target correction   | **CORRECTED — AWAITING INDEPENDENT AUDIT AND CI** |
+| Task                                                           | Status                                              |
+| -------------------------------------------------------------- | --------------------------------------------------- |
+| M3-01 — Shared UI scaffold, layout and accessibility utilities | **APPROVED AND CLOSED**                             |
+| M3-01A — VisuallyHidden accessibility contract correction      | **APPROVED AND CLOSED**                             |
+| M3-02 / M3-02A / M3-02B — Semantic action primitives           | **APPROVED AND CLOSED**                             |
+| M3-03 / M3-03A — Native form controls baseline                 | **APPROVED AND CLOSED**                             |
+| M3-03B — Shared UI directory organization                      | **IMPLEMENTED — AWAITING INDEPENDENT AUDIT AND CI** |
 
-This report covers the Shared UI layer of milestone M3. It records local verification for the task under review. No approval is claimed for M3-03 and no later M3 task has started.
+This report covers the Shared UI layer of milestone M3. It records local verification for the task under review. No approval is claimed for M3-03B and no later M3 task has started.
 
 ### M3-01 / M3-01A closure evidence
 
@@ -38,6 +38,20 @@ M3-02 was started only after both conditions were satisfied.
 | CI scope           | TypeCheck, ESLint, Stylelint, Prettier, comment check, 234 unit/integration tests, production build, build validation, 17 Playwright E2E tests |
 
 M3-03 was started only after that closure was confirmed.
+
+### M3-03 closure evidence
+
+| Item               | Value                                                                                                                                          |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| Final commit       | `dcbbdbdc468df3e890d9de6a1910e991608b8684` (M3-03A)                                                                                            |
+| Independent audit  | APPROVED                                                                                                                                       |
+| GitHub Actions run | 30917346647                                                                                                                                    |
+| Run URL            | https://github.com/mangust5580/GoodCall/actions/runs/30917346647                                                                               |
+| Job                | 92018726914 — `test (24.x)`                                                                                                                    |
+| Conclusion         | success                                                                                                                                        |
+| CI scope           | TypeCheck, ESLint, Stylelint, Prettier, comment check, 422 unit/integration tests, production build, build validation, 17 Playwright E2E tests |
+
+M3-03B was started only after that closure was confirmed.
 
 ## M3-01 Scope
 
@@ -623,7 +637,7 @@ No existing M3-01 or M3-02 component, style or helper was modified. Routes, shel
 
 ## M3-03A — Form content ownership and choice target correction
 
-**Status: CORRECTED — AWAITING INDEPENDENT AUDIT AND CI**
+**Status: APPROVED AND CLOSED** with M3-03 — see [M3-03 closure evidence](#m3-03-closure-evidence).
 
 The independent audit returned CHANGES REQUIRED on M3-03 with two blocking findings. A successful CI run on the M3-03 commit did not close it: neither defect is detectable by typecheck, lint or the build.
 
@@ -682,8 +696,69 @@ All new tests were confirmed failing against the M3-03 implementation before the
 
 No public API, prop name, type union, runtime export, controlled/uncontrolled behaviour, id association, described-by order, error ownership, native required, ref target, Select options contract, Checkbox indeterminate, Radio grouping or Switch role changed. `Select.tsx`, the six component SCSS modules, `index.ts`, `public-api.test.ts`, M3-01, M3-02, routes, shell, foundations, assets, dependencies and configuration are all untouched, and no M3-04 work is present.
 
+## M3-03B — Shared UI directory organization
+
+**Status: IMPLEMENTED — AWAITING INDEPENDENT AUDIT AND CI**
+
+A pure structural refactor. No public API, runtime behaviour, style declaration, test assertion, dependency or bundle output changed — only file locations and the import paths that follow from them.
+
+### Why
+
+`src/shared/ui` had grown to 37 files in one flat directory, mixing public components, their styles, family-specific private helpers, a shared private helper, Sass partials and the public barrel at a single level. After M3-03 that directory holds four distinct families. Carrying the flat layout into M3-04 would keep degrading navigation, helper ownership, reviewability and the visibility of family boundaries. This is an organisational concern, not a runtime defect, so it is isolated in its own commit rather than mixed into functional work.
+
+### Source tree
+
+```
+src/shared/ui/
+├── accessibility/VisuallyHidden/   VisuallyHidden.tsx + .module.scss
+├── actions/
+│   ├── Button/                     Button.tsx + .module.scss
+│   ├── IconButton/                 IconButton.tsx + .module.scss
+│   ├── Link/                       Link.tsx + .module.scss
+│   └── internal/                   _action-base.scss, action-variant.ts, forwarded-props.ts
+├── forms/
+│   ├── Checkbox/ Radio/ Select/ Switch/ Textarea/ TextField/
+│   └── internal/                   FieldShell.tsx + .module.scss, _field-base.scss,
+│                                   field-association.ts, field-props.ts
+├── internal/                       class-names.ts
+├── layout/
+│   ├── Grid/ PageContainer/ Stack/
+│   └── internal/                   spacing.ts
+└── index.ts                        the only barrel
+```
+
+### Test tree
+
+```
+tests/shared/ui/
+├── accessibility/   visually-hidden.test.tsx, visually-hidden-props.test.ts
+├── actions/         button, icon-button, link, action-props
+├── forms/           checkbox, radio, select, switch, text-field, textarea,
+│                    form-control-contract, form-control-props
+├── layout/          grid, page-container, stack
+└── public-api.test.ts
+```
+
+### Ownership rules
+
+Each component owns a directory holding its `.tsx` and its co-located `.module.scss`. Helpers used by exactly one family live in that family's `internal/`; only `class-names.ts`, which every family uses, sits in the shared `src/shared/ui/internal/`.
+
+`internal` marks private implementation and is never exported as runtime API. `src/shared/ui/index.ts` remains the **single** barrel — there is no `index.ts` in any category, component or internal directory, so there is no ambiguity about the entry point and no accidental re-export surface.
+
+Within Shared UI, imports are relative and reach only downward or into a shared internal. Family boundaries are enforced by inspection: `actions` never imports from `forms`, `forms` never from `actions`, and neither `layout` nor `accessibility` imports from either. Sass partials are reached through `../internal/…` from their family's components.
+
+### Deep imports remain prohibited
+
+Everything outside `src/shared/ui/**` imports from `@/shared/ui` only. No alias, subpath export or package-style entry point was added for the new directories, so the nesting is invisible to consumers and cannot become a coupling surface.
+
+### Unchanged
+
+The 13 runtime exports and all 25 public type exports are identical. No component prop, JSX structure, DOM output, runtime guard, forwarded-prop filter, ID generation, accessibility semantics, keyboard behaviour, controlled/uncontrolled behaviour, ref, association contract, style declaration, token or CSS value changed. Test count stays at 422 and every assertion is untouched — all 17 moved test files are byte-identical to their previous versions. Dependencies, lockfile, build configuration, routes, foundations and assets are untouched, and the bundle report is unchanged.
+
+Git records the migration as renames rather than delete/create, so the history of every file is preserved and the diff is reviewable as a move.
+
 ## Next Permitted Step
 
-The only permitted next step is an **independent diff audit of the M3-03A commit**, followed by GitHub Actions CI for it.
+The only permitted next step is an **independent structural diff audit of the M3-03B commit**, followed by GitHub Actions CI for it.
 
-M3-04 must not begin until M3-03 is recorded as APPROVED AND CLOSED. No M4 work and no domain work is authorised by this report.
+M3-04 must not begin until M3-03B is recorded as APPROVED AND CLOSED. No M4 work and no domain work is authorised by this report.

@@ -1,8 +1,0 @@
-@use './field-base' as field;
-
-.control {
-  @include field.text-control;
-
-  min-block-size: 6rem;
-  resize: vertical;
-}

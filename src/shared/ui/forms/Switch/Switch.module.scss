@@ -1,0 +1,5 @@
+@use '../internal/field-base' as field;
+
+.control {
+  @include field.choice-control;
+}

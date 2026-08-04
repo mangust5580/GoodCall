@@ -1,0 +1,21 @@
+@use '../internal/action-base' as action;
+
+.link {
+  @include action.target;
+}
+
+.variant-primary {
+  @include action.primary;
+
+  text-decoration: underline;
+}
+
+.variant-secondary {
+  @include action.secondary;
+
+  text-decoration: underline;
+}
+
+.variant-tertiary {
+  @include action.tertiary;
+}
