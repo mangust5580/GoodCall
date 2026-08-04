@@ -115,6 +115,28 @@ describe('Select', () => {
     expect(screen.queryByRole('listbox')).toBeNull();
   });
 
+  it('keeps its public option children after the conflict filter runs', async () => {
+    const user = userEvent.setup();
+    render(
+      <Select label="Delivery" defaultValue="courier">
+        <optgroup label="Fast">
+          <option value="courier">Courier</option>
+        </optgroup>
+        <option value="pickup">Pickup</option>
+      </Select>
+    );
+    const control = screen.getByRole('combobox', { name: 'Delivery' });
+
+    expect(within(control).getAllByRole('option')).toHaveLength(2);
+    expect(within(control).getByRole('group', { name: 'Fast' })).toBeInTheDocument();
+    expect(control).not.toHaveAttribute('multiple');
+    expect(control).toHaveValue('courier');
+
+    await user.selectOptions(control, 'pickup');
+
+    expect(control).toHaveValue('pickup');
+  });
+
   it('forwards the ref to the native select', () => {
     const ref = createRef<HTMLSelectElement>();
     render(

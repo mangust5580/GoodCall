@@ -2,12 +2,13 @@
 
 ## Status
 
-| Task                                                           | Status                                              |
-| -------------------------------------------------------------- | --------------------------------------------------- |
-| M3-01 — Shared UI scaffold, layout and accessibility utilities | **APPROVED AND CLOSED**                             |
-| M3-01A — VisuallyHidden accessibility contract correction      | **APPROVED AND CLOSED**                             |
-| M3-02 / M3-02A / M3-02B — Semantic action primitives           | **APPROVED AND CLOSED**                             |
-| M3-03 — Native form controls baseline                          | **IMPLEMENTED — AWAITING INDEPENDENT AUDIT AND CI** |
+| Task                                                           | Status                                            |
+| -------------------------------------------------------------- | ------------------------------------------------- |
+| M3-01 — Shared UI scaffold, layout and accessibility utilities | **APPROVED AND CLOSED**                           |
+| M3-01A — VisuallyHidden accessibility contract correction      | **APPROVED AND CLOSED**                           |
+| M3-02 / M3-02A / M3-02B — Semantic action primitives           | **APPROVED AND CLOSED**                           |
+| M3-03 — Native form controls baseline                          | superseded by M3-03A                              |
+| M3-03A — Form content ownership and choice target correction   | **CORRECTED — AWAITING INDEPENDENT AUDIT AND CI** |
 
 This report covers the Shared UI layer of milestone M3. It records local verification for the task under review. No approval is claimed for M3-03 and no later M3 task has started.
 
@@ -221,7 +222,7 @@ The corrective commit cannot record its own hash inside this file, since the fil
 
 ## M3-02 — Semantic action primitives
 
-**Status: IMPLEMENTED — AWAITING INDEPENDENT AUDIT AND CI**
+**Status: APPROVED AND CLOSED** with M3-02A and M3-02B — see [M3-02 closure evidence](#m3-02-closure-evidence).
 
 M3-02 adds three dedicated, native-semantic action siblings. They are ready for M4 and later route and domain milestones, but nothing consumes them yet.
 
@@ -488,7 +489,7 @@ No style file, variant, loading visual, disabled visual, minimum target size, fo
 
 ## M3-03 — Native form controls baseline
 
-**Status: IMPLEMENTED — AWAITING INDEPENDENT AUDIT AND CI**
+**Status: superseded by [M3-03A](#m3-03a--form-content-ownership-and-choice-target-correction)** — the independent audit returned CHANGES REQUIRED on this commit.
 
 M3-03 adds six native-semantic form controls and the private mechanism that gives them a consistent label, description, error and association contract. It implements no form architecture: no form state, no schema, no submission lifecycle and no route integration.
 
@@ -569,7 +570,9 @@ There is no `RadioGroup` export and no ARIA radiogroup reimplementation — the 
 
 Type-level omission does not survive a JSX spread, so each control also filters a fixed conflict set before forwarding and applies its owned attributes afterwards.
 
-Common set removed from every control (18 keys): `style`, `role`, `tabIndex`, `hidden`, `inert`, `contentEditable`, `dangerouslySetInnerHTML`, `autoFocus`, `aria-label`, `aria-labelledby`, `aria-invalid`, `aria-errormessage`, `aria-disabled`, `aria-readonly`, `aria-required`, `aria-busy`, `aria-hidden`, `aria-checked`. `Select` additionally strips `multiple`, `size` and `readOnly`; the choice controls additionally strip `type`, `readOnly` and `indeterminate`.
+Common set removed from every control (19 keys): `children`, `style`, `role`, `tabIndex`, `hidden`, `inert`, `contentEditable`, `dangerouslySetInnerHTML`, `autoFocus`, `aria-label`, `aria-labelledby`, `aria-invalid`, `aria-errormessage`, `aria-disabled`, `aria-readonly`, `aria-required`, `aria-busy`, `aria-hidden`, `aria-checked`. `Select` additionally strips `multiple`, `size` and `readOnly`; the choice controls additionally strip `type`, `readOnly` and `indeterminate`.
+
+`children` is stripped at runtime as well as removed from five public types, so a spread cannot reach a void `<input>` or become a `<textarea>` value. `Select` destructures its own public `children` before the filter runs, so its consumer-owned options are unaffected — see [M3-03A](#m3-03a--form-content-ownership-and-choice-target-correction).
 
 `aria-describedby` is deliberately _not_ blind-forwarded — it is destructured, merged into the ordered association, and re-applied by the component.
 
@@ -577,7 +580,9 @@ The three filters are private, share a static key set, remove only those keys, n
 
 ### Technical, non-canonical styles
 
-Technical baseline values, **not** canonical design tokens: 44 × 44 px minimum interactive target, `0.25rem` radius, `1px` border (`2px` when invalid), `1.25rem` choice-control box, `6rem` textarea minimum height. Colours come only from existing `--gc-*` semantic tokens; no global token was added or changed and `src/styles/**` is untouched.
+Technical baseline values, **not** canonical design tokens: 44 px minimum block size on the interactive target, `0.25rem` radius, `1px` border (`2px` when invalid), `1.25rem` choice-control box, `6rem` textarea minimum height. Colours come only from existing `--gc-*` semantic tokens; no global token was added or changed and `src/styles/**` is untouched.
+
+For choice controls the 44 px minimum is applied to the `<label>` that wraps the native input and spans the row, so the whole visible row is the activation area — not to a non-interactive wrapper. The native input keeps its `1.25rem` box because the enclosing label, not the input, is the pointer target. Rendered pixel size is not measurable in JSDOM and remains subject to the browser review at M3-05; the tests prove structural ownership only.
 
 Text controls use `min-block-size` rather than a fixed height, wrappers and labels allow `min-inline-size: 0` and wrap, and the textarea stays resizable, so nothing clips or scrolls horizontally at zoom. Forced-colors falls back to system colours (`canvastext`, `highlight`, `graytext`) so boundary, focus, invalid and disabled distinctions survive. No animation or transition is required to understand any state.
 
@@ -616,8 +621,69 @@ After M3-03 `@/shared/ui` exports exactly thirteen components: `Button`, `Checkb
 
 No existing M3-01 or M3-02 component, style or helper was modified. Routes, shell, foundations, assets, dependencies, lockfile, build scripts, CI workflows and all tooling configuration are untouched, and no M3-04 work is present.
 
+## M3-03A — Form content ownership and choice target correction
+
+**Status: CORRECTED — AWAITING INDEPENDENT AUDIT AND CI**
+
+The independent audit returned CHANGES REQUIRED on M3-03 with two blocking findings. A successful CI run on the M3-03 commit did not close it: neither defect is detectable by typecheck, lint or the build.
+
+### FORM-RUNTIME-01 — children reached the native control through a spread
+
+`children` was excluded from the five no-children public types but was **not** in the runtime conflict set, so an ordinary object bypassed excess-property checking:
+
+```tsx
+const forwarded = { children: 'Wrong content' };
+<TextField label="Name" {...forwarded} />;
+```
+
+The consequences were real, not theoretical: React threw `input is a void element tag and must neither have children nor use dangerouslySetInnerHTML` for `TextField`, `Checkbox`, `Radio` and `Switch`, and `Textarea` silently adopted the injected text as its content — the children-as-value path the contract explicitly forbids. The existing spread-object test did not include `children`, so nothing caught it.
+
+**Correction.** `children` was added to the private conflict set and is now destructured and discarded by all three filters, so it is removed before anything is forwarded. No component file needed to change. `Select` destructures its own public `children` before calling the filter, so its consumer-owned `<option>` and `<optgroup>` composition is untouched and its API is unchanged.
+
+### FORM-A11Y-01 — the 44 px target was on a non-interactive wrapper
+
+The choice layout rendered the input and the label as siblings inside a `div`:
+
+```
+div.field
+└── div.choice-row      ← min-block-size: 44px, but not clickable
+    ├── input           ← 1.25rem × 1.25rem
+    └── label           ← only as large as its own text
+```
+
+The 44 px belonged to a `div` that activates nothing. The real pointer targets were the 1.25rem input and the label text; the empty space in the row did nothing. The documented minimum interactive target was therefore not met.
+
+**Correction.** The row _is_ the label now:
+
+```
+div.field
+├── label.choice-row          ← min-block-size: 44px, inline-size: 100%, cursor: pointer
+│   ├── input                 ← native control, first in DOM order
+│   └── span.choice-copy
+│       ├── span.choice-text  ← visible label text
+│       └── span.required     ← aria-hidden decorative indication
+├── description
+└── error
+```
+
+The native input is a descendant of the label, `htmlFor` is retained for explicit association, and the label carries the 44 px minimum and stretches across the row — so any point in the visible row activates the control. There is no click handler, no `preventDefault`, no role simulation and no JavaScript target enlargement; activation is entirely native label behaviour. The input remains the focus and form control, keeps its native appearance with no `appearance: none`, and native checked, selected and mixed rendering is unchanged.
+
+`choice-copy` is a wrapping flex container with an explicit `gap`, so the label text and `Обязательное поле` can no longer run together as `SubscribeОбязательное поле`. The indication stays visible and `aria-hidden="true"`, and native `required` remains the semantic signal. The now-dead `choice-label` mixin and class were removed rather than left behind.
+
+### Test evidence
+
+The shared conflict object now carries `children: 'Wrong child content'`, and every control asserts the injected text never appears, the accessible name is unchanged, and the control stays keyboard reachable. `Textarea` has dedicated regressions proving injected children become neither the uncontrolled nor the controlled value. `Select` has a regression proving its option and optgroup children survive the new conflict key and selection still works.
+
+Seven structural tests per choice control confirm the input is a descendant of the label, the label is the field's first child with no intermediate wrapper, the control precedes the visible text, clicking either the label row or the visible text activates and focuses the control, the required indication is a separate element from the label text, and description and error still follow the row.
+
+All new tests were confirmed failing against the M3-03 implementation before the fix.
+
+### Unchanged
+
+No public API, prop name, type union, runtime export, controlled/uncontrolled behaviour, id association, described-by order, error ownership, native required, ref target, Select options contract, Checkbox indeterminate, Radio grouping or Switch role changed. `Select.tsx`, the six component SCSS modules, `index.ts`, `public-api.test.ts`, M3-01, M3-02, routes, shell, foundations, assets, dependencies and configuration are all untouched, and no M3-04 work is present.
+
 ## Next Permitted Step
 
-The only permitted next step is an **independent diff audit of the M3-03 commit**, followed by GitHub Actions CI for it.
+The only permitted next step is an **independent diff audit of the M3-03A commit**, followed by GitHub Actions CI for it.
 
 M3-04 must not begin until M3-03 is recorded as APPROVED AND CLOSED. No M4 work and no domain work is authorised by this report.

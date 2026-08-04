@@ -55,13 +55,13 @@ export function FieldShell({
   if (layout === 'choice') {
     return (
       <div className={classNames(styles['field'], className)}>
-        <div className={styles['choice-row']}>
+        <label htmlFor={controlId} className={styles['choice-row']}>
           {children}
-          <label htmlFor={controlId} className={styles['choice-label']}>
-            {label}
+          <span className={styles['choice-copy']}>
+            <span className={styles['choice-text']}>{label}</span>
             {requiredIndication}
-          </label>
-        </div>
+          </span>
+        </label>
         {messages}
       </div>
     );

@@ -25,6 +25,7 @@ function conflictingProps() {
     'aria-busy': true,
     'aria-hidden': true,
     'aria-checked': false,
+    children: 'Wrong child content',
     dangerouslySetInnerHTML: { __html: '<span>Wrong content</span>' },
   };
 }
@@ -307,13 +308,104 @@ describe('Form control shared contract', () => {
         expect(control).not.toHaveAttribute('aria-checked');
         expect(control).not.toHaveFocus();
         expect(screen.queryByText('Wrong content')).toBeNull();
+        expect(screen.queryByText('Wrong child content')).toBeNull();
         expect(screen.queryByRole(field.role, { name: 'Wrong name' })).toBeNull();
+        expect(screen.getByRole(field.role, { name: field.label })).toBeInTheDocument();
 
         await user.tab();
         expect(control).toHaveFocus();
       });
     });
   }
+
+  describe('choice control activation target', () => {
+    const CHOICE_CASES = CASES.filter(
+      (field) => field.role !== 'textbox' && field.role !== 'combobox'
+    );
+
+    for (const field of CHOICE_CASES) {
+      describe(field.name, () => {
+        it('nests the native control inside the clickable label row', () => {
+          const { container } = render(field.render({}));
+          const control = screen.getByRole(field.role, { name: field.label });
+          const label = container.querySelector('label');
+
+          expect(label).not.toBeNull();
+          expect(label?.contains(control)).toBe(true);
+          expect(control.closest('label')).toBe(label);
+        });
+
+        it('makes the label itself the row, with no non-interactive wrapper between it and the field', () => {
+          const { container } = render(field.render({}));
+          const wrapper = container.firstElementChild;
+          const label = container.querySelector('label');
+
+          expect(wrapper?.firstElementChild).toBe(label);
+          expect(label?.tagName.toLowerCase()).toBe('label');
+          expect(label?.parentElement).toBe(wrapper);
+        });
+
+        it('keeps the control before the visible text in DOM order', () => {
+          const { container } = render(field.render({}));
+          const label = container.querySelector('label');
+          const control = screen.getByRole(field.role, { name: field.label });
+
+          expect(label?.firstElementChild).toBe(control);
+          expect(label?.textContent).toContain(field.label);
+        });
+
+        it('activates the native control when the label row is clicked', async () => {
+          const user = userEvent.setup();
+          const { container } = render(field.render({}));
+          const control = screen.getByRole(field.role, { name: field.label });
+          const label = container.querySelector('label');
+
+          expect(control).not.toBeChecked();
+          if (label !== null) {
+            await user.click(label);
+          }
+
+          expect(control).toBeChecked();
+          expect(control).toHaveFocus();
+        });
+
+        it('activates the native control when the visible text is clicked', async () => {
+          const user = userEvent.setup();
+          render(field.render({}));
+          const control = screen.getByRole(field.role, { name: field.label });
+
+          await user.click(screen.getByText(field.label));
+
+          expect(control).toBeChecked();
+          expect(control).toHaveFocus();
+        });
+
+        it('separates the required indication from the label text', () => {
+          const { container } = render(field.render({ required: true }));
+          const indication = screen.getByText(REQUIRED_INDICATION);
+          const labelText = screen.getByText(field.label);
+
+          expect(indication).not.toBe(labelText);
+          expect(indication.contains(labelText)).toBe(false);
+          expect(labelText.contains(indication)).toBe(false);
+          expect(indication).toHaveAttribute('aria-hidden', 'true');
+          expect(container.querySelector('label')?.contains(indication)).toBe(true);
+        });
+
+        it('keeps the description and error after the choice row', () => {
+          const { container } = render(
+            field.render({ description: 'Help text', error: 'Something is wrong' })
+          );
+          const wrapper = container.firstElementChild;
+          const children = Array.from(wrapper?.children ?? []);
+
+          expect(children[0]?.tagName.toLowerCase()).toBe('label');
+          expect(children[1]?.textContent).toBe('Help text');
+          expect(children[2]?.textContent).toBe('Something is wrong');
+        });
+      });
+    }
+  });
 
   it('keeps Select option children intact under a conflicting spread', () => {
     render(

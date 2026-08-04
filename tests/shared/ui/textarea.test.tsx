@@ -9,6 +9,23 @@ function rawHtmlProps() {
   return { dangerouslySetInnerHTML: { __html: '<span>Wrong content</span>' } };
 }
 
+function injectedChildren() {
+  return { children: 'Injected textarea value' };
+}
+
+function ControlledWithInjectedChildren(): ReactElement {
+  const [value, setValue] = useState('Owned value');
+
+  return (
+    <Textarea
+      label="Comment"
+      value={value}
+      onChange={(event) => setValue(event.target.value)}
+      {...injectedChildren()}
+    />
+  );
+}
+
 function ControlledTextarea(): ReactElement {
   const [value, setValue] = useState('start');
 
@@ -87,6 +104,24 @@ describe('Textarea', () => {
 
     expect(screen.getByRole('textbox', { name: 'Comment' })).toHaveValue('kept');
     expect(screen.queryByText('Wrong content')).toBeNull();
+  });
+
+  it('does not let injected children become the uncontrolled value', () => {
+    render(<Textarea label="Comment" defaultValue="Owned value" {...injectedChildren()} />);
+    const control = screen.getByRole('textbox', { name: 'Comment' });
+
+    expect(control).toHaveValue('Owned value');
+    expect(control.textContent).not.toContain('Injected textarea value');
+    expect(screen.queryByText('Injected textarea value')).toBeNull();
+    expect(screen.getByText('Comment')).toBeInTheDocument();
+  });
+
+  it('does not let injected children become the controlled value', () => {
+    render(<ControlledWithInjectedChildren />);
+    const control = screen.getByRole('textbox', { name: 'Comment' });
+
+    expect(control).toHaveValue('Owned value');
+    expect(screen.queryByText('Injected textarea value')).toBeNull();
   });
 
   it('forwards the ref to the native textarea', () => {

@@ -1,4 +1,5 @@
 type FieldConflictAttributes = {
+  children?: unknown;
   style?: unknown;
   role?: unknown;
   tabIndex?: unknown;
@@ -41,6 +42,7 @@ export function withoutFieldConflicts<TProps extends object>(
   props: TProps & FieldConflictAttributes
 ): Omit<TProps, FieldForbiddenProp> {
   const {
+    children,
     style,
     role,
     tabIndex,
@@ -63,6 +65,7 @@ export function withoutFieldConflicts<TProps extends object>(
   } = props;
 
   void [
+    children,
     style,
     role,
     tabIndex,
@@ -90,6 +93,7 @@ export function withoutSelectConflicts<TProps extends object>(
   props: TProps & FieldConflictAttributes & SelectConflictAttributes
 ): Omit<TProps, SelectForbiddenProp> {
   const {
+    children,
     style,
     role,
     tabIndex,
@@ -115,6 +119,7 @@ export function withoutSelectConflicts<TProps extends object>(
   } = props;
 
   void [
+    children,
     style,
     role,
     tabIndex,
@@ -145,6 +150,7 @@ export function withoutChoiceConflicts<TProps extends object>(
   props: TProps & FieldConflictAttributes & ChoiceConflictAttributes
 ): Omit<TProps, ChoiceForbiddenProp> {
   const {
+    children,
     style,
     role,
     tabIndex,
@@ -170,6 +176,7 @@ export function withoutChoiceConflicts<TProps extends object>(
   } = props;
 
   void [
+    children,
     style,
     role,
     tabIndex,

@@ -20,8 +20,12 @@
   @include field.choice-row;
 }
 
-.choice-label {
-  @include field.choice-label;
+.choice-copy {
+  @include field.choice-copy;
+}
+
+.choice-text {
+  @include field.choice-text;
 }
 
 .description {

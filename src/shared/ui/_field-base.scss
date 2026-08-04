@@ -53,16 +53,30 @@
   display: flex;
   align-items: center;
   gap: var(--gc-spacing-sm);
+  inline-size: 100%;
   min-block-size: 44px;
   min-inline-size: 0;
+  cursor: pointer;
+
+  &:has(input:disabled) {
+    cursor: not-allowed;
+  }
 }
 
-@mixin choice-label {
+@mixin choice-copy {
+  display: flex;
   flex: 1 1 auto;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--gc-spacing-xs);
   min-inline-size: 0;
   line-height: var(--gc-line-height-body);
   overflow-wrap: break-word;
-  cursor: pointer;
+}
+
+@mixin choice-text {
+  min-inline-size: 0;
+  overflow-wrap: break-word;
 }
 
 @mixin text-control {
