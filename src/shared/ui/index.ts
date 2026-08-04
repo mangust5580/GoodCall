@@ -1,6 +1,9 @@
 export { Button } from './Button';
 export type { ButtonProps } from './Button';
 
+export { Checkbox } from './Checkbox';
+export type { CheckboxProps } from './Checkbox';
+
 export { Grid } from './Grid';
 export type { GridElement, GridMinItemWidth, GridProps } from './Grid';
 
@@ -13,8 +16,23 @@ export type { LinkProps, LinkVariant } from './Link';
 export { PageContainer } from './PageContainer';
 export type { PageContainerElement, PageContainerProps, PageContainerWidth } from './PageContainer';
 
+export { Radio } from './Radio';
+export type { RadioProps } from './Radio';
+
+export { Select } from './Select';
+export type { SelectProps } from './Select';
+
 export { Stack } from './Stack';
 export type { StackAlign, StackDirection, StackElement, StackProps } from './Stack';
+
+export { Switch } from './Switch';
+export type { SwitchProps } from './Switch';
+
+export { Textarea } from './Textarea';
+export type { TextareaProps } from './Textarea';
+
+export { TextField } from './TextField';
+export type { TextFieldProps, TextFieldType } from './TextField';
 
 export { VisuallyHidden } from './VisuallyHidden';
 export type { VisuallyHiddenElement, VisuallyHiddenProps } from './VisuallyHidden';

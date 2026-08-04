@@ -1,0 +1,33 @@
+@use './field-base' as field;
+
+.field {
+  @include field.wrapper;
+}
+
+.label-row {
+  @include field.label-row;
+}
+
+.label {
+  @include field.label-text;
+}
+
+.required {
+  @include field.required-indicator;
+}
+
+.choice-row {
+  @include field.choice-row;
+}
+
+.choice-label {
+  @include field.choice-label;
+}
+
+.description {
+  @include field.message;
+}
+
+.error {
+  @include field.error-message;
+}

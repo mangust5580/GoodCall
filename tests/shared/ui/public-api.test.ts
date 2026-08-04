@@ -3,11 +3,17 @@ import * as sharedUi from '@/shared/ui';
 
 const APPROVED_RUNTIME_EXPORTS = [
   'Button',
+  'Checkbox',
   'Grid',
   'IconButton',
   'Link',
   'PageContainer',
+  'Radio',
+  'Select',
   'Stack',
+  'Switch',
+  'Textarea',
+  'TextField',
   'VisuallyHidden',
 ];
 

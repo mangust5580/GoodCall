@@ -2,15 +2,14 @@
 
 ## Status
 
-| Task                                                           | Status                                            |
-| -------------------------------------------------------------- | ------------------------------------------------- |
-| M3-01 — Shared UI scaffold, layout and accessibility utilities | **APPROVED AND CLOSED**                           |
-| M3-01A — VisuallyHidden accessibility contract correction      | **APPROVED AND CLOSED**                           |
-| M3-02 — Semantic action primitives                             | superseded by M3-02A and M3-02B                   |
-| M3-02A — Action semantic ownership correction                  | superseded by M3-02B                              |
-| M3-02B — Interactive content integrity correction              | **CORRECTED — AWAITING INDEPENDENT AUDIT AND CI** |
+| Task                                                           | Status                                              |
+| -------------------------------------------------------------- | --------------------------------------------------- |
+| M3-01 — Shared UI scaffold, layout and accessibility utilities | **APPROVED AND CLOSED**                             |
+| M3-01A — VisuallyHidden accessibility contract correction      | **APPROVED AND CLOSED**                             |
+| M3-02 / M3-02A / M3-02B — Semantic action primitives           | **APPROVED AND CLOSED**                             |
+| M3-03 — Native form controls baseline                          | **IMPLEMENTED — AWAITING INDEPENDENT AUDIT AND CI** |
 
-This report covers the Shared UI layer of milestone M3. It records local verification for the task under review. No approval is claimed for M3-02 and no later M3 task has started.
+This report covers the Shared UI layer of milestone M3. It records local verification for the task under review. No approval is claimed for M3-03 and no later M3 task has started.
 
 ### M3-01 / M3-01A closure evidence
 
@@ -24,6 +23,20 @@ This report covers the Shared UI layer of milestone M3. It records local verific
 | Conclusion         | success — all 14 steps green, including `E2E tests`              |
 
 M3-02 was started only after both conditions were satisfied.
+
+### M3-02 closure evidence
+
+| Item               | Value                                                                                                                                          |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| Final commit       | `9218c551be461b1defc572ec73f798a7de412b55` (M3-02B)                                                                                            |
+| Independent audit  | APPROVED                                                                                                                                       |
+| GitHub Actions run | 30910895790                                                                                                                                    |
+| Run URL            | https://github.com/mangust5580/GoodCall/actions/runs/30910895790                                                                               |
+| Job                | 91997101660 — `test (24.x)`                                                                                                                    |
+| Conclusion         | success                                                                                                                                        |
+| CI scope           | TypeCheck, ESLint, Stylelint, Prettier, comment check, 234 unit/integration tests, production build, build validation, 17 Playwright E2E tests |
+
+M3-03 was started only after that closure was confirmed.
 
 ## M3-01 Scope
 
@@ -46,7 +59,7 @@ Shared type: `SpacingScale` = `'xs' | 'sm' | 'md' | 'lg' | 'xl'`, mapped one-to-
 
 The single public entry point is `src/shared/ui/index.ts`. It uses explicit named exports only — no `export *`, no re-export of implementation modules. Consumers import from `@/shared/ui` and never need a deep import.
 
-M3-01 contributed four runtime exports — `Grid`, `PageContainer`, `Stack`, `VisuallyHidden`. M3-02 added three more; the current full list is in [M3-02 runtime exports](#runtime-exports). `class-names.ts`, `action-variant.ts`, `forwarded-props.ts` and `_action-base.scss` are internal and deliberately unexported.
+M3-01 contributed four runtime exports — `Grid`, `PageContainer`, `Stack`, `VisuallyHidden`. M3-02 added three action primitives and M3-03 added six form controls; the current full list is in [M3-03 runtime exports](#runtime-exports-1). `class-names.ts`, `action-variant.ts`, `forwarded-props.ts`, `FieldShell`, `field-association.ts`, `field-props.ts`, `_action-base.scss` and `_field-base.scss` are internal and deliberately unexported.
 
 ### Layout prop contract
 
@@ -381,7 +394,7 @@ No route or Home integration, no Header, Footer, Information Bar or Catalog Navi
 
 ## M3-02A — Action semantic ownership correction
 
-**Status: CORRECTED — AWAITING INDEPENDENT AUDIT AND CI**
+**Status: APPROVED AND CLOSED** as part of the cumulative M3-02 contract — see [M3-02 closure evidence](#m3-02-closure-evidence).
 
 ### Finding ACTION-A11Y-01
 
@@ -428,7 +441,7 @@ No style file, variant, loading visual, minimum target size, forced-colors rule 
 
 ## M3-02B — Interactive content integrity correction
 
-**Status: CORRECTED — AWAITING INDEPENDENT AUDIT AND CI**
+**Status: APPROVED AND CLOSED** as part of the cumulative M3-02 contract — see [M3-02 closure evidence](#m3-02-closure-evidence).
 
 ### Finding ACTION-A11Y-02
 
@@ -473,8 +486,138 @@ The type-level suite gained the four content-integrity keys for every component 
 
 No style file, variant, loading visual, disabled visual, minimum target size, focus-visible rule, forced-colors rule or reduced-motion rule was touched. The runtime export surface is unchanged — still exactly seven components, with the helper internal. M3-01 primitives, routes, shell, foundations, assets, dependencies and configs are untouched, and no M3-03 work is present.
 
+## M3-03 — Native form controls baseline
+
+**Status: IMPLEMENTED — AWAITING INDEPENDENT AUDIT AND CI**
+
+M3-03 adds six native-semantic form controls and the private mechanism that gives them a consistent label, description, error and association contract. It implements no form architecture: no form state, no schema, no submission lifecycle and no route integration.
+
+### Component matrix
+
+| Component   | Native root                             | Required props           | Controlled / uncontrolled    | Ref target            |
+| ----------- | --------------------------------------- | ------------------------ | ---------------------------- | --------------------- |
+| `TextField` | `<input>` (`text` by default)           | `label`                  | `value` / `defaultValue`     | `HTMLInputElement`    |
+| `Textarea`  | `<textarea>`                            | `label`                  | `value` / `defaultValue`     | `HTMLTextAreaElement` |
+| `Select`    | `<select>` (single)                     | `label`, `children`      | `value` / `defaultValue`     | `HTMLSelectElement`   |
+| `Checkbox`  | `<input type="checkbox">`               | `label`                  | `checked` / `defaultChecked` | `HTMLInputElement`    |
+| `Radio`     | `<input type="radio">`                  | `label`, `name`, `value` | `checked` / `defaultChecked` | `HTMLInputElement`    |
+| `Switch`    | `<input type="checkbox" role="switch">` | `label`                  | `checked` / `defaultChecked` | `HTMLInputElement`    |
+
+All six are dedicated siblings. There is no public generic `Field`, no `control="…"` discriminator, no `as`/`asChild`, and no form context or provider.
+
+### Shared field content contract
+
+Every control accepts `label` (required), `description`, `error` and `className`. `label` must be non-blank — a whitespace-only label throws immediately rather than shipping an unnamed control. Blank `description` and `error` are treated as absent. `className` lands on the public field wrapper, never on the private control, and consumers get no styling hook for private descendants.
+
+### Association contract
+
+Each control accepts a consumer `id` and otherwise derives a stable one from `useId`. The visible `<label>` is bound through `htmlFor`/`id`, and the description and error ids are derived from the resolved control id — no random UUIDs and no module-global counter.
+
+`aria-describedby` is composed in a fixed order:
+
+1. the internal description id
+2. the consumer's own `aria-describedby` tokens
+3. the internal error id
+
+so help text always precedes error text in both the DOM and the described-by order. Duplicate tokens are removed keeping first position, blank tokens are dropped, and the attribute is omitted entirely when the result is empty. `aria-errormessage` is not part of the public API, so an error is never announced through two channels at once.
+
+### Required indication
+
+`required` sets the **native** attribute. The label area additionally renders the visible text `Обязательное поле` — not an asterisk, and not a colour-only cue. Because the native attribute already conveys the state programmatically, the visible text carries `aria-hidden="true"` so it cannot be announced twice. There is no prop to suppress the indication.
+
+### Invalid ownership
+
+`error` is the only public owner of invalid presentation. A non-empty error renders visible text, adds the error id to `aria-describedby`, and sets `aria-invalid="true"`. With no error there is no error container and no `aria-invalid`. A forwarded `aria-invalid` is never accepted. The error text is not a live region and carries no `role="alert"` — announcement and focus management belong to the form owner.
+
+**`Radio` is the one deliberate exception.** ARIA does not support `aria-invalid` on `role="radio"`; invalid state belongs to the radio _group_, not an individual option, and `jsx-a11y/role-supports-aria-props` enforces this. `Radio` therefore renders the visible error and the described-by association but no `aria-invalid`. This is consistent with the rule that a group-level error must not be duplicated onto every option.
+
+### readOnly versus disabled
+
+| Control                       | `readOnly`                                      | `disabled`            |
+| ----------------------------- | ----------------------------------------------- | --------------------- |
+| `TextField`, `Textarea`       | supported — focusable, selectable, not editable | native, not focusable |
+| `Select`                      | not supported (type and runtime)                | native                |
+| `Checkbox`, `Radio`, `Switch` | not supported, and never simulated              | native                |
+
+Read-only and disabled remain visually distinct: dotted border for read-only, dashed for disabled, so neither is signalled by colour alone. Read-only is never simulated with `preventDefault`, and `aria-disabled` / `aria-readonly` are rejected in favour of the native attributes.
+
+### Component-specific decisions
+
+**TextField** accepts only `text`, `email`, `password`, `search`, `tel` and `url`. Because a spread can bypass the type union at runtime, an unsupported `type` throws an error naming the allowed set rather than silently falling back to `text`. `type="search"` is a plain native search input — no suggestions, no history, no clear button, no Search Form.
+
+**Textarea** never uses `children` as a value API, has no fixed height (`min-block-size` only) and stays vertically resizable, so long text and zoom do not clip.
+
+**Select** is native single-select. `multiple`, `size` and `readOnly` are removed from the type and stripped at runtime, so a spread cannot turn it into a listbox. It does not parse options: `children` are the consumer's `<option>` and `<optgroup>` elements.
+
+**Checkbox** supports `indeterminate`, applied to the native `HTMLInputElement.indeterminate` property through an internal ref that composes with the consumer's ref. Mixed state comes from native semantics, not a component-set `aria-checked`, and it is not a third submitted value — the click and change lifecycle stays native. There is no custom tri-state machine.
+
+**Radio** requires non-blank `name` and `value`. Grouping is native composition owned by the consumer:
+
+```tsx
+<fieldset>
+  <legend>Способ доставки</legend>
+  <Radio name="delivery" value="courier" label="Курьер" />
+  <Radio name="delivery" value="pickup" label="Самовывоз" />
+</fieldset>
+```
+
+There is no `RadioGroup` export and no ARIA radiogroup reimplementation — the shared `name` creates the native group and native arrow/Space behaviour is preserved.
+
+**Switch** is a native checkbox with a component-owned `role="switch"`. The accessible name comes only from the visible label; `role`, `aria-label`, `aria-labelledby` and `aria-checked` are all rejected. There is no mixed, pressed or selected state.
+
+### Runtime integrity
+
+Type-level omission does not survive a JSX spread, so each control also filters a fixed conflict set before forwarding and applies its owned attributes afterwards.
+
+Common set removed from every control (18 keys): `style`, `role`, `tabIndex`, `hidden`, `inert`, `contentEditable`, `dangerouslySetInnerHTML`, `autoFocus`, `aria-label`, `aria-labelledby`, `aria-invalid`, `aria-errormessage`, `aria-disabled`, `aria-readonly`, `aria-required`, `aria-busy`, `aria-hidden`, `aria-checked`. `Select` additionally strips `multiple`, `size` and `readOnly`; the choice controls additionally strip `type`, `readOnly` and `indeterminate`.
+
+`aria-describedby` is deliberately _not_ blind-forwarded — it is destructured, merged into the ordered association, and re-applied by the component.
+
+The three filters are private, share a static key set, remove only those keys, never touch safe or unknown props, and keep no HTML-attribute allowlist. No `any`, no index signature, no assertion, no `Proxy`, no `cloneElement`, no suppression comment, no dependency.
+
+### Technical, non-canonical styles
+
+Technical baseline values, **not** canonical design tokens: 44 × 44 px minimum interactive target, `0.25rem` radius, `1px` border (`2px` when invalid), `1.25rem` choice-control box, `6rem` textarea minimum height. Colours come only from existing `--gc-*` semantic tokens; no global token was added or changed and `src/styles/**` is untouched.
+
+Text controls use `min-block-size` rather than a fixed height, wrappers and labels allow `min-inline-size: 0` and wrap, and the textarea stays resizable, so nothing clips or scrolls horizontally at zoom. Forced-colors falls back to system colours (`canvastext`, `highlight`, `graytext`) so boundary, focus, invalid and disabled distinctions survive. No animation or transition is required to understand any state.
+
+### Tests
+
+164 new tests across eight files. `form-control-contract.test.tsx` runs the shared contract table-driven across all six controls; the six per-component files cover native behaviour; `form-control-props.test.ts` holds the compile-time contract.
+
+Coverage includes native element and role, visible label and programmatic name, explicit and generated ids, label activation, description/error association and ordering, external described-by preservation and deduplication, absence of containers and `aria-invalid` when clean, native required plus visible indication, wrapper class placement, safe attribute forwarding, native refs, blank-label rejection, controlled and uncontrolled state, keyboard activation, read-only versus disabled, and a spread-object integrity test per control.
+
+### Baseline failure evidence
+
+The new tests were verified to fail against deliberately weakened implementations before the final run:
+
+- widening `TextFieldProps` to accept `aria-invalid` → `TS2344` / `TS1360` in `form-control-props.test.ts`
+- forwarding props unfiltered in `TextField` and `Select` → the conflicting-spread tests could not find the controls by role at all, because `hidden` and `aria-hidden` removed them from the accessibility tree
+- the same weakening → React's `Can only set one of children or props.dangerouslySetInnerHTML` on `Select`
+- the same weakening → `multiple` and `size` leaked and the single-select test failed
+
+### Rejected abstractions
+
+A public generic `Field`; a `control="input|select|…"` discriminator; form context or provider; React Hook Form, Formik or any form library; Zod schemas and resolvers; a schema-driven field generator; Controller adapters; Error Summary and form-level status; a custom Select, Combobox or listbox; a custom radio keyboard model or ARIA radiogroup; `aria-disabled` / `aria-readonly` simulation; simulated read-only via `preventDefault`; a hidden or visually-hidden label; consumer `aria-label` override; multi-select; asterisk-only required indication; and any business form integration.
+
+### Known limitations
+
+- All styling is a technical baseline; final tokens, typography and visual treatment remain open and no visual fidelity is claimed.
+- `Switch` reuses the native checkbox presentation. A custom track-and-thumb visual would require `appearance: none`, which risks forced-colors and platform-semantics regressions; the final switch visual is a design-system decision.
+- Nothing consumes these controls at runtime; integration belongs to a later approved milestone, so the production bundle is unchanged.
+- JSDOM cannot prove rendered target size, forced-colors output or zoom/reflow behaviour. Those are structural CSS guarantees here and need the M3-05 browser review.
+- Native radio arrow-key navigation is a platform behaviour; it is not simulated in JSDOM and is not asserted by these tests.
+
+### Runtime exports
+
+After M3-03 `@/shared/ui` exports exactly thirteen components: `Button`, `Checkbox`, `Grid`, `IconButton`, `Link`, `PageContainer`, `Radio`, `Select`, `Stack`, `Switch`, `Textarea`, `TextField`, `VisuallyHidden`. `FieldShell`, `field-association.ts`, `field-props.ts` and `_field-base.scss` stay internal.
+
+### Unchanged boundaries
+
+No existing M3-01 or M3-02 component, style or helper was modified. Routes, shell, foundations, assets, dependencies, lockfile, build scripts, CI workflows and all tooling configuration are untouched, and no M3-04 work is present.
+
 ## Next Permitted Step
 
-The only permitted next step is an **independent diff audit of the M3-02B commit**, followed by GitHub Actions CI for it.
+The only permitted next step is an **independent diff audit of the M3-03 commit**, followed by GitHub Actions CI for it.
 
-M3-03 must not begin until M3-02 is recorded as APPROVED AND CLOSED. No M4 work and no domain work is authorised by this report.
+M3-04 must not begin until M3-03 is recorded as APPROVED AND CLOSED. No M4 work and no domain work is authorised by this report.

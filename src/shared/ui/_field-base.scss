@@ -1,0 +1,142 @@
+@mixin wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gc-spacing-xs);
+  min-inline-size: 0;
+}
+
+@mixin label-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--gc-spacing-xs);
+  min-inline-size: 0;
+}
+
+@mixin label-text {
+  font-weight: 600;
+  line-height: var(--gc-line-height-body);
+  overflow-wrap: break-word;
+}
+
+@mixin required-indicator {
+  font-size: 0.875em;
+  font-weight: 400;
+  color: var(--gc-text-secondary);
+  overflow-wrap: break-word;
+
+  @media (forced-colors: active) {
+    color: canvastext;
+  }
+}
+
+@mixin message {
+  margin: 0;
+  font-size: 0.875em;
+  line-height: var(--gc-line-height-body);
+  color: var(--gc-text-secondary);
+  overflow-wrap: break-word;
+}
+
+@mixin error-message {
+  @include message;
+
+  font-weight: 600;
+  color: var(--gc-error);
+
+  @media (forced-colors: active) {
+    color: canvastext;
+  }
+}
+
+@mixin choice-row {
+  display: flex;
+  align-items: center;
+  gap: var(--gc-spacing-sm);
+  min-block-size: 44px;
+  min-inline-size: 0;
+}
+
+@mixin choice-label {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+  line-height: var(--gc-line-height-body);
+  overflow-wrap: break-word;
+  cursor: pointer;
+}
+
+@mixin text-control {
+  inline-size: 100%;
+  min-inline-size: 0;
+  min-block-size: 44px;
+  padding-block: var(--gc-spacing-sm);
+  padding-inline: var(--gc-spacing-sm);
+  border: 1px solid var(--gc-border);
+  border-radius: 0.25rem;
+  background-color: var(--gc-surface);
+  color: var(--gc-text-primary);
+  font: inherit;
+  line-height: var(--gc-line-height-body);
+
+  &:focus-visible {
+    outline: 2px solid var(--gc-focus-ring);
+    outline-offset: 2px;
+  }
+
+  &[aria-invalid='true'] {
+    border-width: 2px;
+    border-color: var(--gc-error);
+  }
+
+  &:read-only {
+    border-style: dotted;
+    background-color: var(--gc-disabled-surface);
+  }
+
+  &:disabled {
+    border-style: dashed;
+    background-color: var(--gc-disabled-surface);
+    color: var(--gc-disabled-text);
+    cursor: not-allowed;
+  }
+
+  @media (forced-colors: active) {
+    border: 1px solid canvastext;
+
+    &:focus-visible {
+      outline: 2px solid highlight;
+    }
+
+    &[aria-invalid='true'] {
+      border-width: 3px;
+    }
+
+    &:disabled {
+      color: graytext;
+      border-color: graytext;
+    }
+  }
+}
+
+@mixin choice-control {
+  flex: none;
+  inline-size: 1.25rem;
+  block-size: 1.25rem;
+  margin: 0;
+  accent-color: var(--gc-action);
+
+  &:focus-visible {
+    outline: 2px solid var(--gc-focus-ring);
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+  }
+
+  @media (forced-colors: active) {
+    &:focus-visible {
+      outline: 2px solid highlight;
+    }
+  }
+}
