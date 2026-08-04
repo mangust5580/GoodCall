@@ -1,0 +1,35 @@
+.grid {
+  display: grid;
+}
+
+.min-item-sm {
+  grid-template-columns: repeat(auto-fit, minmax(min(12rem, 100%), 1fr));
+}
+
+.min-item-md {
+  grid-template-columns: repeat(auto-fit, minmax(min(16rem, 100%), 1fr));
+}
+
+.min-item-lg {
+  grid-template-columns: repeat(auto-fit, minmax(min(22rem, 100%), 1fr));
+}
+
+.gap-xs {
+  gap: var(--gc-spacing-xs);
+}
+
+.gap-sm {
+  gap: var(--gc-spacing-sm);
+}
+
+.gap-md {
+  gap: var(--gc-spacing-md);
+}
+
+.gap-lg {
+  gap: var(--gc-spacing-lg);
+}
+
+.gap-xl {
+  gap: var(--gc-spacing-xl);
+}
