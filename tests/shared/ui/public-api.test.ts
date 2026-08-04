@@ -1,7 +1,15 @@
 import { describe, it, expect } from 'vitest';
 import * as sharedUi from '@/shared/ui';
 
-const APPROVED_RUNTIME_EXPORTS = ['Grid', 'PageContainer', 'Stack', 'VisuallyHidden'];
+const APPROVED_RUNTIME_EXPORTS = [
+  'Button',
+  'Grid',
+  'IconButton',
+  'Link',
+  'PageContainer',
+  'Stack',
+  'VisuallyHidden',
+];
 
 describe('Shared UI public entry point', () => {
   it('exposes exactly the approved runtime exports', () => {

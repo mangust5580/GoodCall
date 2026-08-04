@@ -2,9 +2,26 @@
 
 ## Status
 
-CORRECTED — AWAITING INDEPENDENT AUDIT AND CI
+| Task                                                           | Status                                              |
+| -------------------------------------------------------------- | --------------------------------------------------- |
+| M3-01 — Shared UI scaffold, layout and accessibility utilities | **APPROVED AND CLOSED**                             |
+| M3-01A — VisuallyHidden accessibility contract correction      | **APPROVED AND CLOSED**                             |
+| M3-02 — Semantic action primitives                             | **IMPLEMENTED — AWAITING INDEPENDENT AUDIT AND CI** |
 
-This report covers task **M3-01 — Shared UI scaffold, layout and accessibility utilities** and its corrective pass **M3-01A — VisuallyHidden accessibility contract correction**. It records local verification. No approval is claimed and no later M3 task has started.
+This report covers the Shared UI layer of milestone M3. It records local verification for the task under review. No approval is claimed for M3-02 and no later M3 task has started.
+
+### M3-01 / M3-01A closure evidence
+
+| Item               | Value                                                            |
+| ------------------ | ---------------------------------------------------------------- |
+| Corrective commit  | `6676bbbe113778894b2787ddb0f6edb62da9148c`                       |
+| Independent audit  | APPROVED                                                         |
+| GitHub Actions run | 30905356122 (`CI`, run #22)                                      |
+| Run URL            | https://github.com/mangust5580/GoodCall/actions/runs/30905356122 |
+| Job                | 91979053539 — `test (24.x)`                                      |
+| Conclusion         | success — all 14 steps green, including `E2E tests`              |
+
+M3-02 was started only after both conditions were satisfied.
 
 ## M3-01 Scope
 
@@ -27,7 +44,7 @@ Shared type: `SpacingScale` = `'xs' | 'sm' | 'md' | 'lg' | 'xl'`, mapped one-to-
 
 The single public entry point is `src/shared/ui/index.ts`. It uses explicit named exports only — no `export *`, no re-export of implementation modules. Consumers import from `@/shared/ui` and never need a deep import.
 
-Runtime exports are exactly `Grid`, `PageContainer`, `Stack`, `VisuallyHidden`. `class-names.ts` is internal and deliberately unexported.
+M3-01 contributed four runtime exports — `Grid`, `PageContainer`, `Stack`, `VisuallyHidden`. M3-02 added three more; the current full list is in [M3-02 runtime exports](#runtime-exports). `class-names.ts`, `action-variant.ts` and `_action-base.scss` are internal and deliberately unexported.
 
 ### Layout prop contract
 
@@ -183,12 +200,166 @@ The forbidden keys are written inline at the type so the contract is visible whe
 
 ### Boundaries
 
-Runtime behaviour is unchanged: default `span` root, `as` still restricted to `span | div`, content still in the accessibility tree, no attribute set by the component. The runtime export surface of `@/shared/ui` is unchanged — still exactly `Grid`, `PageContainer`, `Stack`, `VisuallyHidden`. `PageContainer`, `Stack` and `Grid` are untouched. No dependency, config, route, shell, foundation or brand-asset change. M3 scope is not extended and M3-02 has not started.
+Runtime behaviour was unchanged: default `span` root, `as` still restricted to `span | div`, content still in the accessibility tree, no attribute set by the component. `PageContainer`, `Stack` and `Grid` were untouched. No dependency, config, route, shell, foundation or brand-asset change.
 
-The corrective commit cannot record its own hash inside this file, since the file is part of that commit. The exact baseline and corrective SHAs are recorded in the M3-01A task handoff.
+The corrective commit cannot record its own hash inside this file, since the file is part of that commit. The exact baseline and corrective SHAs are recorded in the M3-01A task handoff and in the closure evidence at the top of this report.
+
+## M3-02 — Semantic action primitives
+
+**Status: IMPLEMENTED — AWAITING INDEPENDENT AUDIT AND CI**
+
+M3-02 adds three dedicated, native-semantic action siblings. They are ready for M4 and later route and domain milestones, but nothing consumes them yet.
+
+### Component matrix
+
+| Component    | Responsibility                  | Root                             | Default variant | Loading | Disabled |
+| ------------ | ------------------------------- | -------------------------------- | --------------- | ------- | -------- |
+| `Button`     | User action or form submission  | native `<button>`                | `primary`       | yes     | native   |
+| `Link`       | Internal application navigation | React Router `Link` → `<a href>` | `tertiary`      | no      | no       |
+| `IconButton` | Icon-only action                | native `<button>`                | `tertiary`      | yes     | native   |
+
+The three are separate components by design. There is no shared polymorphic root, no `as`, no `asChild` and no element-switching prop anywhere in the family.
+
+### Variant family
+
+```ts
+type ActionVariant = 'primary' | 'secondary' | 'tertiary' | 'destructive';
+type LinkVariant = 'primary' | 'secondary' | 'tertiary';
+```
+
+`Button` and `IconButton` accept all four. `Link` accepts three — there is no destructive navigation, because navigating somewhere is not itself a destructive act. There is no size, full-width, shape, icon-position, elevation or colour prop.
+
+### Public APIs
+
+**Button** — `ButtonProps`
+
+```ts
+Omit<
+  React.ButtonHTMLAttributes<HTMLButtonElement>,
+  'style' | 'role' | 'tabIndex' | 'aria-disabled' | 'aria-label' | 'aria-labelledby' | 'children'
+> & {
+  children: React.ReactNode;
+  variant?: ActionVariant;
+  isLoading?: boolean;
+}
+```
+
+`children` is required and is the visible label. `type` defaults to `"button"`; `submit` and `reset` pass through. `disabled` is the native attribute.
+
+**Link** — `LinkProps`
+
+```ts
+Omit<
+  RouterLinkProps,
+  'style' | 'role' | 'aria-disabled' | 'aria-label' | 'aria-labelledby' | 'href' | 'children'
+> & {
+  children: React.ReactNode;
+  variant?: LinkVariant;
+}
+```
+
+`to` and `children` are required. The React Router import lives only in `Link.tsx`; no other Shared UI file depends on the router.
+
+**IconButton** — `IconButtonProps`
+
+```ts
+Omit<
+  React.ButtonHTMLAttributes<HTMLButtonElement>,
+  'style' | 'role' | 'tabIndex' | 'aria-disabled' | 'aria-label' | 'aria-labelledby' | 'children'
+> & {
+  label: string;
+  children: React.ReactNode;
+  variant?: ActionVariant;
+  isLoading?: boolean;
+}
+```
+
+`label` and `children` are both required — `label` is the accessible name, `children` is the decorative visual.
+
+### Runtime exports
+
+After M3-02 `@/shared/ui` exports exactly seven components: `Button`, `Grid`, `IconButton`, `Link`, `PageContainer`, `Stack`, `VisuallyHidden`. `ActionVariant` and `LinkVariant` are type-only exports. `class-names.ts`, `action-variant.ts` and `_action-base.scss` remain internal.
+
+### Semantics ownership
+
+- Actions are `<button>`; navigation is `<a href>`. Neither borrows the other's role, and `role="button"` is never applied to a link.
+- `Button` and `IconButton` cannot be turned into links: `href`, `to` and `as` are absent from their types, and `ButtonHTMLAttributes` never carried them.
+- `Link` cannot be turned into a control: `disabled`, `isLoading`, `aria-disabled` and `role` are absent from its type.
+- `style`, `role`, `tabIndex`, `aria-label` and `aria-labelledby` are removed from `Button` and `IconButton` so a consumer cannot override the element's semantics, replace the accessible name with a conflicting one, substitute `aria-disabled` for the native attribute, or remove the control from the tab order.
+
+### Loading and disabled rules
+
+`isLoading` sets the native `disabled` attribute and `aria-busy="true"`. Because the block is native, duplicate clicks and duplicate form submissions cannot occur, and the consumer's `onClick` is never invoked — no runtime click guard is needed. A consumer-supplied `disabled` always wins: a control that is both disabled and loading stays disabled.
+
+The visible label is never hidden or replaced while loading. `Button` keeps rendering its children and adds a separate indicator element; `IconButton` keeps `aria-label` as its accessible name, so the name is stable across the transition. The indicator is a bordered ring built from CSS geometry — it needs no icon asset, and its _presence_ rather than its colour is the signal. Rotation is applied only inside `@media (prefers-reduced-motion: no-preference)`, so the indicator is fully legible without motion. It carries `aria-hidden="true"`; the machine-readable state is `aria-busy`.
+
+Disabled state is distinguished by a dashed border in addition to colour, so it does not depend on colour alone.
+
+### Accessible-name rules
+
+- `Button` and `Link` take their accessible name from the visible label. The API cannot override it.
+- `IconButton` sets `aria-label={label}` itself and wraps `children` in a component-owned `aria-hidden="true"` element, so decorative content can never leak into the name.
+- A blank or whitespace-only `IconButton` label throws immediately with a message naming the cause, rather than shipping a nameless control.
+
+### Technical, non-canonical style values
+
+These are technical defaults chosen to meet the accessibility contract. **None is a canonical design-system value and no visual fidelity is claimed.**
+
+- minimum interactive target `44px × 44px` on all three components
+- border radius `0.25rem`, border width `1px` (`2px` for destructive)
+- loading indicator `0.875em`, spin duration `700ms`
+- colours come only from existing semantic tokens: `--gc-action`, `--gc-error`, `--gc-surface`, `--gc-focus-ring`, `--gc-disabled-surface`, `--gc-disabled-text`, `--gc-disabled-border`, `--gc-spacing-*`, `--gc-line-height-body`
+
+No global token was added or changed and no foundation file was touched. Styles live in co-located SCSS Modules; the shared geometry, focus, disabled and variant rules live in the private `_action-base.scss` mixin partial, which emits no CSS of its own.
+
+### States and forced colors
+
+Observable states: default, hover, active, focus-visible, disabled, loading, destructive. Hover is an enhancement only — it is wrapped in `@media (hover: hover)` and adds an underline, so no behaviour is hover-dependent. Focus-visible draws a 2px `--gc-focus-ring` outline with offset; there is no prop to disable it and no inline style can reach it. Under `forced-colors: active` the components fall back to system colours (`buttonborder`, `highlight`, `graytext`) so the boundary, focus ring and disabled state survive; no hardcoded palette pair is used.
+
+Text is never clipped: controls use `min-block-size` rather than a fixed height, inherit `font`, and allow `overflow-wrap: break-word`, so long labels wrap instead of overflowing.
+
+### Tests
+
+| File                                   | Coverage                                                                                                                                                                                                                                                                                            |
+| -------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `tests/shared/ui/button.test.tsx`      | Native button, default and explicit `type`, name from visible label, pointer/Enter/Space activation, disabled and loading blocking, `aria-busy`, stable name and visible label while loading, indicator hidden from the tree, consumer props, every variant, no navigation semantics                |
+| `tests/shared/ui/link.test.tsx`        | Anchor semantics under `MemoryRouter`, `href` resolved from `to`, no button role, pointer and Enter navigation, name from visible label, consumer props, every variant, no disabled/loading/tabindex attributes                                                                                     |
+| `tests/shared/ui/icon-button.test.tsx` | Native button, default and explicit `type`, name from `label` only, visual content hidden from the tree, blank-label runtime error, pointer/Enter/Space activation, disabled and loading blocking, stable name and `aria-busy` while loading, every variant, consumer props, no icon or image asset |
+| `tests/shared/ui/action-props.test.ts` | Type-level contracts for all three components                                                                                                                                                                                                                                                       |
+| `tests/shared/ui/public-api.test.ts`   | Entry point exposes exactly the seven approved runtime exports                                                                                                                                                                                                                                      |
+
+### Type-level evidence
+
+`action-props.test.ts` resolves conditional types through `Assert<T extends true>` and assigns each result to a `const`, so a regression fails `npm run typecheck` before any test runs. It asserts that the forbidden and navigation-escape props are absent, that consumer props survive, and that `children`, `to` and `label` are genuinely required rather than optional. A final assertion confirms `ButtonHTMLAttributes` still declares the forbidden props, so the absence checks cannot pass vacuously after a types upgrade.
+
+### Rejected API variants
+
+- a single polymorphic `Action` component with `as`, `asChild` or a slot API
+- `Button` able to render an anchor, or `Link` able to render a button
+- simulated disabled `Link` via removed `href`, `preventDefault`, `pointer-events: none`, `aria-disabled` or `tabIndex={-1}`
+- `aria-disabled` in place of the native `disabled` attribute
+- an icon library, icon dependency, icon registry or icon context
+- a generic external-link, download-link, `mailto`/`tel` or inline-prose-link abstraction
+- `size`, `fullWidth`, `shape`, `iconPosition`, `elevation` or `color` props, and any boolean appearance matrix
+- a loading state that replaces the visible label with a spinner, or that changes the accessible name
+- `NavLink` and route-current styling
+- split button, toggle button, button group, menu button, floating action button
+- `cloneElement`, runtime CSS-in-JS, a style-object API, or a provider/context for action styling
+
+### Explicit non-goals
+
+No route or Home integration, no Header, Footer, Information Bar or Catalog Navigation, no Logo component, no domain UI, no forms, no feedback or status family, no overlays, no production icons, and no dependency change.
+
+### Known limitations
+
+- All styling is a technical baseline. Final design tokens, typography and exact visual treatment remain open.
+- Nothing consumes these components at runtime; integration belongs to M3-05, so the production bundle is unchanged by this task.
+- There is no shared abstraction for external, download, `mailto`/`tel` or inline prose links. Those remain consumer-owned native `<a>` elements until a contract is approved.
+- Destructive intent is conveyed by fill, a heavier border and the consumer's label wording. Final differentiation from `primary` is a design-system decision.
+- JSDOM cannot prove rendered target size, forced-colors output or reduced-motion behaviour. Those are structural guarantees here and are confirmed by browser review at M3-05.
 
 ## Next Permitted Step
 
-The only permitted next step is an **independent diff audit of the M3-01 commit**.
+The only permitted next step is an **independent diff audit of the M3-02 commit**, followed by GitHub Actions CI for it.
 
-M3-02 (semantic action primitives) must not begin until that audit approves this commit. No later M3 task, no M4 work and no domain work is authorised by this report.
+M3-03 must not begin until M3-02 is recorded as APPROVED AND CLOSED. No M4 work and no domain work is authorised by this report.

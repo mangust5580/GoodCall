@@ -1,0 +1,92 @@
+@mixin target {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--gc-spacing-sm);
+  min-inline-size: 44px;
+  min-block-size: 44px;
+  padding-block: var(--gc-spacing-sm);
+  padding-inline: var(--gc-spacing-md);
+  border: 1px solid transparent;
+  border-radius: 0.25rem;
+  font: inherit;
+  line-height: var(--gc-line-height-body);
+  text-align: center;
+  overflow-wrap: break-word;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: 2px solid var(--gc-focus-ring);
+    outline-offset: 2px;
+  }
+
+  @media (hover: hover) {
+    &:hover:not(:disabled) {
+      text-decoration: underline;
+    }
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(1px);
+  }
+
+  @media (forced-colors: active) {
+    border: 1px solid buttonborder;
+
+    &:focus-visible {
+      outline: 2px solid highlight;
+    }
+  }
+}
+
+@mixin control-disabled {
+  &:disabled {
+    border-style: dashed;
+    background-color: var(--gc-disabled-surface);
+    color: var(--gc-disabled-text);
+    border-color: var(--gc-disabled-border);
+    cursor: not-allowed;
+  }
+
+  @media (forced-colors: active) {
+    &:disabled {
+      color: graytext;
+      border-color: graytext;
+    }
+  }
+}
+
+@mixin primary {
+  background-color: var(--gc-action);
+  color: var(--gc-surface);
+  border-color: var(--gc-action);
+}
+
+@mixin secondary {
+  background-color: transparent;
+  color: var(--gc-action);
+  border-color: var(--gc-action);
+}
+
+@mixin tertiary {
+  background-color: transparent;
+  color: var(--gc-action);
+  border-color: transparent;
+  text-decoration: underline;
+}
+
+@mixin destructive {
+  background-color: var(--gc-error);
+  color: var(--gc-surface);
+  border-color: var(--gc-error);
+  border-width: 2px;
+}
+
+@mixin loading-indicator {
+  flex: none;
+  inline-size: 0.875em;
+  block-size: 0.875em;
+  border: 2px solid currentcolor;
+  border-block-start-color: transparent;
+  border-radius: 50%;
+}

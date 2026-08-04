@@ -1,0 +1,40 @@
+@use './action-base' as action;
+
+.button {
+  @include action.target;
+  @include action.control-disabled;
+}
+
+.variant-primary {
+  @include action.primary;
+}
+
+.variant-secondary {
+  @include action.secondary;
+}
+
+.variant-tertiary {
+  @include action.tertiary;
+}
+
+.variant-destructive {
+  @include action.destructive;
+}
+
+.label {
+  min-inline-size: 0;
+}
+
+.indicator {
+  @include action.loading-indicator;
+
+  @media (prefers-reduced-motion: no-preference) {
+    animation: button-loading-spin 700ms linear infinite;
+  }
+}
+
+@keyframes button-loading-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

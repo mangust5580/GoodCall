@@ -1,0 +1,123 @@
+﻿import { describe, it, expect } from 'vitest';
+import type { ButtonHTMLAttributes } from 'react';
+import type { ButtonProps, IconButtonProps, LinkProps } from '@/shared/ui';
+
+type Assert<T extends true> = T;
+
+type Absent<TProps, TKeys> = [Extract<keyof TProps, TKeys>] extends [never] ? true : false;
+
+type Present<TProps, TKeys extends PropertyKey> = TKeys extends keyof TProps ? true : false;
+
+type IsRequired<TProps, TKey extends keyof TProps> =
+  Record<never, never> extends Pick<TProps, TKey> ? false : true;
+
+type ControlForbiddenProp =
+  'style' | 'role' | 'tabIndex' | 'aria-disabled' | 'aria-label' | 'aria-labelledby';
+
+type NavigationEscapeProp = 'as' | 'href' | 'to';
+
+type ButtonForbiddenPropsAbsent = Assert<
+  Absent<ButtonProps, ControlForbiddenProp | NavigationEscapeProp>
+>;
+
+type ButtonPropsPreserved = Assert<
+  Present<ButtonProps, 'id' | 'className' | 'disabled' | 'type' | 'onClick' | 'aria-describedby'>
+>;
+
+type ButtonChildrenRequired = Assert<IsRequired<ButtonProps, 'children'>>;
+
+type LinkForbiddenPropsAbsent = Assert<
+  Absent<
+    LinkProps,
+    | 'style'
+    | 'role'
+    | 'aria-disabled'
+    | 'aria-label'
+    | 'aria-labelledby'
+    | 'disabled'
+    | 'isLoading'
+    | 'href'
+    | 'as'
+  >
+>;
+
+type LinkPropsPreserved = Assert<
+  Present<LinkProps, 'id' | 'className' | 'to' | 'aria-describedby'>
+>;
+
+type LinkToRequired = Assert<IsRequired<LinkProps, 'to'>>;
+
+type LinkChildrenRequired = Assert<IsRequired<LinkProps, 'children'>>;
+
+type IconButtonForbiddenPropsAbsent = Assert<
+  Absent<IconButtonProps, ControlForbiddenProp | NavigationEscapeProp>
+>;
+
+type IconButtonPropsPreserved = Assert<
+  Present<
+    IconButtonProps,
+    'id' | 'className' | 'disabled' | 'type' | 'onClick' | 'aria-describedby'
+  >
+>;
+
+type IconButtonLabelRequired = Assert<IsRequired<IconButtonProps, 'label'>>;
+
+type IconButtonChildrenRequired = Assert<IsRequired<IconButtonProps, 'children'>>;
+
+type ForbiddenControlPropsExistOnBaseAttributes = Assert<
+  Present<ButtonHTMLAttributes<HTMLButtonElement>, ControlForbiddenProp>
+>;
+
+describe('Action primitive type contracts', () => {
+  it('removes semantic-override props from Button', () => {
+    const buttonForbiddenPropsAbsent: ButtonForbiddenPropsAbsent = true;
+
+    expect(buttonForbiddenPropsAbsent).toBe(true);
+  });
+
+  it('keeps Button consumer props and requires a visible label', () => {
+    const buttonPropsPreserved: ButtonPropsPreserved = true;
+    const buttonChildrenRequired: ButtonChildrenRequired = true;
+
+    expect(buttonPropsPreserved).toBe(true);
+    expect(buttonChildrenRequired).toBe(true);
+  });
+
+  it('removes disabled, loading and semantic-override props from Link', () => {
+    const linkForbiddenPropsAbsent: LinkForbiddenPropsAbsent = true;
+
+    expect(linkForbiddenPropsAbsent).toBe(true);
+  });
+
+  it('keeps Link consumer props and requires to and children', () => {
+    const linkPropsPreserved: LinkPropsPreserved = true;
+    const linkToRequired: LinkToRequired = true;
+    const linkChildrenRequired: LinkChildrenRequired = true;
+
+    expect(linkPropsPreserved).toBe(true);
+    expect(linkToRequired).toBe(true);
+    expect(linkChildrenRequired).toBe(true);
+  });
+
+  it('removes semantic-override props from IconButton', () => {
+    const iconButtonForbiddenPropsAbsent: IconButtonForbiddenPropsAbsent = true;
+
+    expect(iconButtonForbiddenPropsAbsent).toBe(true);
+  });
+
+  it('keeps IconButton consumer props and requires label and children', () => {
+    const iconButtonPropsPreserved: IconButtonPropsPreserved = true;
+    const iconButtonLabelRequired: IconButtonLabelRequired = true;
+    const iconButtonChildrenRequired: IconButtonChildrenRequired = true;
+
+    expect(iconButtonPropsPreserved).toBe(true);
+    expect(iconButtonLabelRequired).toBe(true);
+    expect(iconButtonChildrenRequired).toBe(true);
+  });
+
+  it('guards against the base attribute type silently dropping the forbidden props', () => {
+    const forbiddenControlPropsExistOnBaseAttributes: ForbiddenControlPropsExistOnBaseAttributes = true;
+
+    expect(forbiddenControlPropsExistOnBaseAttributes).toBe(true);
+  });
+});
