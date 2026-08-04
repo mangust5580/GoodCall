@@ -169,6 +169,50 @@ describe('IconButton', () => {
     expect(button.classList.contains('consumer-hook')).toBe(true);
   });
 
+  it('keeps ownership of its accessible name when conflicting props arrive through a spread', () => {
+    const forwarded = {
+      role: 'link',
+      'aria-label': 'Wrong name',
+      'aria-labelledby': 'wrong-label',
+      'aria-disabled': true,
+      tabIndex: -1,
+      'aria-busy': false,
+      className: 'consumer-hook',
+    };
+
+    render(
+      <IconButton label="Close dialog" isLoading {...forwarded}>
+        x
+      </IconButton>
+    );
+
+    const button = screen.getByRole('button', { name: 'Close dialog' });
+
+    expect(button.tagName.toLowerCase()).toBe('button');
+    expect(button).not.toHaveAttribute('role');
+    expect(button).toHaveAttribute('aria-label', 'Close dialog');
+    expect(button).not.toHaveAttribute('aria-labelledby');
+    expect(button).not.toHaveAttribute('aria-disabled');
+    expect(button).not.toHaveAttribute('tabindex');
+    expect(button).toHaveAttribute('aria-busy', 'true');
+    expect(button).toBeDisabled();
+    expect(button.classList.contains('consumer-hook')).toBe(true);
+    expect(button.classList.length).toBeGreaterThan(1);
+    expect(screen.queryByRole('button', { name: 'Wrong name' })).toBeNull();
+  });
+
+  it('does not adopt a forwarded busy state while idle', () => {
+    const forwarded = { 'aria-busy': true };
+
+    render(
+      <IconButton label="Close dialog" {...forwarded}>
+        x
+      </IconButton>
+    );
+
+    expect(screen.getByRole('button', { name: 'Close dialog' })).not.toHaveAttribute('aria-busy');
+  });
+
   it('imports no icon or image asset of its own', () => {
     const { container } = render(<IconButton label="Close dialog">x</IconButton>);
 

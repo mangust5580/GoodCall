@@ -1,11 +1,19 @@
 import React from 'react';
 import styles from './IconButton.module.scss';
 import { classNames } from './class-names';
+import { withoutOwnedAttributes } from './forwarded-props';
 import type { ActionVariant } from './action-variant';
 
 export interface IconButtonProps extends Omit<
   React.ButtonHTMLAttributes<HTMLButtonElement>,
-  'style' | 'role' | 'tabIndex' | 'aria-disabled' | 'aria-label' | 'aria-labelledby' | 'children'
+  | 'style'
+  | 'role'
+  | 'tabIndex'
+  | 'aria-disabled'
+  | 'aria-label'
+  | 'aria-labelledby'
+  | 'aria-busy'
+  | 'children'
 > {
   label: string;
   children: React.ReactNode;
@@ -29,12 +37,12 @@ export function IconButton({
 
   return (
     <button
+      {...withoutOwnedAttributes(rest)}
       type={type}
       aria-label={label}
       disabled={disabled || isLoading}
       aria-busy={isLoading || undefined}
       className={classNames(styles['icon-button'], styles[`variant-${variant}`], className)}
-      {...rest}
     >
       {isLoading ? (
         <span className={styles['indicator']} aria-hidden="true" />

@@ -2,11 +2,12 @@
 
 ## Status
 
-| Task                                                           | Status                                              |
-| -------------------------------------------------------------- | --------------------------------------------------- |
-| M3-01 — Shared UI scaffold, layout and accessibility utilities | **APPROVED AND CLOSED**                             |
-| M3-01A — VisuallyHidden accessibility contract correction      | **APPROVED AND CLOSED**                             |
-| M3-02 — Semantic action primitives                             | **IMPLEMENTED — AWAITING INDEPENDENT AUDIT AND CI** |
+| Task                                                           | Status                                            |
+| -------------------------------------------------------------- | ------------------------------------------------- |
+| M3-01 — Shared UI scaffold, layout and accessibility utilities | **APPROVED AND CLOSED**                           |
+| M3-01A — VisuallyHidden accessibility contract correction      | **APPROVED AND CLOSED**                           |
+| M3-02 — Semantic action primitives                             | superseded by M3-02A                              |
+| M3-02A — Action semantic ownership correction                  | **CORRECTED — AWAITING INDEPENDENT AUDIT AND CI** |
 
 This report covers the Shared UI layer of milestone M3. It records local verification for the task under review. No approval is claimed for M3-02 and no later M3 task has started.
 
@@ -44,7 +45,7 @@ Shared type: `SpacingScale` = `'xs' | 'sm' | 'md' | 'lg' | 'xl'`, mapped one-to-
 
 The single public entry point is `src/shared/ui/index.ts`. It uses explicit named exports only — no `export *`, no re-export of implementation modules. Consumers import from `@/shared/ui` and never need a deep import.
 
-M3-01 contributed four runtime exports — `Grid`, `PageContainer`, `Stack`, `VisuallyHidden`. M3-02 added three more; the current full list is in [M3-02 runtime exports](#runtime-exports). `class-names.ts`, `action-variant.ts` and `_action-base.scss` are internal and deliberately unexported.
+M3-01 contributed four runtime exports — `Grid`, `PageContainer`, `Stack`, `VisuallyHidden`. M3-02 added three more; the current full list is in [M3-02 runtime exports](#runtime-exports). `class-names.ts`, `action-variant.ts`, `forwarded-props.ts` and `_action-base.scss` are internal and deliberately unexported.
 
 ### Layout prop contract
 
@@ -282,7 +283,14 @@ After M3-02 `@/shared/ui` exports exactly seven components: `Button`, `Grid`, `I
 
 ### Semantics ownership
 
+**Type-level omission alone is not enough.** Removing a key with `Omit` constrains the declared props type, but TypeScript does not apply excess-property checking to a JSX spread. A consumer can build an ordinary object carrying `role`, `aria-label` or `aria-busy` and spread it in without a type error. Ownership therefore has to hold at runtime as well — see [M3-02A](#m3-02a--action-semantic-ownership-correction).
+
+Each component enforces ownership in three layers: the forbidden keys are absent from the public type; conflicting keys are stripped from the forwarded object before it reaches the DOM; and the component-owned attributes are applied **after** the spread, so they always win.
+
 - Actions are `<button>`; navigation is `<a href>`. Neither borrows the other's role, and `role="button"` is never applied to a link.
+- `aria-busy` is owned by `isLoading` alone. An idle control never carries a forwarded busy state.
+- `IconButton`'s `aria-label` is owned by `label` alone.
+- `Link`'s `href` is owned by `to` alone, and `tabIndex` is removed so the link cannot be pulled out of the tab order.
 - `Button` and `IconButton` cannot be turned into links: `href`, `to` and `as` are absent from their types, and `ButtonHTMLAttributes` never carried them.
 - `Link` cannot be turned into a control: `disabled`, `isLoading`, `aria-disabled` and `role` are absent from its type.
 - `style`, `role`, `tabIndex`, `aria-label` and `aria-labelledby` are removed from `Button` and `IconButton` so a consumer cannot override the element's semantics, replace the accessible name with a conflicting one, substitute `aria-disabled` for the native attribute, or remove the control from the tab order.
@@ -358,8 +366,55 @@ No route or Home integration, no Header, Footer, Information Bar or Catalog Navi
 - Destructive intent is conveyed by fill, a heavier border and the consumer's label wording. Final differentiation from `primary` is a design-system decision.
 - JSDOM cannot prove rendered target size, forced-colors output or reduced-motion behaviour. Those are structural guarantees here and are confirmed by browser review at M3-05.
 
+## M3-02A — Action semantic ownership correction
+
+**Status: CORRECTED — AWAITING INDEPENDENT AUDIT AND CI**
+
+### Finding ACTION-A11Y-01
+
+The independent audit rejected the M3-02 commit. `Button`, `Link` and `IconButton` all spread consumer props **after** their own attributes:
+
+```tsx
+<button type={type} disabled={disabled || isLoading} aria-busy={isLoading || undefined} {...rest} />
+```
+
+Two defects followed.
+
+**Direct override of a permitted key.** `aria-busy` was not excluded from `ButtonProps` or `IconButtonProps`, so `<Button isLoading aria-busy={false}>` type-checked and silently replaced the component-owned busy state.
+
+**Spread-object bypass.** `Omit` constrains the declared keys of an interface; it does not make an object exact at runtime, and TypeScript performs excess-property checking only on object literals written directly in JSX — never on a spread. A consumer could therefore write:
+
+```tsx
+const forwarded = { role: 'link', 'aria-label': 'Wrong name' };
+<IconButton label="Close" {...forwarded}>
+  …
+</IconButton>;
+```
+
+with no type error, and the resulting DOM would carry an overriding `role`, a replaced accessible name, `aria-labelledby`, `aria-disabled`, a `tabIndex` override or a conflicting `aria-busy`. Type-level `keyof` tests could not detect this, because the types were correct — the runtime forwarding was not.
+
+### Runtime ownership strategy
+
+Three changes, applied to all three components:
+
+1. **Type-level exclusions extended.** `aria-busy` is now removed from `ButtonProps` and `IconButtonProps`; `tabIndex` is removed from `LinkProps`.
+2. **Conflicting keys are stripped before forwarding.** A private helper, `withoutOwnedAttributes` in `src/shared/ui/forwarded-props.ts`, removes a fixed set of eight keys — `role`, `tabIndex`, `style`, `href`, `aria-label`, `aria-labelledby`, `aria-disabled`, `aria-busy` — from the rest object via destructuring. The key set is static, the helper is used by all three primitives, it is not exported from the barrel, and it is not a general-purpose DOM sanitiser: it never drops unknown props and maintains no allowlist. There is no `any`, no type assertion, no index signature and no suppression comment.
+3. **Owned attributes are applied after the spread.** `{...withoutOwnedAttributes(rest)}` comes first; `type`, `disabled`, `aria-busy`, `aria-label`, `to` and `className` follow it, so the component's values always win.
+
+Consumers keep everything that is legitimately theirs: `id`, `name`, `value`, `form`, `type`, `disabled`, `onClick`, `onFocus`, `aria-describedby`, and `className`, which is merged after the component's own classes rather than replacing them.
+
+### Regression evidence
+
+`button.test.tsx`, `icon-button.test.tsx` and `link.test.tsx` each gained a test that builds an ordinary object of conflicting keys and spreads it into the component — the exact bypass the audit described, with no cast and no assertion. Each asserts the resulting DOM: native element preserved, no `role`, no `aria-labelledby`, no `aria-disabled`, no consumer `tabindex`, the correct accessible name, `aria-busy="true"` while loading, and the consumer's class merged alongside the component's own. `Button` and `IconButton` additionally assert that an idle control never adopts a forwarded `aria-busy`, and `Link` asserts that `href` follows `to` rather than a forwarded `href` and that the link stays tab-reachable and Enter-activated.
+
+All five new tests were confirmed to fail against the M3-02 implementation before the fix was applied.
+
+### Unchanged boundaries
+
+No style file, variant, loading visual, minimum target size, forced-colors rule or reduced-motion rule was touched. `Button.module.scss`, `Link.module.scss`, `IconButton.module.scss`, `_action-base.scss` and `action-variant.ts` are byte-identical to M3-02. The runtime export surface is unchanged — still exactly seven components; the new helper is internal. M3-01 primitives, routes, shell, foundations, assets, dependencies and configs are untouched, and no M3-03 work is present.
+
 ## Next Permitted Step
 
-The only permitted next step is an **independent diff audit of the M3-02 commit**, followed by GitHub Actions CI for it.
+The only permitted next step is an **independent diff audit of the M3-02A commit**, followed by GitHub Actions CI for it.
 
 M3-03 must not begin until M3-02 is recorded as APPROVED AND CLOSED. No M4 work and no domain work is authorised by this report.

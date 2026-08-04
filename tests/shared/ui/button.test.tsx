@@ -173,6 +173,47 @@ describe('Button', () => {
     }
   });
 
+  it('keeps ownership of its semantics when conflicting props arrive through a spread', () => {
+    const forwarded = {
+      role: 'link',
+      'aria-label': 'Wrong name',
+      'aria-labelledby': 'wrong-label',
+      'aria-disabled': true,
+      tabIndex: -1,
+      'aria-busy': false,
+      className: 'consumer-hook',
+    };
+
+    render(
+      <Button isLoading {...forwarded}>
+        Save
+      </Button>
+    );
+
+    const button = screen.getByRole('button', { name: 'Save' });
+
+    expect(button.tagName.toLowerCase()).toBe('button');
+    expect(button).not.toHaveAttribute('role');
+    expect(button).not.toHaveAttribute('aria-label');
+    expect(button).not.toHaveAttribute('aria-labelledby');
+    expect(button).not.toHaveAttribute('aria-disabled');
+    expect(button).not.toHaveAttribute('tabindex');
+    expect(button).toHaveAttribute('aria-busy', 'true');
+    expect(button).toBeDisabled();
+    expect(button.classList.contains('consumer-hook')).toBe(true);
+    expect(button.classList.length).toBeGreaterThan(1);
+    expect(screen.getByText('Save')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Wrong name' })).toBeNull();
+  });
+
+  it('does not adopt a forwarded busy state while idle', () => {
+    const forwarded = { 'aria-busy': true };
+
+    render(<Button {...forwarded}>Save</Button>);
+
+    expect(screen.getByRole('button', { name: 'Save' })).not.toHaveAttribute('aria-busy');
+  });
+
   it('introduces no navigation semantics', () => {
     const { container } = render(<Button>Save</Button>);
 

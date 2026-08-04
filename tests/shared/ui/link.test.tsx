@@ -96,6 +96,44 @@ describe('Link', () => {
     }
   });
 
+  it('keeps ownership of its semantics when conflicting props arrive through a spread', async () => {
+    const user = userEvent.setup();
+    const forwarded = {
+      role: 'button',
+      'aria-label': 'Wrong name',
+      'aria-labelledby': 'wrong-label',
+      'aria-disabled': true,
+      tabIndex: -1,
+      href: '/wrong',
+      className: 'consumer-hook',
+    };
+
+    renderWithRouter(
+      <Link to="/target" {...forwarded}>
+        Go to target
+      </Link>
+    );
+
+    const link = screen.getByRole('link', { name: 'Go to target' });
+
+    expect(link.tagName.toLowerCase()).toBe('a');
+    expect(link).not.toHaveAttribute('role');
+    expect(link).toHaveAttribute('href', '/target');
+    expect(link).not.toHaveAttribute('aria-label');
+    expect(link).not.toHaveAttribute('aria-labelledby');
+    expect(link).not.toHaveAttribute('aria-disabled');
+    expect(link).not.toHaveAttribute('tabindex');
+    expect(link.classList.contains('consumer-hook')).toBe(true);
+    expect(link.classList.length).toBeGreaterThan(1);
+    expect(screen.queryByRole('button')).toBeNull();
+
+    await user.tab();
+    expect(link).toHaveFocus();
+    await user.keyboard('{Enter}');
+
+    expect(screen.getByRole('heading', { name: 'Target page' })).toBeInTheDocument();
+  });
+
   it('exposes no disabled or loading state', () => {
     renderWithRouter(<Link to="/target">Go to target</Link>);
 
