@@ -4,7 +4,10 @@ import { classNames } from './class-names';
 
 export type VisuallyHiddenElement = 'span' | 'div';
 
-export interface VisuallyHiddenProps extends Omit<React.HTMLAttributes<HTMLElement>, 'style'> {
+export interface VisuallyHiddenProps extends Omit<
+  React.HTMLAttributes<HTMLElement>,
+  'style' | 'hidden' | 'aria-hidden' | 'inert' | 'tabIndex'
+> {
   as?: VisuallyHiddenElement;
 }
 

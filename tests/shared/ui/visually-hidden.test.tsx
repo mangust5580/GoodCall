@@ -27,7 +27,15 @@ describe('VisuallyHidden', () => {
 
     expect(root?.hasAttribute('hidden')).toBe(false);
     expect(root?.hasAttribute('aria-hidden')).toBe(false);
+    expect(root?.hasAttribute('inert')).toBe(false);
     expect(root?.hasAttribute('style')).toBe(false);
+  });
+
+  it('does not make the visually hidden root focusable', () => {
+    const { container } = render(<VisuallyHidden as="div">Accessible text</VisuallyHidden>);
+    const root = container.firstElementChild;
+
+    expect(root?.hasAttribute('tabindex')).toBe(false);
   });
 
   it('keeps nested accessible content queryable by role', () => {

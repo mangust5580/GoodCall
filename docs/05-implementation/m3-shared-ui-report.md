@@ -2,9 +2,9 @@
 
 ## Status
 
-IMPLEMENTED — AWAITING INDEPENDENT AUDIT
+CORRECTED — AWAITING INDEPENDENT AUDIT AND CI
 
-This report covers task **M3-01 — Shared UI scaffold, layout and accessibility utilities** only. It records local verification. No approval is claimed and no later M3 task has started.
+This report covers task **M3-01 — Shared UI scaffold, layout and accessibility utilities** and its corrective pass **M3-01A — VisuallyHidden accessibility contract correction**. It records local verification. No approval is claimed and no later M3 task has started.
 
 ## M3-01 Scope
 
@@ -29,13 +29,23 @@ The single public entry point is `src/shared/ui/index.ts`. It uses explicit name
 
 Runtime exports are exactly `Grid`, `PageContainer`, `Stack`, `VisuallyHidden`. `class-names.ts` is internal and deliberately unexported.
 
-### Shared prop contract
+### Layout prop contract
 
-Every primitive extends `Omit<React.HTMLAttributes<HTMLElement>, 'style'>`:
+`PageContainer`, `Stack` and `Grid` extend `Omit<React.HTMLAttributes<HTMLElement>, 'style'>`:
 
 - native attributes, `id`, `role` and `aria-*` pass through to the root
 - `className` is supported as a root placement hook and is merged after the component's own classes
 - `style` is deliberately omitted so the API cannot accept an arbitrary style map
+
+### VisuallyHidden prop contract
+
+`VisuallyHidden` does **not** share the layout contract. Its whole purpose is to keep content in the accessibility tree while hiding it visually, so its public type additionally removes every prop that would defeat that invariant:
+
+```ts
+Omit<React.HTMLAttributes<HTMLElement>, 'style' | 'hidden' | 'aria-hidden' | 'inert' | 'tabIndex'>;
+```
+
+`id`, `className`, `role`, `aria-live` and the remaining ARIA and event attributes stay available and typed. See [M3-01A corrective pass](#m3-01a-corrective-pass) for the defect this replaced.
 
 ### PageContainer
 
@@ -87,11 +97,15 @@ Column count is never specified. Tracks resolve from `repeat(auto-fit, minmax(mi
 
 There is no `visible` or `hidden` toggle. This is not a general show/hide utility.
 
+`style`, `hidden`, `aria-hidden`, `inert` and `tabIndex` are absent from the public type, so a consumer cannot remove the root or its subtree from the accessibility tree, and cannot make a visually hidden root focusable.
+
+**Intended content.** `VisuallyHidden` is for hidden text and semantic content — a supplementary label, a status string, a heading that structures a region without being shown. Consumers must not place focusable or interactive descendants inside it: it is not a container for hidden buttons, links, inputs or anything else reachable by keyboard navigation. A focusable descendant would create a target a sighted keyboard user can reach but cannot see. This restriction is a documented contract, not a runtime check — the component performs no descendant inspection.
+
 ## Semantics and Accessibility Ownership
 
 - All four primitives render a plain element with no implicit role, landmark or heading. A landmark appears only when a consumer explicitly selects `as="main"`, `as="nav"`, `as="header"` or `as="footer"`.
 - Children render in source order inside a single root. No primitive reorders, wraps or clones children, so DOM order and focus order always match source order.
-- No primitive sets `tabindex`, `hidden`, `aria-hidden` or any live-region attribute. Announcement ownership stays with `RootLayout` and is untouched by M3-01.
+- No primitive sets `tabindex`, `hidden`, `aria-hidden`, `inert` or any live-region attribute. Announcement ownership stays with `RootLayout` and is untouched by M3-01.
 - `VisuallyHidden` uses the clip technique (`position: absolute`, 1px box, `clip-path: inset(50%)`, `white-space: nowrap`, negative margin). It never uses `display: none`, `visibility: hidden`, the `hidden` attribute or `aria-hidden`, so content stays in the accessibility tree. `white-space: nowrap` keeps long text from reflowing inside the 1px box under zoom, and the technique carries no colour dependency, so forced-colors mode is unaffected.
 - Consumer-supplied ARIA attributes are preserved on the root. A consumer may, for example, place `aria-live` on a `VisuallyHidden` root — the primitive does not impose or remove that semantics.
 
@@ -107,15 +121,18 @@ There is no `visible` or `hidden` toggle. This is not a general show/hide utilit
 
 Tests live under `tests/shared/ui/`, matching the repository's existing convention that all tests reside in `tests/`.
 
-| File                                       | Coverage                                                                                                                                                                                        |
-| ------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `tests/shared/ui/page-container.test.tsx`  | Content rendering, default and selected root element, absence of implicit landmarks/headings, explicit landmark opt-in, attribute and className preservation, child DOM order, every width role |
-| `tests/shared/ui/stack.test.tsx`           | Same baseline plus DOM order across both directions and every gap/alignment role                                                                                                                |
-| `tests/shared/ui/grid.test.tsx`            | Same baseline plus every item-width and gap role                                                                                                                                                |
-| `tests/shared/ui/visually-hidden.test.tsx` | Content presence, root elements, absence of `hidden` / `aria-hidden` / inline `style`, nested content still queryable by role, attribute preservation, child DOM order                          |
-| `tests/shared/ui/public-api.test.ts`       | Public entry point exposes exactly the four approved runtime exports, each a component function                                                                                                 |
+| File                                            | Coverage                                                                                                                                                                                        |
+| ----------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `tests/shared/ui/page-container.test.tsx`       | Content rendering, default and selected root element, absence of implicit landmarks/headings, explicit landmark opt-in, attribute and className preservation, child DOM order, every width role |
+| `tests/shared/ui/stack.test.tsx`                | Same baseline plus DOM order across both directions and every gap/alignment role                                                                                                                |
+| `tests/shared/ui/grid.test.tsx`                 | Same baseline plus every item-width and gap role                                                                                                                                                |
+| `tests/shared/ui/visually-hidden.test.tsx`      | Content presence, root elements, absence of `hidden` / `aria-hidden` / `inert` / `tabindex` / inline `style`, nested content still queryable by role, attribute preservation, child DOM order   |
+| `tests/shared/ui/visually-hidden-props.test.ts` | Type-level contract: forbidden props are absent from `VisuallyHiddenProps`, preserved props remain available, and the base attribute type still declares the forbidden props                    |
+| `tests/shared/ui/public-api.test.ts`            | Public entry point exposes exactly the four approved runtime exports, each a component function                                                                                                 |
 
 Tests assert observable contract only. They query by role, text and consumer-supplied identity, never by generated CSS Module class names, and there are no static markup snapshots.
+
+`visually-hidden-props.test.ts` is compile-time evidence rather than a rendering test. Each assertion resolves a conditional type through `Assert<T extends true>`, so a regression in the public type breaks `npm run typecheck` — the constraint fails before any test runs. The third assertion guards the other two: if a future `@types/react` upgrade removed a forbidden prop from `HTMLAttributes`, the absence checks would pass vacuously, so the file also asserts that the base type still declares all five.
 
 Local results are recorded in the task handoff. Targeted tests, `npm run check`, `npm run check:full` and `git diff --check` all pass. No local server, preview server or Playwright run was performed.
 
@@ -140,6 +157,35 @@ M3-01 deliberately does **not** deliver:
 - `Grid` and `Stack` do not accept list root elements. Applying flex or grid layout to `ul`/`ol` is known to suppress list semantics in some assistive technologies, and M3-01 must not replace semantic list or group elements. List composition remains the consumer's responsibility.
 - Element-specific attributes outside `React.HTMLAttributes` (for example `start` on `ol`) are not typed, which is consistent with the narrow root-element allowlists.
 - Browser-level evidence — zoom, reflow, forced colors, coarse pointer — is not collected in M3-01. These primitives have no interactive surface; that evidence belongs to the M3-05 integration review.
+- The `VisuallyHidden` restriction against focusable descendants is a documented contract only. It is not enforced at runtime or by the type system.
+
+## M3-01A corrective pass
+
+### Finding A11Y-01
+
+The independent audit rejected the original M3-01 commit. `VisuallyHiddenProps` extended `Omit<React.HTMLAttributes<HTMLElement>, 'style'>`, which left `hidden`, `aria-hidden`, `inert` and `tabIndex` in the public type.
+
+Those four props defeat the component's only reason to exist. `hidden`, `aria-hidden` and `inert` remove the root or its subtree from the accessibility tree — precisely what the clip technique is chosen to avoid — and `tabIndex` makes a visually hidden root focusable, producing a keyboard target that a sighted user can reach but cannot see. The API therefore permitted, as ordinary typed usage, exactly the states the component promises to prevent.
+
+The original commit passed CI. That is expected and does not weaken the finding: this is a contract defect in the public type, and no runtime test or lint rule in the pipeline inspects which props a component's type admits.
+
+### Correction
+
+`VisuallyHiddenProps` now removes all five props at the type level:
+
+```ts
+Omit<React.HTMLAttributes<HTMLElement>, 'style' | 'hidden' | 'aria-hidden' | 'inert' | 'tabIndex'>;
+```
+
+The forbidden keys are written inline at the type so the contract is visible where the props are declared. `id`, `className`, `role`, `aria-live`, the remaining ARIA attributes and the event handlers already present in the base type stay available and typed. There is no `any`, no type assertion, no index signature and no runtime prop filtering — the type is the enforcement.
+
+`tests/shared/ui/visually-hidden-props.test.ts` provides the regression evidence, and the runtime tests additionally assert that a normally used root carries no `inert` attribute and no `tabindex`.
+
+### Boundaries
+
+Runtime behaviour is unchanged: default `span` root, `as` still restricted to `span | div`, content still in the accessibility tree, no attribute set by the component. The runtime export surface of `@/shared/ui` is unchanged — still exactly `Grid`, `PageContainer`, `Stack`, `VisuallyHidden`. `PageContainer`, `Stack` and `Grid` are untouched. No dependency, config, route, shell, foundation or brand-asset change. M3 scope is not extended and M3-02 has not started.
+
+The corrective commit cannot record its own hash inside this file, since the file is part of that commit. The exact baseline and corrective SHAs are recorded in the M3-01A task handoff.
 
 ## Next Permitted Step
 
