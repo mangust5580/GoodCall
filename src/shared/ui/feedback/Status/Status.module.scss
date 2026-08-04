@@ -1,0 +1,29 @@
+@use '../internal/feedback-base' as feedback;
+
+.status {
+  @include feedback.compact-root;
+}
+
+.tone-neutral {
+  @include feedback.tone-neutral;
+}
+
+.tone-info {
+  @include feedback.tone-info;
+}
+
+.tone-success {
+  @include feedback.tone-success;
+}
+
+.tone-warning {
+  @include feedback.tone-warning;
+}
+
+.tone-error {
+  @include feedback.tone-error;
+}
+
+.tone-current {
+  @include feedback.tone-current;
+}

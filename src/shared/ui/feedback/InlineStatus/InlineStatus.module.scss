@@ -1,0 +1,33 @@
+@use '../internal/feedback-base' as feedback;
+
+.inline-status {
+  @include feedback.region-root;
+}
+
+.tone-info {
+  @include feedback.region-tone-info;
+}
+
+.tone-pending {
+  @include feedback.region-tone-pending;
+}
+
+.tone-success {
+  @include feedback.region-tone-success;
+}
+
+.tone-warning {
+  @include feedback.region-tone-warning;
+}
+
+.tone-error {
+  @include feedback.region-tone-error;
+}
+
+.tone-stale {
+  @include feedback.region-tone-stale;
+}
+
+.tone-offline {
+  @include feedback.region-tone-offline;
+}

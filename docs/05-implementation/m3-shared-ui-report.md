@@ -8,9 +8,10 @@
 | M3-01A — VisuallyHidden accessibility contract correction      | **APPROVED AND CLOSED**                             |
 | M3-02 / M3-02A / M3-02B — Semantic action primitives           | **APPROVED AND CLOSED**                             |
 | M3-03 / M3-03A — Native form controls baseline                 | **APPROVED AND CLOSED**                             |
-| M3-03B — Shared UI directory organization                      | **IMPLEMENTED — AWAITING INDEPENDENT AUDIT AND CI** |
+| M3-03B — Shared UI directory organization                      | **APPROVED AND CLOSED**                             |
+| M3-04 — Feedback, status and validation-summary primitives     | **IMPLEMENTED — AWAITING INDEPENDENT AUDIT AND CI** |
 
-This report covers the Shared UI layer of milestone M3. It records local verification for the task under review. No approval is claimed for M3-03B and no later M3 task has started.
+This report covers the Shared UI layer of milestone M3. It records local verification for the task under review. No approval is claimed for M3-04 and no later M3 task has started.
 
 ### M3-01 / M3-01A closure evidence
 
@@ -52,6 +53,21 @@ M3-03 was started only after that closure was confirmed.
 | CI scope           | TypeCheck, ESLint, Stylelint, Prettier, comment check, 422 unit/integration tests, production build, build validation, 17 Playwright E2E tests |
 
 M3-03B was started only after that closure was confirmed.
+
+### M3-03B closure evidence
+
+| Item               | Value                                                                                                                                          |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| Final commit       | `f65625586f768250e3ede3b1de55c29941fe81f4`                                                                                                     |
+| Independent audit  | APPROVED                                                                                                                                       |
+| GitHub Actions run | 30919329440                                                                                                                                    |
+| Run URL            | https://github.com/mangust5580/GoodCall/actions/runs/30919329440                                                                               |
+| Job                | 92025499981 — `test (24.x)`                                                                                                                    |
+| Conclusion         | success                                                                                                                                        |
+| CI scope           | TypeCheck, ESLint, Stylelint, Prettier, comment check, 422 unit/integration tests, production build, build validation, 17 Playwright E2E tests |
+| Bundle baseline    | raw 371.38 KB, gzip 114.00 KB                                                                                                                  |
+
+M3-04 was started only after that closure was confirmed.
 
 ## M3-01 Scope
 
@@ -698,7 +714,7 @@ No public API, prop name, type union, runtime export, controlled/uncontrolled be
 
 ## M3-03B — Shared UI directory organization
 
-**Status: IMPLEMENTED — AWAITING INDEPENDENT AUDIT AND CI**
+**Status: APPROVED AND CLOSED** — see [M3-03B closure evidence](#m3-03b-closure-evidence).
 
 A pure structural refactor. No public API, runtime behaviour, style declaration, test assertion, dependency or bundle output changed — only file locations and the import paths that follow from them.
 
@@ -757,8 +773,112 @@ The 13 runtime exports and all 25 public type exports are identical. No componen
 
 Git records the migration as renames rather than delete/create, so the history of every file is preserved and the diff is reviewable as a move.
 
+## M3-04 — Feedback, status and validation-summary primitives
+
+**Status: IMPLEMENTED — AWAITING INDEPENDENT AUDIT AND CI**
+
+### Scope and non-goals
+
+M3-04 adds basic reusable feedback _presentation_. It does not implement async state ownership, mutation logic, retry orchestration or announcement channels — those stay with the owner.
+
+Delivered: a compact static family (`Badge`, `Counter`, `Status`), a persistent owner-region `InlineStatus` with explicit live-role opt-in, and a long-form `ErrorSummary`.
+
+Not delivered, deliberately: Toast, global notification store, timers, portals, dialogs, drawers, overlay root, route or domain error states, empty states, async orchestration, cross-route feedback infrastructure, spinner, progress, skeleton, action slots and automatic focus.
+
+### Component registry
+
+| Component      | Root      | Tones / states          | Default live semantics                 | Focus owner            |
+| -------------- | --------- | ----------------------- | -------------------------------------- | ---------------------- |
+| `Badge`        | `span`    | `FeedbackTone`          | none                                   | none                   |
+| `Counter`      | `span`    | `FeedbackTone`          | none                                   | none                   |
+| `Status`       | `span`    | `FeedbackTone`          | none                                   | none                   |
+| `InlineStatus` | `div`     | `InlineStatusTone`      | none; explicit `status` / `alert` only | none                   |
+| `ErrorSummary` | `section` | invalid long-form state | none                                   | form owner through ref |
+
+```ts
+type FeedbackTone = 'neutral' | 'info' | 'success' | 'warning' | 'error' | 'current';
+type InlineStatusTone = 'info' | 'pending' | 'success' | 'warning' | 'error' | 'stale' | 'offline';
+type InlineStatusRole = 'status' | 'alert';
+```
+
+Tone sets are closed unions. There is no open string union, no arbitrary colour prop and no `variant`/`severity` synonym. Values arriving through a spread are validated at runtime and throw naming the component and the received value.
+
+### Public API
+
+- `Badge` — `children: string` (required, non-blank), `tone?: FeedbackTone` (default `neutral`)
+- `Counter` — `value: number | string` (required), `tone?: FeedbackTone` (default `neutral`)
+- `Status` — `children: string` (required, non-blank), `tone: FeedbackTone` (required)
+- `InlineStatus` — `tone: InlineStatusTone` (required), `role?: InlineStatusRole`, `children: React.ReactNode` (required)
+- `ErrorSummary` — `title: string`, `items: readonly ErrorSummaryItem[]`, `headingLevel?: 2 | 3 | 4` (default `2`), `ref?: React.Ref<HTMLElement>`
+
+`Counter` accepts any finite number including `0`; `NaN` and both infinities throw. A non-blank string such as `99+` passes through exactly — formatting, pluralisation, maximums and localisation all stay with the consumer.
+
+Runtime exports are now exactly eighteen. New public types: `BadgeProps`, `CounterProps`, `ErrorSummaryItem`, `ErrorSummaryProps`, `FeedbackTone`, `InlineStatusProps`, `InlineStatusRole`, `InlineStatusTone`, `StatusProps`. No private helper, validator, tone array or Sass detail is exported.
+
+### Static versus live semantics
+
+Every primitive is static by default. `Badge`, `Counter` and `Status` are **always** static — they carry no role and no live-region attributes, and re-rendering with a new value or new text announces nothing. `Status` stays static even with `tone="error"`; it is compact persistent text, not an announcement primitive.
+
+`InlineStatus` is static unless the consumer passes `role`. Tone and role are fully independent: `tone="error"` without a role announces nothing, `role="alert"` never gets injected because the tone happens to be an error, and choosing a role never rewrites the tone. `aria-live`, `aria-atomic`, `aria-relevant` and `aria-busy` are removed from the type and stripped at runtime, so live semantics can only be reached through the explicit `role` prop — which is itself validated.
+
+### Announcement ownership
+
+One event has one announcement owner, and that owner is the consumer. These primitives never create a live region implicitly, never deduplicate or delay announcements, never own timing, and never construct cross-route notification infrastructure. There is no timer, no portal and no global store anywhere in the family.
+
+### ErrorSummary focus and link contract
+
+```
+section.error-summary[tabindex=-1][aria-labelledby]
+├── h2|h3|h4.title
+└── ul
+    ├── li > a[href="#target-id"] message
+    └── li > span message
+```
+
+The summary is programmatically focusable but **does not focus itself** and does not scroll. The approved long-form flow is: the form owner detects an invalid submit, renders the summary, and focuses it through the ref; the user then activates a link and the linked native control receives focus.
+
+Items with a `targetId` render a native anchor whose accessible name is the visible message and whose `href` is a fragment built from the encoded id. On ordinary activation the component looks the raw id up with `document.getElementById`; if it resolves to an element it prevents the default fragment navigation and calls the element's native `.focus()`. It never adds or mutates the target's `tabindex`, never calls `scrollIntoView`, never rewrites the URL or history, and never synthesises a click or a route navigation. A missing target does not throw — the native fragment `href` simply remains.
+
+The summary carries no `role="alert"` and no `aria-live`; field-level error association stays with the form controls, and the summary never duplicates those errors through a live region.
+
+### Runtime prop hardening
+
+Type-level omission does not survive a JSX spread, so each component also strips a fixed conflict set before forwarding and applies owned attributes afterwards.
+
+Compact family (13 keys): `children`, `style`, `dangerouslySetInnerHTML`, `role`, `tabIndex`, `contentEditable`, `autoFocus`, `aria-label`, `aria-labelledby`, `aria-live`, `aria-atomic`, `aria-relevant`, `aria-busy`.
+
+`InlineStatus` and `ErrorSummary` (16 keys): the above plus `hidden`, `inert`, `aria-hidden`.
+
+Deliberately kept consumer-owned: `id`, `title`, `className`, `data-*`, `aria-describedby`, `aria-current`, and — for the compact family only — `aria-hidden`, because a compact badge or counter is often a duplicate of content the owning control already exposes in its accessible name.
+
+The filters are private, share static key sets, remove only those keys, never touch safe or unknown props, and keep no HTML-attribute allowlist. No `any`, no index signature, no `Proxy`, no `cloneElement`, no suppression comment, no dependency.
+
+### Visual and forced-colors baseline
+
+Compact primitives are content-sized inline-flex with a border, no fixed height and wrapping text. `InlineStatus` and `ErrorSummary` are full-width blocks with visible boundaries and wrapping content. `Counter` uses tabular numerals.
+
+Existing semantic tokens cover neutral, error, surface, text and focus. The palette has no approved info, success or warning role, so three local technical colours plus one offline grey live inside the feedback Sass. **They are non-canonical, are not exposed as root CSS custom properties, and imply no design-system approval.**
+
+Tone is never the sole carrier of meaning — the visible text is, and every primitive requires visible content. Tone is reinforced structurally as well as by colour: warning and stale use a dashed border, pending and offline dotted, error and current a heavier border. Under `forced-colors: active` boundaries and text fall back to system colours and the focus ring uses `highlight`, with no `forced-color-adjust: none` and no dependence on custom background fills.
+
+There is no motion anywhere in the family: no spinner, pulse, fade, auto-dismiss, countdown or required transition.
+
+### Tests
+
+84 new tests across seven files. `feedback-contract.test.tsx` drives the compact family table-driven; each component has its own file; `feedback-props.test.ts` holds the compile-time contract.
+
+Coverage includes native roots, absent default semantics, every tone, spread-object integrity for all conflict keys, safe-attribute survival, `className` merging, runtime tone/role/value/heading validation, `InlineStatus` role opt-in in both directions with tone/role independence, and the full `ErrorSummary` structure, validation, link and focus behaviour — including target focus for input, select and textarea, no `tabindex` mutation, no `scrollIntoView`, and a missing target not throwing.
+
+### Rejected variants
+
+A single universal `Alert`/`Notice`/`Callout`; a sixth `MessageBanner` alias; deriving the live role from the tone; a raw `aria-live` prop; Toast, Snackbar or a global notification store; auto-focusing the `ErrorSummary`; `role="alert"` on the summary; mutating the target's `tabindex`; portals and timers; an icon library or icon slot; generating domain copy from a tone; and an action slot or retry callback inside `InlineStatus`.
+
+### Known limitations
+
+The local info/success/warning colours are technical, not canonical. Tone differentiation beyond the visible text is border treatment only, pending design-system review. Nothing consumes these primitives at runtime, so the production bundle is unchanged. JSDOM cannot prove rendered size, forced-colors output or zoom behaviour — those remain for the browser review.
+
 ## Next Permitted Step
 
-The only permitted next step is an **independent structural diff audit of the M3-03B commit**, followed by GitHub Actions CI for it.
+The only permitted next step is an **independent diff audit of the M3-04 commit**, followed by GitHub Actions CI for it.
 
-M3-04 must not begin until M3-03B is recorded as APPROVED AND CLOSED. No M4 work and no domain work is authorised by this report.
+M3-05 must not begin until M3-04 is recorded as APPROVED AND CLOSED. No M4 work and no domain work is authorised by this report.

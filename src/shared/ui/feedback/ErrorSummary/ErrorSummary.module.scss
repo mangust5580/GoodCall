@@ -1,0 +1,21 @@
+@use '../internal/feedback-base' as feedback;
+
+.error-summary {
+  @include feedback.summary-root;
+}
+
+.title {
+  @include feedback.summary-title;
+}
+
+.list {
+  @include feedback.summary-list;
+}
+
+.item {
+  @include feedback.summary-item;
+}
+
+.link {
+  @include feedback.summary-link;
+}
