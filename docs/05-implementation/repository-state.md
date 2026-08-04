@@ -192,6 +192,45 @@ GoodCall/
 
 Only `.idea/` (WebStorm metadata) exists outside tracked files. Not committed to git.
 
+## Milestone State Note — M2B Brand Assets (2026-08-04)
+
+The "Created Files Summary" and "Directory Tree" sections above describe the M0 baseline and have not been expanded for every later milestone. This note records M2B-relevant state only; it is not a full repository census.
+
+### Added in M2B
+
+```
+src/assets/brand/
+  goodcall-logo.svg                     horizontal logo, primary, fixed brand colors
+  goodcall-symbol.svg                   symbol-only, primary, fixed brand colors
+  goodcall-logo-inverse.svg             horizontal logo, inverse, fixed #FFFFFF
+  goodcall-symbol-inverse.svg           symbol-only, inverse, fixed #FFFFFF
+  goodcall-logo-monochrome.svg          horizontal logo, monochrome, currentColor
+  goodcall-symbol-monochrome.svg        symbol-only, monochrome, currentColor
+docs/05-implementation/
+  m2-brand-assets-report.md             M2B implementation and usage contract
+  m2-brand-asset-manifest.json          Tracked asset manifest (hashes, geometry, roles)
+tests/
+  brand-assets.test.ts                  Serverless brand asset contract test
+.gitattributes                          Disables EOL conversion for src/assets/brand/*.svg only
+```
+
+### Modified in M2B
+
+```
+src/styles/foundations/_primitives.scss   Added $brand-primary, $brand-ink
+src/styles/foundations/_semantic.scss     Added --gc-brand-primary, --gc-brand-ink
+```
+
+### State at Report Time
+
+- Six approved logo assets are tracked with byte identity verified against approved SHA-256 hashes.
+- Brand primitive and semantic tokens are defined; existing technical action, focus and text tokens are unchanged.
+- Assets are **not** consumed by the Shell or any component. No Header, Footer or shared logo component exists.
+- No route, dependency or lockfile change.
+- M2B awaits independent repository diff audit and GitHub Actions CI success.
+- M3 has not started.
+- M4 canonical shell integration, which owns runtime consumption of these assets, is deferred.
+
 ## Next Repository Modifications
 
 M0 is complete. Future milestones will add:

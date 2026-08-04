@@ -316,3 +316,33 @@ Feature styles do NOT reference primitive tokens directly. All runtime styling c
 ## Ready for CI Review
 
 This report documents M2A local verification only. GitHub Actions CI pipeline will perform independent validation. No approval is claimed.
+
+## Post-M2A Synchronization — M2B Brand Assets
+
+This section records later M2B developments. It does not revise M2A history or M2A acceptance claims. Every statement above remained correct for the M2A milestone at the time it was written.
+
+**M2A state was correct**: M2A legitimately contained no production assets and claimed no canonical brand palette. The temporary technical defaults documented above were the correct M2A baseline.
+
+**What M2B approved afterwards**: M2B approved the adapted logo direction and the following brand values:
+
+- `#8343FB` — symbol purple
+- `#0A0F2C` — wordmark navy
+
+**Tokens added in M2B**:
+
+| Layer     | Name                 |
+| --------- | -------------------- |
+| Primitive | `$brand-primary`     |
+| Primitive | `$brand-ink`         |
+| Semantic  | `--gc-brand-primary` |
+| Semantic  | `--gc-brand-ink`     |
+
+**What did not change**:
+
+- Existing technical interaction tokens are not replaced. `--gc-action`, `--gc-action-visited` and `--gc-focus-ring` keep their M2A technical values, and `--gc-text-primary` is unchanged.
+- The global font baseline remains the system stack in `--gc-font-family`.
+- The logo wordmark is delivered as outlines and creates no runtime Manrope dependency. No font file is added and no font is preloaded.
+- No brand token is applied to existing technical UI, and no route or component behavior changed.
+- M3 and M4 boundaries are unchanged. The tracked brand assets are not consumed by any runtime component; consumption remains deferred to M4 or another explicitly approved component milestone.
+
+Details: [m2-brand-assets-report.md](./m2-brand-assets-report.md) and [m2-brand-asset-manifest.json](./m2-brand-asset-manifest.json).

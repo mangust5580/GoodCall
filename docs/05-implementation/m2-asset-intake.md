@@ -4,13 +4,12 @@
 
 ### Canonical References
 
-- **FND-001**: Partial foundation reference (normative design planning document)
-- **Logo**: Circular purple symbol + uppercase GOODCALL text (canonical role established; production SVG absent)
+- **FND-001**: Historical provenance and design reference only (not the exact production-logo authority)
+- **Logo**: Adapted abstract circular/G-shaped symbol + outlined uppercase GOODCALL wordmark. Production SVG family delivered and tracked in M2B — see [m2-brand-assets-report.md](./m2-brand-assets-report.md)
 
 ### Current Limitations
 
-- Exact SVG source for primary logo unavailable
-- Font family/licensing status pending audit
+- Font family/licensing status pending audit (application typography; the logo wordmark is outlined and carries no runtime font dependency)
 - Production icon inventory not documented
 - Runtime raster media assets not inventoried
 
@@ -18,9 +17,30 @@
 
 ### Primary Assets
 
-- [ ] Primary horizontal logo SVG (h/w ratio, viewBox, clear space, minimum size)
-- [ ] Symbol-only logo SVG variant
-- [ ] Inverse/monochrome variants (subject to design validation)
+- [x] Primary horizontal logo SVG (h/w ratio, viewBox, clear space, minimum size)
+- [x] Symbol-only logo SVG variant
+- [x] Inverse/monochrome variants (subject to design validation)
+
+Completed in M2B. Tracked production paths:
+
+```
+src/assets/brand/goodcall-logo.svg
+src/assets/brand/goodcall-symbol.svg
+src/assets/brand/goodcall-logo-inverse.svg
+src/assets/brand/goodcall-symbol-inverse.svg
+src/assets/brand/goodcall-logo-monochrome.svg
+src/assets/brand/goodcall-symbol-monochrome.svg
+```
+
+Approved colors: symbol `#8343FB`, wordmark `#0A0F2C`, inverse `#FFFFFF`, monochrome `currentColor`.
+
+Clear space: at least `x` on every side, where `x` is the width of the central form of the symbol geometry.
+
+Minimum sizes: horizontal logo 120px width; symbol-only mark 16px.
+
+Accessibility ownership: asset files are context-neutral with no hardcoded `<title>`. The consuming component owns the accessible name, decorative duplicates can be hidden from the accessibility tree, symbol-only interactive use requires an explicit accessible name, and adjacent visible brand text must not create duplicate spoken labels.
+
+Assets are tracked and approved but not yet consumed by any runtime component. Full contract: [m2-brand-assets-report.md](./m2-brand-assets-report.md) and [m2-brand-asset-manifest.json](./m2-brand-asset-manifest.json).
 
 ### Icon System
 
@@ -42,7 +62,7 @@
 
 ### Responsive Derivatives
 
-- [ ] Logo sizing rules across viewports
+- [ ] Logo sizing rules across viewports (beyond the approved minimum sizes)
 - [ ] Asset crop/fit policy for responsive image containers
 - [ ] Quality/format metadata (PNG, WEBP, AVIF, quality levels)
 - [ ] Lazy-loading and srcset strategy
@@ -67,11 +87,12 @@ For future asset handoff to design system, require canonical metadata:
 
 ## Next Steps
 
-1. **Codex Task Initiation**: Collect canonical logo SVG from brand source
-2. **Icon Audit**: Inventory and classify all product icons
-3. **Typography Audit**: Confirm font licensing and performance targets
-4. **Media Audit**: Catalog product photography and marketing assets
-5. **Responsive Strategy**: Define sizing rules across breakpoints
-6. **Accessibility Verification**: Validate alt-text ownership and semantic roles
+1. **Icon Audit**: Inventory and classify all product icons
+2. **Typography Audit**: Confirm font licensing and performance targets for application typography
+3. **Media Audit**: Catalog product photography and marketing assets
+4. **Responsive Strategy**: Define sizing rules across breakpoints
+5. **Accessibility Verification**: Validate alt-text ownership and semantic roles for remaining asset classes
 
-No production assets are created in M2A. This document establishes intake protocol only.
+No production assets were created in M2A; this document established the intake protocol. The logo asset family was delivered and tracked in M2B. Icon inventory, general application typography and font audit, product and content media inventory, responsive media derivative work, and preload evidence remain open.
+
+Outlined logo wordmark glyphs do not approve Manrope as the global UI font. The application font baseline remains the system stack.

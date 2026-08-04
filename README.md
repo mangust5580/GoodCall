@@ -76,6 +76,8 @@ npm --version   # Should be 11.6.0+
 
 ```
 src/
+  assets/                # Static assets
+    brand/               # Approved logo SVG family (not yet consumed at runtime)
   app/                   # Application root and composition
     bootstrap.tsx        # Bootstrap function, MSW startup
     App.tsx              # Root component with providers and router
@@ -176,7 +178,20 @@ No suppression comments allowed without escalation.
   - **Typography** (_typography.scss): Semantic typography roles (body, headings)
   - **Accessibility** (_accessibility.scss): Focus management, motion, forced-colors support
 
-For details, see [M2A Foundations Report](docs/05-implementation/m2-foundations-report.md).
+#### Brand Tokens
+
+Two approved brand semantic tokens are defined:
+
+- `--gc-brand-primary` (#8343fb) — brand symbol purple
+- `--gc-brand-ink` (#0a0f2c) — brand wordmark navy
+
+Notes:
+
+- Existing action and focus tokens (`--gc-action`, `--gc-action-visited`, `--gc-focus-ring`) remain **technical defaults** and are not replaced by brand values.
+- Brand tokens are not applied to the existing technical UI. They document approved brand values for future component consumption.
+- Manrope is **not** loaded as a global runtime font. The logo wordmark is already outlined, so the brand assets carry no font dependency.
+
+For details, see [M2A Foundations Report](docs/05-implementation/m2-foundations-report.md) and [M2B Brand Assets Report](docs/05-implementation/m2-brand-assets-report.md).
 
 ### Testing
 
@@ -211,6 +226,8 @@ For details, see [M1 Routing Report](docs/05-implementation/m1-routing-report.md
 - [M1 Routing Report](docs/05-implementation/m1-routing-report.md)
 - [M2A Foundations Report](docs/05-implementation/m2-foundations-report.md)
 - [M2A Asset Intake Handoff](docs/05-implementation/m2-asset-intake.md)
+- [M2B Brand Assets Report](docs/05-implementation/m2-brand-assets-report.md)
+- [M2B Brand Asset Manifest](docs/05-implementation/m2-brand-asset-manifest.json)
 - [Repository State](docs/05-implementation/repository-state.md)
 - [Tooling Versions](docs/05-implementation/tooling-versions.md)
 

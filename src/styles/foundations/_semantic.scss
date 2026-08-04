@@ -8,6 +8,8 @@
   --gc-text-disabled: #999;
   --gc-border: #ddd;
   --gc-border-subtle: #e8e8e8;
+  --gc-brand-primary: #{prim.$brand-primary};
+  --gc-brand-ink: #{prim.$brand-ink};
   --gc-action: #{prim.$technical-accent};
   --gc-action-visited: #{prim.$technical-accent-visited};
   --gc-focus-ring: #{prim.$technical-accent};
