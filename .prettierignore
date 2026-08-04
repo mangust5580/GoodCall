@@ -1,5 +1,6 @@
 # Local temporary handoff files
 AUDIT.md
+artifacts/
 
 # Build and dependencies
 node_modules/
