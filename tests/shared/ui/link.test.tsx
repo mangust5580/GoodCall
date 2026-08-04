@@ -8,6 +8,10 @@ import type { LinkVariant } from '@/shared/ui';
 
 const VARIANTS: LinkVariant[] = ['primary', 'secondary', 'tertiary'];
 
+function rawHtmlProps() {
+  return { dangerouslySetInnerHTML: { __html: '<span>Wrong content</span>' } };
+}
+
 function renderWithRouter(ui: ReactElement) {
   return render(
     <MemoryRouter initialEntries={['/start']}>
@@ -130,6 +134,54 @@ describe('Link', () => {
     await user.tab();
     expect(link).toHaveFocus();
     await user.keyboard('{Enter}');
+
+    expect(screen.getByRole('heading', { name: 'Target page' })).toBeInTheDocument();
+  });
+
+  it('cannot be hidden, inerted or marked busy through a spread', async () => {
+    const user = userEvent.setup();
+    const forwarded = {
+      hidden: true,
+      'aria-hidden': true,
+      inert: true,
+      'aria-busy': true,
+    };
+
+    renderWithRouter(
+      <Link to="/target" {...forwarded}>
+        Go to target
+      </Link>
+    );
+
+    const link = screen.getByRole('link', { name: 'Go to target' });
+
+    expect(link).not.toHaveAttribute('hidden');
+    expect(link).not.toHaveAttribute('aria-hidden');
+    expect(link).not.toHaveAttribute('inert');
+    expect(link).not.toHaveAttribute('aria-busy');
+    expect(link).toHaveAttribute('href', '/target');
+
+    await user.tab();
+    expect(link).toHaveFocus();
+    await user.keyboard('{Enter}');
+
+    expect(screen.getByRole('heading', { name: 'Target page' })).toBeInTheDocument();
+  });
+
+  it('keeps ownership of its content when raw HTML arrives through a spread', async () => {
+    const user = userEvent.setup();
+    renderWithRouter(
+      <Link to="/target" {...rawHtmlProps()}>
+        Go to target
+      </Link>
+    );
+
+    const link = screen.getByRole('link', { name: 'Go to target' });
+
+    expect(link).toBeInTheDocument();
+    expect(screen.queryByText('Wrong content')).toBeNull();
+
+    await user.click(link);
 
     expect(screen.getByRole('heading', { name: 'Target page' })).toBeInTheDocument();
   });

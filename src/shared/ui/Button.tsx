@@ -9,10 +9,14 @@ export interface ButtonProps extends Omit<
   | 'style'
   | 'role'
   | 'tabIndex'
+  | 'hidden'
+  | 'inert'
+  | 'dangerouslySetInnerHTML'
   | 'aria-disabled'
   | 'aria-label'
   | 'aria-labelledby'
   | 'aria-busy'
+  | 'aria-hidden'
   | 'children'
 > {
   children: React.ReactNode;

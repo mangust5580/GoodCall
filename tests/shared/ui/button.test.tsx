@@ -6,6 +6,10 @@ import type { ActionVariant } from '@/shared/ui';
 
 const VARIANTS: ActionVariant[] = ['primary', 'secondary', 'tertiary', 'destructive'];
 
+function rawHtmlProps() {
+  return { dangerouslySetInnerHTML: { __html: '<span>Wrong content</span>' } };
+}
+
 describe('Button', () => {
   it('renders a native button', () => {
     render(<Button>Save</Button>);
@@ -204,6 +208,35 @@ describe('Button', () => {
     expect(button.classList.length).toBeGreaterThan(1);
     expect(screen.getByText('Save')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Wrong name' })).toBeNull();
+  });
+
+  it('cannot be hidden from the accessibility tree through a spread', async () => {
+    const user = userEvent.setup();
+    const forwarded = {
+      hidden: true,
+      'aria-hidden': true,
+      inert: true,
+    };
+
+    render(<Button {...forwarded}>Save</Button>);
+
+    const button = screen.getByRole('button', { name: 'Save' });
+
+    expect(button).not.toHaveAttribute('hidden');
+    expect(button).not.toHaveAttribute('aria-hidden');
+    expect(button).not.toHaveAttribute('inert');
+    expect(screen.getByText('Save')).toBeInTheDocument();
+
+    await user.tab();
+    expect(button).toHaveFocus();
+  });
+
+  it('keeps ownership of its content when raw HTML arrives through a spread', () => {
+    expect(() => render(<Button {...rawHtmlProps()}>Save</Button>)).not.toThrow();
+
+    expect(screen.getByRole('button', { name: 'Save' })).toBeInTheDocument();
+    expect(screen.getByText('Save')).toBeInTheDocument();
+    expect(screen.queryByText('Wrong content')).toBeNull();
   });
 
   it('does not adopt a forwarded busy state while idle', () => {

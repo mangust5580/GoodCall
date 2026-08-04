@@ -12,8 +12,17 @@ type Present<TProps, TKeys extends PropertyKey> = TKeys extends keyof TProps ? t
 type IsRequired<TProps, TKey extends keyof TProps> =
   Record<never, never> extends Pick<TProps, TKey> ? false : true;
 
+type ContentIntegrityProp = 'hidden' | 'inert' | 'dangerouslySetInnerHTML' | 'aria-hidden';
+
 type ControlForbiddenProp =
-  'style' | 'role' | 'tabIndex' | 'aria-disabled' | 'aria-label' | 'aria-labelledby' | 'aria-busy';
+  | 'style'
+  | 'role'
+  | 'tabIndex'
+  | 'aria-disabled'
+  | 'aria-label'
+  | 'aria-labelledby'
+  | 'aria-busy'
+  | ContentIntegrityProp;
 
 type LinkForbiddenProp =
   | 'style'
@@ -22,9 +31,11 @@ type LinkForbiddenProp =
   | 'aria-disabled'
   | 'aria-label'
   | 'aria-labelledby'
+  | 'aria-busy'
   | 'href'
   | 'disabled'
-  | 'isLoading';
+  | 'isLoading'
+  | ContentIntegrityProp;
 
 type NavigationEscapeProp = 'as' | 'href' | 'to';
 
@@ -70,7 +81,14 @@ type ControlForbiddenPropsExistOnButtonBase = Assert<
 type LinkForbiddenPropsExistOnRouterBase = Assert<
   Present<
     RouterLinkProps,
-    'style' | 'role' | 'tabIndex' | 'aria-disabled' | 'aria-label' | 'aria-labelledby'
+    | 'style'
+    | 'role'
+    | 'tabIndex'
+    | 'aria-disabled'
+    | 'aria-label'
+    | 'aria-labelledby'
+    | 'aria-busy'
+    | ContentIntegrityProp
   >
 >;
 

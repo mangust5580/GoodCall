@@ -6,8 +6,9 @@
 | -------------------------------------------------------------- | ------------------------------------------------- |
 | M3-01 — Shared UI scaffold, layout and accessibility utilities | **APPROVED AND CLOSED**                           |
 | M3-01A — VisuallyHidden accessibility contract correction      | **APPROVED AND CLOSED**                           |
-| M3-02 — Semantic action primitives                             | superseded by M3-02A                              |
-| M3-02A — Action semantic ownership correction                  | **CORRECTED — AWAITING INDEPENDENT AUDIT AND CI** |
+| M3-02 — Semantic action primitives                             | superseded by M3-02A and M3-02B                   |
+| M3-02A — Action semantic ownership correction                  | superseded by M3-02B                              |
+| M3-02B — Interactive content integrity correction              | **CORRECTED — AWAITING INDEPENDENT AUDIT AND CI** |
 
 This report covers the Shared UI layer of milestone M3. It records local verification for the task under review. No approval is claimed for M3-02 and no later M3 task has started.
 
@@ -291,6 +292,18 @@ Each component enforces ownership in three layers: the forbidden keys are absent
 - `aria-busy` is owned by `isLoading` alone. An idle control never carries a forwarded busy state.
 - `IconButton`'s `aria-label` is owned by `label` alone.
 - `Link`'s `href` is owned by `to` alone, and `tabIndex` is removed so the link cannot be pulled out of the tab order.
+
+### Interactive content integrity
+
+An interactive primitive must stay interactive. The following are removed from all three public types and stripped from the forwarded object — see [M3-02B](#m3-02b--interactive-content-integrity-correction):
+
+- **`hidden`, `aria-hidden`, `inert`** — none of these may be applied to an action root. `hidden` removes the control from the rendered interaction contract entirely; `aria-hidden` leaves a focusable control in the tab order while deleting it from the accessibility tree, so a keyboard user reaches a control a screen reader cannot describe; `inert` introduces an alternative disabled-like state outside the approved native-`disabled` contract, and on `Link` it reinstates exactly the disabled-link simulation the family forbids.
+- **`dangerouslySetInnerHTML`** — `children` belong to the component contract. Forwarding raw HTML alongside them throws React's "Can only set one of `children` or `props.dangerouslySetInnerHTML`", and if it did render it would replace the declared visible-label contract and bypass the structural markup the component owns inside its root.
+
+`Link` additionally rejects `aria-busy`: it has no loading or busy state, so accepting the prop and silently discarding it would be a misleading API.
+
+This applies to the **root** only. `IconButton` still sets `aria-hidden="true"` on its own decorative wrapper and on its loading indicator — that is component-owned, deliberate, and unaffected by the consumer-facing prohibition.
+
 - `Button` and `IconButton` cannot be turned into links: `href`, `to` and `as` are absent from their types, and `ButtonHTMLAttributes` never carried them.
 - `Link` cannot be turned into a control: `disabled`, `isLoading`, `aria-disabled` and `role` are absent from its type.
 - `style`, `role`, `tabIndex`, `aria-label` and `aria-labelledby` are removed from `Button` and `IconButton` so a consumer cannot override the element's semantics, replace the accessible name with a conflicting one, substitute `aria-disabled` for the native attribute, or remove the control from the tab order.
@@ -413,8 +426,55 @@ All five new tests were confirmed to fail against the M3-02 implementation befor
 
 No style file, variant, loading visual, minimum target size, forced-colors rule or reduced-motion rule was touched. `Button.module.scss`, `Link.module.scss`, `IconButton.module.scss`, `_action-base.scss` and `action-variant.ts` are byte-identical to M3-02. The runtime export surface is unchanged — still exactly seven components; the new helper is internal. M3-01 primitives, routes, shell, foundations, assets, dependencies and configs are untouched, and no M3-03 work is present.
 
+## M3-02B — Interactive content integrity correction
+
+**Status: CORRECTED — AWAITING INDEPENDENT AUDIT AND CI**
+
+### Finding ACTION-A11Y-02
+
+M3-02A closed the semantic-override path, but the cumulative contract was still incomplete. Three categories remained.
+
+**Accessibility-tree removal.** `hidden`, `aria-hidden` and `inert` were neither excluded from the public types nor stripped by the forwarding filter, so `<Button aria-hidden="true">Save</Button>`, `<IconButton label="Close" inert>` and `<Link to="/checkout" hidden>` were all well-typed. Each defeats the purpose of an interactive primitive: `aria-hidden` leaves the control focusable but invisible to assistive technology, `inert` creates a disabled-like state outside the native-`disabled` contract — reinstating disabled-link simulation on `Link` — and `hidden` removes the control from the interaction contract altogether.
+
+`hidden` was not named in the audit summary. It is the direct equivalent of the same defect category, so it is fixed here to make the cumulative contract complete rather than deferred to a third corrective pass.
+
+**Children ownership.** `dangerouslySetInnerHTML` survived in the base attribute types and in the forwarded object. Because all three components own their `children`, forwarding raw HTML threw React's "Can only set one of `children` or `props.dangerouslySetInnerHTML`" at render time, and would otherwise have replaced the declared content contract.
+
+**Link busy-state mismatch.** M3-02A's filter already stripped `aria-busy`, but `LinkProps` still accepted it. `<Link to="/catalog" aria-busy="true">` compiled and the prop silently vanished — a misleading public API contradicting `Link`'s documented absence of any busy state.
+
+### Type corrections
+
+| Component         | Newly excluded                                                           |
+| ----------------- | ------------------------------------------------------------------------ |
+| `ButtonProps`     | `hidden`, `aria-hidden`, `inert`, `dangerouslySetInnerHTML`              |
+| `IconButtonProps` | `hidden`, `aria-hidden`, `inert`, `dangerouslySetInnerHTML`              |
+| `LinkProps`       | `hidden`, `aria-hidden`, `inert`, `dangerouslySetInnerHTML`, `aria-busy` |
+
+Every earlier M3-02 and M3-02A prohibition is retained. Safe consumer-owned props are untouched: `id`, `name`, `value`, `form`, `type`, `disabled`, `onClick`, `onFocus`, `aria-describedby`, `aria-controls` and `className` on the controls; `id`, `to`, `replace`, `state`, `relative`, `preventScrollReset`, `aria-describedby`, `aria-controls` and `className` on `Link`. `children` remains required on all three, `to` on `Link`, `label` on `IconButton`.
+
+### Runtime filtering correction
+
+`withoutOwnedAttributes` now strips a fixed set of **twelve** keys:
+
+```
+role, tabIndex, style, href, hidden, inert, dangerouslySetInnerHTML,
+aria-label, aria-labelledby, aria-disabled, aria-busy, aria-hidden
+```
+
+The helper stays narrow: it is private, unexported from the barrel, used by all three primitives, removes only these twelve keys, never touches unknown or safe props, and maintains no HTML-attribute allowlist. There is no `any`, no index signature, no type assertion, no `Proxy`, no `cloneElement` and no suppression comment. The M3-02A ordering is unchanged — filtered consumer props first, then component-owned attributes, then component-owned children.
+
+### Regression evidence
+
+Six new spread-object tests were added — hiding-props and raw-HTML cases for each component, with the `Link` hiding case also covering the `aria-busy` mismatch. All six were confirmed failing against the previous implementation: the hiding cases could not find the element by role at all, because a `hidden` or `aria-hidden` root is excluded from the accessibility tree, and the raw-HTML cases threw React's children conflict error.
+
+The type-level suite gained the four content-integrity keys for every component plus `aria-busy` for `Link`, and the router base-type guard was widened to match. Three deliberate type regressions were verified to break `npm run typecheck`.
+
+### Unchanged boundaries
+
+No style file, variant, loading visual, disabled visual, minimum target size, focus-visible rule, forced-colors rule or reduced-motion rule was touched. The runtime export surface is unchanged — still exactly seven components, with the helper internal. M3-01 primitives, routes, shell, foundations, assets, dependencies and configs are untouched, and no M3-03 work is present.
+
 ## Next Permitted Step
 
-The only permitted next step is an **independent diff audit of the M3-02A commit**, followed by GitHub Actions CI for it.
+The only permitted next step is an **independent diff audit of the M3-02B commit**, followed by GitHub Actions CI for it.
 
 M3-03 must not begin until M3-02 is recorded as APPROVED AND CLOSED. No M4 work and no domain work is authorised by this report.

@@ -6,6 +6,10 @@ import type { ActionVariant } from '@/shared/ui';
 
 const VARIANTS: ActionVariant[] = ['primary', 'secondary', 'tertiary', 'destructive'];
 
+function rawHtmlProps() {
+  return { dangerouslySetInnerHTML: { __html: '<span>Wrong content</span>' } };
+}
+
 describe('IconButton', () => {
   it('renders a native button', () => {
     render(<IconButton label="Close dialog">x</IconButton>);
@@ -199,6 +203,49 @@ describe('IconButton', () => {
     expect(button.classList.contains('consumer-hook')).toBe(true);
     expect(button.classList.length).toBeGreaterThan(1);
     expect(screen.queryByRole('button', { name: 'Wrong name' })).toBeNull();
+  });
+
+  it('cannot be hidden from the accessibility tree through a spread', async () => {
+    const user = userEvent.setup();
+    const forwarded = {
+      hidden: true,
+      'aria-hidden': true,
+      inert: true,
+    };
+
+    const { container } = render(
+      <IconButton label="Close dialog" {...forwarded}>
+        decorative
+      </IconButton>
+    );
+
+    const button = screen.getByRole('button', { name: 'Close dialog' });
+
+    expect(button).not.toHaveAttribute('hidden');
+    expect(button).not.toHaveAttribute('aria-hidden');
+    expect(button).not.toHaveAttribute('inert');
+    expect(button).toHaveAttribute('aria-label', 'Close dialog');
+
+    const decorative = container.querySelector('[aria-hidden="true"]');
+
+    expect(decorative).not.toBeNull();
+    expect(decorative).not.toBe(button);
+    expect(decorative?.textContent).toBe('decorative');
+
+    await user.tab();
+    expect(button).toHaveFocus();
+  });
+
+  it('keeps ownership of its content when raw HTML arrives through a spread', () => {
+    const { container } = render(
+      <IconButton label="Close dialog" {...rawHtmlProps()}>
+        decorative
+      </IconButton>
+    );
+
+    expect(screen.getByRole('button', { name: 'Close dialog' })).toBeInTheDocument();
+    expect(screen.queryByText('Wrong content')).toBeNull();
+    expect(container.querySelector('[aria-hidden="true"]')?.textContent).toBe('decorative');
   });
 
   it('does not adopt a forwarded busy state while idle', () => {
