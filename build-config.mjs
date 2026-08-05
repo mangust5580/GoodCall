@@ -1,6 +1,7 @@
 export const BUILD_CONFIG = {
   dev: {
     base: '/',
+    publicDir: 'dev-public',
   },
 
   production: {
@@ -35,5 +36,13 @@ export const BUILD_CONFIG = {
   getBase(command, mode) {
     const isProduction = command === 'build' || (command === 'serve' && mode === 'production');
     return isProduction ? this.getProductionBase() : this.getDevelopmentBase();
+  },
+
+  getDevelopmentPublicDir() {
+    return this.dev.publicDir;
+  },
+
+  getPublicDir(command, isPreview) {
+    return command === 'serve' && isPreview === false ? this.getDevelopmentPublicDir() : false;
   },
 };

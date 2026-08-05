@@ -6,11 +6,13 @@ import { BUILD_CONFIG } from './build-config.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-export default defineConfig(({ command, mode }) => {
+export default defineConfig(({ command, mode, isPreview }) => {
   const base = BUILD_CONFIG.getBase(command, mode);
+  const publicDir = BUILD_CONFIG.getPublicDir(command, isPreview);
 
   return {
     base,
+    publicDir,
     plugins: [react()],
     resolve: {
       alias: {

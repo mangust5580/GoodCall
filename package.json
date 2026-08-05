@@ -13,19 +13,20 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "lint:styles": "stylelint src/**/*.scss",
-    "format": "prettier --write .",
-    "format:check": "prettier --check .",
+    "format": "prettier --write . \"!dev-public/**\"",
+    "format:check": "prettier --check . \"!dev-public/**\"",
     "test": "vitest run",
     "test:watch": "vitest",
     "build": "vite build && npm run prepare:pages && npm run report:sizes",
     "prepare:pages": "node scripts/prepare-pages-artifact.mjs",
     "report:sizes": "node scripts/report-bundle-sizes.mjs",
     "validate:build": "node scripts/validate-build.mjs",
+    "verify:dev-bootstrap": "node scripts/verify-dev-bootstrap.mjs",
     "preview": "vite preview",
     "test:e2e": "playwright test",
     "check:comments": "node scripts/check-comments.mjs",
     "check": "npm run typecheck && npm run lint && npm run lint:styles && npm run format:check && npm run check:comments",
-    "check:full": "npm run typecheck && npm run lint && npm run lint:styles && npm run format:check && npm run check:comments && npm test && npm run build && npm run validate:build"
+    "check:full": "npm run typecheck && npm run lint && npm run lint:styles && npm run format:check && npm run check:comments && npm test && npm run verify:dev-bootstrap && npm run build && npm run validate:build"
   },
   "dependencies": {
     "react": "^19.2.8",

@@ -52,11 +52,13 @@ GoodCall M0 bootstrap successfully initialized a greenfield React SPA repository
 
 ### MSW Configuration
 
-**Decision**: MSW configured to start only in development (`import.meta.env.DEV` guard in `src/main.tsx`).
+**Decision**: MSW configured to start only in development (`import.meta.env.DEV` guard in `src/app/bootstrap.tsx`).
 
 **Why**: Prevents accidental mock interception in production. Worker script is not included in dist/.
 
 **Validation**: `scripts/validate-build.mjs` explicitly checks for absence of `mockServiceWorker.js`.
+
+**Corrected in M3-05B**: the worker asset itself was never generated, so development never actually started. See [BR-01](#br-01--development-msw-bootstrap-restoration-m3-05b).
 
 ## Technology Versions
 
@@ -150,8 +152,11 @@ npm test               # ✓ All pass
 npm run build          # ✓ Deterministic
 npm run validate:build # ✓ All checks pass
 npm run test:e2e       # ✓ All pass (with server running)
-npm run check:full     # ✓ Comprehensive (serverless)
+npm run verify:dev-bootstrap # ✓ Owns its dev server and headless browser, then releases both
+npm run check:full     # ✓ Comprehensive
 ```
+
+`check:full` is no longer serverless: it includes `verify:dev-bootstrap`, which starts a development server on a free loopback port and closes it again. That step never touches the developer's own server or browser.
 
 ### Comment Policy
 
@@ -227,6 +232,62 @@ Steps:
 3. **Axe Scan Scope**: E2E axe scan covers only the bootstrap page. Full product accessibility audit deferred to when content is added.
 
 4. **Bundle Analysis**: Size reporting is informational. No numeric budgets enforced in M0.
+
+## BR-01 — Development MSW bootstrap restoration (M3-05B)
+
+**Status: IMPLEMENTED — AWAITING INDEPENDENT AUDIT AND CI**
+
+### Symptom
+
+`npm run dev` served HTTP 200 and the document title, but the application never rendered: `#root` stayed empty, no `main#main-content`, no `<h1>`, body text length 0. The user saw a blank white page with no explanation.
+
+### Root cause
+
+Four facts combined:
+
+1. `src/app/bootstrap.tsx` awaited `startMSW()` **before** `ReactDOM.createRoot(...).render(...)`.
+2. `src/main.tsx` called `bootstrap()` with no rejection handler.
+3. The worker asset was **never generated** — there was no `public/` directory and no `mockServiceWorker.js` anywhere in the repository. M0 configured MSW startup and documented its production exclusion, but the file that startup depends on was never created.
+4. `worker.start()` requested `/mockServiceWorker.js`; Vite's SPA fallback answered with `index.html` at `text/html`, so `navigator.serviceWorker.register()` rejected on MIME type.
+
+The rejection propagated out of `bootstrap()` and the render call was never reached.
+
+### Why production CI never detected it
+
+`startMSW()` is gated by `import.meta.env.DEV`, which is false in a production build. Every automated gate — typecheck, lint, unit tests, build, build validation and all 23 Playwright E2E tests — runs against either jsdom or the production preview build. **Nothing in the pipeline loaded the development entry point**, so a completely broken `npm run dev` passed every gate for the entire M0–M3 history.
+
+### Accepted design
+
+**Dev-only public directory.** The generated worker is tracked at `dev-public/mockServiceWorker.js`. `BUILD_CONFIG.getPublicDir(command, isPreview)` is the single decision point:
+
+| Vite mode          | `publicDir`  |
+| ------------------ | ------------ |
+| development server | `dev-public` |
+| production build   | `false`      |
+| production preview | `false`      |
+
+The worker therefore cannot reach `dist/` by construction, and the existing build validator remains the authoritative backstop.
+
+**Explicit worker URL.** `startMSW()` passes `serviceWorker.url = ${import.meta.env.BASE_URL}mockServiceWorker.js`, so the path follows the configured base instead of an implicit default. No host, port or filesystem path is hardcoded.
+
+**Fail-closed startup.** A worker failure never renders the application as though mocks exist. There is no `.catch(() => undefined)` anywhere in the startup path. `src/main.tsx` attaches a rejection handler that calls `renderBootstrapFailure`.
+
+**Visible fatal diagnostic.** `src/app/render-bootstrap-failure.ts` logs under the stable `[GoodCall bootstrap]` prefix and replaces the root with one `<main>` and one `<h1>` reading `GoodCall could not start`, plus a single sentence pointing at the console. It uses no Shared UI (which may itself be unavailable during a bootstrap failure), no CSS, no timers, no retry control, no routing and no raw error text or stack — the error goes to the console, never into the DOM.
+
+**Dev-bootstrap Chromium gate.** `scripts/verify-dev-bootstrap.mjs` (`npm run verify:dev-bootstrap`) starts the dev server through the Vite Node API on an OS-selected free loopback port, asserts `/mockServiceWorker.js` returns JavaScript carrying the generated `PACKAGE_VERSION` and `INTEGRITY_CHECKSUM` markers, loads the page in an isolated headless Chromium, and requires a rendered root, exactly one `main#main-content`, exactly one `<h1>` containing `GoodCall Shared UI verification`, the visible technical notice, an absent failure diagnostic, a service-worker registration ending in `/mockServiceWorker.js`, and zero page errors, console errors, request failures and failed module requests. It owns its whole lifecycle in `try/finally`, closes the browser and the server, and verifies the port stops responding. It runs in `check:full` and as a dedicated CI step.
+
+### Production exclusion evidence
+
+`publicDir` is `false` for build and preview; `npm run validate:build` fails on any `dist` filename containing `mockServiceWorker`; `tests/validate-build.test.ts` keeps its `fails when MSW worker present` case; and a post-build scan of `dist` finds no worker file.
+
+### Rejected variants
+
+- **Preview-only browser review as a substitute for fixing dev** — would leave `npm run dev` broken for every developer and hide the defect behind the one environment that never exercises it.
+- **Worker in the ordinary production `public/` directory** — ships the worker to GitHub Pages and lets a mock layer reach real users.
+- **Copying the worker into `dist` and accepting it** — same exposure, and it would require weakening the build validator that already rejects it.
+- **Silently continuing when MSW fails** (`worker.start().catch(() => undefined)`) — development would run against real network calls while appearing to be mocked, which is worse than a blank page.
+- **Attaching automation to the user's browser** — the verifier must never control or terminate a developer's Chrome/Edge session.
+- **Detached background server orchestration** — leaves orphaned servers and ports behind; the verifier runs one foreground process it fully owns.
 
 ## Next Steps
 

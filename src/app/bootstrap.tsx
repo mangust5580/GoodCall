@@ -10,6 +10,9 @@ async function startMSW() {
     const { worker } = await import('@/mocks');
     await worker.start({
       onUnhandledRequest: 'warn',
+      serviceWorker: {
+        url: `${import.meta.env.BASE_URL}mockServiceWorker.js`,
+      },
     });
   }
 }

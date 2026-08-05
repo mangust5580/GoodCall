@@ -11,8 +11,10 @@
 | M3-03B — Shared UI directory organization                      | **APPROVED AND CLOSED**                                                                                  |
 | M3-04 — Feedback, status and validation-summary primitives     | **APPROVED AND CLOSED**                                                                                  |
 | M3-05 — Shared UI runtime integration                          | **IMPLEMENTED — CORRECTIVE TEST PASS APPLIED — AWAITING INDEPENDENT AUDIT, CI, AND USER BROWSER REVIEW** |
+| M3-05A — Shell-aware announcement ownership correction         | **APPROVED AND CLOSED**                                                                                  |
+| M3-05B — Dev MSW bootstrap restoration                         | **IMPLEMENTED — AWAITING INDEPENDENT AUDIT AND CI**                                                      |
 
-This report covers the Shared UI layer of milestone M3. It records local verification for the task under review. No approval is claimed for M3-04 and no later M3 task has started.
+This report covers the Shared UI layer of milestone M3. It records local verification for the tasks under review. M3-01 through M3-04 are approved and closed; M3-05 and its corrective passes are recorded in their own sections below, and M3 as a whole is not closed.
 
 ### M3-01 / M3-01A closure evidence
 
@@ -1015,7 +1017,7 @@ M4 remains the first milestone permitted to build the canonical shell — Header
 
 ## M3-05A — Shell-aware announcement ownership correction
 
-**Status: IMPLEMENTED — AWAITING INDEPENDENT AUDIT, CI, AND USER BROWSER REVIEW**
+**Status: APPROVED AND CLOSED** — independent audit APPROVED; GitHub Actions run 30965324334, job 92177917198, checked SHA `ac24d87e2c72fed059a7dc7031d780fde502a076`, conclusion success, with 522 unit/integration tests, build and validation passing and **23 E2E passing**.
 
 A narrow corrective pass over **test assertions and this report only**. No runtime code was changed, and M3-05 is not approved by it.
 
@@ -1054,8 +1056,35 @@ No status assertion was deleted or weakened.
 
 `src/**` is untouched — `HomePage`, Shared UI, `RootLayout`, `#route-announcement`, routing lifecycle, styles and assets are all unchanged. No dependency, lockfile, config, CI or script change. Exactly three tracked files changed: the two test files and this report.
 
+## M3-05B — Dev MSW bootstrap restoration
+
+**Status: IMPLEMENTED — AWAITING INDEPENDENT AUDIT AND CI**
+
+### Why this sits inside M3
+
+The M3 browser review was attempted at SHA `ac24d87…` and **failed before a single checklist assertion ran**. The development server returned HTTP 200 but the application never mounted: `#root` empty, no `main#main-content`, no `<h1>`, body text length 0. The cause was defect **BR-01** — MSW's worker asset had never been generated, so `worker.start()` rejected on a `text/html` response and the rejection propagated out of `bootstrap()` before `render()`.
+
+That is an **M0 development-bootstrap defect**, not a Shared UI one. Every automated gate passed at that SHA because none of them loads the development entry point. M3-05B fixes it so the browser review can actually be performed.
+
+### What changed
+
+No Shared UI, Home, route, shell, routing-lifecycle, style or asset behaviour changed. `src/shared/ui/**`, `tests/shared/ui/**`, `src/routes/**`, `tests/routes/**`, `tests/e2e/bootstrap.spec.ts`, `src/app/shell/**`, `src/styles/**` and `src/assets/**` are all untouched.
+
+The change is confined to development bootstrap: a tracked `dev-public/mockServiceWorker.js`, a `publicDir` contract that serves it in development and disables it for build and preview, an explicit worker URL derived from `import.meta.env.BASE_URL`, a fail-closed startup path with a plain-DOM fatal diagnostic, and a Chromium regression gate that loads the development entry point in CI.
+
+Full root cause, design, production-exclusion evidence and rejected variants: [BR-01 in the M0 bootstrap report](bootstrap-report.md#br-01--development-msw-bootstrap-restoration-m3-05b).
+
+### Effect on M3 evidence
+
+- The 18 route-level RTL tests, the 23 E2E scenarios and the announcement-ownership contract are **unchanged**.
+- Unit/integration totals move from 522 in 36 files to **533 in 37 files** — 8 new bootstrap-failure tests plus 3 `publicDir` contract tests.
+- Expected CI E2E remains **23**.
+- The M3 browser review is still **owed**. It has to be re-run once M3-05B is audited and green in CI. Nothing about M3-05 or M3-05A is confirmed or contradicted by this task.
+
+M3 remains open and M4 remains blocked.
+
 ## Next Permitted Step
 
-The only permitted next step is an **independent diff audit of the M3-05A corrective commit**, followed by GitHub Actions CI for it and the user's browser review.
+The only permitted next step is an **independent diff audit of the M3-05B commit**, followed by GitHub Actions CI for it, and then a repeat of the M3 browser review.
 
 M4 must not begin until M3 is recorded as APPROVED AND CLOSED. No domain work is authorised by this report.

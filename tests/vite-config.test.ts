@@ -17,3 +17,17 @@ describe('Vite Config Base Path Selection', () => {
     expect(base).toBe('/GoodCall/');
   });
 });
+
+describe('Vite Config Public Directory Selection', () => {
+  it('development server uses dev-public', () => {
+    expect(BUILD_CONFIG.getPublicDir('serve', false)).toBe('dev-public');
+  });
+
+  it('production build disables publicDir', () => {
+    expect(BUILD_CONFIG.getPublicDir('build', false)).toBe(false);
+  });
+
+  it('production preview disables publicDir', () => {
+    expect(BUILD_CONFIG.getPublicDir('serve', true)).toBe(false);
+  });
+});
