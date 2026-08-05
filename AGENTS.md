@@ -32,9 +32,16 @@ Authored comments are prohibited in production and test code.
 
 ## Local Server Ownership
 
-Only the user (developer) may manage local servers. Agents must never manage server lifecycle, apart from the single bounded verifier below.
+Only the user (developer) may manage local servers. Agents must never manage server lifecycle, apart from the two bounded, repository-owned exceptions below.
 
-**Rule:** Do not run commands that start, stop, or manage local servers, except the single bounded verifier described in [Bounded Verification Exception](#bounded-verification-exception).
+**Rule:** Do not run commands that start, stop, or manage local servers, except the two commands described in [Bounded Verification Exception](#bounded-verification-exception) and [Bounded Browser Review Exception](#bounded-browser-review-exception).
+
+The two exceptions are distinct and are not interchangeable:
+
+- **`verify:dev-bootstrap`** — directly or through `check:full` — is a **bounded development gate**. It is part of the routine local and CI gate set.
+- **`review:m3-browser`** is **explicitly initiated milestone-review tooling**. It is never part of a gate, and it runs only when the user asks for it or approves it.
+
+No other server-bearing command is permitted under either exception.
 
 **Prohibited actions:**
 
@@ -59,7 +66,7 @@ Only the user (developer) may manage local servers. Agents must never manage ser
 
 ## Bounded Verification Exception
 
-One repository-owned verifier is exempt from the rule above, because it is finite, self-cleaning and owns every resource it creates.
+This is the first of the two exceptions. One repository-owned verifier is exempt from the rule above, because it is finite, self-cleaning and owns every resource it creates.
 
 **Scope of the exception — exactly two invocations:**
 
@@ -90,7 +97,7 @@ Nothing else is covered. The exception grants no general permission to start ser
 
 ## Bounded Browser Review Exception
 
-A second repository-owned command is exempt, on the same bounded terms plus one addition: it may open a **headed** browser window, but only for an explicit user sign-off phase.
+This is the second of the two exceptions. A repository-owned command is exempt on the same bounded terms plus one addition: it may open a **headed** browser window, but only for an explicit user sign-off phase.
 
 **Scope of the exception — one invocation:**
 

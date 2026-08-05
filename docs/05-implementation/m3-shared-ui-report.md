@@ -14,7 +14,8 @@
 | M3-05A — Shell-aware announcement ownership correction                | **APPROVED AND CLOSED**                                                                                  |
 | M3-05B — Dev MSW bootstrap restoration                                | **APPROVED AND CLOSED** with M3-05C                                                                      |
 | M3-05C — Agent policy, artifact and verifier lifecycle reconciliation | **APPROVED AND CLOSED**                                                                                  |
-| M3-05D — Bounded browser review harness                               | **IMPLEMENTED — AWAITING INDEPENDENT AUDIT AND CI**                                                      |
+| M3-05D — Bounded browser review harness                               | **CI SUCCESS — INDEPENDENT AUDIT RETURNED CHANGES REQUIRED — SUPERSEDED BY M3-05E**                      |
+| M3-05E — Browser review harness reliability and evidence integrity    | **IMPLEMENTED — AWAITING INDEPENDENT AUDIT AND CI**                                                      |
 
 This report covers the Shared UI layer of milestone M3. It records local verification for the tasks under review. M3-01 through M3-04 are approved and closed; M3-05 and its corrective passes are recorded in their own sections below, and M3 as a whole is not closed.
 
@@ -1141,8 +1142,36 @@ Real browser zoom, real OS forced-colors mode and screen-reader behaviour remain
 
 M3 remains open. M4 remains blocked.
 
+## M3-05E — Browser review harness reliability and evidence integrity
+
+**Status: IMPLEMENTED — AWAITING INDEPENDENT AUDIT AND CI**
+
+### M3-05D outcome
+
+GitHub Actions run **30971101806**, job 92195393439, checked SHA `6a30e0e7a1d1a0d6a7899069e5f7821b66a4e2c2`, conclusion **success** — Dev bootstrap, TypeCheck, ESLint, Stylelint, Prettier, comment check, 533 unit/integration tests in 37 files, build, build validation and 23 production-preview E2E all green, bundle raw 407.10 KB / gzip 122.19 KB.
+
+The **independent audit returned CHANGES REQUIRED** with seven findings — M3D-STATUS-01, M3D-EVIDENCE-01, M3D-LIFECYCLE-01, M3D-DIAGNOSTICS-01, M3D-FOCUS-01, M3D-COVERAGE-01 and M3D-POLICY-01. A green CI run did not close them: CI never runs the harness, so none of the seven is observable from the pipeline.
+
+The findings concern whether the harness reports the truth — exit code diverging from report status, evidence not bound to a real commit, interactive context that could leak, diagnostics collected but never enforced, focus "evidence" that could pass without a visible ring, coverage narrower than claimed, and a policy sentence contradicting itself.
+
+### What M3-05E changes
+
+Four tracked files: `AGENTS.md`, `scripts/review-m3-browser.mjs` and two implementation reports. Finding-by-finding detail: [M3-05E in the M0 bootstrap report](bootstrap-report.md#m3-05e--browser-review-harness-reliability-and-evidence-integrity).
+
+### What M3-05E does not change
+
+**No product runtime change.** Shared UI, Home, routes, the shell, the routing lifecycle, the MSW worker, the Vite `publicDir` contract, `scripts/verify-dev-bootstrap.mjs`, `package.json`, `package-lock.json` and every test file are untouched. Unit/integration totals remain **533 in 37 files**, expected E2E remains **23**, and the bundle is unchanged.
+
+### Evidence status
+
+The provisional automated-only runs recorded during M3-05D — and those recorded during this stage — are **discarded as closure evidence**. They were produced by unaudited harness versions, are not bound to an approved SHA, and carry no user sign-off. The harness now marks such runs `PROVISIONAL` and refuses to treat them as final.
+
+The M3 browser review remains **owed**. It must be re-run bound to an approved SHA after M3-05E is audited and CI is green for that exact commit. Real browser zoom, real OS forced-colors mode and screen-reader behaviour remain unverified.
+
+M3 remains open. M4 remains blocked.
+
 ## Next Permitted Step
 
-The only permitted next step is an **independent diff audit of the M3-05D commit**, followed by GitHub Actions CI for it, and then the M3 browser review itself.
+The only permitted next step is an **independent diff audit of the M3-05E commit**, followed by GitHub Actions CI for it, and then the M3 browser review bound to that approved SHA.
 
 M4 must not begin until M3 is recorded as APPROVED AND CLOSED. No domain work is authorised by this report.

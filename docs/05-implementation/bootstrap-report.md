@@ -365,6 +365,57 @@ No product runtime change. The MSW worker, the `publicDir` contract, the explici
 
 Any browser-review evidence produced before the harness itself is independently audited is **provisional** and must be repeated after M3-05D is approved and CI is green for its exact SHA. Implementing the harness is not the same as passing the review.
 
+## M3-05E — Browser review harness reliability and evidence integrity
+
+**Status: IMPLEMENTED — AWAITING INDEPENDENT AUDIT AND CI**
+
+The independent audit of M3-05D returned **CHANGES REQUIRED** with seven findings. The accepted M3-05D architecture is unchanged: the same repository-owned command, Vite Node API, dynamic loopback port, isolated Chromium, headed sign-off phase, untracked artifacts, and no product-runtime coupling. What changed is whether the harness can be trusted to tell the truth about a run.
+
+### Status and exit code are one contract
+
+Status resolution is now a single pure function fed by baseline eligibility, startup blockers, execution exceptions, automated failures, axe violations, diagnostics failures, manual answers, interruption, cleanup errors and port release. The exit code is derived from the final status through a fixed map — `AUTOMATED PASS — USER SIGN-OFF PENDING` and `AUTOMATED + USER REVIEW PASSED` exit 0; `FAILED` and `PARTIAL` exit 1. Nothing computes an exit code independently, so a report can no longer disagree with the process result, and success wording is never printed for a failed or partial run.
+
+### Repository evidence integrity
+
+The harness derives its own identity before starting anything: `git rev-parse HEAD`, `git branch --show-current` and `git status --porcelain --untracked-files=no`. There is no hardcoded SHA fallback and no reliance on `GITHUB_SHA`.
+
+A run is bound to an approved baseline through the `GOODCALL_REVIEW_SHA` environment variable. Without it a run is legal but is stamped **PROVISIONAL** and can never be final-review evidence. A final interactive review requires the variable, an exact HEAD match, branch `main` and a clean tracked tree; any mismatch is rejected **before** Vite or Chromium starts. Node, Playwright and Chromium versions are read from the runtime and package metadata rather than written into the source.
+
+### Interactive lifecycle and signals
+
+The interactive browser, context and page are created in the main lifecycle scope and the page is handed to the sign-off function, which no longer owns context creation. `SIGINT` and `SIGTERM` set an interruption flag and abort the readline prompt instead of exiting the process, so cleanup always runs and an interrupted sign-off resolves to `PARTIAL`.
+
+### Diagnostics are a gate, not a note
+
+Page errors, console errors, request failures, HTTP ≥ 400 responses and failed critical resources — script, stylesheet, fetch/XHR, document and service worker — are collected from the automated, touch and interactive contexts and evaluated in a mandatory final section. Anything unexpected fails the review. The allow-list is empty and is structured to require an exact pattern, a reason and a scope for any future entry; blanket suppression of warnings, 4xx or request failures is not possible.
+
+### Focus evidence
+
+Representative controls are reached by **real** `Tab` traversal from a known document state, with the tab order recorded and DOM ordering asserted. `:focus-visible` is a prerequisite, not proof: a target passes only when a computed indicator is materially visible — an outline with non-zero width and a non-transparent colour, a real box-shadow, or a border/background change measured against the unfocused baseline. Focused targets are also checked for viewport visibility and for obscuration by another element via hit-testing. The same rule is applied under forced-colors emulation, where the `PASS — PLAYWRIGHT EMULATION` note is now conditional on that section having zero failures.
+
+### Coverage corrections
+
+Every viewport is measured in three states — initial, invalid and success — instead of initial only. Explicit bounding-box overlap detection replaces the implicit claim that no overflow means no overlap, skipping nested pairs and allowing a 1 px border-touch tolerance. Touch activation now covers `IconButton`, `Radio` and `Switch` alongside the existing targets. Reset verifies every control against the canonical defaults read from `HomePage.tsx`. Forced colors additionally checks `Badge`, `Counter`, `Status`, `InlineStatus` and `ErrorSummary` boundaries and proves checked/unchecked and on/off distinction by comparing rendered element screenshots. Axe evidence now stores impact, description, help URL, tags and every affected node with target, failure summary and a capped HTML excerpt.
+
+### Policy wording
+
+`AGENTS.md` referred to "the single bounded verifier" while two named exceptions existed. It now speaks of two bounded exceptions, links both, and states the distinction: `verify:dev-bootstrap` is a routine development gate, `review:m3-browser` is explicitly initiated milestone-review tooling. No additional server-bearing command is permitted.
+
+### Rejected variants
+
+- **Trusting the exit code independently of report status** — the exact split that let a failing run print a passing summary.
+- **A hardcoded SHA fallback** — evidence would silently describe the wrong commit.
+- **Accepting a dirty working tree for a final review** — the artefact reviewed would not be the artefact approved.
+- **Implicit browser close as context cleanup** — leaves the context unclosed on any path where the browser close is skipped or fails.
+- **Treating diagnostics as report-only evidence** — console and network errors would be recorded and then ignored.
+- **Programmatic `locator.focus()` as keyboard evidence** — proves nothing about reachability, and in pointer modality it does not even produce `:focus-visible`.
+- **Treating `:focus-visible` as a visible ring** — a matching selector is not a rendered indicator.
+- **Claiming responsive validation from the initial state only** — the invalid and success states are exactly where wrapping and overlap fail.
+
+### Verification and status
+
+A `--self-test` mode exercises the status and baseline logic without starting a server or a browser. Provisional automated-only runs are labelled as such. **Implementing the harness is not passing the review**: the final review must be re-run bound to an approved SHA after independent audit and green CI.
+
 ## Next Steps
 
 M0 is complete. Next allowed step is **request review checkpoint R0**.
