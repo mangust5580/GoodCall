@@ -88,6 +88,41 @@ Nothing else is covered. The exception grants no general permission to start ser
 
 **Why:** the development entry point cannot be verified without loading it in a browser, and no other gate does so. A bounded, self-cleaning verifier closes that hole without giving up user ownership of ordinary server lifecycle.
 
+## Bounded Browser Review Exception
+
+A second repository-owned command is exempt, on the same bounded terms plus one addition: it may open a **headed** browser window, but only for an explicit user sign-off phase.
+
+**Scope of the exception — one invocation:**
+
+- `npm run review:m3-browser`, with or without `-- --automated-only`
+
+This is **milestone-review tooling**. It is deliberately **not** part of `npm run check`, not part of `npm run check:full`, not a CI gate and not part of any deployment workflow.
+
+**The command is allowed for agents only while it satisfies all of the following:**
+
+- one foreground-owned Node process
+- Vite Node API (`createServer`), not a CLI dev server
+- dynamically selected loopback port, never a fixed one
+- `open: false`
+- no detached or background process
+- isolated Playwright browser profile — no persistent context, no existing user profile
+- no connection to an existing Chrome/Edge
+- no remote-debugging attachment
+- no termination of any user browser process
+- automated phase may use headless Chromium
+- interactive sign-off phase may use exactly one harness-owned headed Chromium window
+- the user explicitly initiates the command, or explicitly approves running it
+- cleanup in `finally`
+- context, browser and Vite server closed **independently**, so one failure cannot skip the rest
+- port release verified after cleanup
+- a cleanup failure makes the command fail
+- no process-name kill, no broad Node kill, no browser-image kill
+- artifacts written only under the ignored `artifacts/` directory
+
+**If any of these constraints regresses, agents must not run it.**
+
+`npm run dev`, `npm run preview`, local E2E and every other local server remain user-owned and prohibited.
+
 ## Testing Policy
 
 ### Local Testing
@@ -134,8 +169,9 @@ npm run test:e2e # Agent or user can then run this
 ## Summary
 
 - Agents do not add comments
-- Agents do not manage local servers, with the single bounded verifier exception
-- `npm run verify:dev-bootstrap` — directly or through `npm run check:full` — is the only server-bearing command an agent may run, and only while it meets every constraint listed above
+- Agents do not manage local servers, apart from two narrowly bounded, repository-owned commands
+- `npm run verify:dev-bootstrap` — directly or through `npm run check:full` — is the gate an agent may run, and only while it meets every constraint listed above
+- `npm run review:m3-browser` is milestone-review tooling an agent may run on the same terms, plus a headed window for explicit user sign-off only. It is not part of `check`, `check:full` or CI
 - Users control local development lifecycle: `dev`, `preview` and local E2E remain theirs
 - CI controls server lifecycle for E2E tests
 - Comment policy is enforced by automated scanner in CI pipeline

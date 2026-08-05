@@ -22,6 +22,7 @@
     "report:sizes": "node scripts/report-bundle-sizes.mjs",
     "validate:build": "node scripts/validate-build.mjs",
     "verify:dev-bootstrap": "node scripts/verify-dev-bootstrap.mjs",
+    "review:m3-browser": "node scripts/review-m3-browser.mjs",
     "preview": "vite preview",
     "test:e2e": "playwright test",
     "check:comments": "node scripts/check-comments.mjs",

@@ -329,6 +329,42 @@ No force-kill fallback was added. The verifier still releases everything through
 
 M3-05B's implementation remains accepted **in design**, but the corrective chain is not closed: M3-05C awaits its own independent audit and CI run. The M3 browser review is still owed and has not been re-run.
 
+## M3-05D — Bounded browser review harness
+
+**Status: IMPLEMENTED — AWAITING INDEPENDENT AUDIT AND CI**
+
+### Why a second policy exception was required
+
+After M3-05C, `AGENTS.md` permitted agents exactly two server-bearing invocations: `npm run verify:dev-bootstrap` and `npm run check:full`. The mandatory M3 browser review needs a browser session that visits the running application, drives the form and routing flows, and — for zoom, real forced colors and screen-reader checks — puts a real window in front of the user. None of that fits the dev-bootstrap gate, and an ad-hoc review script would have been a policy violation.
+
+Rather than loosen the general rule, `AGENTS.md` gains a second **named, conditional** exception for one repository-owned command, `npm run review:m3-browser`. It is milestone-review tooling: deliberately **not** in `check`, **not** in `check:full`, **not** a CI gate and **not** in any deployment workflow. `npm run dev`, `npm run preview` and local E2E stay user-owned.
+
+### Lifecycle and browser-isolation contract
+
+The harness owns everything it creates and releases all of it:
+
+- one foreground Node process; server created through the Vite Node API on a dynamically selected loopback port with `open: false`; no CLI dev server, no detached process, no fixed port
+- automated phase in headless Chromium; interactive sign-off phase in exactly one harness-owned headed Chromium window, launched only after the automated phase passes
+- every context is fresh — no persistent context, no existing user profile, no remote-debugging attachment, no connection to a running Chrome/Edge
+- cleanup in `finally` across six independent guarded stages: interactive context, interactive browser, automated context, automated browser, Vite server, then port verification. One failure cannot skip the rest
+- cleanup errors are accumulated and **fail the command**; the port check always runs
+- no process-name kill, no browser-image kill, no broad Node kill
+- all evidence is written under the ignored `artifacts/` directory; no tracked documentation is touched by a run
+
+### Automated versus manual coverage
+
+Automated: runtime startup (including the MSW worker endpoint and service-worker registration), initial structure, keyboard and skip-link flow with focus-indicator evidence, counter silence, invalid-submit focus flow, single Home-owned success status, reset behaviour, a six-viewport responsive matrix, touch/coarse-pointer targets, forced-colors **emulation**, reduced motion, axe scans of four states, and routing regression including Back/Forward.
+
+Not automatable, and never claimed by the harness: real browser zoom at 200 % and 400 %, real OS forced-colors mode, screen-reader announcement behaviour, and subjective readability. Those come only from the interactive sign-off phase, and the forced-colors automated result is labelled exactly `PASS — PLAYWRIGHT EMULATION`.
+
+### Unchanged
+
+No product runtime change. The MSW worker, the `publicDir` contract, the explicit worker URL, the fail-closed startup, `src/**`, `tests/**` and `scripts/verify-dev-bootstrap.mjs` are all untouched. Unit/integration totals stay at 533 in 37 files and the bundle is unchanged.
+
+### Evidence status
+
+Any browser-review evidence produced before the harness itself is independently audited is **provisional** and must be repeated after M3-05D is approved and CI is green for its exact SHA. Implementing the harness is not the same as passing the review.
+
 ## Next Steps
 
 M0 is complete. Next allowed step is **request review checkpoint R0**.

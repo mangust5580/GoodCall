@@ -12,8 +12,9 @@
 | M3-04 — Feedback, status and validation-summary primitives            | **APPROVED AND CLOSED**                                                                                  |
 | M3-05 — Shared UI runtime integration                                 | **IMPLEMENTED — CORRECTIVE TEST PASS APPLIED — AWAITING INDEPENDENT AUDIT, CI, AND USER BROWSER REVIEW** |
 | M3-05A — Shell-aware announcement ownership correction                | **APPROVED AND CLOSED**                                                                                  |
-| M3-05B — Dev MSW bootstrap restoration                                | **CI SUCCESS — INDEPENDENT AUDIT RETURNED CHANGES REQUIRED — SUPERSEDED BY M3-05C**                      |
-| M3-05C — Agent policy, artifact and verifier lifecycle reconciliation | **IMPLEMENTED — AWAITING INDEPENDENT AUDIT AND CI**                                                      |
+| M3-05B — Dev MSW bootstrap restoration                                | **APPROVED AND CLOSED** with M3-05C                                                                      |
+| M3-05C — Agent policy, artifact and verifier lifecycle reconciliation | **APPROVED AND CLOSED**                                                                                  |
+| M3-05D — Bounded browser review harness                               | **IMPLEMENTED — AWAITING INDEPENDENT AUDIT AND CI**                                                      |
 
 This report covers the Shared UI layer of milestone M3. It records local verification for the tasks under review. M3-01 through M3-04 are approved and closed; M3-05 and its corrective passes are recorded in their own sections below, and M3 as a whole is not closed.
 
@@ -1112,8 +1113,36 @@ Full finding-by-finding detail: [M3-05C in the M0 bootstrap report](bootstrap-re
 
 The M3 browser review remains **blocked until the corrective chain closes** — it has not been re-run and nothing about it is claimed here. M3 remains open and M4 remains blocked.
 
+## M3-05D — Bounded browser review harness
+
+**Status: IMPLEMENTED — AWAITING INDEPENDENT AUDIT AND CI**
+
+### Position in the chain
+
+M3-05B and M3-05C are **APPROVED AND CLOSED**; BR-01 is resolved and the development bootstrap is operational and CI-protected. Baseline CI for M3-05C: run 30970141078, job 92192476289, checked SHA `9ec8c671e564e1185313d3f8315288fde2e4e209`, conclusion success — Dev bootstrap green, ESLint 0 warnings, 533 tests in 37 files, build and validation green, 23 production-preview E2E passing.
+
+The **M3 browser review is still owed.** It has never produced evidence: the first attempt was blocked by BR-01 before any assertion ran, and afterwards no policy-legal way to run a browser review existed.
+
+### What this task adds
+
+One repository-owned command, `npm run review:m3-browser`, plus the narrow `AGENTS.md` exception that makes it runnable. Two modes: `--automated-only`, which ends at `AUTOMATED PASS — USER SIGN-OFF PENDING`, and the default interactive mode, which opens one harness-owned headed window and collects the user's zoom, keyboard, clipping, forced-colors and screen-reader answers through the terminal.
+
+Details of the lifecycle contract, browser isolation and the automated-versus-manual coverage split: [M3-05D in the M0 bootstrap report](bootstrap-report.md#m3-05d--bounded-browser-review-harness).
+
+### What it does not change
+
+No product runtime change. Shared UI, Home, routes, the shell, the routing lifecycle, the MSW worker, the `publicDir` contract and `scripts/verify-dev-bootstrap.mjs` are all untouched. Tests remain **533 in 37 files**, expected E2E remains **23**, and the bundle is unchanged at raw 407.10 KB / gzip 122.19 KB.
+
+### Implementing the harness is not passing the review
+
+Two `--automated-only` runs passed locally during implementation, on distinct dynamic ports, with zero axe violations and clean cleanup. That evidence is **provisional**: it was produced by a harness that has not yet been independently audited, and it carries no user sign-off. The M3 browser review must be re-run after M3-05D is approved and CI is green for its exact SHA.
+
+Real browser zoom, real OS forced-colors mode and screen-reader behaviour remain unverified and are not claimed anywhere.
+
+M3 remains open. M4 remains blocked.
+
 ## Next Permitted Step
 
-The only permitted next step is an **independent diff audit of the M3-05C commit**, followed by GitHub Actions CI for it, and then a repeat of the M3 browser review.
+The only permitted next step is an **independent diff audit of the M3-05D commit**, followed by GitHub Actions CI for it, and then the M3 browser review itself.
 
 M4 must not begin until M3 is recorded as APPROVED AND CLOSED. No domain work is authorised by this report.
