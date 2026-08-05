@@ -2,15 +2,15 @@
 
 ## Status
 
-| Task                                                           | Status                                                                    |
-| -------------------------------------------------------------- | ------------------------------------------------------------------------- |
-| M3-01 — Shared UI scaffold, layout and accessibility utilities | **APPROVED AND CLOSED**                                                   |
-| M3-01A — VisuallyHidden accessibility contract correction      | **APPROVED AND CLOSED**                                                   |
-| M3-02 / M3-02A / M3-02B — Semantic action primitives           | **APPROVED AND CLOSED**                                                   |
-| M3-03 / M3-03A — Native form controls baseline                 | **APPROVED AND CLOSED**                                                   |
-| M3-03B — Shared UI directory organization                      | **APPROVED AND CLOSED**                                                   |
-| M3-04 — Feedback, status and validation-summary primitives     | **APPROVED AND CLOSED**                                                   |
-| M3-05 — Shared UI runtime integration                          | **IMPLEMENTED — AWAITING INDEPENDENT AUDIT, CI, AND USER BROWSER REVIEW** |
+| Task                                                           | Status                                                                                                   |
+| -------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| M3-01 — Shared UI scaffold, layout and accessibility utilities | **APPROVED AND CLOSED**                                                                                  |
+| M3-01A — VisuallyHidden accessibility contract correction      | **APPROVED AND CLOSED**                                                                                  |
+| M3-02 / M3-02A / M3-02B — Semantic action primitives           | **APPROVED AND CLOSED**                                                                                  |
+| M3-03 / M3-03A — Native form controls baseline                 | **APPROVED AND CLOSED**                                                                                  |
+| M3-03B — Shared UI directory organization                      | **APPROVED AND CLOSED**                                                                                  |
+| M3-04 — Feedback, status and validation-summary primitives     | **APPROVED AND CLOSED**                                                                                  |
+| M3-05 — Shared UI runtime integration                          | **IMPLEMENTED — CORRECTIVE TEST PASS APPLIED — AWAITING INDEPENDENT AUDIT, CI, AND USER BROWSER REVIEW** |
 
 This report covers the Shared UI layer of milestone M3. It records local verification for the task under review. No approval is claimed for M3-04 and no later M3 task has started.
 
@@ -897,7 +897,9 @@ The local info/success/warning colours are technical, not canonical. Tone differ
 
 ## M3-05 — Shared UI runtime integration
 
-**Status: IMPLEMENTED — AWAITING INDEPENDENT AUDIT, CI, AND USER BROWSER REVIEW**
+**Status: IMPLEMENTED — CORRECTIVE TEST PASS APPLIED — AWAITING INDEPENDENT AUDIT, CI, AND USER BROWSER REVIEW**
+
+The corrective pass is [M3-05A](#m3-05a--shell-aware-announcement-ownership-correction). It changed test assertions and this report only; the M3-05 runtime is unchanged.
 
 ### Purpose
 
@@ -948,15 +950,24 @@ The route owns validation, not the primitives. It checks two things — `Name` n
 
 ### Announcement ownership
 
-This is the point of the exercise, and the page keeps exactly one announcement owner per event:
+This is the point of the exercise, and the page keeps exactly one announcement owner per **event**. Ownership is per event, not a global count of live regions in the document.
 
-- The route announcement region in `RootLayout` is untouched.
+| Event                     | Owner           | Channel                                                  |
+| ------------------------- | --------------- | -------------------------------------------------------- |
+| route navigation          | `RootLayout`    | `#route-announcement`, `role="status"`                   |
+| counter increment / reset | none            | static `Counter`                                         |
+| invalid form submit       | form owner      | focus moved to `ErrorSummary`, no live region            |
+| valid form submit         | Home form owner | one success `InlineStatus` `role="status"` inside `main` |
+
+- The route announcement region in `RootLayout` is untouched. It is a **pre-existing, routing-owned** `role="status"` channel that is present on every route, including Home, and sits outside `main#main-content`.
 - The counter is **silent**: `Counter` carries no role and no live region, and incrementing or resetting it announces nothing.
 - The initial technical `InlineStatus` has **no** role, so it never announces.
 - Invalid submit is **focus-based, not announcement-based**: `ErrorSummary` gets no `role="alert"` and no live region; the owner moves focus to it instead.
-- The success `InlineStatus role="status"` is the **sole** live owner, and only after a valid submit.
+- The success `InlineStatus role="status"` is the **sole announcement owner of the valid-submit event**, and only after a valid submit.
 
-There is no second live region, no toast and no duplicated announcement anywhere on the page.
+The success `InlineStatus` is the sole announcement owner of the valid-submit event. `RootLayout`'s pre-existing route announcement remains a separate routing-owned status channel. No second Home-owned result live region, toast or duplicate valid-submit announcement is created.
+
+Document-level `role="status"` counts on Home are therefore: one (routing) in the initial and counter states, and two (routing plus the Home result) after a valid submit. Those totals are evidence about the shell, not about Home's ownership, so tests scope their status assertions to the owner — `main#main-content` for Home, `#route-announcement` for routing.
 
 ### ErrorSummary focus flow
 
@@ -964,7 +975,7 @@ Invalid submit builds the error map, renders the summary, and the owner focuses 
 
 ### Responsive and browser evidence
 
-Six new Playwright scenarios cover the runtime surface (no page or console errors), counter actions, the invalid-submit focus flow, the valid-submit single result, a seven-viewport layout and target sweep (320, 767, 768, 1023, 1024, 1279, 1280 px) asserting no horizontal overflow, unclipped labels and ≥ 44 px targets for `Button`, `IconButton` and the choice rows, and a reduced-motion plus forced-colors axe scan of the invalid state with zero violations.
+Six new Playwright scenarios cover the runtime surface (no page or console errors), counter actions, the invalid-submit focus flow, the single Home-owned valid-submit result, a seven-viewport layout and target sweep (320, 767, 768, 1023, 1024, 1279, 1280 px) asserting no horizontal overflow, unclipped labels and ≥ 44 px targets for `Button`, `IconButton` and the choice rows, and a reduced-motion plus forced-colors axe scan of the invalid state with zero violations.
 
 **Viewport width is not zoom.** These scenarios do not prove 200 % or 400 % reflow, real forced-colors rendering, coarse-pointer behaviour or screen-reader output — those remain the user's manual browser review.
 
@@ -984,6 +995,8 @@ The important result: **Shared UI stayed inside the lazy Home boundary.** The en
 
 `tests/routes/home/home-page.test.tsx` adds 18 route-level tests covering structure, evidence for all eighteen primitives, the counter flow, the invalid and valid submit flows and reset. The existing smoke suite needed **no** change. Full suite: **36 files, 522 tests**. Expected CI E2E after this change: **23** (17 preserved + 6 new).
 
+These route-level tests render `HomePage` **without** `RootLayout`, so their scope is Home alone: zero Home-owned statuses initially and one after a valid submit. In the full application the routing status channel is present as well, separately. See [M3-05A](#m3-05a--shell-aware-announcement-ownership-correction).
+
 ### Rejected variants
 
 A separate showcase route; a canonical Home implementation; Header/Footer/logo; a Storybook or component-explorer dependency; new shared `Card`, `Form` or `RadioGroup` abstractions; deep imports; importing `Link` from `react-router-dom`; a toast; an async mock submit; React Hook Form or Zod; visual snapshot baselines; an auto-announcing counter or error summary; and running a local server or E2E.
@@ -994,14 +1007,55 @@ The page is a technical surface with no visual-fidelity claim. The `↺` glyph i
 
 ### Closure gates
 
-M3 is **not** closed. Closure requires the independent diff audit of the M3-05 commit, a successful GitHub Actions run for that exact SHA, the user's browser review against the checklist, and any external canonical-source synchronisation the closure review identifies.
+M3 is **not** closed. Closure requires the independent diff audit of the corrective commit, a successful GitHub Actions run for that exact SHA, the user's browser review against the checklist, and any external canonical-source synchronisation the closure review identifies.
 
 ### M4 boundary
 
 M4 remains the first milestone permitted to build the canonical shell — Header, Information Bar, Catalog Navigation, Footer — and to consume the brand logo at runtime. None of that is started here.
 
+## M3-05A — Shell-aware announcement ownership correction
+
+**Status: IMPLEMENTED — AWAITING INDEPENDENT AUDIT, CI, AND USER BROWSER REVIEW**
+
+A narrow corrective pass over **test assertions and this report only**. No runtime code was changed, and M3-05 is not approved by it.
+
+### CI evidence for the M3-05 commit
+
+| Item         | Value                                                            |
+| ------------ | ---------------------------------------------------------------- |
+| Baseline SHA | `150b55d0b1e0fa7e4aa0bc5746d0328abfe5e5e3`                       |
+| Run          | 30926941321                                                      |
+| Run URL      | https://github.com/mangust5580/GoodCall/actions/runs/30926941321 |
+| Job          | 92051591337 — `test (24.x)`                                      |
+| Conclusion   | failure — `E2E tests` step only                                  |
+
+Everything except the E2E step passed: TypeCheck, ESLint, Stylelint, Prettier, comment check, **522 unit/integration tests in 36 files**, production build and build validation. E2E ran **23 tests: 21 passed, 2 failed**.
+
+| Failing scenario                                   | Expected | Actual |
+| -------------------------------------------------- | -------- | ------ |
+| `counter increments and resets without announcing` | 0        | 1      |
+| `valid submit produces exactly one status result`  | 1        | 2      |
+
+Both assertions counted `getByRole('status')` across the **whole document**. The extra element in each case is `#route-announcement`, the routing-owned live region `RootLayout` renders on every route. Expected document totals on Home are therefore 1 in the initial and counter states and 2 after a valid submit.
+
+This is **not** an accessibility defect and **not** duplicate ownership of one event. The runtime was correct; the test scoping was shell-unaware. No runtime code change was required, and the corrective scope is tests plus documentation only.
+
+### Correction
+
+- Both E2E scenarios now scope their status assertions to the owner: `main#main-content` for Home, `#route-announcement` for routing. Each asserts the routing region exists, sits outside `main`, and does not carry Home's copy.
+- The counter scenario keeps proving counter silence — zero Home-owned statuses before, during and after the increments and the reset, and no `role` or `aria-live` on `Counter` itself.
+- The valid-submit scenario keeps proving one Home-owned status carrying exactly the success copy, no `ErrorSummary` and no `alert`.
+- `tests/routes/home/home-page.test.tsx` renders `HomePage` in isolation, so its counts were already correct in that scope. Its status queries are now scoped to the rendered `main` and its names say "home-owned", so nothing there implies a document-global count. Test totals are unchanged at **36 files, 522 tests**.
+- This report's announcement-ownership section now states ownership per event instead of asserting a global live-region count.
+
+No status assertion was deleted or weakened.
+
+### Boundaries
+
+`src/**` is untouched — `HomePage`, Shared UI, `RootLayout`, `#route-announcement`, routing lifecycle, styles and assets are all unchanged. No dependency, lockfile, config, CI or script change. Exactly three tracked files changed: the two test files and this report.
+
 ## Next Permitted Step
 
-The only permitted next step is an **independent diff audit of the M3-05 commit**, followed by GitHub Actions CI for it and the user's browser review.
+The only permitted next step is an **independent diff audit of the M3-05A corrective commit**, followed by GitHub Actions CI for it and the user's browser review.
 
 M4 must not begin until M3 is recorded as APPROVED AND CLOSED. No domain work is authorised by this report.

@@ -28,7 +28,11 @@ async function submitForm(user: ReturnType<typeof userEvent.setup>): Promise<voi
   await user.click(screen.getByRole('button', { name: /validate demonstration form/i }));
 }
 
-describe('Home Shared UI verification surface', () => {
+function homeOwnedStatuses(): HTMLElement[] {
+  return within(screen.getByRole('main')).queryAllByRole('status');
+}
+
+describe('Home Shared UI verification surface rendered without the routing shell', () => {
   describe('structure', () => {
     it('renders exactly one main landmark owned by PageContainer', () => {
       const { container } = renderHome();
@@ -145,16 +149,16 @@ describe('Home Shared UI verification surface', () => {
       expect(within(group).getByRole('radio', { name: 'Pickup' })).toBeInTheDocument();
     });
 
-    it('renders the technical inline status without live semantics', () => {
+    it('renders the technical inline status without home-owned live semantics', () => {
       renderHome();
 
-      expect(screen.queryAllByRole('status')).toHaveLength(0);
+      expect(homeOwnedStatuses()).toHaveLength(0);
       expect(screen.queryAllByRole('alert')).toHaveLength(0);
     });
   });
 
   describe('counter demonstration', () => {
-    it('starts at zero, increments and resets without announcing', async () => {
+    it('starts at zero, increments and resets without a home-owned announcement', async () => {
       const user = userEvent.setup();
       renderHome();
       const counter = screen.getByTestId('demo-counter');
@@ -170,12 +174,12 @@ describe('Home Shared UI verification surface', () => {
       expect(screen.getByText('Demonstration counter value: 2')).toBeInTheDocument();
       expect(counter).not.toHaveAttribute('role');
       expect(counter).not.toHaveAttribute('aria-live');
-      expect(screen.queryAllByRole('status')).toHaveLength(0);
+      expect(homeOwnedStatuses()).toHaveLength(0);
 
       await user.click(screen.getByRole('button', { name: /reset demonstration counter/i }));
 
       expect(counter).toHaveTextContent('0');
-      expect(screen.queryAllByRole('status')).toHaveLength(0);
+      expect(homeOwnedStatuses()).toHaveLength(0);
     });
   });
 
@@ -235,7 +239,7 @@ describe('Home Shared UI verification surface', () => {
   });
 
   describe('valid submit', () => {
-    it('clears the summary and announces exactly one result', async () => {
+    it('clears the summary and owns exactly one home result status', async () => {
       const user = userEvent.setup();
       renderHome();
 
@@ -249,7 +253,7 @@ describe('Home Shared UI verification surface', () => {
         'aria-invalid'
       );
 
-      const results = screen.getAllByRole('status');
+      const results = homeOwnedStatuses();
 
       expect(results).toHaveLength(1);
       expect(results[0]).toHaveTextContent(SUCCESS_RESULT);
@@ -269,7 +273,7 @@ describe('Home Shared UI verification surface', () => {
       await user.click(reset);
 
       expect(screen.queryByRole('region', { name: SUMMARY_TITLE })).toBeNull();
-      expect(screen.queryAllByRole('status')).toHaveLength(0);
+      expect(homeOwnedStatuses()).toHaveLength(0);
       expect(screen.getByRole('textbox', { name: /name/i })).not.toHaveAttribute('aria-invalid');
       expect(reset).toHaveFocus();
     });

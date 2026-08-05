@@ -197,6 +197,10 @@ test.describe('M1 Routing and Navigation', () => {
 const TECHNICAL_NOTICE = 'Technical Shared UI verification surface';
 const SUCCESS_RESULT = 'Demonstration form validated. No data was sent.';
 const SUMMARY_TITLE = 'Fix these demonstration fields';
+const MAIN_CONTENT = 'main#main-content';
+const ROUTE_ANNOUNCEMENT = '#route-announcement';
+const INCREMENT_LABEL = 'Increment demonstration counter';
+const RESET_COUNTER_LABEL = 'Reset demonstration counter';
 
 const VERIFICATION_VIEWPORTS = [
   { width: 320, height: 568 },
@@ -239,10 +243,15 @@ test.describe('M3 Shared UI integration', () => {
   test('counter increments and resets without announcing', async ({ page }) => {
     await page.goto('');
 
+    const main = page.locator(MAIN_CONTENT);
+    const routeAnnouncement = page.locator(ROUTE_ANNOUNCEMENT);
     const counter = page.getByTestId('demo-counter');
-    const increment = page.getByRole('button', { name: 'Increment demonstration counter' });
-    const reset = page.getByRole('button', { name: 'Reset demonstration counter' });
+    const increment = page.getByRole('button', { name: INCREMENT_LABEL });
+    const reset = page.getByRole('button', { name: RESET_COUNTER_LABEL });
 
+    await expect(routeAnnouncement).toHaveCount(1);
+    await expect(main.locator(ROUTE_ANNOUNCEMENT)).toHaveCount(0);
+    await expect(main.getByRole('status')).toHaveCount(0);
     await expect(counter).toHaveText('0');
 
     await increment.focus();
@@ -252,12 +261,15 @@ test.describe('M3 Shared UI integration', () => {
     await expect(counter).toHaveText('2');
     await expect(counter).not.toHaveAttribute('role', /.*/);
     await expect(counter).not.toHaveAttribute('aria-live', /.*/);
-    await expect(page.getByRole('status')).toHaveCount(0);
+    await expect(main.getByRole('status')).toHaveCount(0);
+    await expect(routeAnnouncement).not.toContainText('2');
+    await expect(routeAnnouncement).not.toContainText(INCREMENT_LABEL);
 
     await reset.click();
 
     await expect(counter).toHaveText('0');
-    await expect(page.getByRole('status')).toHaveCount(0);
+    await expect(main.getByRole('status')).toHaveCount(0);
+    await expect(routeAnnouncement).not.toContainText(RESET_COUNTER_LABEL);
   });
 
   test('invalid submit moves focus to the error summary', async ({ page }) => {
@@ -278,19 +290,26 @@ test.describe('M3 Shared UI integration', () => {
     await expect(page.locator('#m3-demo-name')).toBeFocused();
   });
 
-  test('valid submit produces exactly one status result', async ({ page }) => {
+  test('valid submit produces exactly one home-owned status result', async ({ page }) => {
     await page.goto('');
+
+    const main = page.locator(MAIN_CONTENT);
+    const routeAnnouncement = page.locator(ROUTE_ANNOUNCEMENT);
+
+    await expect(routeAnnouncement).toHaveCount(1);
+    await expect(main.locator(ROUTE_ANNOUNCEMENT)).toHaveCount(0);
 
     await page.locator('#m3-demo-name').fill('Demonstration');
     await page.locator('#m3-demo-category').selectOption('laptops');
     await page.getByRole('button', { name: 'Validate demonstration form' }).click();
 
-    const results = page.getByRole('status');
+    const homeStatuses = main.getByRole('status');
 
-    await expect(results).toHaveCount(1);
-    await expect(results).toContainText(SUCCESS_RESULT);
-    await expect(page.getByRole('region', { name: SUMMARY_TITLE })).toHaveCount(0);
-    await expect(page.getByRole('alert')).toHaveCount(0);
+    await expect(homeStatuses).toHaveCount(1);
+    await expect(homeStatuses).toHaveText(SUCCESS_RESULT);
+    await expect(main.getByRole('region', { name: SUMMARY_TITLE })).toHaveCount(0);
+    await expect(main.getByRole('alert')).toHaveCount(0);
+    await expect(routeAnnouncement).not.toContainText(SUCCESS_RESULT);
   });
 
   test('layout and interactive targets hold across verification viewports', async ({ page }) => {
