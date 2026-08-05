@@ -16,9 +16,11 @@ const summary = {
   runtime: {},
   serviceWorker: {},
   diagnostics: {},
+  contextClosed: false,
   browserClosed: false,
   serverClosed: false,
   portReleased: false,
+  cleanupErrors: [],
 };
 
 const failures = [];
@@ -26,6 +28,32 @@ const failures = [];
 function check(condition, message) {
   if (!condition) {
     failures.push(message);
+  }
+}
+
+function toMessage(error) {
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  if (typeof error === 'string') {
+    return error;
+  }
+
+  try {
+    return JSON.stringify(error);
+  } catch {
+    return Object.prototype.toString.call(error);
+  }
+}
+
+async function closeStage(label, close) {
+  try {
+    await close();
+    return true;
+  } catch (error) {
+    summary.cleanupErrors.push(`${label} close failed: ${toMessage(error)}`);
+    return false;
   }
 }
 
@@ -54,6 +82,7 @@ async function respondsAt(url) {
 
 let server = null;
 let browser = null;
+let context = null;
 let localUrl = null;
 
 try {
@@ -108,7 +137,7 @@ try {
   }
 
   browser = await chromium.launch({ headless: true });
-  const context = await browser.newContext();
+  context = await browser.newContext();
   const page = await context.newPage();
 
   const pageErrors = [];
@@ -196,21 +225,32 @@ try {
   check(requestFailures.length === 0, `request failures: ${requestFailures.join(' | ')}`);
   check(failedModules.length === 0, `failed module requests: ${failedModules.join(' | ')}`);
 } catch (error) {
-  failures.push(error instanceof Error ? error.message : String(error));
+  failures.push(toMessage(error));
 } finally {
-  if (browser !== null) {
-    await browser.close();
-    summary.browserClosed = true;
+  if (context !== null) {
+    summary.contextClosed = await closeStage('context', () => context.close());
   }
+
+  if (browser !== null) {
+    summary.browserClosed = await closeStage('browser', () => browser.close());
+  }
+
   if (server !== null) {
-    await server.close();
-    summary.serverClosed = true;
+    summary.serverClosed = await closeStage('server', () => server.close());
+  }
+
+  try {
+    summary.portReleased = localUrl === null ? true : !(await respondsAt(localUrl));
+  } catch (error) {
+    summary.cleanupErrors.push(`port verification failed: ${toMessage(error)}`);
   }
 }
 
-summary.portReleased = localUrl === null ? true : !(await respondsAt(localUrl));
-
 check(summary.portReleased, 'dev server port still responds after shutdown');
+
+for (const cleanupError of summary.cleanupErrors) {
+  failures.push(cleanupError);
+}
 
 console.log('\n🔍 Dev bootstrap verification\n');
 console.log(JSON.stringify(summary, null, 2));

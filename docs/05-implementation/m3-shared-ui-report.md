@@ -2,17 +2,18 @@
 
 ## Status
 
-| Task                                                           | Status                                                                                                   |
-| -------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| M3-01 — Shared UI scaffold, layout and accessibility utilities | **APPROVED AND CLOSED**                                                                                  |
-| M3-01A — VisuallyHidden accessibility contract correction      | **APPROVED AND CLOSED**                                                                                  |
-| M3-02 / M3-02A / M3-02B — Semantic action primitives           | **APPROVED AND CLOSED**                                                                                  |
-| M3-03 / M3-03A — Native form controls baseline                 | **APPROVED AND CLOSED**                                                                                  |
-| M3-03B — Shared UI directory organization                      | **APPROVED AND CLOSED**                                                                                  |
-| M3-04 — Feedback, status and validation-summary primitives     | **APPROVED AND CLOSED**                                                                                  |
-| M3-05 — Shared UI runtime integration                          | **IMPLEMENTED — CORRECTIVE TEST PASS APPLIED — AWAITING INDEPENDENT AUDIT, CI, AND USER BROWSER REVIEW** |
-| M3-05A — Shell-aware announcement ownership correction         | **APPROVED AND CLOSED**                                                                                  |
-| M3-05B — Dev MSW bootstrap restoration                         | **IMPLEMENTED — AWAITING INDEPENDENT AUDIT AND CI**                                                      |
+| Task                                                                  | Status                                                                                                   |
+| --------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| M3-01 — Shared UI scaffold, layout and accessibility utilities        | **APPROVED AND CLOSED**                                                                                  |
+| M3-01A — VisuallyHidden accessibility contract correction             | **APPROVED AND CLOSED**                                                                                  |
+| M3-02 / M3-02A / M3-02B — Semantic action primitives                  | **APPROVED AND CLOSED**                                                                                  |
+| M3-03 / M3-03A — Native form controls baseline                        | **APPROVED AND CLOSED**                                                                                  |
+| M3-03B — Shared UI directory organization                             | **APPROVED AND CLOSED**                                                                                  |
+| M3-04 — Feedback, status and validation-summary primitives            | **APPROVED AND CLOSED**                                                                                  |
+| M3-05 — Shared UI runtime integration                                 | **IMPLEMENTED — CORRECTIVE TEST PASS APPLIED — AWAITING INDEPENDENT AUDIT, CI, AND USER BROWSER REVIEW** |
+| M3-05A — Shell-aware announcement ownership correction                | **APPROVED AND CLOSED**                                                                                  |
+| M3-05B — Dev MSW bootstrap restoration                                | **CI SUCCESS — INDEPENDENT AUDIT RETURNED CHANGES REQUIRED — SUPERSEDED BY M3-05C**                      |
+| M3-05C — Agent policy, artifact and verifier lifecycle reconciliation | **IMPLEMENTED — AWAITING INDEPENDENT AUDIT AND CI**                                                      |
 
 This report covers the Shared UI layer of milestone M3. It records local verification for the tasks under review. M3-01 through M3-04 are approved and closed; M3-05 and its corrective passes are recorded in their own sections below, and M3 as a whole is not closed.
 
@@ -1083,8 +1084,36 @@ Full root cause, design, production-exclusion evidence and rejected variants: [B
 
 M3 remains open and M4 remains blocked.
 
+## M3-05C — Agent policy, generated artifact and verifier lifecycle reconciliation
+
+**Status: IMPLEMENTED — AWAITING INDEPENDENT AUDIT AND CI**
+
+### M3-05B outcome
+
+GitHub Actions run **30968872883**, job 92188672031, checked SHA `89d20f2f633af73ba9a1cedf766b1eb5be455b82`, conclusion **success** — Dev bootstrap gate, TypeCheck, ESLint (one warning), Stylelint, Prettier, comment check, 533 unit/integration tests in 37 files, build, build validation and 23 production-preview E2E all passing, bundle raw 407.10 KB / gzip 122.19 KB.
+
+The **independent audit nevertheless returned CHANGES REQUIRED**, with four findings: M3-POLICY-01, M3-LINT-01, M3-LIFECYCLE-01 and M3-TOOLING-01. A green CI run did not close them — none of the four is detectable by any gate in the pipeline.
+
+### What M3-05C changes
+
+Seven tracked files: `AGENTS.md`, `eslint.config.js`, `.prettierignore`, `package.json`, `scripts/verify-dev-bootstrap.mjs` and two implementation reports.
+
+- **Policy.** `AGENTS.md` gains a narrow, conditional Bounded Verification Exception for `verify:dev-bootstrap` and `check:full`, keeps every other server prohibition intact, and corrects the stale "serverless `check:full`" and CI descriptions. `CLAUDE.md` is unchanged.
+- **Generated artifact.** The MSW worker is excluded from ESLint and Prettier by directory ignores instead of by editing it or by a negated CLI glob. `npm run lint` now reports zero warnings.
+- **Verifier lifecycle.** Context, browser and server are closed independently, port verification always runs, and cleanup failures are accumulated rather than aborting the remaining stages.
+
+### What M3-05C does not change
+
+The MSW worker bytes, the `publicDir` contract, the explicit worker URL, the fail-closed startup, `src/**`, `tests/**`, Shared UI, Home, routes, the shell, the routing lifecycle, `README.md`, `repository-state.md`, `.github/**`, `package-lock.json` and all remaining configuration. Unit/integration totals stay at **533 in 37 files** and expected E2E stays at **23**.
+
+Full finding-by-finding detail: [M3-05C in the M0 bootstrap report](bootstrap-report.md#m3-05c--agent-policy-generated-artifact-and-verifier-lifecycle-reconciliation).
+
+### Still owed
+
+The M3 browser review remains **blocked until the corrective chain closes** — it has not been re-run and nothing about it is claimed here. M3 remains open and M4 remains blocked.
+
 ## Next Permitted Step
 
-The only permitted next step is an **independent diff audit of the M3-05B commit**, followed by GitHub Actions CI for it, and then a repeat of the M3 browser review.
+The only permitted next step is an **independent diff audit of the M3-05C commit**, followed by GitHub Actions CI for it, and then a repeat of the M3 browser review.
 
 M4 must not begin until M3 is recorded as APPROVED AND CLOSED. No domain work is authorised by this report.

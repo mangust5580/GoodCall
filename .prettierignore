@@ -9,6 +9,7 @@ dist/
 
 # Generated
 package-lock.json
+dev-public/
 
 # IDE
 .idea/

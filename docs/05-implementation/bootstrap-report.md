@@ -289,6 +289,46 @@ The worker therefore cannot reach `dist/` by construction, and the existing buil
 - **Attaching automation to the user's browser** — the verifier must never control or terminate a developer's Chrome/Edge session.
 - **Detached background server orchestration** — leaves orphaned servers and ports behind; the verifier runs one foreground process it fully owns.
 
+## M3-05C — Agent policy, generated artifact and verifier lifecycle reconciliation
+
+**Status: IMPLEMENTED — AWAITING INDEPENDENT AUDIT AND CI**
+
+The independent audit of M3-05B returned **CHANGES REQUIRED** with four findings. None of them disputes the accepted design: the MSW worker, the `publicDir` contract, the explicit worker URL, the fail-closed startup and the runtime application are all unchanged by this pass.
+
+### M3-POLICY-01 — policy contradiction
+
+M3-05B added a verifier that starts a development server, and wired it into `check:full`, while `AGENTS.md` still said agents must never manage local servers and described `check:full` as serverless. The repository's canonical policy contradicted its own gate.
+
+`AGENTS.md` now carries a **Bounded Verification Exception** covering exactly two invocations — `npm run verify:dev-bootstrap` and `npm run check:full`, which runs it indirectly. The exception is conditional: it holds only while the verifier remains a single foreground-owned Node process using the Vite Node API on a dynamically selected loopback port with `open: false`, driving an isolated headless Chromium with no existing profile and no attachment to the user's browser, cleaning up in `finally`, closing context, browser and server, verifying port release, and never killing by process name. If any constraint stops holding, the verifier leaves the exception and agents must not run it.
+
+Everything else stays user-owned and prohibited: `npm run dev`, `npm run preview`, direct `vite`/`vite preview`, the local production-preview E2E lifecycle, long-lived servers, detached processes, fixed ports, reusing a user's server, and controlling or terminating the user's Chrome/Edge. The gate descriptions were corrected — `check` is serverless, `check:full` is not — and the CI description now matches the workflow, which runs dedicated steps rather than `check:full`.
+
+`CLAUDE.md` needed no change: it already defers to `AGENTS.md` as canonical.
+
+### M3-LINT-01 and M3-TOOLING-01 — generated artifact ownership
+
+The generated worker carries its own `/* eslint-disable */` directive, which ESLint reported as an unused directive — one warning on every lint run. M3-05B also excluded the worker from Prettier through a negated CLI glob inside the npm scripts, so editors and the npm scripts disagreed about what was ignored.
+
+Both are now **directory boundaries** on the generated artifact rather than edits to it:
+
+- `eslint.config.js` ignores `dev-public/**`
+- `.prettierignore` ignores `dev-public/`
+- `package.json` is back to plain `prettier --write .` and `prettier --check .`
+
+The worker is byte-identical, its generated directive is untouched, no lint rule was weakened for authored files, unused-directive reporting stays on globally, and `npm run lint` now reports **zero errors and zero warnings**.
+
+### M3-LIFECYCLE-01 — independent cleanup
+
+M3-05B's `finally` block closed the browser and then the server in one sequence, so a throw from the first close would have skipped the second and skipped port verification entirely. The Playwright context was also never closed explicitly.
+
+The verifier now owns `context` in a variable visible to cleanup and runs each stage independently — close context, close browser, close server, verify the port — each in its own `try`/`catch`. A failure in one stage records a stable message and continues to the next. Cleanup failures join the final failure list only after every stage and the port check have run, so a cleanup problem can never hide an incomplete shutdown. The summary reports `contextClosed`, `browserClosed`, `serverClosed`, `portReleased` and a `cleanupErrors` array, and unknown thrown values are normalised through one local helper so nothing renders as `[object Object]`.
+
+No force-kill fallback was added. The verifier still releases everything through APIs only.
+
+### Status
+
+M3-05B's implementation remains accepted **in design**, but the corrective chain is not closed: M3-05C awaits its own independent audit and CI run. The M3 browser review is still owed and has not been re-run.
+
 ## Next Steps
 
 M0 is complete. Next allowed step is **request review checkpoint R0**.
