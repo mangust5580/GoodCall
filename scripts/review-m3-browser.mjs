@@ -38,6 +38,28 @@ const DESKTOP_VIEWPORT = { width: 1280, height: 800 };
 const OVERLAP_TOLERANCE_PX = 1;
 const MAX_TAB_STOPS = 90;
 const AXE_HTML_CAP = 400;
+const MIN_VISIBLE_AREA_RATIO = 0.9;
+const OBSCURATION_SAMPLES = 5;
+const MIN_UNOBSCURED_SAMPLES = 4;
+
+const DIAGNOSTIC_KINDS = [
+  'pageErrors',
+  'consoleErrors',
+  'requestFailures',
+  'badResponses',
+  'failedResources',
+];
+const DIAGNOSTIC_SCOPES = ['automated', 'touch', 'interactive'];
+const CRITICAL_RESOURCE_TYPES = [
+  'script',
+  'stylesheet',
+  'fetch',
+  'xhr',
+  'document',
+  'serviceworker',
+];
+
+const EXPECTED_DIAGNOSTICS = [];
 
 const REVIEW_VIEWPORTS = [
   { width: 320, height: 568 },
@@ -65,13 +87,31 @@ const FOCUS_TARGETS = [
   { key: 'Switch', selector: 'input[name="compact"]' },
 ];
 
-const OVERLAP_PAIRS = [
-  { name: 'H1 vs notice', a: 'main#main-content h1', b: 'main#main-content p' },
-  { name: 'feedback primitives', a: 'main#main-content span', b: 'main#main-content span' },
-  { name: 'counter actions', a: 'main#main-content button', b: 'main#main-content button' },
-  { name: 'field labels vs controls', a: 'main#main-content label', b: 'main#main-content input' },
-  { name: 'errors vs fields', a: 'main#main-content label', b: 'main#main-content select' },
-];
+const OVERLAP_PROBES = {
+  initial: [
+    { pair: 'H1 vs technical notice', left: 'h1', right: 'notice' },
+    { pair: 'Badge vs Status', left: 'badge', right: 'status' },
+    { pair: 'Status vs Counter', left: 'status', right: 'counter' },
+    { pair: 'counter actions', left: 'incrementButton', right: 'resetCounterButton' },
+    { pair: 'name vs notes field group', left: 'nameGroup', right: 'notesGroup' },
+    { pair: 'notes vs category field group', left: 'notesGroup', right: 'categoryGroup' },
+    { pair: 'form actions', left: 'submitButton', right: 'resetFormButton' },
+  ],
+  invalid: [
+    { pair: 'error summary vs form', left: 'errorSummary', right: 'form' },
+    { pair: 'error summary links', left: 'summaryLinkOne', right: 'summaryLinkTwo' },
+    { pair: 'name error vs notes field group', left: 'nameError', right: 'notesGroup' },
+    { pair: 'category error vs form actions', left: 'categoryError', right: 'submitButton' },
+    { pair: 'form actions', left: 'submitButton', right: 'resetFormButton' },
+    { pair: 'name label vs name control', left: 'nameLabel', right: 'nameControl' },
+    { pair: 'category label vs category control', left: 'categoryLabel', right: 'categoryControl' },
+  ],
+  success: [
+    { pair: 'success status vs form', left: 'successStatus', right: 'form' },
+    { pair: 'success status vs form actions', left: 'successStatus', right: 'submitButton' },
+    { pair: 'form actions', left: 'submitButton', right: 'resetFormButton' },
+  ],
+};
 
 const RESET_DEFAULTS = {
   name: '',
@@ -81,8 +121,6 @@ const RESET_DEFAULTS = {
   delivery: null,
   compact: false,
 };
-
-const EXPECTED_DIAGNOSTICS = [];
 
 const MANUAL_PROMPTS = [
   { key: '200% zoom', allowed: ['PASS', 'FAIL'] },
@@ -150,6 +188,7 @@ function resolveFinalStatus(input) {
     input.automatedFailures > 0 ||
     input.axeViolations > 0 ||
     input.diagnosticsFailures > 0 ||
+    input.automatedExecutionErrors > 0 ||
     input.cleanupErrors > 0 ||
     !input.portReleased;
 
@@ -161,19 +200,17 @@ function resolveFinalStatus(input) {
     return STATUS.FAILED;
   }
 
-  if (input.interrupted) {
-    return STATUS.PARTIAL;
-  }
-
-  if (input.executionErrors > 0) {
-    return STATUS.FAILED;
-  }
-
   if (input.mode === 'automated-only') {
-    return STATUS.AUTOMATED_PENDING;
+    return input.signoffInterrupted ? STATUS.PARTIAL : STATUS.AUTOMATED_PENDING;
   }
 
-  if (input.manual === null || !input.manual.complete) {
+  if (
+    input.signoffUnavailable > 0 ||
+    input.signoffInterrupted ||
+    input.signoffIncomplete > 0 ||
+    input.manual === null ||
+    !input.manual.complete
+  ) {
     return STATUS.PARTIAL;
   }
 
@@ -182,6 +219,212 @@ function resolveFinalStatus(input) {
 
 function exitCodeForStatus(status) {
   return EXIT_CODES[status] ?? 1;
+}
+
+function resolveSignoffAvailability(input) {
+  if (input.mode !== 'interactive') {
+    return { available: false, reason: null };
+  }
+
+  if (input.stdinTTY !== true || input.stdoutTTY !== true) {
+    return {
+      available: false,
+      reason: `interactive sign-off requires a TTY (stdin ${String(input.stdinTTY)}, stdout ${String(input.stdoutTTY)})`,
+    };
+  }
+
+  return { available: true, reason: null };
+}
+
+function resolveViewportStatus(states) {
+  return states.every((state) => state.failures.length === 0) ? 'PASS' : 'FAIL';
+}
+
+function responsiveSectionFailures(viewports) {
+  return viewports
+    .filter((entry) => entry.status === 'FAIL')
+    .map((entry) => {
+      const detail = entry.states
+        .filter((state) => state.failures.length > 0)
+        .map((state) => `${state.state}: ${state.failures.join(', ')}`)
+        .join('; ');
+      return `${entry.viewport} -> ${detail}`;
+    });
+}
+
+function evaluateBackwardMove(before, after, order) {
+  if (after === null) {
+    return { moved: false, reason: 'no element focused after Shift+Tab' };
+  }
+
+  if (before !== null && after.documentOrder === before.documentOrder) {
+    return { moved: false, reason: 'Shift+Tab left focus on the same element' };
+  }
+
+  const beforeIndex = order.indexOf(before?.documentOrder ?? -1);
+  const afterIndex = order.indexOf(after.documentOrder);
+
+  if (beforeIndex >= 0 && afterIndex >= 0) {
+    if (afterIndex === beforeIndex - 1) {
+      return { moved: true, reason: 'reached the immediately previous tab stop' };
+    }
+    if (afterIndex < beforeIndex) {
+      return { moved: true, reason: 'reached an earlier tab stop' };
+    }
+    return { moved: false, reason: 'Shift+Tab did not move backwards in the recorded tab order' };
+  }
+
+  if (before !== null && after.documentOrder < before.documentOrder) {
+    return { moved: true, reason: 'reached an earlier element in document order' };
+  }
+
+  return { moved: false, reason: 'backward movement could not be confirmed' };
+}
+
+function evaluateFocusVisibility(evidence) {
+  const failures = [];
+
+  if (evidence.visibleAreaRatio < MIN_VISIBLE_AREA_RATIO) {
+    failures.push(
+      `only ${(evidence.visibleAreaRatio * 100).toFixed(1)}% of the focus target is inside the viewport`
+    );
+  }
+
+  if (evidence.unobscuredSampleCount < MIN_UNOBSCURED_SAMPLES) {
+    failures.push(
+      `only ${String(evidence.unobscuredSampleCount)} of ${String(evidence.sampleCount)} sample points resolve to the focus target`
+    );
+  }
+
+  return failures;
+}
+
+function validateAllowList(entries) {
+  const problems = [];
+
+  entries.forEach((entry, index) => {
+    const label = `allow-list[${String(index)}]`;
+
+    if (typeof entry.pattern !== 'string' && !(entry.pattern instanceof RegExp)) {
+      problems.push(`${label}: pattern must be a string or RegExp`);
+    }
+    if (typeof entry.reason !== 'string' || entry.reason.trim() === '') {
+      problems.push(`${label}: reason must be a non-empty string`);
+    }
+    if (!Array.isArray(entry.scopes) || entry.scopes.length === 0) {
+      problems.push(`${label}: scopes must be a non-empty array`);
+    } else if (entry.scopes.some((scope) => !DIAGNOSTIC_SCOPES.includes(scope))) {
+      problems.push(`${label}: scopes contains an unknown scope`);
+    }
+    if (!Array.isArray(entry.kinds) || entry.kinds.length === 0) {
+      problems.push(`${label}: kinds must be a non-empty array`);
+    } else if (entry.kinds.some((kind) => !DIAGNOSTIC_KINDS.includes(kind))) {
+      problems.push(`${label}: kinds contains an unknown kind`);
+    }
+  });
+
+  return problems;
+}
+
+function isSuppressed(entries, kind, scope, text) {
+  return entries.some((entry) => {
+    if (!Array.isArray(entry.scopes) || !entry.scopes.includes(scope)) {
+      return false;
+    }
+    if (!Array.isArray(entry.kinds) || !entry.kinds.includes(kind)) {
+      return false;
+    }
+    return entry.pattern instanceof RegExp
+      ? entry.pattern.test(text)
+      : String(text).includes(entry.pattern);
+  });
+}
+
+function aggregateDiagnostics(sinks, entries) {
+  const aggregate = {
+    scopes: sinks.map((sink) => sink.scope),
+    pageErrors: [],
+    consoleErrors: [],
+    requestFailures: [],
+    badResponses: [],
+    failedResources: [],
+  };
+
+  for (const sink of sinks) {
+    for (const kind of DIAGNOSTIC_KINDS) {
+      for (const entry of sink[kind]) {
+        const text = typeof entry === 'string' ? entry : JSON.stringify(entry);
+        if (isSuppressed(entries, kind, sink.scope, text)) {
+          continue;
+        }
+        aggregate[kind].push(
+          typeof entry === 'string' ? `[${sink.scope}] ${entry}` : { scope: sink.scope, ...entry }
+        );
+      }
+    }
+  }
+
+  return aggregate;
+}
+
+function evaluateDiagnostics(aggregate) {
+  const failures = [];
+
+  if (aggregate.pageErrors.length > 0) {
+    failures.push(`page errors: ${aggregate.pageErrors.join(' | ')}`);
+  }
+  if (aggregate.consoleErrors.length > 0) {
+    failures.push(`console errors: ${aggregate.consoleErrors.join(' | ')}`);
+  }
+  if (aggregate.requestFailures.length > 0) {
+    failures.push(`request failures: ${aggregate.requestFailures.join(' | ')}`);
+  }
+  if (aggregate.badResponses.length > 0) {
+    failures.push(`unexpected HTTP >= 400: ${aggregate.badResponses.join(' | ')}`);
+  }
+
+  const criticalFailures = aggregate.failedResources.filter((entry) =>
+    CRITICAL_RESOURCE_TYPES.includes(entry.type)
+  );
+
+  if (criticalFailures.length > 0) {
+    failures.push(`failed critical resources: ${JSON.stringify(criticalFailures.slice(0, 5))}`);
+  }
+
+  return { failures, aggregate };
+}
+
+function summariseManual(answers) {
+  if (answers === null) {
+    return null;
+  }
+
+  const complete = MANUAL_PROMPTS.every((prompt) => typeof answers[prompt.key] === 'string');
+  const failed = MANUAL_PROMPTS.some((prompt) => answers[prompt.key] === 'FAIL');
+
+  return { complete, failed, answers };
+}
+
+function collectRepositoryEvidence() {
+  const run = (args) => execFileSync('git', args, { encoding: 'utf8' }).trim();
+
+  try {
+    return {
+      available: true,
+      headSha: run(['rev-parse', 'HEAD']),
+      branch: run(['branch', '--show-current']),
+      trackedTreeClean: run(['status', '--porcelain', '--untracked-files=no']) === '',
+      error: null,
+    };
+  } catch (error) {
+    return {
+      available: false,
+      headSha: null,
+      branch: null,
+      trackedTreeClean: false,
+      error: toMessage(error),
+    };
+  }
 }
 
 function evaluateReviewBaseline(input) {
@@ -222,39 +465,6 @@ function evaluateReviewBaseline(input) {
   };
 }
 
-function summariseManual(answers) {
-  if (answers === null) {
-    return null;
-  }
-
-  const complete = MANUAL_PROMPTS.every((prompt) => typeof answers[prompt.key] === 'string');
-  const failed = MANUAL_PROMPTS.some((prompt) => answers[prompt.key] === 'FAIL');
-
-  return { complete, failed, answers };
-}
-
-function collectRepositoryEvidence() {
-  const run = (args) => execFileSync('git', args, { encoding: 'utf8' }).trim();
-
-  try {
-    return {
-      available: true,
-      headSha: run(['rev-parse', 'HEAD']),
-      branch: run(['branch', '--show-current']),
-      trackedTreeClean: run(['status', '--porcelain', '--untracked-files=no']) === '',
-      error: null,
-    };
-  } catch (error) {
-    return {
-      available: false,
-      headSha: null,
-      branch: null,
-      trackedTreeClean: false,
-      error: toMessage(error),
-    };
-  }
-}
-
 function readPlaywrightVersion() {
   try {
     const manifest = JSON.parse(readFileSync('node_modules/@playwright/test/package.json', 'utf8'));
@@ -269,15 +479,19 @@ function runSelfTest() {
     mode: 'automated-only',
     baselineEligible: true,
     startupBlockers: 0,
-    executionErrors: 0,
+    automatedExecutionErrors: 0,
     automatedFailures: 0,
     axeViolations: 0,
     diagnosticsFailures: 0,
     cleanupErrors: 0,
     portReleased: true,
     manual: null,
-    interrupted: false,
+    signoffUnavailable: 0,
+    signoffInterrupted: false,
+    signoffIncomplete: 0,
   };
+
+  const interactive = { ...base, mode: 'interactive' };
 
   const completeManual = summariseManual({
     '200% zoom': 'PASS',
@@ -310,75 +524,74 @@ function runSelfTest() {
   };
   const cleanRepo = { ...dirtyRepo, trackedTreeClean: true };
 
-  const scenarios = [
+  const failures = [];
+
+  const record = (ok, line) => {
+    stdout.write(`  ${ok ? '✓' : '✗'} ${line}\n`);
+    if (!ok) {
+      failures.push(line);
+    }
+  };
+
+  const statusCases = [
+    { name: 'automated-only pass', input: base, expected: STATUS.AUTOMATED_PENDING },
+    { name: 'automated defect', input: { ...base, automatedFailures: 2 }, expected: STATUS.FAILED },
     {
-      name: 'automated-only pass',
-      status: resolveFinalStatus(base),
-      expected: STATUS.AUTOMATED_PENDING,
-      exit: 0,
+      name: 'automated execution failure',
+      input: { ...base, automatedExecutionErrors: 1 },
+      expected: STATUS.FAILED,
     },
     {
-      name: 'automated failure',
-      status: resolveFinalStatus({ ...base, automatedFailures: 2 }),
+      name: 'interactive diagnostics defect',
+      input: { ...interactive, diagnosticsFailures: 1, manual: completeManual },
       expected: STATUS.FAILED,
-      exit: 1,
-    },
-    {
-      name: 'execution exception',
-      status: resolveFinalStatus({ ...base, executionErrors: 1 }),
-      expected: STATUS.FAILED,
-      exit: 1,
-    },
-    {
-      name: 'diagnostics failure',
-      status: resolveFinalStatus({ ...base, diagnosticsFailures: 1 }),
-      expected: STATUS.FAILED,
-      exit: 1,
     },
     {
       name: 'manual FAIL',
-      status: resolveFinalStatus({ ...base, mode: 'interactive', manual: failedManual }),
+      input: { ...interactive, manual: failedManual },
       expected: STATUS.FAILED,
-      exit: 1,
     },
     {
-      name: 'incomplete manual',
-      status: resolveFinalStatus({ ...base, mode: 'interactive', manual: partialManual }),
+      name: 'headed browser unavailable',
+      input: { ...interactive, signoffUnavailable: 1 },
       expected: STATUS.PARTIAL,
-      exit: 1,
     },
     {
-      name: 'interrupted sign-off',
-      status: resolveFinalStatus({
-        ...base,
-        mode: 'interactive',
-        manual: null,
-        interrupted: true,
-      }),
+      name: 'stdin EOF',
+      input: { ...interactive, signoffIncomplete: 1 },
       expected: STATUS.PARTIAL,
-      exit: 1,
     },
     {
-      name: 'cleanup failure',
-      status: resolveFinalStatus({ ...base, cleanupErrors: 1 }),
-      expected: STATUS.FAILED,
-      exit: 1,
+      name: 'SIGINT during sign-off',
+      input: { ...interactive, signoffInterrupted: true },
+      expected: STATUS.PARTIAL,
     },
     {
-      name: 'port not released',
-      status: resolveFinalStatus({ ...base, portReleased: false }),
-      expected: STATUS.FAILED,
-      exit: 1,
+      name: 'incomplete manual answers',
+      input: { ...interactive, manual: partialManual },
+      expected: STATUS.PARTIAL,
     },
+    { name: 'cleanup failure', input: { ...base, cleanupErrors: 1 }, expected: STATUS.FAILED },
+    { name: 'port unreleased', input: { ...base, portReleased: false }, expected: STATUS.FAILED },
     {
-      name: 'final interactive complete pass',
-      status: resolveFinalStatus({ ...base, mode: 'interactive', manual: completeManual }),
+      name: 'complete interactive pass',
+      input: { ...interactive, manual: completeManual },
       expected: STATUS.FULL_PASS,
-      exit: 0,
     },
   ];
 
-  const baselineScenarios = [
+  for (const testCase of statusCases) {
+    const status = resolveFinalStatus(testCase.input);
+    const exit = exitCodeForStatus(status);
+    const expectedExit =
+      testCase.expected === STATUS.FAILED || testCase.expected === STATUS.PARTIAL ? 1 : 0;
+    record(
+      status === testCase.expected && exit === expectedExit,
+      `${testCase.name} -> ${status} / exit ${String(exit)}`
+    );
+  }
+
+  const baselineCases = [
     {
       name: 'SHA mismatch rejected',
       result: evaluateReviewBaseline({
@@ -395,11 +608,6 @@ function runSelfTest() {
         approvedSha: 'a'.repeat(40),
         repo: dirtyRepo,
       }),
-      expectEligible: false,
-    },
-    {
-      name: 'interactive without approved SHA rejected',
-      result: evaluateReviewBaseline({ mode: 'interactive', approvedSha: null, repo: cleanRepo }),
       expectEligible: false,
     },
     {
@@ -424,36 +632,133 @@ function runSelfTest() {
     },
   ];
 
-  const failures = [];
-
-  for (const scenario of scenarios) {
-    const actualExit = exitCodeForStatus(scenario.status);
-    if (scenario.status !== scenario.expected) {
-      failures.push(`${scenario.name}: status ${scenario.status}, expected ${scenario.expected}`);
-    }
-    if (actualExit !== scenario.exit) {
-      failures.push(
-        `${scenario.name}: exit ${String(actualExit)}, expected ${String(scenario.exit)}`
-      );
-    }
-    stdout.write(
-      `  ${scenario.status === scenario.expected && actualExit === scenario.exit ? '✓' : '✗'} ${scenario.name} -> ${scenario.status} / exit ${String(actualExit)}\n`
-    );
-  }
-
-  for (const scenario of baselineScenarios) {
-    const okEligible = scenario.result.eligible === scenario.expectEligible;
+  for (const testCase of baselineCases) {
+    const okEligible = testCase.result.eligible === testCase.expectEligible;
     const okClass =
-      scenario.expectClass === undefined || scenario.result.evidenceClass === scenario.expectClass;
-    if (!okEligible || !okClass) {
-      failures.push(
-        `${scenario.name}: eligible ${String(scenario.result.eligible)}, class ${scenario.result.evidenceClass}`
-      );
-    }
-    stdout.write(
-      `  ${okEligible && okClass ? '✓' : '✗'} ${scenario.name} -> eligible ${String(scenario.result.eligible)}, ${scenario.result.evidenceClass}\n`
+      testCase.expectClass === undefined || testCase.result.evidenceClass === testCase.expectClass;
+    record(
+      okEligible && okClass,
+      `${testCase.name} -> eligible ${String(testCase.result.eligible)}, ${testCase.result.evidenceClass}`
     );
   }
+
+  const nonTty = resolveSignoffAvailability({
+    mode: 'interactive',
+    stdinTTY: false,
+    stdoutTTY: true,
+  });
+  record(
+    !nonTty.available && nonTty.reason !== null,
+    `non-TTY interactive mode blocks sign-off before browser launch -> ${String(nonTty.reason)}`
+  );
+  record(
+    resolveSignoffAvailability({ mode: 'interactive', stdinTTY: true, stdoutTTY: true }).available,
+    'TTY interactive mode allows sign-off'
+  );
+
+  const nonTtyStatus = resolveFinalStatus({ ...interactive, signoffUnavailable: 1 });
+  record(
+    nonTtyStatus === STATUS.PARTIAL && exitCodeForStatus(nonTtyStatus) === 1,
+    `non-TTY interactive run resolves to ${nonTtyStatus} / exit 1`
+  );
+
+  const failingViewport = {
+    viewport: '320x568',
+    states: [
+      { state: 'initial', failures: [] },
+      { state: 'invalid', failures: ['error summary not visible'] },
+      { state: 'success', failures: [] },
+    ],
+  };
+  failingViewport.status = resolveViewportStatus(failingViewport.states);
+
+  const passingViewport = {
+    viewport: '1280x800',
+    states: [
+      { state: 'initial', failures: [] },
+      { state: 'invalid', failures: [] },
+      { state: 'success', failures: [] },
+    ],
+  };
+  passingViewport.status = resolveViewportStatus(passingViewport.states);
+
+  record(failingViewport.status === 'FAIL', 'viewport state failure forces viewport FAIL');
+  record(passingViewport.status === 'PASS', 'clean viewport states resolve to PASS');
+  record(
+    responsiveSectionFailures([passingViewport, failingViewport]).length === 1,
+    'responsive section fails when any viewport fails'
+  );
+
+  const order = [10, 20, 30];
+  record(
+    !evaluateBackwardMove({ documentOrder: 20 }, { documentOrder: 20 }, order).moved,
+    'Shift+Tab landing on the same element fails'
+  );
+  record(
+    evaluateBackwardMove({ documentOrder: 20 }, { documentOrder: 10 }, order).moved,
+    'Shift+Tab reaching the previous stop passes'
+  );
+  record(
+    !evaluateBackwardMove({ documentOrder: 20 }, { documentOrder: 30 }, order).moved,
+    'Shift+Tab moving forwards fails'
+  );
+
+  record(
+    evaluateFocusVisibility({ visibleAreaRatio: 0.5, unobscuredSampleCount: 5, sampleCount: 5 })
+      .length === 1,
+    'low visible-area ratio fails'
+  );
+  record(
+    evaluateFocusVisibility({ visibleAreaRatio: 1, unobscuredSampleCount: 2, sampleCount: 5 })
+      .length === 1,
+    'insufficient unobscured samples fails'
+  );
+  record(
+    evaluateFocusVisibility({ visibleAreaRatio: 1, unobscuredSampleCount: 5, sampleCount: 5 })
+      .length === 0,
+    'fully visible unobscured target passes'
+  );
+
+  const scopedEntry = [
+    { pattern: 'noise', reason: 'documented', scopes: ['touch'], kinds: ['consoleErrors'] },
+  ];
+
+  record(
+    !isSuppressed(scopedEntry, 'consoleErrors', 'automated', 'noise here'),
+    'allow-list with wrong scope does not suppress'
+  );
+  record(
+    !isSuppressed(scopedEntry, 'badResponses', 'touch', 'noise here'),
+    'allow-list with wrong kind does not suppress'
+  );
+  record(
+    isSuppressed(scopedEntry, 'consoleErrors', 'touch', 'noise here'),
+    'allow-list matching kind, scope and pattern suppresses'
+  );
+  record(
+    validateAllowList([{ pattern: 'x' }]).length >= 3,
+    'malformed allow-list entry is rejected by validation'
+  );
+  record(validateAllowList(scopedEntry).length === 0, 'well-formed allow-list entry validates');
+  record(validateAllowList(EXPECTED_DIAGNOSTICS).length === 0, 'shipped allow-list validates');
+
+  const interactiveAggregate = aggregateDiagnostics(
+    [
+      {
+        scope: 'interactive',
+        pageErrors: ['boom'],
+        consoleErrors: [],
+        requestFailures: [],
+        badResponses: [],
+        failedResources: [],
+      },
+    ],
+    EXPECTED_DIAGNOSTICS
+  );
+  record(
+    evaluateDiagnostics(interactiveAggregate).failures.length === 1,
+    'interactive diagnostics reach the final evaluation'
+  );
 
   return failures;
 }
@@ -463,10 +768,10 @@ const selfTest = process.argv.includes('--self-test');
 
 if (selfTest) {
   stdout.write('\n🔍 M3 browser review — self-test (no server, no browser)\n\n');
-  const failures = runSelfTest();
-  if (failures.length > 0) {
+  const selfTestFailures = runSelfTest();
+  if (selfTestFailures.length > 0) {
     stdout.write('\n✗ self-test failed\n');
-    for (const failure of failures) {
+    for (const failure of selfTestFailures) {
       stdout.write(`  - ${failure}\n`);
     }
     process.exit(1);
@@ -475,9 +780,25 @@ if (selfTest) {
   process.exit(0);
 }
 
+const allowListProblems = validateAllowList(EXPECTED_DIAGNOSTICS);
+
+if (allowListProblems.length > 0) {
+  stdout.write('\n✗ diagnostics allow-list is malformed:\n');
+  for (const problem of allowListProblems) {
+    stdout.write(`  - ${problem}\n`);
+  }
+  process.exit(1);
+}
+
 const approvedSha = process.env[REVIEW_SHA_ENV] ?? null;
 const repo = collectRepositoryEvidence();
 const baseline = evaluateReviewBaseline({ mode, approvedSha, repo });
+const ttyEvidence = { stdin: stdin.isTTY === true, stdout: stdout.isTTY === true };
+const signoffAvailability = resolveSignoffAvailability({
+  mode,
+  stdinTTY: ttyEvidence.stdin,
+  stdoutTTY: ttyEvidence.stdout,
+});
 
 const results = {
   mode,
@@ -494,6 +815,11 @@ const results = {
     finalReviewEligible: baseline.finalEligible,
     blockers: baseline.blockers,
   },
+  tty: {
+    stdin: ttyEvidence.stdin,
+    stdout: ttyEvidence.stdout,
+    interactiveSignoffAvailable: signoffAvailability.available,
+  },
   environment: {
     os: `${process.platform} ${process.arch}`,
     node: process.version,
@@ -504,9 +830,14 @@ const results = {
   sections: [],
   viewports: [],
   overlap: [],
-  focusOrder: [],
+  focus: { forwardOrder: [], backward: null, targets: [] },
   axe: [],
-  diagnostics: {},
+  diagnostics: {
+    automatedSnapshot: null,
+    finalSnapshot: null,
+    interactiveIncluded: false,
+    allowListEntries: EXPECTED_DIAGNOSTICS.length,
+  },
   lifecycle: {
     serverStarted: false,
     automatedContextClosed: false,
@@ -518,15 +849,27 @@ const results = {
     cleanupErrors: [],
     userBrowserTouched: false,
   },
+  outcome: {
+    automatedExecutionErrors: [],
+    signoffUnavailable: [],
+    signoffInterrupted: false,
+    signoffIncomplete: [],
+  },
   manual: null,
-  executionErrors: [],
-  interrupted: false,
   screenshots: [],
 };
 
 function openSection(id, name) {
-  const record = { id, name, status: 'PASS', failures: [], notes: [] };
-  results.sections.push(record);
+  const existing = results.sections.find((entry) => entry.id === id);
+  const record = existing ?? { id, name, status: 'PASS', failures: [], notes: [] };
+
+  if (existing === undefined) {
+    results.sections.push(record);
+  } else {
+    record.status = 'PASS';
+    record.failures = [];
+    record.notes = [];
+  }
 
   return {
     check(condition, message) {
@@ -565,8 +908,9 @@ function createDiagnostics(page, scope) {
     }
   });
   page.on('requestfailed', (request) => {
-    const entry = `${request.resourceType()} ${request.url()} :: ${request.failure()?.errorText ?? 'unknown'}`;
-    sink.requestFailures.push(entry);
+    sink.requestFailures.push(
+      `${request.resourceType()} ${request.url()} :: ${request.failure()?.errorText ?? 'unknown'}`
+    );
     sink.failedResources.push({ type: request.resourceType(), url: request.url(), status: null });
   });
   page.on('response', (response) => {
@@ -581,33 +925,20 @@ function createDiagnostics(page, scope) {
   return sink;
 }
 
-function isExpectedDiagnostic(text) {
-  return EXPECTED_DIAGNOSTICS.some((entry) =>
-    entry.pattern instanceof RegExp ? entry.pattern.test(text) : text.includes(entry.pattern)
-  );
-}
+function recordDiagnosticsSection(evaluation, includesInteractive) {
+  const s = openSection('M', 'Runtime diagnostics gate');
 
-function aggregateDiagnostics() {
-  const aggregate = {
-    pageErrors: [],
-    consoleErrors: [],
-    requestFailures: [],
-    badResponses: [],
-    failedResources: [],
-  };
-
-  for (const sink of diagnosticSinks) {
-    for (const key of Object.keys(aggregate)) {
-      for (const entry of sink[key]) {
-        const text = typeof entry === 'string' ? entry : JSON.stringify(entry);
-        if (!isExpectedDiagnostic(text)) {
-          aggregate[key].push(typeof entry === 'string' ? `[${sink.scope}] ${entry}` : entry);
-        }
-      }
-    }
+  for (const failure of evaluation.failures) {
+    s.check(false, failure);
   }
 
-  return aggregate;
+  s.note(`scopes: ${evaluation.aggregate.scopes.join(', ')}`);
+  s.note(`interactive diagnostics included: ${String(includesInteractive)}`);
+
+  results.diagnostics.finalSnapshot = evaluation.aggregate;
+  results.diagnostics.interactiveIncluded = includesInteractive;
+
+  return evaluation.failures.length === 0;
 }
 
 function resolveFreePort() {
@@ -700,46 +1031,129 @@ async function clippedElements(page) {
   );
 }
 
-async function overlapReport(page, pairs, tolerance) {
-  return page.evaluate(
+async function semanticOverlap(page, probes, tolerance, viewportLabel, state) {
+  const findings = await page.evaluate(
     ([definitions, allowance]) => {
-      const intersects = (a, b) => {
-        const overlapX = Math.min(a.right, b.right) - Math.max(a.left, b.left);
-        const overlapY = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top);
-        return overlapX > allowance && overlapY > allowance;
+      const describedError = (controlId) => {
+        const control = document.getElementById(controlId);
+        const tokens = (control?.getAttribute('aria-describedby') ?? '').split(' ').filter(Boolean);
+        const last = tokens[tokens.length - 1];
+        return last === undefined ? null : document.getElementById(last);
       };
 
-      const findings = [];
+      const byExactText = (selector, text) =>
+        Array.from(document.querySelectorAll(selector)).find(
+          (el) => (el.textContent ?? '').trim() === text
+        ) ?? null;
+
+      const summaryLinks = () =>
+        Array.from(document.querySelectorAll('main#main-content section[tabindex="-1"] a'));
+
+      const resolvers = {
+        h1: () => document.querySelector('main#main-content h1'),
+        notice: () =>
+          Array.from(document.querySelectorAll('main#main-content p')).find((el) =>
+            (el.textContent ?? '').includes('Technical Shared UI verification surface')
+          ) ?? null,
+        badge: () => byExactText('main#main-content span', 'Technical'),
+        status: () => byExactText('main#main-content span', 'Verification surface'),
+        counter: () => document.querySelector('[data-testid="demo-counter"]'),
+        incrementButton: () =>
+          byExactText('main#main-content button', 'Increment demonstration counter'),
+        resetCounterButton: () =>
+          document.querySelector('button[aria-label="Reset demonstration counter"]'),
+        submitButton: () => byExactText('main#main-content button', 'Validate demonstration form'),
+        resetFormButton: () => byExactText('main#main-content button', 'Reset demonstration form'),
+        form: () => document.querySelector('main#main-content form'),
+        errorSummary: () => document.querySelector('main#main-content section[tabindex="-1"]'),
+        summaryLinkOne: () => summaryLinks()[0] ?? null,
+        summaryLinkTwo: () => summaryLinks()[1] ?? null,
+        successStatus: () => document.querySelector('main#main-content [role="status"]'),
+        nameControl: () => document.getElementById('m3-demo-name'),
+        notesControl: () => document.getElementById('m3-demo-notes'),
+        categoryControl: () => document.getElementById('m3-demo-category'),
+        nameGroup: () => document.getElementById('m3-demo-name')?.closest('div') ?? null,
+        notesGroup: () => document.getElementById('m3-demo-notes')?.closest('div') ?? null,
+        categoryGroup: () => document.getElementById('m3-demo-category')?.closest('div') ?? null,
+        nameLabel: () => document.querySelector('label[for="m3-demo-name"]'),
+        categoryLabel: () => document.querySelector('label[for="m3-demo-category"]'),
+        nameError: () => describedError('m3-demo-name'),
+        categoryError: () => describedError('m3-demo-category'),
+      };
+
+      const identify = (el) =>
+        `${el.tagName.toLowerCase()}${el.id === '' ? '' : `#${el.id}`}:${(el.textContent ?? '').trim().slice(0, 30)}`;
+
+      const output = [];
 
       for (const definition of definitions) {
-        const groupA = Array.from(document.querySelectorAll(definition.a));
-        const groupB = Array.from(document.querySelectorAll(definition.b));
+        const left = resolvers[definition.left]?.() ?? null;
+        const right = resolvers[definition.right]?.() ?? null;
 
-        for (const first of groupA) {
-          for (const second of groupB) {
-            if (first === second || first.contains(second) || second.contains(first)) {
-              continue;
-            }
-            const rectA = first.getBoundingClientRect();
-            const rectB = second.getBoundingClientRect();
-            if (rectA.height === 0 || rectB.height === 0) {
-              continue;
-            }
-            if (intersects(rectA, rectB)) {
-              findings.push({
-                pair: definition.name,
-                a: `${first.tagName.toLowerCase()}:${(first.textContent ?? '').trim().slice(0, 30)}`,
-                b: `${second.tagName.toLowerCase()}:${(second.textContent ?? '').trim().slice(0, 30)}`,
-              });
-            }
-          }
+        if (left === null || right === null || left === right) {
+          output.push({
+            pairName: definition.pair,
+            leftIdentifier: definition.left,
+            rightIdentifier: definition.right,
+            resolved: false,
+            failed: false,
+          });
+          continue;
         }
+
+        if (left.contains(right) || right.contains(left)) {
+          output.push({
+            pairName: definition.pair,
+            leftIdentifier: identify(left),
+            rightIdentifier: identify(right),
+            resolved: true,
+            nested: true,
+            failed: false,
+          });
+          continue;
+        }
+
+        const leftRect = left.getBoundingClientRect();
+        const rightRect = right.getBoundingClientRect();
+        const overlapX =
+          Math.min(leftRect.right, rightRect.right) - Math.max(leftRect.left, rightRect.left);
+        const overlapY =
+          Math.min(leftRect.bottom, rightRect.bottom) - Math.max(leftRect.top, rightRect.top);
+
+        output.push({
+          pairName: definition.pair,
+          leftIdentifier: identify(left),
+          rightIdentifier: identify(right),
+          resolved: true,
+          nested: false,
+          leftRect: {
+            top: Math.round(leftRect.top),
+            left: Math.round(leftRect.left),
+            width: Math.round(leftRect.width),
+            height: Math.round(leftRect.height),
+          },
+          rightRect: {
+            top: Math.round(rightRect.top),
+            left: Math.round(rightRect.left),
+            width: Math.round(rightRect.width),
+            height: Math.round(rightRect.height),
+          },
+          overlapX: Math.round(overlapX),
+          overlapY: Math.round(overlapY),
+          failed: overlapX > allowance && overlapY > allowance,
+        });
       }
 
-      return findings;
+      return output;
     },
-    [pairs, tolerance]
+    [probes, tolerance]
   );
+
+  for (const finding of findings) {
+    results.overlap.push({ viewport: viewportLabel, state, tolerance, ...finding });
+  }
+
+  return findings.filter((finding) => finding.failed);
 }
 
 async function runStartupChecks(page, url, sink) {
@@ -885,8 +1299,13 @@ async function sectionInitialStructure(page, url) {
   s.check((await horizontalOverflow(page)) <= 1, 'horizontal overflow at 1280x800');
   s.check((await clippedElements(page)) === 0, 'clipped text at 1280x800');
 
-  const overlaps = await overlapReport(page, OVERLAP_PAIRS, OVERLAP_TOLERANCE_PX);
-  results.overlap.push({ state: 'initial', viewport: '1280x800', findings: overlaps });
+  const overlaps = await semanticOverlap(
+    page,
+    OVERLAP_PROBES.initial,
+    OVERLAP_TOLERANCE_PX,
+    '1280x800',
+    'initial'
+  );
   s.check(overlaps.length === 0, `overlapping regions: ${JSON.stringify(overlaps.slice(0, 3))}`);
 
   await shot(page, 'automated-1280x800.png');
@@ -932,66 +1351,98 @@ async function captureFocusBaseline(page) {
   }, FOCUS_TARGETS);
 }
 
-async function describeActiveElement(page) {
-  return page.evaluate((targets) => {
-    const el = document.activeElement;
-    if (el === null || el === document.body || el === document.documentElement) {
-      return null;
-    }
-
-    const matchKey = () => {
-      for (const target of targets) {
-        if (target.selector !== undefined && el.matches(target.selector)) {
-          return target.key;
-        }
-        if (target.ariaLabel !== undefined && el.getAttribute('aria-label') === target.ariaLabel) {
-          return target.key;
-        }
-        if (
-          target.text !== undefined &&
-          el.tagName.toLowerCase() === (target.tag ?? el.tagName.toLowerCase()) &&
-          (el.textContent ?? '').trim() === target.text
-        ) {
-          return target.key;
-        }
+async function describeActiveElement(page, sampleCount) {
+  return page.evaluate(
+    ([targets, samples]) => {
+      const el = document.activeElement;
+      if (el === null || el === document.body || el === document.documentElement) {
+        return null;
       }
-      return null;
-    };
 
-    const style = window.getComputedStyle(el);
-    const rect = el.getBoundingClientRect();
-    const centreX = rect.left + rect.width / 2;
-    const centreY = rect.top + rect.height / 2;
-    const hit = document.elementFromPoint(centreX, centreY);
+      const matchKey = () => {
+        for (const target of targets) {
+          if (target.selector !== undefined && el.matches(target.selector)) {
+            return target.key;
+          }
+          if (
+            target.ariaLabel !== undefined &&
+            el.getAttribute('aria-label') === target.ariaLabel
+          ) {
+            return target.key;
+          }
+          if (
+            target.text !== undefined &&
+            el.tagName.toLowerCase() === (target.tag ?? el.tagName.toLowerCase()) &&
+            (el.textContent ?? '').trim() === target.text
+          ) {
+            return target.key;
+          }
+        }
+        return null;
+      };
 
-    const documentOrder = Array.from(document.querySelectorAll('*')).indexOf(el);
+      const style = window.getComputedStyle(el);
+      const rect = el.getBoundingClientRect();
+      const label = el.closest('label');
 
-    return {
-      key: matchKey(),
-      tag: el.tagName.toLowerCase(),
-      label: (el.getAttribute('aria-label') ?? el.textContent ?? '').trim().slice(0, 40),
-      documentOrder,
-      focusVisible: el.matches(':focus-visible'),
-      style: {
-        outlineStyle: style.outlineStyle,
-        outlineWidth: style.outlineWidth,
-        outlineColor: style.outlineColor,
-        boxShadow: style.boxShadow,
-        borderTopWidth: style.borderTopWidth,
-        borderTopColor: style.borderTopColor,
-        backgroundColor: style.backgroundColor,
-      },
-      rect: { width: rect.width, height: rect.height, top: rect.top, bottom: rect.bottom },
-      inViewport:
-        rect.width > 0 &&
-        rect.height > 0 &&
-        rect.bottom > 0 &&
-        rect.top < window.innerHeight &&
-        rect.right > 0 &&
-        rect.left < window.innerWidth,
-      obscured: hit !== null && hit !== el && !el.contains(hit) && !hit.contains(el),
-    };
-  }, FOCUS_TARGETS);
+      const owns = (hit) =>
+        hit !== null &&
+        (hit === el ||
+          el.contains(hit) ||
+          hit.contains(el) ||
+          (label !== null && (hit === label || label.contains(hit))));
+
+      const inset = 0.15;
+      const points = [
+        [rect.left + rect.width / 2, rect.top + rect.height / 2],
+        [rect.left + rect.width * inset, rect.top + rect.height * inset],
+        [rect.right - rect.width * inset, rect.top + rect.height * inset],
+        [rect.left + rect.width * inset, rect.bottom - rect.height * inset],
+        [rect.right - rect.width * inset, rect.bottom - rect.height * inset],
+      ].slice(0, samples);
+
+      const unobscuredSampleCount = points.filter(([x, y]) =>
+        owns(document.elementFromPoint(x, y))
+      ).length;
+
+      const visibleWidth = Math.max(
+        0,
+        Math.min(rect.right, window.innerWidth) - Math.max(rect.left, 0)
+      );
+      const visibleHeight = Math.max(
+        0,
+        Math.min(rect.bottom, window.innerHeight) - Math.max(rect.top, 0)
+      );
+      const area = rect.width * rect.height;
+      const visibleAreaRatio = area === 0 ? 0 : (visibleWidth * visibleHeight) / area;
+
+      return {
+        key: matchKey(),
+        tag: el.tagName.toLowerCase(),
+        label: (el.getAttribute('aria-label') ?? el.textContent ?? '').trim().slice(0, 40),
+        documentOrder: Array.from(document.querySelectorAll('*')).indexOf(el),
+        focusVisible: el.matches(':focus-visible'),
+        style: {
+          outlineStyle: style.outlineStyle,
+          outlineWidth: style.outlineWidth,
+          outlineColor: style.outlineColor,
+          boxShadow: style.boxShadow,
+          borderTopWidth: style.borderTopWidth,
+          borderTopColor: style.borderTopColor,
+          backgroundColor: style.backgroundColor,
+        },
+        rect: {
+          width: Math.round(rect.width),
+          height: Math.round(rect.height),
+          top: Math.round(rect.top),
+        },
+        visibleAreaRatio,
+        unobscuredSampleCount,
+        sampleCount: points.length,
+      };
+    },
+    [FOCUS_TARGETS, sampleCount]
+  );
 }
 
 function transparent(color) {
@@ -1022,24 +1473,6 @@ function hasVisibleFocusIndicator(focused, baseline) {
   );
 }
 
-async function walkTabOrder(page, limit) {
-  const stops = [];
-
-  for (let index = 0; index < limit; index += 1) {
-    await page.keyboard.press('Tab');
-    const stop = await describeActiveElement(page);
-    if (stop === null) {
-      break;
-    }
-    stops.push(stop);
-    if (stops.filter((entry) => entry.key !== null).length === FOCUS_TARGETS.length) {
-      break;
-    }
-  }
-
-  return stops;
-}
-
 async function sectionKeyboard(page, url) {
   const s = openSection('B', 'Keyboard and skip link');
   await page.setViewportSize(DESKTOP_VIEWPORT);
@@ -1058,11 +1491,26 @@ async function sectionKeyboard(page, url) {
     'main did not receive focus after activating skip link'
   );
 
-  const stops = await walkTabOrder(page, MAX_TAB_STOPS);
-  results.focusOrder = stops.map((stop) => ({
+  const stops = [];
+
+  for (let index = 0; index < MAX_TAB_STOPS; index += 1) {
+    await page.keyboard.press('Tab');
+    const stop = await describeActiveElement(page, OBSCURATION_SAMPLES);
+    if (stop === null) {
+      break;
+    }
+    stops.push(stop);
+    if (stops.filter((entry) => entry.key !== null).length === FOCUS_TARGETS.length) {
+      break;
+    }
+  }
+
+  const order = stops.map((stop) => stop.documentOrder);
+  results.focus.forwardOrder = stops.map((stop) => ({
     key: stop.key,
     tag: stop.tag,
     label: stop.label,
+    documentOrder: stop.documentOrder,
     focusVisible: stop.focusVisible,
   }));
 
@@ -1086,8 +1534,18 @@ async function sectionKeyboard(page, url) {
       hasVisibleFocusIndicator(stop.style, baselineStyles[target.key]),
       `${target.key} has no materially visible focus indicator`
     );
-    s.check(stop.inViewport, `${target.key} focus target is outside the viewport`);
-    s.check(!stop.obscured, `${target.key} focus target is obscured by another element`);
+
+    for (const failure of evaluateFocusVisibility(stop)) {
+      s.check(false, `${target.key}: ${failure}`);
+    }
+
+    results.focus.targets.push({
+      key: target.key,
+      focusVisible: stop.focusVisible,
+      visibleAreaRatio: Number(stop.visibleAreaRatio.toFixed(3)),
+      unobscuredSampleCount: stop.unobscuredSampleCount,
+      sampleCount: stop.sampleCount,
+    });
   }
 
   const reachedOrder = Array.from(reached.values()).map((stop) => stop.documentOrder);
@@ -1096,9 +1554,19 @@ async function sectionKeyboard(page, url) {
   );
   s.check(ascending, 'representative controls were not reached in DOM order');
 
+  const beforeBackward = stops[stops.length - 1] ?? null;
   await page.keyboard.press('Shift+Tab');
-  const backwards = await describeActiveElement(page);
-  s.check(backwards !== null, 'Shift+Tab did not move focus backwards');
+  const afterBackward = await describeActiveElement(page, OBSCURATION_SAMPLES);
+  const backward = evaluateBackwardMove(beforeBackward, afterBackward, order);
+
+  results.focus.backward = {
+    from: beforeBackward === null ? null : beforeBackward.label,
+    to: afterBackward === null ? null : afterBackward.label,
+    moved: backward.moved,
+    reason: backward.reason,
+  };
+
+  s.check(backward.moved, `Shift+Tab evidence: ${backward.reason}`);
 }
 
 async function sectionCounter(page, url) {
@@ -1304,12 +1772,10 @@ async function sectionReset(page, url) {
   }
 }
 
-async function measureState(page, s, viewportLabel, state) {
+async function measureGeometry(page, label, state, probes) {
   const overflow = await horizontalOverflow(page);
   const clipped = await clippedElements(page);
-  const overlaps = await overlapReport(page, OVERLAP_PAIRS, OVERLAP_TOLERANCE_PX);
-
-  results.overlap.push({ state, viewport: viewportLabel, findings: overlaps });
+  const overlaps = await semanticOverlap(page, probes, OVERLAP_TOLERANCE_PX, label, state);
 
   const failures = [];
 
@@ -1320,14 +1786,12 @@ async function measureState(page, s, viewportLabel, state) {
     failures.push(`${String(clipped)} clipped elements`);
   }
   if (overlaps.length > 0) {
-    failures.push(`${String(overlaps.length)} overlapping regions`);
+    failures.push(
+      `${String(overlaps.length)} overlapping regions (${overlaps.map((entry) => entry.pairName).join(', ')})`
+    );
   }
 
-  for (const failure of failures) {
-    s.check(false, `${viewportLabel} ${state}: ${failure}`);
-  }
-
-  return { overflow, clipped, overlaps: overlaps.length, failures };
+  return { geometry: { overflow, clipped, overlaps: overlaps.length }, failures };
 }
 
 async function sectionResponsive(page, url) {
@@ -1338,9 +1802,15 @@ async function sectionResponsive(page, url) {
     await page.setViewportSize(viewport);
     await gotoHome(page, url);
 
-    const initial = await measureState(page, s, label, 'initial');
+    const initial = { state: 'initial', failures: [], geometry: {}, visibility: {} };
+    const invalid = { state: 'invalid', failures: [], geometry: {}, visibility: {} };
+    const success = { state: 'success', failures: [], geometry: {}, visibility: {} };
 
-    const visible = await page.evaluate(() => {
+    const initialGeometry = await measureGeometry(page, label, 'initial', OVERLAP_PROBES.initial);
+    initial.geometry = initialGeometry.geometry;
+    initial.failures.push(...initialGeometry.failures);
+
+    initial.visibility = await page.evaluate(() => {
       const heading = document.querySelector('h1');
       const notice = Array.from(document.querySelectorAll('p')).find((el) =>
         (el.textContent ?? '').includes('Technical Shared UI verification surface')
@@ -1351,31 +1821,58 @@ async function sectionResponsive(page, url) {
       };
     });
 
-    s.check(visible.heading, `${label} initial: heading not visible`);
-    s.check(visible.notice, `${label} initial: notice not visible`);
+    if (!initial.visibility.heading) {
+      initial.failures.push('heading not visible');
+    }
+    if (!initial.visibility.notice) {
+      initial.failures.push('technical notice not visible');
+    }
 
     await page.getByRole('button', { name: SUBMIT_LABEL }).click();
     const summary = page.getByRole('region', { name: SUMMARY_TITLE });
     await summary.waitFor();
 
-    const invalid = await measureState(page, s, label, 'invalid');
+    const invalidGeometry = await measureGeometry(page, label, 'invalid', OVERLAP_PROBES.invalid);
+    invalid.geometry = invalidGeometry.geometry;
+    invalid.failures.push(...invalidGeometry.failures);
 
-    s.check(await summary.isVisible(), `${label} invalid: error summary not visible`);
-    s.check(
-      await summary.evaluate((el) => {
+    invalid.visibility = {
+      summaryVisible: await summary.isVisible(),
+      summaryFocused: await summary.evaluate((el) => el === document.activeElement),
+      summaryInViewport: await summary.evaluate((el) => {
         const rect = el.getBoundingClientRect();
         return rect.height > 0 && rect.bottom > 0 && rect.top < window.innerHeight;
       }),
-      `${label} invalid: focused error summary not within the viewport`
-    );
-    s.check(
-      (await summary.getByRole('link').count()) === 2,
-      `${label} invalid: summary links missing`
-    );
-    s.check(
-      await page.getByText(NAME_ERROR).first().isVisible(),
-      `${label} invalid: field error not visible`
-    );
+      summaryLinks: await summary.getByRole('link').count(),
+      nameErrorVisible: await page.getByText(NAME_ERROR).first().isVisible(),
+      categoryErrorVisible: await page.getByText(CATEGORY_ERROR).first().isVisible(),
+      submitVisible: await page.getByRole('button', { name: SUBMIT_LABEL }).isVisible(),
+      resetVisible: await page.getByRole('button', { name: RESET_FORM_LABEL }).isVisible(),
+    };
+
+    if (!invalid.visibility.summaryVisible) {
+      invalid.failures.push('error summary not visible');
+    }
+    if (!invalid.visibility.summaryFocused) {
+      invalid.failures.push('error summary not focused');
+    }
+    if (!invalid.visibility.summaryInViewport) {
+      invalid.failures.push('error summary outside the viewport');
+    }
+    if (invalid.visibility.summaryLinks !== 2) {
+      invalid.failures.push(
+        `expected two summary links, found ${String(invalid.visibility.summaryLinks)}`
+      );
+    }
+    if (!invalid.visibility.nameErrorVisible) {
+      invalid.failures.push('name error not visible');
+    }
+    if (!invalid.visibility.categoryErrorVisible) {
+      invalid.failures.push('category error not visible');
+    }
+    if (!invalid.visibility.submitVisible || !invalid.visibility.resetVisible) {
+      invalid.failures.push('form actions not visible');
+    }
 
     await page.locator(NAME_FIELD).fill('Demonstration');
     await page.locator(CATEGORY_FIELD).selectOption('laptops');
@@ -1383,28 +1880,43 @@ async function sectionResponsive(page, url) {
     const status = page.locator(MAIN).getByRole('status');
     await status.waitFor();
 
-    const success = await measureState(page, s, label, 'success');
+    const successGeometry = await measureGeometry(page, label, 'success', OVERLAP_PROBES.success);
+    success.geometry = successGeometry.geometry;
+    success.failures.push(...successGeometry.failures);
 
-    s.check(await status.isVisible(), `${label} success: status not visible`);
-    s.check(
-      await page.getByRole('button', { name: RESET_FORM_LABEL }).isVisible(),
-      `${label} success: form actions not visible`
-    );
+    success.visibility = {
+      statusVisible: await status.isVisible(),
+      statusText: await status.first().textContent(),
+      statusCount: await status.count(),
+      submitVisible: await page.getByRole('button', { name: SUBMIT_LABEL }).isVisible(),
+      resetVisible: await page.getByRole('button', { name: RESET_FORM_LABEL }).isVisible(),
+    };
 
-    results.viewports.push({
-      viewport: label,
-      status:
-        initial.failures.length + invalid.failures.length + success.failures.length === 0
-          ? 'PASS'
-          : 'FAIL',
-      initial,
-      invalid,
-      success,
-    });
+    if (!success.visibility.statusVisible) {
+      success.failures.push('success status not visible');
+    }
+    if (success.visibility.statusCount !== 1) {
+      success.failures.push(
+        `expected one Home-owned status, found ${String(success.visibility.statusCount)}`
+      );
+    }
+    if (success.visibility.statusText !== SUCCESS_RESULT) {
+      success.failures.push('success copy mismatch');
+    }
+    if (!success.visibility.submitVisible || !success.visibility.resetVisible) {
+      success.failures.push('form actions not visible');
+    }
+
+    const states = [initial, invalid, success];
+    results.viewports.push({ viewport: label, states, status: resolveViewportStatus(states) });
 
     if (label === '320x568') {
       await shot(page, 'viewport-320x568.png');
     }
+  }
+
+  for (const failure of responsiveSectionFailures(results.viewports)) {
+    s.check(false, failure);
   }
 
   await page.setViewportSize(DESKTOP_VIEWPORT);
@@ -1617,7 +2129,7 @@ async function sectionForcedColors(page, url) {
   );
 
   await page.keyboard.press('Tab');
-  const focused = await describeActiveElement(page);
+  const focused = await describeActiveElement(page, OBSCURATION_SAMPLES);
 
   s.check(
     focused !== null && focused.tag === 'a',
@@ -1628,6 +2140,12 @@ async function sectionForcedColors(page, url) {
     focused !== null && hasVisibleFocusIndicator(focused.style, null),
     'focus indicator not materially visible under forced colors'
   );
+
+  if (focused !== null) {
+    for (const failure of evaluateFocusVisibility(focused)) {
+      s.check(false, `forced colors focus: ${failure}`);
+    }
+  }
 
   await shot(page, 'forced-colors.png');
   s.note(s.failed ? 'FAIL — PLAYWRIGHT EMULATION' : 'PASS — PLAYWRIGHT EMULATION');
@@ -1789,38 +2307,6 @@ async function sectionRouting(page, url) {
   );
 }
 
-function sectionDiagnosticsGate() {
-  const s = openSection('M', 'Runtime diagnostics gate');
-  const aggregate = aggregateDiagnostics();
-  results.diagnostics = aggregate;
-
-  s.check(aggregate.pageErrors.length === 0, `page errors: ${aggregate.pageErrors.join(' | ')}`);
-  s.check(
-    aggregate.consoleErrors.length === 0,
-    `console errors: ${aggregate.consoleErrors.join(' | ')}`
-  );
-  s.check(
-    aggregate.requestFailures.length === 0,
-    `request failures: ${aggregate.requestFailures.join(' | ')}`
-  );
-  s.check(
-    aggregate.badResponses.length === 0,
-    `unexpected HTTP >= 400: ${aggregate.badResponses.join(' | ')}`
-  );
-
-  const criticalTypes = ['script', 'stylesheet', 'fetch', 'xhr', 'document', 'serviceworker'];
-  const criticalFailures = aggregate.failedResources.filter((entry) =>
-    criticalTypes.includes(entry.type)
-  );
-
-  s.check(
-    criticalFailures.length === 0,
-    `failed critical resources: ${JSON.stringify(criticalFailures.slice(0, 5))}`
-  );
-
-  return s;
-}
-
 async function runInteractiveSignoff(page, url, signal) {
   await gotoHome(page, url);
 
@@ -1856,6 +2342,16 @@ async function runInteractiveSignoff(page, url, signal) {
   return answers;
 }
 
+function printSignoffHandoff(sha) {
+  const target = sha ?? '<approved SHA>';
+  stdout.write('\nInteractive sign-off requires a visible TTY.\n');
+  stdout.write('Run in the project terminal:\n\n');
+  stdout.write(`  $env:${REVIEW_SHA_ENV}="${target}"\n`);
+  stdout.write('  npm run review:m3-browser\n\n');
+  stdout.write('Bash:\n\n');
+  stdout.write(`  ${REVIEW_SHA_ENV}=${target} npm run review:m3-browser\n\n`);
+}
+
 mkdirSync(ARTIFACT_DIR, { recursive: true });
 
 let server = null;
@@ -1869,7 +2365,7 @@ let startupHealthy = false;
 const abortController = new AbortController();
 
 function onInterrupt() {
-  results.interrupted = true;
+  results.outcome.signoffInterrupted = true;
   abortController.abort();
 }
 
@@ -1923,36 +2419,62 @@ try {
     await sectionReducedMotion(page, localUrl);
     await sectionAxe(page, localUrl);
     await sectionRouting(page, localUrl);
-    sectionDiagnosticsGate();
   }
 
-  const automatedFailed = results.sections.some((entry) => entry.status === 'FAIL');
-  const automatedPassed = startupHealthy && !automatedFailed;
+  const automatedAggregate = aggregateDiagnostics(diagnosticSinks, EXPECTED_DIAGNOSTICS);
+  const automatedEvaluation = evaluateDiagnostics(automatedAggregate);
+  results.diagnostics.automatedSnapshot = automatedAggregate;
 
-  if (mode === 'interactive' && automatedPassed && !results.interrupted) {
-    interactiveBrowser = await chromium.launch({ headless: false });
-    interactiveContext = await interactiveBrowser.newContext({ viewport: DESKTOP_VIEWPORT });
-    const interactivePage = await interactiveContext.newPage();
-    createDiagnostics(interactivePage, 'interactive');
+  const automatedSectionsFailed = results.sections.some(
+    (entry) => entry.id !== 'M' && entry.status === 'FAIL'
+  );
+  const automatedPassed =
+    startupHealthy && !automatedSectionsFailed && automatedEvaluation.failures.length === 0;
 
-    try {
-      const answers = await runInteractiveSignoff(
-        interactivePage,
-        localUrl,
-        abortController.signal
-      );
-      results.manual = answers;
-      await shot(interactivePage, 'manual-final.png');
-    } catch (error) {
-      if (results.interrupted) {
-        results.executionErrors.push(`sign-off interrupted: ${toMessage(error)}`);
-      } else {
-        results.executionErrors.push(`sign-off failed: ${toMessage(error)}`);
+  if (mode === 'interactive' && automatedPassed && !results.outcome.signoffInterrupted) {
+    if (!signoffAvailability.available) {
+      results.outcome.signoffUnavailable.push(String(signoffAvailability.reason));
+      printSignoffHandoff(approvedSha);
+    } else {
+      try {
+        interactiveBrowser = await chromium.launch({ headless: false });
+        interactiveContext = await interactiveBrowser.newContext({ viewport: DESKTOP_VIEWPORT });
+      } catch (error) {
+        results.outcome.signoffUnavailable.push(
+          `headed browser could not launch: ${toMessage(error)}`
+        );
+      }
+
+      if (interactiveContext !== null) {
+        const interactivePage = await interactiveContext.newPage();
+        createDiagnostics(interactivePage, 'interactive');
+
+        try {
+          results.manual = await runInteractiveSignoff(
+            interactivePage,
+            localUrl,
+            abortController.signal
+          );
+        } catch (error) {
+          if (results.outcome.signoffInterrupted) {
+            results.outcome.signoffIncomplete.push(`sign-off interrupted: ${toMessage(error)}`);
+          } else {
+            results.outcome.signoffIncomplete.push(
+              `sign-off did not complete: ${toMessage(error)}`
+            );
+          }
+        }
+
+        try {
+          await shot(interactivePage, 'manual-final.png');
+        } catch (error) {
+          results.outcome.signoffIncomplete.push(`final screenshot failed: ${toMessage(error)}`);
+        }
       }
     }
   }
 } catch (error) {
-  results.executionErrors.push(toMessage(error));
+  results.outcome.automatedExecutionErrors.push(toMessage(error));
 } finally {
   if (interactiveContext !== null) {
     results.lifecycle.interactiveContextClosed = await closeStage('interactive context', () =>
@@ -1996,23 +2518,31 @@ if (!results.lifecycle.portReleased) {
   results.lifecycle.cleanupErrors.push('review server port still responds after shutdown');
 }
 
+const finalAggregate = aggregateDiagnostics(diagnosticSinks, EXPECTED_DIAGNOSTICS);
+const finalEvaluation = evaluateDiagnostics(finalAggregate);
+const interactiveIncluded = diagnosticSinks.some((sink) => sink.scope === 'interactive');
+const diagnosticsPassed = recordDiagnosticsSection(finalEvaluation, interactiveIncluded);
+
 const manualSummary = summariseManual(results.manual);
-const automatedFailures = results.sections.filter((entry) => entry.status === 'FAIL');
-const diagnosticsSection = results.sections.find((entry) => entry.id === 'M');
+const automatedFailures = results.sections.filter(
+  (entry) => entry.id !== 'M' && entry.status === 'FAIL'
+);
 const axeViolations = results.axe.reduce((total, entry) => total + entry.violations.length, 0);
 
 const status = resolveFinalStatus({
   mode,
   baselineEligible: baseline.eligible,
   startupBlockers: (results.startup.blockers ?? []).length,
-  executionErrors: results.executionErrors.length,
-  automatedFailures: automatedFailures.filter((entry) => entry.id !== 'M').length,
+  automatedExecutionErrors: results.outcome.automatedExecutionErrors.length,
+  automatedFailures: automatedFailures.length,
   axeViolations,
-  diagnosticsFailures: diagnosticsSection?.status === 'FAIL' ? 1 : 0,
+  diagnosticsFailures: diagnosticsPassed ? 0 : 1,
   cleanupErrors: results.lifecycle.cleanupErrors.length,
   portReleased: results.lifecycle.portReleased,
   manual: manualSummary,
-  interrupted: results.interrupted,
+  signoffUnavailable: results.outcome.signoffUnavailable.length,
+  signoffInterrupted: results.outcome.signoffInterrupted,
+  signoffIncomplete: results.outcome.signoffIncomplete.length,
 });
 
 const exitCode = exitCodeForStatus(status);
@@ -2028,6 +2558,7 @@ results.manualSummary =
 function renderReport() {
   const lifecycle = results.lifecycle;
   const repository = results.repository;
+  const outcome = results.outcome;
 
   const sectionRows = results.sections
     .map((entry) => {
@@ -2038,22 +2569,30 @@ function renderReport() {
 
   const viewportRows = results.viewports
     .map((entry) => {
-      const detail = ['initial', 'invalid', 'success']
-        .map((state) => `${state}: ${entry[state].failures.join(', ') || 'clean'}`)
-        .join('; ');
-      const overflow = [entry.initial, entry.invalid, entry.success].some((s) => s.overflow > 1)
-        ? 'yes'
-        : 'none';
-      const clipping = [entry.initial, entry.invalid, entry.success].some((s) => s.clipped > 0)
-        ? 'yes'
-        : 'none';
-      return `| ${entry.viewport} | ${entry.status} | ${overflow} | ${clipping} | checked | ${detail} |`;
+      const cell = (name) => {
+        const state = entry.states.find((item) => item.state === name);
+        return state === undefined
+          ? 'not measured'
+          : state.failures.length === 0
+            ? 'clean'
+            : state.failures.join(', ');
+      };
+      return `| ${entry.viewport} | ${entry.status} | ${cell('initial')} | ${cell('invalid')} | ${cell('success')} |`;
     })
     .join('\n');
 
   const axeRows = results.axe
     .map((entry) => `- \`${entry.state}\`: ${String(entry.violations.length)} violations`)
     .join('\n');
+
+  const focusRows = results.focus.targets
+    .map(
+      (entry) =>
+        `| ${entry.key} | ${String(entry.focusVisible)} | ${(entry.visibleAreaRatio * 100).toFixed(1)}% | ${String(entry.unobscuredSampleCount)}/${String(entry.sampleCount)} |`
+    )
+    .join('\n');
+
+  const overlapFailures = results.overlap.filter((entry) => entry.failed);
 
   const manual = results.manual;
   const manualRow = (label, key) =>
@@ -2068,6 +2607,10 @@ function renderReport() {
 
   const startupBlockers = results.startup.blockers ?? [];
   const forcedColors = results.sections.find((entry) => entry.id === 'I');
+  const snapshotCounts = (snapshot) =>
+    snapshot === null
+      ? 'not captured'
+      : `page ${String(snapshot.pageErrors.length)}, console ${String(snapshot.consoleErrors.length)}, request-failures ${String(snapshot.requestFailures.length)}, >=400 ${String(snapshot.badResponses.length)} (scopes: ${snapshot.scopes.join(', ')})`;
 
   return `# GoodCall M3 Browser Review
 
@@ -2087,14 +2630,21 @@ ${status}
 ${repository.blockers.length === 0 ? '' : `- baseline blockers: ${repository.blockers.join('; ')}\n`}
 ## Execution Outcome
 
-- execution errors: ${results.executionErrors.length === 0 ? 'none' : results.executionErrors.join('; ')}
-- automated failures: ${String(automatedFailures.length)}
-- diagnostics failures: ${diagnosticsSection === undefined ? 'not reached' : diagnosticsSection.status}
-- manual status: ${manualSummary === null ? 'not collected' : `complete=${String(manualSummary.complete)}, failed=${String(manualSummary.failed)}`}
-- interrupted: ${String(results.interrupted)}
-- cleanup failures: ${lifecycle.cleanupErrors.length === 0 ? 'none' : lifecycle.cleanupErrors.join('; ')}
+- automated execution errors: ${outcome.automatedExecutionErrors.length === 0 ? 'none' : outcome.automatedExecutionErrors.join('; ')}
+- sign-off unavailable: ${outcome.signoffUnavailable.length === 0 ? 'no' : outcome.signoffUnavailable.join('; ')}
+- sign-off interrupted: ${String(outcome.signoffInterrupted)}
+- sign-off incomplete: ${outcome.signoffIncomplete.length === 0 ? 'no' : outcome.signoffIncomplete.join('; ')}
+- manual failed: ${manualSummary === null ? 'not collected' : String(manualSummary.failed)}
+- diagnostics failed: ${String(!diagnosticsPassed)}
+- cleanup failed: ${lifecycle.cleanupErrors.length > 0 ? lifecycle.cleanupErrors.join('; ') : 'no'}
 - final status: **${status}**
 - exit code: **${String(exitCode)}**
+
+## Terminal Availability
+
+- stdin TTY: ${String(results.tty.stdin)}
+- stdout TTY: ${String(results.tty.stdout)}
+- interactive sign-off available: **${String(results.tty.interactiveSignoffAvailable)}**
 
 ## Baseline
 
@@ -2102,7 +2652,7 @@ ${repository.blockers.length === 0 ? '' : `- baseline blockers: ${repository.blo
 - branch: \`${String(repository.branch)}\`
 - tracked tree clean: ${String(repository.trackedTreeClean)}
 
-Prerequisite history, **not** verification of this review result: M3-05B/M3-05C are recorded as closed in the implementation reports, and M3-05D CI passed for its own commit. Those runs verify their own commits only.
+Prerequisite history, **not** verification of this review result: earlier corrective commits passed CI for their own SHAs. Those runs verify their own commits only.
 
 ## Environment
 
@@ -2152,11 +2702,31 @@ Forced-colors outcome: **${forcedColors === undefined ? 'not reached' : (forcedC
 
 ## Viewport Matrix
 
-Each viewport is measured in three states — initial, invalid and success.
+Each viewport is measured in three states. Viewport status is PASS only when all three state failure lists are empty.
 
-| Viewport | Status | Overflow | Clipping | Overlap | States |
-| --- | --- | --- | --- | --- | --- |
+| Viewport | Status | Initial | Invalid | Success |
+| --- | --- | --- | --- | --- |
 ${viewportRows}
+
+## Overlap Probes
+
+Semantic adjacent-region probes with a documented ${String(OVERLAP_TOLERANCE_PX)} px border-touch tolerance. Probes recorded: ${String(results.overlap.length)}; failing: ${String(overlapFailures.length)}.
+
+${overlapFailures.length === 0 ? 'No material intersections detected.' : overlapFailures.map((entry) => `- ${entry.viewport} ${entry.state} — ${entry.pairName}: overlapX ${String(entry.overlapX)}, overlapY ${String(entry.overlapY)}`).join('\n')}
+
+Full rectangles and overlap values for every probe: \`${RESULTS_PATH}\`.
+
+## Focus Evidence
+
+Forward tab stops recorded: ${String(results.focus.forwardOrder.length)}. Backward movement: ${
+    results.focus.backward === null
+      ? 'not measured'
+      : `${String(results.focus.backward.from)} -> ${String(results.focus.backward.to)} (${results.focus.backward.reason})`
+  }.
+
+| Target | :focus-visible | Visible area | Unobscured samples |
+| --- | --- | --- | --- |
+${focusRows || '| — | — | — | — |'}
 
 ## Axe Results
 
@@ -2166,11 +2736,10 @@ Affected-node evidence — targets, failure summaries and capped HTML excerpts �
 
 ## Console and Network
 
-- page errors: ${results.diagnostics.pageErrors?.length ? results.diagnostics.pageErrors.join(' | ') : 'none'}
-- console errors: ${results.diagnostics.consoleErrors?.length ? results.diagnostics.consoleErrors.join(' | ') : 'none'}
-- request failures: ${results.diagnostics.requestFailures?.length ? results.diagnostics.requestFailures.join(' | ') : 'none'}
-- responses >= 400: ${results.diagnostics.badResponses?.length ? results.diagnostics.badResponses.join(' | ') : 'none'}
-- diagnostics allow-list entries: ${String(EXPECTED_DIAGNOSTICS.length)}
+- automated snapshot: ${snapshotCounts(results.diagnostics.automatedSnapshot)}
+- final snapshot: ${snapshotCounts(results.diagnostics.finalSnapshot)}
+- interactive diagnostics included: **${String(results.diagnostics.interactiveIncluded)}**
+- diagnostics allow-list entries: ${String(results.diagnostics.allowListEntries)}
 
 ## Manual Sign-off
 
@@ -2216,9 +2785,9 @@ ${repository.finalReviewEligible ? '' : 'This run is **PROVISIONAL**: it is not 
 ## Next Step
 
 ${
-  repository.finalReviewEligible
+  repository.finalReviewEligible && status === STATUS.FULL_PASS
     ? 'Independent review of these results, then the M3 closure documentation pass.'
-    : `Re-run bound to the approved SHA after independent audit:\n\n\`\`\`\n${REVIEW_SHA_ENV}=<approved SHA> npm run review:m3-browser\n\`\`\`\n\nPowerShell:\n\n\`\`\`\n$env:${REVIEW_SHA_ENV}="<approved SHA>"; npm run review:m3-browser\n\`\`\``
+    : `Re-run bound to the approved SHA in a visible terminal after independent audit:\n\n\`\`\`\n$env:${REVIEW_SHA_ENV}="<approved SHA>"; npm run review:m3-browser\n\`\`\``
 }
 
 M3 BROWSER REVIEW — ${status === STATUS.FULL_PASS ? 'PASSED' : status === STATUS.FAILED ? 'FAILED' : status === STATUS.PARTIAL ? 'PARTIAL' : 'AUTOMATED PASS, USER SIGN-OFF PENDING'}
@@ -2239,10 +2808,16 @@ stdout.write(
       headSha: results.repository.headSha,
       branch: results.repository.branch,
       trackedTreeClean: results.repository.trackedTreeClean,
+      tty: results.tty,
       startup: results.startup.healthy ?? false,
       sections: results.sections.map((entry) => `${entry.id}:${entry.status}`),
+      viewports: results.viewports.map((entry) => `${entry.viewport}:${entry.status}`),
       axeViolations,
-      executionErrors: results.executionErrors,
+      diagnostics: {
+        interactiveIncluded: results.diagnostics.interactiveIncluded,
+        failures: finalEvaluation.failures.length,
+      },
+      outcome: results.outcome,
       lifecycle: results.lifecycle,
       exitCode,
     },
@@ -2258,7 +2833,9 @@ if (exitCode !== 0) {
   const reasons = [
     ...baseline.blockers,
     ...(results.startup.blockers ?? []),
-    ...results.executionErrors,
+    ...results.outcome.automatedExecutionErrors,
+    ...results.outcome.signoffUnavailable,
+    ...results.outcome.signoffIncomplete,
     ...results.sections.flatMap((entry) => entry.failures.map((f) => `${entry.id}: ${f}`)),
     ...results.lifecycle.cleanupErrors,
   ];

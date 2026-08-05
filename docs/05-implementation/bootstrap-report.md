@@ -416,6 +416,51 @@ Every viewport is measured in three states — initial, invalid and success — 
 
 A `--self-test` mode exercises the status and baseline logic without starting a server or a browser. Provisional automated-only runs are labelled as such. **Implementing the harness is not passing the review**: the final review must be re-run bound to an approved SHA after independent audit and green CI.
 
+## M3-05F — Interactive diagnostics and review evidence coherence
+
+**Status: IMPLEMENTED — AWAITING INDEPENDENT AUDIT AND CI**
+
+The independent audit of M3-05E returned **CHANGES REQUIRED** with six findings plus an operational risk. The accepted architecture is unchanged; each correction closes a way the harness could report something the run did not prove.
+
+### Final diagnostics re-aggregation
+
+The diagnostics gate previously ran **before** the interactive phase, so console errors, page errors and failed requests produced by the sign-off window were collected and then never evaluated. Collection is now separated from evaluation: `aggregateDiagnostics()` gathers, `evaluateDiagnostics()` judges, and `recordDiagnosticsSection()` writes section M. The automated aggregate still decides whether the sign-off phase may start, but the **final** aggregation runs after the interactive phase completes or fails, before status resolution and before any file is written. The report carries both snapshots and an explicit `interactive diagnostics included` flag, which must be true for an interactive pass. Unexpected interactive diagnostics resolve to `FAILED`, not `PARTIAL` — the review got far enough to reveal a real defect.
+
+### FAILED versus PARTIAL
+
+One generic execution-error array conflated "the application is broken" with "the sign-off could not happen". Outcomes are now tracked in four separate buckets — `automatedExecutionErrors`, `signoffUnavailable`, `signoffInterrupted`, `signoffIncomplete` — classified at the point of failure rather than inferred afterwards. Automated, startup, diagnostics and cleanup defects and any manual `FAIL` resolve to `FAILED`; an unavailable headed browser, a missing TTY, stdin EOF, a `SIGINT` abort, incomplete answers or a post-answer screenshot failure resolve to `PARTIAL` unless a hard defect already forces `FAILED`.
+
+### Terminal availability
+
+The harness collects sign-off answers on its own stdin, so a non-interactive process could previously open a headed window nobody could answer. Default mode now checks `process.stdin.isTTY` and `process.stdout.isTTY` **before** launching anything headed. Without a TTY it records `signoffUnavailable`, prints the exact command to re-run in a visible project terminal, and resolves to `PARTIAL`. No in-page sign-off form was added and no product runtime was touched — the model remains terminal input plus a harness-owned window.
+
+### Coherent viewport evidence
+
+Section G could fail while a viewport row still read PASS. Every viewport now builds three state-local records — initial, invalid, success — each with its own `failures`, `geometry` and `visibility`. `resolveViewportStatus()` returns PASS only when all three failure lists are empty, and `responsiveSectionFailures()` derives the section's failures from the viewport records, so the two can no longer disagree. Invalid state records summary visibility, focus, viewport containment, both links, both field errors and form actions; success state records the single Home-owned status, its exact copy and the actions.
+
+### Semantic overlap probes
+
+Broad tag-pair scans (`span` vs `span`, `button` vs `button`, `label` vs `select`) were replaced by named probes over adjacent regions resolved from real markup — IDs, `data-testid`, `aria-describedby` for error paragraphs, and the labelled summary section. Probe sets are state-specific, and each record stores both rectangles, `overlapX`, `overlapY`, the tolerance and the verdict. Nested pairs are skipped, and the 1 px border-touch tolerance stays documented.
+
+### Backward focus and obscuration
+
+`Shift+Tab` previously passed on any non-null element. The harness now records the active element and its index before the keypress and requires the result to be the immediately previous recorded tab stop, or at minimum earlier in the recorded order. Viewport visibility uses a material threshold — at least 90 % of the focused element's area inside the viewport, recorded as a ratio — and obscuration samples five points instead of one, requiring at least four to resolve to the target. Hit-test ownership accepts the input, its associated label or a visual control inside that label, so a wrapping choice label is never mistaken for an obscurer.
+
+### Scope-aware diagnostics allow-list
+
+Allow-list entries now require `pattern`, a non-empty `reason`, an explicit `scopes` array and an explicit `kinds` array, and suppression matches all three dimensions. A malformed entry aborts the run before a server starts. The shipped list remains empty.
+
+### Rejected variants
+
+- **Treating pre-interactive diagnostics as final** — the exact gap that let sign-off-phase runtime errors escape the gate.
+- **Classifying unavailable sign-off as application failure** — a missing terminal is not a defect in the product.
+- **Marking a viewport PASS from geometry alone** — hides state-specific layout failures behind a clean overflow number.
+- **Broad tag-pair overlap scans** — combinatorial false positives, and no evidence about the regions that actually matter.
+- **Treating any non-null `Shift+Tab` target as proof** — focus staying put satisfies it.
+- **Centre-point-only obscuration** — a partial overlay leaves the centre clear.
+- **Pattern-only diagnostics allow-list** — one entry would silence a message across every scope and kind.
+- **Launching a headed browser when stdin is not interactive** — opens a window nobody can answer and then blocks.
+
 ## Next Steps
 
 M0 is complete. Next allowed step is **request review checkpoint R0**.
