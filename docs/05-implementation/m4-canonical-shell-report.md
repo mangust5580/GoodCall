@@ -2,13 +2,14 @@
 
 ## Status
 
-| Task                                                                   | Status                                                                        |
-| ---------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
-| M4-01 — Shell destination safety and composition boundary              | **CLOSED THROUGH M4-01A**                                                     |
-| M4-01A — Catalog family catch-all correction and CI reconciliation     | **APPROVED AND CLOSED**                                                       |
-| M4-02 — Runtime brand/logo integration                                 | **CLOSED THROUGH M4-02A**                                                     |
-| M4-02A — Brand landmark accessibility correction and E2E stabilization | **APPROVED AND CLOSED**                                                       |
-| M4-03 — Information Bar                                                | **IMPLEMENTED — AWAITING INDEPENDENT AUDIT, CI AND USER VISUAL CONFIRMATION** |
+| Task                                                                          | Status                                                                        |
+| ----------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| M4-01 — Shell destination safety and composition boundary                     | **CLOSED THROUGH M4-01A**                                                     |
+| M4-01A — Catalog family catch-all correction and CI reconciliation            | **APPROVED AND CLOSED**                                                       |
+| M4-02 — Runtime brand/logo integration                                        | **CLOSED THROUGH M4-02A**                                                     |
+| M4-02A — Brand landmark accessibility correction and E2E stabilization        | **APPROVED AND CLOSED**                                                       |
+| M4-03 — Information Bar                                                       | **CI FAILED ON ITS EXACT SHA — SUPERSEDED BY M4-03A**                         |
+| M4-03A — Information Bar E2E correction and exact active-state reconciliation | **IMPLEMENTED — AWAITING INDEPENDENT AUDIT, CI AND USER VISUAL CONFIRMATION** |
 
 M4 is not approved and not closed. The Information Bar is the first canonical shell surface; the primary Header, Footer, Newsletter, Search and Catalog UI all remain later stages, and the brand banner remains transitional until M4-04.
 
@@ -697,7 +698,36 @@ E2E covers compact 320px closed state, the compact keyboard sequence, the opened
 
 Bundle moves from raw 415.49 KB / gzip 124.67 KB to raw **419.75 KB** / gzip **125.66 KB**.
 
-Intentionally not run: `npm run dev`, `npm run preview`, `npm run test:e2e`, `playwright test`, `vite`, `vite preview`, `npm run review:m3-browser`, and any background or fixed-port server. CI was pending at commit time, and user visual confirmation against RTE-001 remains pending.
+Intentionally not run: `npm run dev`, `npm run preview`, `npm run test:e2e`, `playwright test`, `vite`, `vite preview`, `npm run review:m3-browser`, and any background or fixed-port server.
+
+### Exact-SHA CI — failed
+
+| Item         | Value                                        |
+| ------------ | -------------------------------------------- |
+| Commit       | `71a0addfb8e461affd91d788fde493fce5acb765`   |
+| Workflow run | 31083387582                                  |
+| Job          | 92557147682 — `test (24.x)`                  |
+| Conclusion   | **failure**                                  |
+| Vitest       | 791 passed in 44 files                       |
+| Playwright   | 77 total — 65 passed, **12 failed**, 0 flaky |
+
+Every step through `Build` and `Validate build` passed; `E2E tests` failed. All twelve failures reproduced on the initial attempt and both retries, so none was flaky. The failure artifact `playwright-report` (id 8960564053, 1 633 460 bytes) was uploaded.
+
+Three failure classes, all in test code rather than in the shipped Information Bar:
+
+1. **Obsolete brand focus-order expectation** — `tests/e2e/brand-home-link.spec.ts` still asserted `skip link → BrandHomeLink`. M4-03 deliberately inserted the Information Bar disclosure between them, so the correct compact closed order is `skip link → Информация и помощь → GoodCall — на главную`. The runtime order was right; the expectation was stale.
+2. **Ten invalid exact city locators** — `serviceNav(page).getByText('Москва', { exact: true })` resolved to zero elements. The city paragraph intentionally renders a visually hidden prefix plus the visible city, so its full text content is `Текущий город: Москва` and no element in that subtree matches `Москва` exactly. Affected: the compact 320px scenario, 767, 768, 769, 1023, 1024, 1025, 1280 and 1440 px scenarios, and the expanded geometry scenario.
+3. **Unstable forced-colors focus origin** — the test clicked the disclosure, then blurred and focused `document.body`, then assumed two `Tab` presses would restart sequential navigation from the document start. Chromium may retain the sequential focus-navigation starting point from the activated button, so the traversal did not deterministically return to it.
+
+**M4-03 was not accepted on that SHA**, user visual confirmation was not performed, and M4-04 remained blocked.
+
+### Independent-audit findings on M4-03
+
+- `NavLink` lacked `end`, so a longer pathname such as `/help/unknown` could mark `/help` current even though the catch-all renders it.
+- The public barrel exported four internal constants and `ServiceLinkDescriptor` alongside `InformationBar`, wider than any consumer needed.
+- `artifacts/` was untracked but not excluded, so the RTE-001 screenshot was one careless `git add .` away from being committed.
+
+All three are corrected in [M4-03A](#m4-03a--information-bar-e2e-correction-and-exact-active-state-reconciliation).
 
 ### Rejected variants
 
@@ -726,4 +756,106 @@ One. `tests/app/shell/brand-runtime-mount.test.tsx` is outside the expected file
 
 ### Next gate
 
-Green GitHub Actions CI on the exact M4-03 SHA with zero failed and zero flaky Playwright tests, then independent diff audit, then user visual confirmation against the original RTE-001. **M4-04 must not begin until all three close.**
+Superseded. CI failed for `71a0addf…`, so M4-03 alone is not an implementation candidate; the gate moved to [M4-03A](#m4-03a--information-bar-e2e-correction-and-exact-active-state-reconciliation).
+
+## M4-03A — Information Bar E2E correction and exact active-state reconciliation
+
+**Status at commit time: IMPLEMENTED — AWAITING INDEPENDENT AUDIT, CI AND USER VISUAL CONFIRMATION**
+
+### Baseline
+
+| Item                                 | Value                                      |
+| ------------------------------------ | ------------------------------------------ |
+| Branch                               | `main`                                     |
+| Baseline SHA                         | `71a0addfb8e461affd91d788fde493fce5acb765` |
+| Baseline commit                      | `feat(shell): add information bar`         |
+| `git rev-parse HEAD` / `origin/main` | both matched the baseline before changes   |
+| `git diff` / `git diff --cached`     | exit 0 — clean                             |
+
+RTE-001 re-verified before any change: 1920 × 3840, 5 438 232 bytes, SHA-256 `cb943e0b5b525645ede341c53fb6bff7eca714a69b62c042db23d62feb7bdd64` — all three match the recorded evidence exactly.
+
+### Corrective scope
+
+No Information Bar redesign. The application-owned location, the single named service navigation, static `Москва`, the visually hidden `Текущий город: ` prefix, five canonical registry-resolved links, the local controlled disclosure, one DOM copy per link, the CSS-only 64rem transformation, the 44px target contract, non-sticky behaviour, root composition and all styling are unchanged. **No CSS, RootLayout, route, Shared UI, dependency, asset, tooling or workflow change.**
+
+### Exact active-state contract
+
+Each service `NavLink` now carries `end`, so only the exact pathname is current. No custom pathname matcher was introduced and no route was added for the longer path — `/help/unknown` legitimately renders through the catch-all.
+
+| Location           | Current service link |
+| ------------------ | -------------------- |
+| `/help`            | Помощь               |
+| `/help?source=bar` | Помощь               |
+| `/help#section`    | Помощь               |
+| `/help/unknown`    | none                 |
+| `/cart`            | none                 |
+
+Each of the five destinations is additionally proven current on its own exact path and nowhere else.
+
+### City locator correction
+
+The runtime markup was **not** changed — the visually hidden prefix stays, because it is the accessibility contract. The ten invalid `getByText('Москва', { exact: true })` assertions are replaced by one helper that locates the unique city paragraph inside the service navigation and asserts count, visibility and full text `Текущий город: Москва`. It relies on neither CSS-module class names nor a `data-testid`, and no runtime test hook was added. The expanded geometry scenario now takes its bounding box from the same asserted paragraph.
+
+A serverless contract test pins the assumption the helper depends on: exactly one `<p>` inside the landmark, with text content `Текущий город: Москва`.
+
+### Keyboard and focus reconciliation
+
+- **Brand focus order** — the M4-02 test now sets an explicit compact viewport, asserts the disclosure is present and closed, establishes a neutral focus origin, and proves `skip link → Информация и помощь → GoodCall — на главную` through real `Tab` presses. It was renamed to drop the obsolete implication that the brand link is always second. No control is focused directly and no assertion was removed.
+- **Forced colors** — the test no longer clicks the disclosure before resetting focus. It establishes a neutral origin first, then reaches the disclosure by `Tab`, opens it with `Enter`, asserts focus is retained and `aria-expanded="true"`, inspects the forced-colors indicator, and continues tabbing to `Помощь` — the fourth service link — where it asserts focus, `aria-current="page"` and a non-colour-only treatment. No `.focus()` simulates the sequence, no sleep, no timeout or retry change.
+
+### Public boundary
+
+`src/app/shell/information-bar/index.ts` exports only `InformationBar`. The content constants, `serviceLinks`, `ServiceLinkDescriptor` and the internal resolver are no longer re-exported; the configuration file did not move. Tests that need the constants import the internal module directly, which is contract testing rather than a public dependency. A test asserts the barrel's export list is exactly `['InformationBar']`.
+
+### Visual evidence exclusion
+
+`artifacts/` was added to `.git/info/exclude` — the local, untracked exclude file. The tracked `.gitignore` was **not** modified. `git check-ignore -v artifacts/m4-03/references/RTE-001.png` now reports `.git/info/exclude:9`, and `git status --short` no longer lists `?? artifacts/`. The screenshot remains local and uncommitted.
+
+### Files changed
+
+| File                                                     | Change                                                                     |
+| -------------------------------------------------------- | -------------------------------------------------------------------------- |
+| `src/app/shell/information-bar/InformationBar.tsx`       | `end` added to each service `NavLink`                                      |
+| `src/app/shell/information-bar/index.ts`                 | barrel narrowed to `InformationBar` only                                   |
+| `tests/app/shell/information-bar.test.tsx`               | exact active-state cases, city paragraph contract, barrel export assertion |
+| `tests/app/shell/information-bar-runtime-mount.test.tsx` | import updated for the narrowed barrel                                     |
+| `tests/e2e/information-bar.spec.ts`                      | city helper, forced-colors keyboard sequence, exact-pathname scenario      |
+| `tests/e2e/brand-home-link.spec.ts`                      | focus-order test reconciled with the current shell order                   |
+| `docs/05-implementation/m4-canonical-shell-report.md`    | M4-03 failure evidence and audit findings; this section                    |
+| `docs/05-implementation/repository-state.md`             | current-state note reconciled                                              |
+
+Local, uncommitted: `.git/info/exclude` gained `artifacts/`.
+
+### Local verification
+
+| Command                  | Result                                         |
+| ------------------------ | ---------------------------------------------- |
+| `npm run typecheck`      | PASS                                           |
+| `npm run lint`           | PASS — 0 errors, 0 warnings                    |
+| `npm run lint:styles`    | PASS                                           |
+| `npm run format:check`   | PASS                                           |
+| `npm run check:comments` | PASS                                           |
+| `npm test`               | PASS — **803 tests in 44 files**               |
+| `npm run build`          | PASS — 238 modules                             |
+| `npm run validate:build` | PASS                                           |
+| `npm run check:full`     | PASS — includes the bounded dev-bootstrap gate |
+| `git diff --check`       | PASS                                           |
+
+Bundle essentially unchanged at raw **419.76 KB** / gzip **125.66 KB**, confirming the correction is behavioural and test-side rather than visual.
+
+Intentionally not run: `npm run dev`, `npm run preview`, `npm run test:e2e`, `playwright test`, `vite`, `vite preview`, `npm run review:m3-browser`, and any background or fixed-port server. CI was pending at commit time, and user visual confirmation against RTE-001 remains pending.
+
+### Deviations
+
+None beyond the expected file set. `tests/app/shell/information-bar-runtime-mount.test.tsx` is explicitly permitted by the stage and was changed only to follow the narrowed barrel.
+
+### Risks
+
+- Twelve corrected E2E scenarios are verified by reasoning about the failure mode, not by local execution; repository policy forbids running Playwright locally, so only exact-SHA CI can confirm them.
+- The forced-colors traversal now depends on the canonical link order — `Помощь` being the fourth service link. If the canonical order ever changes, that test must change with it; it derives the index from the shared link table rather than hard-coding it, which limits but does not eliminate the coupling.
+- User visual confirmation against RTE-001 is still outstanding, so density and proportion remain unvalidated.
+- `scripts/review-m3-browser.mjs` still asserts no image asset and a specific tab order, both obsolete since M4-02 and M4-03. It is milestone-review tooling for a closed milestone, is not a CI gate, and was deliberately left unchanged.
+
+### Next gate
+
+Green GitHub Actions CI on the exact M4-03A SHA with zero failed and zero flaky Playwright tests, then independent diff audit, then user visual confirmation against the original RTE-001. **M4-04 must not begin until all three close.**

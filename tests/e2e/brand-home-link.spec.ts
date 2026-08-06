@@ -103,13 +103,19 @@ test.describe('M4-02 runtime brand link', () => {
     expect(problems.failedRequests).toHaveLength(0);
   });
 
-  test('skip link remains the first focusable control', async ({ page }) => {
+  test('skip link remains first and the brand link follows the shell controls', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 320, height: 640 });
     await page.goto('/GoodCall/');
 
     const skipLink = page.locator('a[href="#main-content"]');
+    const disclosure = page.getByRole('button', { name: 'Информация и помощь', exact: true });
     const brandLink = page.getByRole('link', { name: BRAND_LINK_LABEL, exact: true });
 
     await expect(skipLink).toHaveCount(1);
+    await expect(disclosure).toBeVisible();
+    await expect(disclosure).toHaveAttribute('aria-expanded', 'false');
     await expect(brandLink).toHaveCount(1);
 
     const focusOrigin = await page.evaluate(() => {
@@ -125,15 +131,18 @@ test.describe('M4-02 runtime brand link', () => {
       return {
         isSkipLink:
           reset instanceof HTMLAnchorElement && reset.getAttribute('href') === '#main-content',
-        isBrandLink: reset instanceof HTMLElement && reset.hasAttribute('aria-label'),
+        isInteractive: reset instanceof HTMLElement && reset !== document.body,
       };
     });
 
     expect(focusOrigin.isSkipLink).toBe(false);
-    expect(focusOrigin.isBrandLink).toBe(false);
+    expect(focusOrigin.isInteractive).toBe(false);
 
     await page.keyboard.press('Tab');
     await expect(skipLink).toBeFocused();
+
+    await page.keyboard.press('Tab');
+    await expect(disclosure).toBeFocused();
 
     await page.keyboard.press('Tab');
     await expect(brandLink).toBeFocused();

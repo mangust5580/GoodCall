@@ -5,6 +5,7 @@ const NAV_LABEL = 'Сервисная навигация';
 const DISCLOSURE_LABEL = 'Информация и помощь';
 const BRAND_LINK_LABEL = 'GoodCall — на главную';
 const CITY = 'Москва';
+const CITY_CONTEXT = 'Текущий город: Москва';
 const MINIMUM_TARGET = 44;
 
 const CANONICAL_LINKS = [
@@ -24,6 +25,16 @@ function serviceNav(page: Page) {
 
 function disclosure(page: Page) {
   return page.getByRole('button', { name: DISCLOSURE_LABEL, exact: true });
+}
+
+function cityContext(page: Page) {
+  return serviceNav(page).locator('p').filter({ hasText: CITY });
+}
+
+async function expectCityContext(page: Page): Promise<void> {
+  await expect(cityContext(page)).toHaveCount(1);
+  await expect(cityContext(page)).toBeVisible();
+  await expect(cityContext(page)).toHaveText(CITY_CONTEXT);
 }
 
 function collectRuntimeProblems(page: Page): {
@@ -63,7 +74,7 @@ test.describe('M4-03 Information Bar', () => {
     await page.goto('/GoodCall/');
 
     await expect(serviceNav(page)).toHaveCount(1);
-    await expect(serviceNav(page).getByText(CITY, { exact: true })).toBeVisible();
+    await expectCityContext(page);
     await expect(disclosure(page)).toBeVisible();
     await expect(disclosure(page)).toHaveAttribute('aria-expanded', 'false');
 
@@ -146,7 +157,7 @@ test.describe('M4-03 Information Bar', () => {
       await page.setViewportSize({ width, height: 800 });
       await page.goto('/GoodCall/');
 
-      await expect(serviceNav(page).getByText(CITY, { exact: true })).toBeVisible();
+      await expectCityContext(page);
       await expect(disclosure(page)).toBeVisible();
 
       for (const link of CANONICAL_LINKS) {
@@ -164,7 +175,7 @@ test.describe('M4-03 Information Bar', () => {
       await page.setViewportSize({ width, height: 900 });
       await page.goto('/GoodCall/');
 
-      await expect(serviceNav(page).getByText(CITY, { exact: true })).toBeVisible();
+      await expectCityContext(page);
       await expect(disclosure(page)).toBeHidden();
 
       const links = serviceNav(page).getByRole('link');
@@ -187,7 +198,9 @@ test.describe('M4-03 Information Bar', () => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto('/GoodCall/');
 
-    const cityBox = await serviceNav(page).getByText(CITY, { exact: true }).boundingBox();
+    await expectCityContext(page);
+
+    const cityBox = await cityContext(page).boundingBox();
     const firstLinkBox = await serviceNav(page)
       .getByRole('link', { name: CANONICAL_LINKS[0]?.label ?? '', exact: true })
       .boundingBox();
@@ -310,9 +323,6 @@ test.describe('M4-03 Information Bar', () => {
     await page.setViewportSize({ width: 320, height: 640 });
     await page.goto('/GoodCall/help');
 
-    await disclosure(page).click();
-    await expect(disclosure(page)).toHaveAttribute('aria-expanded', 'true');
-
     await page.evaluate(() => {
       const active = document.activeElement;
       if (active instanceof HTMLElement && active !== document.body) {
@@ -322,7 +332,13 @@ test.describe('M4-03 Information Bar', () => {
     });
 
     await page.keyboard.press('Tab');
+    await expect(page.locator('a[href="#main-content"]')).toBeFocused();
+
     await page.keyboard.press('Tab');
+    await expect(disclosure(page)).toBeFocused();
+
+    await page.keyboard.press('Enter');
+    await expect(disclosure(page)).toHaveAttribute('aria-expanded', 'true');
     await expect(disclosure(page)).toBeFocused();
 
     const buttonIndicator = await disclosure(page).evaluate((element) => {
@@ -332,9 +348,16 @@ test.describe('M4-03 Information Bar', () => {
     expect(buttonIndicator.style).not.toBe('none');
     expect(buttonIndicator.width).toBeGreaterThan(0);
 
+    const helpIndex = CANONICAL_LINKS.findIndex((link) => link.label === 'Помощь');
+    expect(helpIndex).toBeGreaterThanOrEqual(0);
+
+    for (let step = 0; step <= helpIndex; step += 1) {
+      await page.keyboard.press('Tab');
+    }
+
     const current = serviceNav(page).getByRole('link', { name: 'Помощь', exact: true });
-    await current.focus();
     await expect(current).toBeFocused();
+    await expect(current).toHaveAttribute('aria-current', 'page');
 
     const currentTreatment = await current.evaluate((element) => {
       const style = window.getComputedStyle(element);
@@ -352,5 +375,25 @@ test.describe('M4-03 Information Bar', () => {
       currentTreatment.textDecoration.includes('underline') ||
         Number(currentTreatment.fontWeight) >= 600
     ).toBe(true);
+  });
+
+  test('exact pathname alone carries the current service state', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+
+    await page.goto('/GoodCall/help');
+    await expect(
+      serviceNav(page).getByRole('link', { name: 'Помощь', exact: true })
+    ).toHaveAttribute('aria-current', 'page');
+
+    await page.goto('/GoodCall/help?source=bar');
+    await expect(
+      serviceNav(page).getByRole('link', { name: 'Помощь', exact: true })
+    ).toHaveAttribute('aria-current', 'page');
+
+    await page.goto('/GoodCall/help/unknown');
+    await expect(serviceNav(page).locator('a[aria-current="page"]')).toHaveCount(0);
+
+    await page.goto('/GoodCall/');
+    await expect(serviceNav(page).locator('a[aria-current="page"]')).toHaveCount(0);
   });
 });

@@ -3,7 +3,7 @@ import { render, screen, waitFor, within } from '@testing-library/react';
 import { createMemoryRouter, RouterProvider } from 'react-router-dom';
 import { createApplicationRoutes } from '@/app/composition/application-routes';
 import { BRAND_HOME_LINK_LABEL } from '@/app/shell/brand';
-import { INFORMATION_BAR_NAV_LABEL } from '@/app/shell/information-bar';
+import { INFORMATION_BAR_NAV_LABEL } from '@/app/shell/information-bar/information-bar-items';
 
 function renderApplicationAt(path: string) {
   const router = createMemoryRouter(createApplicationRoutes(), { initialEntries: [path] });

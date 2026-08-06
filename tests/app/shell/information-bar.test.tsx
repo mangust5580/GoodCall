@@ -246,4 +246,74 @@ describe('InformationBar', () => {
       expect(marked).toHaveLength(0);
     });
   });
+
+  describe('exact active-state matching', () => {
+    function currentLinks(): HTMLElement[] {
+      return within(serviceNav())
+        .getAllByRole('link')
+        .filter((link) => link.getAttribute('aria-current') === 'page');
+    }
+
+    it('marks the exact service pathname as current', () => {
+      renderBar('/help');
+
+      expect(currentLinks()).toHaveLength(1);
+      expect(currentLinks()[0]).toHaveAccessibleName('Помощь');
+    });
+
+    it('keeps the exact pathname current when a query string is present', () => {
+      renderBar('/help?source=bar');
+
+      expect(currentLinks()).toHaveLength(1);
+      expect(currentLinks()[0]).toHaveAccessibleName('Помощь');
+    });
+
+    it('keeps the exact pathname current when a hash is present', () => {
+      renderBar('/help#section');
+
+      expect(currentLinks()).toHaveLength(1);
+      expect(currentLinks()[0]).toHaveAccessibleName('Помощь');
+    });
+
+    it('marks no service link current on a longer pathname below a service route', () => {
+      renderBar('/help/unknown');
+
+      expect(currentLinks()).toHaveLength(0);
+    });
+
+    it('marks no service link current on an unrelated route', () => {
+      renderBar('/cart');
+
+      expect(currentLinks()).toHaveLength(0);
+    });
+
+    it.each(serviceLinks.map((link) => [link.label, link.path] as const))(
+      'marks only %s current on its own exact destination',
+      (label, path) => {
+        renderBar(path);
+
+        expect(currentLinks()).toHaveLength(1);
+        expect(currentLinks()[0]).toHaveAccessibleName(label);
+      }
+    );
+  });
+
+  describe('city paragraph locator contract', () => {
+    it('exposes exactly one paragraph inside the landmark carrying the full city context', () => {
+      renderBar();
+
+      const paragraphs = Array.from(serviceNav().querySelectorAll('p'));
+
+      expect(paragraphs).toHaveLength(1);
+      expect(paragraphs[0]?.textContent).toBe('Текущий город: Москва');
+    });
+  });
+});
+
+describe('Information Bar public boundary', () => {
+  it('exports only the shell component', async () => {
+    const barrel = await import('@/app/shell/information-bar');
+
+    expect(Object.keys(barrel)).toEqual(['InformationBar']);
+  });
 });

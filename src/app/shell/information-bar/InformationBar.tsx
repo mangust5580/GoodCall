@@ -37,6 +37,7 @@ export function InformationBar(): React.ReactElement {
             <li key={link.key} className={styles['item']}>
               <NavLink
                 to={link.path}
+                end
                 className={({ isActive }) =>
                   isActive ? `${styles['link']} ${styles['link-current']}` : styles['link']
                 }

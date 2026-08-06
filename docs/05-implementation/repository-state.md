@@ -520,8 +520,31 @@ docs/05-implementation/m4-canonical-shell-report.md   M4-02A closure and the M4-
 - No Shared UI API, dependency, lockfile, asset, brand, manifest, route, tooling or workflow change.
 - Test suite: **791 tests across 44 files**, up from 746 in 41. Bundle: raw **419.75 KB** / gzip **125.66 KB**.
 - Local checks pass, including `npm run check:full`. **Local E2E was not run** — the production-preview lifecycle belongs to CI or a user-owned preview.
+
+### M4-03 CI failure and the M4-03A correction
+
+CI for the M4-03 commit `71a0addfb8e461affd91d788fde493fce5acb765` — run **31083387582**, job **92557147682** — concluded **failure**. Vitest passed (791 in 44 files); Playwright reported **77 total, 65 passed, 12 failed, 0 flaky**, with every failure reproduced on the initial attempt and both retries.
+
+All twelve failures were test defects, not runtime defects:
+
+- one obsolete brand focus-order expectation, still asserting `skip link → BrandHomeLink` after M4-03 intentionally inserted the disclosure between them;
+- ten invalid exact city locators — `getByText('Москва', { exact: true })` cannot match, because the city paragraph's full text is `Текущий город: Москва` by design;
+- one unstable forced-colors focus origin, which reset focus after pointer activation and assumed sequential navigation would restart from the document beginning.
+
+The independent audit additionally found that the service `NavLink` lacked `end` (so `/help/unknown` could mark `/help` current), that the public barrel re-exported internals no consumer needed, and that `artifacts/` was untracked but not excluded.
+
+M4-03A corrects all of it without touching the Information Bar's visual or structural design:
+
+- **exact `aria-current` matching** — `end` on each service `NavLink`; `/help`, `/help?source=bar` and `/help#section` are current, while `/help/unknown` and unrelated routes are not;
+- **corrected test synchronization and selectors** — one city helper asserting the unique paragraph's full text `Текущий город: Москва`, a compact-viewport brand focus-order test proving `skip link → disclosure → brand link` by real `Tab` presses, and a forced-colors test that establishes its focus origin before opening the disclosure with `Enter` and reaches `Помощь` by keyboard;
+- **narrowed public boundary** — `@/app/shell/information-bar` exports only `InformationBar`;
+- **RTE-001 now locally excluded** through `.git/info/exclude`, verified by `git check-ignore`; the tracked `.gitignore` is unchanged and the screenshot remains local and uncommitted.
+
+- **No visual, CSS, RootLayout, route, dependency, Shared UI, asset, tooling or workflow change.**
+- Test suite: **803 tests across 44 files**. Bundle essentially unchanged at raw 419.76 KB / gzip 125.66 KB.
+- M4-03A status at commit time: **IMPLEMENTED — AWAITING INDEPENDENT AUDIT, CI AND USER VISUAL CONFIRMATION**.
 - **CI is pending at commit time**, and **user visual confirmation against RTE-001 is pending**.
-- **M4-04 is blocked** until M4-03 exact-SHA green CI, independent audit and user visual confirmation all close.
+- **M4-04 remains blocked** until M4-03A exact-SHA green CI, independent audit and user visual confirmation all close.
 
 ## Next Repository Modifications
 
