@@ -195,6 +195,22 @@ const EXIT_CODES = {
   [STATUS.PARTIAL]: 1,
 };
 
+const SEVERITY = {
+  FAILURE: 'FAILURE',
+  PARTIAL: 'PARTIAL',
+  WARNING: 'WARNING',
+};
+
+const CLEAN_FULL_PASS_SENTENCE = 'No blocker to a full-pass claim remains in this run.';
+
+const FINAL_ASSESSMENTS = {
+  [STATUS.FAILED]: 'The review failed. Mandatory failure reasons are listed above.',
+  [STATUS.PARTIAL]:
+    'The review did not complete. Mandatory sign-off or environment requirements remain unresolved.',
+  [STATUS.AUTOMATED_PENDING]: 'Automated checks passed. User sign-off remains pending.',
+  [STATUS.FULL_PASS]: 'Automated and mandatory user review checks passed.',
+};
+
 function toMessage(error) {
   if (error instanceof Error) {
     return error.message;
@@ -211,44 +227,223 @@ function toMessage(error) {
   }
 }
 
-function resolveFinalStatus(input) {
-  const hardFailure =
-    !input.baselineEligible ||
-    input.startupBlockers > 0 ||
-    input.automatedFailures > 0 ||
-    input.axeViolations > 0 ||
-    input.diagnosticsFailures > 0 ||
-    input.automatedExecutionErrors > 0 ||
-    input.cleanupErrors > 0 ||
-    !input.portReleased;
-
-  if (hardFailure) {
-    return STATUS.FAILED;
-  }
-
-  if (input.manual !== null && input.manual.failed) {
-    return STATUS.FAILED;
-  }
-
-  if (input.mode === 'automated-only') {
-    return input.signoffInterrupted ? STATUS.PARTIAL : STATUS.AUTOMATED_PENDING;
-  }
-
-  if (
-    input.signoffUnavailable > 0 ||
-    input.signoffInterrupted ||
-    input.signoffIncomplete > 0 ||
-    input.manual === null ||
-    !input.manual.complete
-  ) {
-    return STATUS.PARTIAL;
-  }
-
-  return STATUS.FULL_PASS;
-}
-
 function exitCodeForStatus(status) {
   return EXIT_CODES[status] ?? 1;
+}
+
+function evaluateOutcome(input) {
+  const reasons = [];
+  const add = (code, severity, message) => {
+    reasons.push({ code, severity, message });
+  };
+
+  const count = (value) => (typeof value === 'number' ? value : 0);
+  const plural = (value, singular, pluralForm) =>
+    `${String(value)} ${value === 1 ? singular : pluralForm}`;
+  const manual = input.manual ?? null;
+  const mandatoryComplete = manual !== null && manual.complete === true;
+
+  if (!input.baselineEligible) {
+    add('BASELINE_REJECTED', SEVERITY.FAILURE, 'the review baseline was rejected');
+  }
+  if (count(input.startupBlockers) > 0) {
+    add(
+      'STARTUP_BLOCKER',
+      SEVERITY.FAILURE,
+      plural(input.startupBlockers, 'runtime startup blocker', 'runtime startup blockers')
+    );
+  }
+  if (count(input.automatedExecutionErrors) > 0) {
+    add(
+      'AUTOMATED_EXECUTION_ERROR',
+      SEVERITY.FAILURE,
+      plural(
+        input.automatedExecutionErrors,
+        'automated execution error',
+        'automated execution errors'
+      )
+    );
+  }
+  if (count(input.automatedFailures) > 0) {
+    add(
+      'AUTOMATED_SECTION_FAILURE',
+      SEVERITY.FAILURE,
+      `${plural(input.automatedFailures, 'automated section', 'automated sections')} failed`
+    );
+  }
+  if (count(input.axeViolations) > 0) {
+    add(
+      'AXE_VIOLATION',
+      SEVERITY.FAILURE,
+      plural(input.axeViolations, 'axe violation', 'axe violations')
+    );
+  }
+  if (count(input.diagnosticsFailures) > 0) {
+    add('DIAGNOSTICS_FAILURE', SEVERITY.FAILURE, 'the runtime diagnostics gate failed');
+  }
+  if (count(input.unresolvedRequiredProbes) > 0) {
+    add(
+      'OVERLAP_PROBE_UNRESOLVED',
+      SEVERITY.FAILURE,
+      `${plural(input.unresolvedRequiredProbes, 'required overlap probe was', 'required overlap probes were')} unresolved`
+    );
+  }
+  if (count(input.responsiveLinkFailures) > 0) {
+    add(
+      'RESPONSIVE_LINK_UNUSABLE',
+      SEVERITY.FAILURE,
+      `${plural(input.responsiveLinkFailures, 'responsive Error Summary link record was', 'responsive Error Summary link records were')} unusable`
+    );
+  }
+  if (manual !== null && manual.failed) {
+    add('MANUAL_FAIL', SEVERITY.FAILURE, 'the user recorded a manual FAIL');
+  }
+  if (count(input.cleanupErrors) > 0) {
+    add(
+      'CLEANUP_ERROR',
+      SEVERITY.FAILURE,
+      plural(input.cleanupErrors, 'cleanup error', 'cleanup errors')
+    );
+  }
+  if (input.portReleased !== true) {
+    add(
+      'PORT_NOT_RELEASED',
+      SEVERITY.FAILURE,
+      'the review server port still responded after shutdown'
+    );
+  }
+
+  if (input.mode === 'interactive') {
+    if (count(input.signoffUnavailable) > 0) {
+      add(
+        'SIGNOFF_UNAVAILABLE',
+        SEVERITY.PARTIAL,
+        'the sign-off environment was unavailable before mandatory collection'
+      );
+    }
+    if (count(input.mandatorySignoffIncomplete) > 0) {
+      add(
+        'MANDATORY_SIGNOFF_INCOMPLETE',
+        SEVERITY.PARTIAL,
+        'mandatory sign-off collection did not complete'
+      );
+    }
+    if (input.signoffInterrupted === true && !mandatoryComplete) {
+      add(
+        'MANDATORY_SIGNOFF_INTERRUPTED',
+        SEVERITY.PARTIAL,
+        'mandatory sign-off was interrupted by a signal'
+      );
+    }
+    if (manual === null) {
+      add(
+        'MANDATORY_SIGNOFF_NOT_COLLECTED',
+        SEVERITY.PARTIAL,
+        'no mandatory sign-off answers were collected'
+      );
+    } else {
+      if (!manual.answersComplete) {
+        add(
+          'MANDATORY_ANSWERS_INCOMPLETE',
+          SEVERITY.PARTIAL,
+          `mandatory answers incomplete (${String(manual.answeredCount)} of ${String(manual.promptCount)})`
+        );
+      }
+      if (!manual.fallbackReasonsComplete) {
+        add(
+          'FALLBACK_REASON_MISSING',
+          SEVERITY.PARTIAL,
+          `required fallback reason missing: ${manual.missingReasons.join(', ')}`
+        );
+      }
+    }
+    if (input.signoffInterrupted === true && mandatoryComplete) {
+      add(
+        'SIGNAL_AFTER_MANDATORY_SIGNOFF',
+        SEVERITY.WARNING,
+        'a signal arrived after mandatory sign-off was complete'
+      );
+    }
+  } else if (input.signoffInterrupted === true) {
+    add('RUN_INTERRUPTED', SEVERITY.PARTIAL, 'the run was interrupted by a signal');
+  }
+
+  for (const warning of input.optionalEvidenceWarnings ?? []) {
+    add('OPTIONAL_EVIDENCE_MISSING', SEVERITY.WARNING, warning);
+  }
+
+  const failureReasons = reasons.filter((entry) => entry.severity === SEVERITY.FAILURE);
+  const partialReasons = reasons.filter((entry) => entry.severity === SEVERITY.PARTIAL);
+  const optionalWarnings = reasons.filter((entry) => entry.severity === SEVERITY.WARNING);
+
+  const status =
+    failureReasons.length > 0
+      ? STATUS.FAILED
+      : partialReasons.length > 0
+        ? STATUS.PARTIAL
+        : input.mode === 'automated-only'
+          ? STATUS.AUTOMATED_PENDING
+          : STATUS.FULL_PASS;
+
+  return {
+    status,
+    exitCode: exitCodeForStatus(status),
+    reasons,
+    blockingReasons: [...failureReasons, ...partialReasons],
+    failureReasons,
+    partialReasons,
+    optionalWarnings,
+  };
+}
+
+function resolveFinalStatus(input) {
+  return evaluateOutcome(input).status;
+}
+
+function renderReasonLines(entries) {
+  return entries
+    .map((entry) => `- **${entry.severity}** \`${entry.code}\` — ${entry.message}`)
+    .join('\n');
+}
+
+function renderOutcomeNarrative(outcome) {
+  const assessment = FINAL_ASSESSMENTS[outcome.status] ?? FINAL_ASSESSMENTS[STATUS.PARTIAL];
+
+  const blockers =
+    outcome.blockingReasons.length > 0
+      ? `Blocking reasons:\n\n${renderReasonLines(outcome.blockingReasons)}`
+      : outcome.status === STATUS.FULL_PASS
+        ? CLEAN_FULL_PASS_SENTENCE
+        : 'No blocking reason was recorded; mandatory user sign-off remains pending.';
+
+  const warnings =
+    outcome.optionalWarnings.length === 0
+      ? 'Optional supporting evidence: complete.'
+      : `Optional supporting evidence warnings — these never change the status or the exit code:\n\n${renderReasonLines(outcome.optionalWarnings)}`;
+
+  return { assessment, blockers, warnings, text: `${assessment}\n\n${blockers}\n\n${warnings}` };
+}
+
+function createSignoffEvidence() {
+  return {
+    mandatoryComplete: false,
+    notesCollected: false,
+    manualScreenshotCaptured: false,
+    manualScreenshotPath: null,
+    optionalEvidenceWarnings: [],
+  };
+}
+
+function renderManualNotesParagraph(manual, signoff) {
+  if (manual === null) {
+    return 'No user answers were collected in this mode.';
+  }
+
+  if (signoff.notesCollected !== true) {
+    return 'Optional general notes were not collected. Mandatory sign-off is unaffected.';
+  }
+
+  return `User notes — optional, kept separate from fallback reasons and never accepted as justification:\n\n> ${manual.notes || '(none)'}`;
 }
 
 function resolveSignoffAvailability(input) {
@@ -512,6 +707,23 @@ function evaluateSummaryLinkEvidence(record) {
   return failures;
 }
 
+function toPresentationNumber(value) {
+  return Number(Number(value).toFixed(2));
+}
+
+function toPresentationRect(rect) {
+  if (rect === null || rect === undefined) {
+    return rect;
+  }
+
+  return {
+    top: toPresentationNumber(rect.top),
+    left: toPresentationNumber(rect.left),
+    width: toPresentationNumber(rect.width),
+    height: toPresentationNumber(rect.height),
+  };
+}
+
 function classifyOverlapFinding(finding, viewport, state, tolerance) {
   const identity = {
     viewport,
@@ -541,15 +753,19 @@ function classifyOverlapFinding(finding, viewport, state, tolerance) {
     };
   }
 
-  const failed = finding.overlapX > tolerance && finding.overlapY > tolerance;
+  const rawOverlapX = finding.rawOverlapX;
+  const rawOverlapY = finding.rawOverlapY;
+  const failed = rawOverlapX > tolerance && rawOverlapY > tolerance;
 
   return {
     ...identity,
     status: failed ? OVERLAP_STATUS.MEASURED_FAIL : OVERLAP_STATUS.MEASURED_PASS,
-    leftRect: finding.leftRect,
-    rightRect: finding.rightRect,
-    overlapX: finding.overlapX,
-    overlapY: finding.overlapY,
+    leftRect: toPresentationRect(finding.leftRect),
+    rightRect: toPresentationRect(finding.rightRect),
+    rawOverlapX,
+    rawOverlapY,
+    overlapX: toPresentationNumber(rawOverlapX),
+    overlapY: toPresentationNumber(rawOverlapY),
     tolerance,
     required: finding.required !== false,
     failed,
@@ -701,10 +917,13 @@ async function runSelfTest() {
     diagnosticsFailures: 0,
     cleanupErrors: 0,
     portReleased: true,
+    unresolvedRequiredProbes: 0,
+    responsiveLinkFailures: 0,
     manual: null,
     signoffUnavailable: 0,
     signoffInterrupted: false,
-    signoffIncomplete: 0,
+    mandatorySignoffIncomplete: 0,
+    optionalEvidenceWarnings: [],
   };
 
   const interactive = { ...base, mode: 'interactive' };
@@ -796,7 +1015,7 @@ async function runSelfTest() {
     },
     {
       name: 'stdin EOF',
-      input: { ...interactive, signoffIncomplete: 1 },
+      input: { ...interactive, mandatorySignoffIncomplete: 1 },
       expected: STATUS.PARTIAL,
     },
     {
@@ -1084,7 +1303,7 @@ async function runSelfTest() {
     {
       name: 'manual FAIL then EOF',
       answers: interruptedFail,
-      outcome: { signoffIncomplete: 1 },
+      outcome: { mandatorySignoffIncomplete: 1 },
       expected: STATUS.FAILED,
     },
     {
@@ -1102,7 +1321,7 @@ async function runSelfTest() {
     {
       name: 'partial PASS then EOF',
       answers: interruptedPass,
-      outcome: { signoffIncomplete: 1 },
+      outcome: { mandatorySignoffIncomplete: 1 },
       expected: STATUS.PARTIAL,
     },
   ];
@@ -1235,17 +1454,25 @@ async function runSelfTest() {
     'viewport cannot pass while a summary link is unusable'
   );
 
-  const measuredProbe = (overlapX, overlapY) => ({
+  const measuredProbe = (rawOverlapX, rawOverlapY) => ({
     pairName: 'form actions',
     leftIdentifier: 'button:Validate demonstration',
     rightIdentifier: 'button:Reset demonstration',
     required: true,
     unresolved: false,
-    leftRect: { top: 0, left: 0, width: 100, height: 40 },
-    rightRect: { top: 0, left: 110, width: 100, height: 40 },
-    overlapX,
-    overlapY,
+    leftRect: { top: 0.125, left: 0, width: 100.5, height: 40.25 },
+    rightRect: { top: 0.125, left: 110.75, width: 100.5, height: 40.25 },
+    rawOverlapX,
+    rawOverlapY,
   });
+
+  const classifyOverlap = (rawOverlapX, rawOverlapY) =>
+    classifyOverlapFinding(
+      measuredProbe(rawOverlapX, rawOverlapY),
+      '320x568',
+      'invalid',
+      OVERLAP_TOLERANCE_PX
+    );
 
   const measuredPass = classifyOverlapFinding(
     measuredProbe(-10, 40),
@@ -1349,6 +1576,314 @@ async function runSelfTest() {
     'optional NOT_APPLICABLE probe does not block a clean-overlap claim'
   );
 
+  const completeManualSummary = summariseManual(completeAnswers);
+  const partialManualSummary = summariseManual(interruptedPass);
+
+  const optionalCases = [
+    {
+      name: 'complete mandatory answers + notes EOF',
+      input: {
+        ...interactive,
+        manual: completeManualSummary,
+        optionalEvidenceWarnings: ['optional notes were not collected: readline closed'],
+      },
+      expected: STATUS.FULL_PASS,
+    },
+    {
+      name: 'complete mandatory answers + SIGINT during notes',
+      input: {
+        ...interactive,
+        manual: completeManualSummary,
+        signoffInterrupted: true,
+        optionalEvidenceWarnings: ['optional notes were not collected: aborted'],
+      },
+      expected: STATUS.FULL_PASS,
+    },
+    {
+      name: 'complete mandatory answers + screenshot failure',
+      input: {
+        ...interactive,
+        manual: completeManualSummary,
+        optionalEvidenceWarnings: ['optional manual-final.png was not captured: disk error'],
+      },
+      expected: STATUS.FULL_PASS,
+    },
+    {
+      name: 'complete mandatory answers + notes and screenshot collected',
+      input: { ...interactive, manual: completeManualSummary },
+      expected: STATUS.FULL_PASS,
+    },
+    {
+      name: 'incomplete mandatory answers + EOF',
+      input: { ...interactive, manual: partialManualSummary, mandatorySignoffIncomplete: 1 },
+      expected: STATUS.PARTIAL,
+    },
+    {
+      name: 'manual FAIL + optional evidence failure',
+      input: {
+        ...interactive,
+        manual: summariseManual(interruptedFail),
+        optionalEvidenceWarnings: ['optional manual-final.png was not captured: disk error'],
+      },
+      expected: STATUS.FAILED,
+    },
+  ];
+
+  for (const testCase of optionalCases) {
+    const outcome = evaluateOutcome(testCase.input);
+    record(
+      outcome.status === testCase.expected &&
+        outcome.exitCode === exitCodeForStatus(testCase.expected),
+      `${testCase.name} -> ${outcome.status} / exit ${String(outcome.exitCode)}`
+    );
+  }
+
+  const notesEofOutcome = evaluateOutcome(optionalCases[0].input);
+  const screenshotOutcome = evaluateOutcome(optionalCases[2].input);
+  const cleanInteractiveOutcome = evaluateOutcome(optionalCases[3].input);
+
+  record(
+    notesEofOutcome.blockingReasons.length === 0 && notesEofOutcome.optionalWarnings.length === 1,
+    'optional notes warning is recorded and is not a blocker'
+  );
+  record(
+    screenshotOutcome.blockingReasons.length === 0 &&
+      screenshotOutcome.optionalWarnings.length === 1,
+    'optional screenshot warning is recorded and is not a blocker'
+  );
+  record(
+    cleanInteractiveOutcome.optionalWarnings.length === 0 &&
+      cleanInteractiveOutcome.blockingReasons.length === 0,
+    'collected notes and captured screenshot produce no warning'
+  );
+  record(
+    notesEofOutcome.exitCode === cleanInteractiveOutcome.exitCode &&
+      screenshotOutcome.exitCode === cleanInteractiveOutcome.exitCode,
+    'optional warning count does not alter the exit code'
+  );
+
+  const collectedNotes = { ...completeAnswers, notes: 'zoom reflow verified by hand' };
+  record(
+    renderManualNotesParagraph(collectedNotes, {
+      notesCollected: true,
+      mandatoryComplete: true,
+    }).includes('zoom reflow verified by hand'),
+    'optional notes remain visible in the report when collected'
+  );
+  record(
+    !renderManualNotesParagraph(collectedNotes, {
+      notesCollected: false,
+      mandatoryComplete: true,
+    }).includes('zoom reflow verified by hand'),
+    'uncollected optional notes are reported as absent, not as a defect'
+  );
+
+  const signoffEvidence = createSignoffEvidence();
+  record(
+    signoffEvidence.mandatoryComplete === false &&
+      signoffEvidence.notesCollected === false &&
+      signoffEvidence.manualScreenshotCaptured === false &&
+      signoffEvidence.optionalEvidenceWarnings.length === 0,
+    'sign-off evidence starts with mandatory and optional markers cleared'
+  );
+
+  const coherenceCases = [
+    {
+      name: 'diagnostics failure',
+      input: { ...interactive, diagnosticsFailures: 1, manual: completeManualSummary },
+      expected: STATUS.FAILED,
+      code: 'DIAGNOSTICS_FAILURE',
+    },
+    {
+      name: 'cleanup failure',
+      input: { ...interactive, cleanupErrors: 1, manual: completeManualSummary },
+      expected: STATUS.FAILED,
+      code: 'CLEANUP_ERROR',
+    },
+    {
+      name: 'port unreleased',
+      input: { ...interactive, portReleased: false, manual: completeManualSummary },
+      expected: STATUS.FAILED,
+      code: 'PORT_NOT_RELEASED',
+    },
+    {
+      name: 'unresolved required overlap probe',
+      input: { ...interactive, unresolvedRequiredProbes: 2, manual: completeManualSummary },
+      expected: STATUS.FAILED,
+      code: 'OVERLAP_PROBE_UNRESOLVED',
+    },
+    {
+      name: 'unusable responsive summary link',
+      input: { ...interactive, responsiveLinkFailures: 1, manual: completeManualSummary },
+      expected: STATUS.FAILED,
+      code: 'RESPONSIVE_LINK_UNUSABLE',
+    },
+    {
+      name: 'sign-off environment unavailable',
+      input: { ...interactive, signoffUnavailable: 1 },
+      expected: STATUS.PARTIAL,
+      code: 'SIGNOFF_UNAVAILABLE',
+    },
+    {
+      name: 'mandatory sign-off interrupted',
+      input: { ...interactive, signoffInterrupted: true, manual: partialManualSummary },
+      expected: STATUS.PARTIAL,
+      code: 'MANDATORY_SIGNOFF_INTERRUPTED',
+    },
+    {
+      name: 'mandatory sign-off incomplete',
+      input: { ...interactive, mandatorySignoffIncomplete: 1, manual: partialManualSummary },
+      expected: STATUS.PARTIAL,
+      code: 'MANDATORY_SIGNOFF_INCOMPLETE',
+    },
+    {
+      name: 'missing fallback reason',
+      input: { ...interactive, manual: summariseManual(missingForcedColorsReason) },
+      expected: STATUS.PARTIAL,
+      code: 'FALLBACK_REASON_MISSING',
+    },
+    {
+      name: 'mandatory sign-off never collected',
+      input: { ...interactive },
+      expected: STATUS.PARTIAL,
+      code: 'MANDATORY_SIGNOFF_NOT_COLLECTED',
+    },
+  ];
+
+  for (const testCase of coherenceCases) {
+    const outcome = evaluateOutcome(testCase.input);
+    const hasCode = outcome.blockingReasons.some((entry) => entry.code === testCase.code);
+    const expectedSeverity =
+      testCase.expected === STATUS.FAILED ? SEVERITY.FAILURE : SEVERITY.PARTIAL;
+    const correctSeverity = outcome.reasons.some(
+      (entry) => entry.code === testCase.code && entry.severity === expectedSeverity
+    );
+    record(
+      outcome.status === testCase.expected && hasCode && correctSeverity,
+      `${testCase.name} -> ${outcome.status} with ${expectedSeverity} reason ${testCase.code}`
+    );
+  }
+
+  const narrativeCases = [
+    ...coherenceCases.map((entry) => entry.input),
+    ...optionalCases.map((entry) => entry.input),
+    base,
+    { ...base, automatedFailures: 1 },
+    { ...base, baselineEligible: false },
+    { ...base, signoffInterrupted: true },
+  ];
+
+  const cleanSentenceLeaks = narrativeCases.filter((input) => {
+    const outcome = evaluateOutcome(input);
+    if (outcome.status === STATUS.FULL_PASS) {
+      return false;
+    }
+    return renderOutcomeNarrative(outcome).text.includes(CLEAN_FULL_PASS_SENTENCE);
+  });
+
+  record(
+    cleanSentenceLeaks.length === 0,
+    `no non-full-pass outcome renders the clean full-pass sentence (${String(narrativeCases.length)} outcomes checked)`
+  );
+
+  const failedNarrative = renderOutcomeNarrative(evaluateOutcome(coherenceCases[0].input));
+  const partialNarrative = renderOutcomeNarrative(evaluateOutcome(coherenceCases[5].input));
+  const pendingNarrative = renderOutcomeNarrative(evaluateOutcome(base));
+  const fullPassNarrative = renderOutcomeNarrative(evaluateOutcome(optionalCases[3].input));
+
+  record(
+    failedNarrative.assessment === FINAL_ASSESSMENTS[STATUS.FAILED] &&
+      failedNarrative.blockers.includes('DIAGNOSTICS_FAILURE') &&
+      !failedNarrative.text.includes(CLEAN_FULL_PASS_SENTENCE),
+    'FAILED narrative lists a failure reason and cannot claim no blockers'
+  );
+  record(
+    partialNarrative.assessment === FINAL_ASSESSMENTS[STATUS.PARTIAL] &&
+      partialNarrative.blockers.includes('SIGNOFF_UNAVAILABLE') &&
+      !partialNarrative.text.includes(CLEAN_FULL_PASS_SENTENCE),
+    'PARTIAL narrative lists a partial reason and cannot claim no blockers'
+  );
+  record(
+    pendingNarrative.assessment === FINAL_ASSESSMENTS[STATUS.AUTOMATED_PENDING] &&
+      pendingNarrative.assessment.includes('sign-off remains pending') &&
+      !pendingNarrative.text.includes(CLEAN_FULL_PASS_SENTENCE),
+    'automated-only narrative says user sign-off remains pending'
+  );
+  record(
+    fullPassNarrative.assessment === FINAL_ASSESSMENTS[STATUS.FULL_PASS] &&
+      fullPassNarrative.blockers === CLEAN_FULL_PASS_SENTENCE,
+    'full interactive pass has zero blocking reasons and may claim a clean full pass'
+  );
+
+  const invariantBreaks = narrativeCases.filter((input) => {
+    const outcome = evaluateOutcome(input);
+    const statusMatches = outcome.exitCode === exitCodeForStatus(outcome.status);
+    const wrapperMatches = resolveFinalStatus(input) === outcome.status;
+    const failedHasReason = outcome.status !== STATUS.FAILED || outcome.failureReasons.length > 0;
+    const partialHasReason = outcome.status !== STATUS.PARTIAL || outcome.partialReasons.length > 0;
+    const passHasNoBlocker =
+      (outcome.status !== STATUS.FULL_PASS && outcome.status !== STATUS.AUTOMATED_PENDING) ||
+      outcome.blockingReasons.length === 0;
+    return !(
+      statusMatches &&
+      wrapperMatches &&
+      failedHasReason &&
+      partialHasReason &&
+      passHasNoBlocker
+    );
+  });
+
+  record(
+    invariantBreaks.length === 0,
+    `status, exit code and blocker invariants hold across ${String(narrativeCases.length)} outcomes`
+  );
+
+  const subpixelCases = [
+    { x: 1.0, y: 2.0, expected: OVERLAP_STATUS.MEASURED_PASS },
+    { x: 1.01, y: 2.0, expected: OVERLAP_STATUS.MEASURED_FAIL },
+    { x: 1.49, y: 2.0, expected: OVERLAP_STATUS.MEASURED_FAIL },
+    { x: 2.0, y: 0.99, expected: OVERLAP_STATUS.MEASURED_PASS },
+    { x: 2.0, y: 1.0, expected: OVERLAP_STATUS.MEASURED_PASS },
+    { x: 2.0, y: 1.01, expected: OVERLAP_STATUS.MEASURED_FAIL },
+    { x: -3.5, y: 40.25, expected: OVERLAP_STATUS.MEASURED_PASS },
+    { x: 0, y: 0, expected: OVERLAP_STATUS.MEASURED_PASS },
+    { x: 1.0001, y: 1.0001, expected: OVERLAP_STATUS.MEASURED_FAIL },
+  ];
+
+  for (const testCase of subpixelCases) {
+    const classified = classifyOverlap(testCase.x, testCase.y);
+    const failedMatches =
+      classified.failed === (testCase.expected === OVERLAP_STATUS.MEASURED_FAIL);
+    record(
+      classified.status === testCase.expected && failedMatches,
+      `raw overlap ${testCase.x.toFixed(4)} x ${testCase.y.toFixed(4)} -> ${classified.status}`
+    );
+  }
+
+  const subpixelFail = classifyOverlap(1.0001, 1.0001);
+  record(
+    subpixelFail.rawOverlapX === 1.0001 &&
+      subpixelFail.rawOverlapY === 1.0001 &&
+      subpixelFail.overlapX === 1 &&
+      subpixelFail.overlapY === 1 &&
+      subpixelFail.status === OVERLAP_STATUS.MEASURED_FAIL,
+    'presentation rounding to 1.00 cannot turn a raw 1.0001 intersection into a pass'
+  );
+  record(
+    classifyOverlap(1.49, 2).overlapX === 1.49 && classifyOverlap(1.234567, 2).overlapX === 1.23,
+    'presentation overlap values keep two decimals'
+  );
+  record(
+    classifyOverlap(2, 2).leftRect.width === 100.5 &&
+      classifyOverlap(2, 2).rightRect.left === 110.75,
+    'subpixel rectangles survive as two-decimal presentation values'
+  );
+  record(
+    summariseOverlap([classifyOverlap(1.01, 2)]).measuredFail === 1 &&
+      summariseOverlap([classifyOverlap(1.0, 2)]).measuredPass === 1,
+    'subpixel classification propagates into the overlap summary'
+  );
+
   stdout.write(
     `\n${String(scenarioCount)} scenarios: ${String(scenarioCount - failures.length)} passed, ${String(failures.length)} failed\n`
   );
@@ -1446,10 +1981,12 @@ const results = {
     automatedExecutionErrors: [],
     signoffUnavailable: [],
     signoffInterrupted: false,
-    signoffIncomplete: [],
+    mandatorySignoffIncomplete: [],
+    optionalEvidenceWarnings: [],
     signoffCollectionStarted: false,
   },
   manual: null,
+  signoff: createSignoffEvidence(),
   screenshots: [],
 };
 
@@ -1723,19 +2260,19 @@ async function semanticOverlap(page, probes, tolerance, viewportLabel, state) {
           required: definition.required,
           unresolved: false,
           leftRect: {
-            top: Math.round(leftRect.top),
-            left: Math.round(leftRect.left),
-            width: Math.round(leftRect.width),
-            height: Math.round(leftRect.height),
+            top: leftRect.top,
+            left: leftRect.left,
+            width: leftRect.width,
+            height: leftRect.height,
           },
           rightRect: {
-            top: Math.round(rightRect.top),
-            left: Math.round(rightRect.left),
-            width: Math.round(rightRect.width),
-            height: Math.round(rightRect.height),
+            top: rightRect.top,
+            left: rightRect.left,
+            width: rightRect.width,
+            height: rightRect.height,
           },
-          overlapX: Math.round(overlapX),
-          overlapY: Math.round(overlapY),
+          rawOverlapX: overlapX,
+          rawOverlapY: overlapY,
         });
       }
 
@@ -3063,7 +3600,7 @@ async function sectionRouting(page, url) {
   );
 }
 
-async function runInteractiveSignoff(page, url, signal, answers) {
+async function runInteractiveSignoff(page, url, signal, answers, signoff) {
   await page.bringToFront().catch(() => undefined);
 
   stdout.write(`\n${MANUAL_CHECKLIST}\n`);
@@ -3106,7 +3643,16 @@ async function runInteractiveSignoff(page, url, signal, answers) {
       }
     }
 
-    answers.notes = (await rl.question('notes: ', { signal })).trim();
+    signoff.mandatoryComplete = true;
+
+    try {
+      answers.notes = (await rl.question('notes (optional): ', { signal })).trim();
+      signoff.notesCollected = true;
+    } catch (error) {
+      signoff.optionalEvidenceWarnings.push(
+        `optional notes were not collected: ${toMessage(error)}`
+      );
+    }
   } finally {
     rl.close();
   }
@@ -3232,22 +3778,28 @@ try {
             interactivePage,
             localUrl,
             abortController.signal,
-            results.manual
+            results.manual,
+            results.signoff
           );
         } catch (error) {
           if (results.outcome.signoffInterrupted) {
-            results.outcome.signoffIncomplete.push(`sign-off interrupted: ${toMessage(error)}`);
+            results.outcome.mandatorySignoffIncomplete.push(
+              `mandatory sign-off interrupted: ${toMessage(error)}`
+            );
           } else {
-            results.outcome.signoffIncomplete.push(
-              `sign-off did not complete: ${toMessage(error)}`
+            results.outcome.mandatorySignoffIncomplete.push(
+              `mandatory sign-off did not complete: ${toMessage(error)}`
             );
           }
         }
 
         try {
-          await shot(interactivePage, 'manual-final.png');
+          results.signoff.manualScreenshotPath = await shot(interactivePage, 'manual-final.png');
+          results.signoff.manualScreenshotCaptured = true;
         } catch (error) {
-          results.outcome.signoffIncomplete.push(`final screenshot failed: ${toMessage(error)}`);
+          results.signoff.optionalEvidenceWarnings.push(
+            `optional manual-final.png was not captured: ${toMessage(error)}`
+          );
         }
       }
     }
@@ -3302,12 +3854,14 @@ const finalEvaluation = evaluateDiagnostics(finalAggregate);
 const interactiveIncluded = diagnosticSinks.some((sink) => sink.scope === 'interactive');
 const diagnosticsPassed = recordDiagnosticsSection(finalEvaluation, interactiveIncluded);
 
+results.outcome.optionalEvidenceWarnings = results.signoff.optionalEvidenceWarnings;
+
 const manualSummary = summariseManual(results.manual);
 const interruptedAfterAnswers =
   manualSummary !== null &&
   manualSummary.answeredCount > 0 &&
   (results.outcome.signoffInterrupted ||
-    results.outcome.signoffIncomplete.length > 0 ||
+    results.outcome.mandatorySignoffIncomplete.length > 0 ||
     results.outcome.signoffUnavailable.length > 0);
 const overlapTotals = summariseOverlap(results.overlap);
 const summaryLinkEvidence = results.viewports.flatMap((entry) =>
@@ -3329,7 +3883,7 @@ const automatedFailures = results.sections.filter(
 );
 const axeViolations = results.axe.reduce((total, entry) => total + entry.violations.length, 0);
 
-const status = resolveFinalStatus({
+const outcomeModel = evaluateOutcome({
   mode,
   baselineEligible: baseline.eligible,
   startupBlockers: (results.startup.blockers ?? []).length,
@@ -3337,19 +3891,30 @@ const status = resolveFinalStatus({
   automatedFailures: automatedFailures.length,
   axeViolations,
   diagnosticsFailures: diagnosticsPassed ? 0 : 1,
+  unresolvedRequiredProbes: overlapTotals.unresolved,
+  responsiveLinkFailures: summaryLinkFailureCount,
   cleanupErrors: results.lifecycle.cleanupErrors.length,
   portReleased: results.lifecycle.portReleased,
   manual: manualSummary,
   signoffUnavailable: results.outcome.signoffUnavailable.length,
   signoffInterrupted: results.outcome.signoffInterrupted,
-  signoffIncomplete: results.outcome.signoffIncomplete.length,
+  mandatorySignoffIncomplete: results.outcome.mandatorySignoffIncomplete.length,
+  optionalEvidenceWarnings: results.outcome.optionalEvidenceWarnings,
 });
 
-const exitCode = exitCodeForStatus(status);
+const status = outcomeModel.status;
+const exitCode = outcomeModel.exitCode;
+const narrative = renderOutcomeNarrative(outcomeModel);
 
 results.status = status;
 results.exitCode = exitCode;
 results.finishedAt = new Date().toISOString();
+results.outcomeModel = {
+  status,
+  exitCode,
+  blockingReasons: outcomeModel.blockingReasons,
+  optionalWarnings: outcomeModel.optionalWarnings,
+};
 results.overlapSummary = overlapTotals;
 results.summaryLinkFailures = summaryLinkFailureCount;
 results.manualSummary =
@@ -3364,6 +3929,10 @@ results.manualSummary =
         fallbackReasonsComplete: manualSummary.fallbackReasonsComplete,
         missingReasons: manualSummary.missingReasons,
         interruptedAfterAnswers,
+        mandatorySignoffComplete: results.signoff.mandatoryComplete,
+        notesCollected: results.signoff.notesCollected,
+        manualScreenshotCaptured: results.signoff.manualScreenshotCaptured,
+        optionalEvidenceWarnings: results.signoff.optionalEvidenceWarnings,
       };
 
 function renderReport() {
@@ -3445,23 +4014,7 @@ function renderReport() {
       : `| ${label} | MISSING | required because \`${entry.key}\` = ${entry.trigger} |`;
   };
 
-  const fullPassBlockers = [
-    manualSummary === null ? 'no manual answers were collected' : null,
-    manualSummary !== null && !manualSummary.answersComplete
-      ? `manual answers are incomplete (${String(manualSummary.answeredCount)} of ${String(manualSummary.promptCount)})`
-      : null,
-    manualSummary !== null && manualSummary.failed ? 'a manual FAIL was recorded' : null,
-    manualSummary !== null && !manualSummary.fallbackReasonsComplete
-      ? `fallback reason missing: ${manualSummary.missingReasons.join(', ')}`
-      : null,
-    outcome.signoffUnavailable.length > 0 ? 'the sign-off environment was unavailable' : null,
-    overlapTotals.unresolved > 0
-      ? `${String(overlapTotals.unresolved)} required overlap probes were unresolved`
-      : null,
-    summaryLinkFailureCount > 0
-      ? `${String(summaryLinkFailureCount)} responsive Error Summary links were not usable`
-      : null,
-  ].filter((entry) => entry !== null);
+  const signoff = results.signoff;
 
   const defects = results.sections
     .filter((entry) => entry.status === 'FAIL')
@@ -3493,15 +4046,27 @@ ${status}
 ${repository.blockers.length === 0 ? '' : `- baseline blockers: ${repository.blockers.join('; ')}\n`}
 ## Execution Outcome
 
+Status, exit code, the blocker list below and the Final Assessment are all derived from one central outcome model — \`evaluateOutcome()\`. Nothing recomputes them independently, so the report and the process result cannot disagree.
+
 - automated execution errors: ${outcome.automatedExecutionErrors.length === 0 ? 'none' : outcome.automatedExecutionErrors.join('; ')}
 - sign-off unavailable: ${outcome.signoffUnavailable.length === 0 ? 'no' : outcome.signoffUnavailable.join('; ')}
 - sign-off interrupted: ${String(outcome.signoffInterrupted)}
-- sign-off incomplete: ${outcome.signoffIncomplete.length === 0 ? 'no' : outcome.signoffIncomplete.join('; ')}
+- mandatory sign-off incomplete: ${outcome.mandatorySignoffIncomplete.length === 0 ? 'no' : outcome.mandatorySignoffIncomplete.join('; ')}
 - manual failed: ${manualSummary === null ? 'not collected' : String(manualSummary.failed)}
 - diagnostics failed: ${String(!diagnosticsPassed)}
 - cleanup failed: ${lifecycle.cleanupErrors.length > 0 ? lifecycle.cleanupErrors.join('; ') : 'no'}
 - final status: **${status}**
 - exit code: **${String(exitCode)}**
+
+### Blocking reasons
+
+${outcomeModel.blockingReasons.length === 0 ? '- none' : renderReasonLines(outcomeModel.blockingReasons)}
+
+### Optional evidence warnings
+
+Optional supporting evidence is never a review defect and never changes status or exit code.
+
+${outcomeModel.optionalWarnings.length === 0 ? '- none' : renderReasonLines(outcomeModel.optionalWarnings)}
 
 ## Terminal Availability
 
@@ -3583,6 +4148,8 @@ ${summaryLinkRows || '| — | — | — | — | — | — | — | not measured |
 
 Semantic adjacent-region probes with a documented ${String(OVERLAP_TOLERANCE_PX)} px border-touch tolerance. Every probe resolves to exactly one status: \`MEASURED_PASS\`, \`MEASURED_FAIL\`, \`UNRESOLVED\` or \`NOT_APPLICABLE\`. Only a probe explicitly declared \`required: false\` may be \`NOT_APPLICABLE\`; an unresolved required probe is a failure of the state that declared it.
 
+Classification uses the **raw** floating-point geometry — a probe fails only when \`rawOverlapX\` **and** \`rawOverlapY\` both exceed the tolerance. \`overlapX\`/\`overlapY\` are two-decimal presentation values derived from the raw ones after classification; no integer rounding is applied before the comparison and no integer precision is claimed.
+
 | Count | Value |
 | --- | --- |
 | declared | ${String(overlapTotals.declared)} |
@@ -3599,7 +4166,7 @@ ${
     : [
         ...overlapFailures.map(
           (entry) =>
-            `- MEASURED_FAIL — ${entry.viewport} ${entry.state} — ${entry.pairName}: overlapX ${String(entry.overlapX)}, overlapY ${String(entry.overlapY)}`
+            `- MEASURED_FAIL — ${entry.viewport} ${entry.state} — ${entry.pairName}: raw overlapX ${entry.rawOverlapX.toFixed(2)}, raw overlapY ${entry.rawOverlapY.toFixed(2)}, tolerance ${String(entry.tolerance)} px`
         ),
         ...overlapUnresolved.map(
           (entry) =>
@@ -3637,14 +4204,20 @@ Affected-node evidence — targets, failure summaries and capped HTML excerpts �
 
 ## Manual Sign-off
 
+Mandatory evidence is the six result prompts plus every required fallback reason. Optional evidence is the general notes and \`manual-final.png\`. Optional evidence never affects pass eligibility, status or exit code.
+
 - answers collected: ${manual === null ? 'none' : String(Object.keys(manual).length)}
 - answered count: ${manualSummary === null ? '0' : `${String(manualSummary.answeredCount)} of ${String(manualSummary.promptCount)}`}
+- mandatory sign-off complete: **${String(signoff.mandatoryComplete)}**
 - complete: ${manualSummary === null ? 'false' : String(manualSummary.complete)}
 - failed: ${manualSummary === null ? 'not collected' : String(manualSummary.failed)}
 - fallback reasons complete: ${manualSummary === null ? 'not collected' : String(manualSummary.fallbackReasonsComplete)}
 - missing fallback reasons: ${manualSummary === null || manualSummary.missingReasons.length === 0 ? 'none' : manualSummary.missingReasons.join(', ')}
 - sign-off collection started: ${String(outcome.signoffCollectionStarted)}
 - interrupted after answers: ${String(interruptedAfterAnswers)}
+- notes collected (optional): ${String(signoff.notesCollected)}
+- manual screenshot captured (optional): ${String(signoff.manualScreenshotCaptured)}${signoff.manualScreenshotPath === null ? '' : ` — \`${signoff.manualScreenshotPath}\``}
+- optional evidence warnings: ${signoff.optionalEvidenceWarnings.length === 0 ? 'none' : signoff.optionalEvidenceWarnings.join('; ')}
 
 Every answer is persisted the moment it is accepted, so an EOF, \`SIGINT\` or \`SIGTERM\` after an answer cannot discard it. Answers already recorded are reported below even when the sign-off ended early.
 
@@ -3659,7 +4232,7 @@ ${manualReasonRow('forced colors reason', MANUAL_FALLBACK_REASONS[0])}
 ${manualRow('screen reader', 'screen reader')}
 ${manualReasonRow('screen reader reason', MANUAL_FALLBACK_REASONS[1])}
 
-${manual === null ? 'No user answers were collected in this mode.' : `User notes — kept separate from fallback reasons and never accepted as justification:\n\n> ${manual.notes || '(none)'}`}
+${renderManualNotesParagraph(manual, signoff)}
 
 ## Defects
 
@@ -3671,21 +4244,11 @@ ${results.screenshots.map((path) => `- \`${path}\``).join('\n') || '- none'}
 
 ## Final Assessment
 
-${
-  status === STATUS.AUTOMATED_PENDING
-    ? 'Automated coverage passed. Real browser zoom, real OS forced-colors mode and screen-reader behaviour are not covered and remain owed from the user sign-off phase.'
-    : status === STATUS.FULL_PASS
-      ? 'Automated coverage and user sign-off both passed.'
-      : status === STATUS.PARTIAL
-        ? 'The review did not complete. No pass is claimed.'
-        : 'The review failed. See defects and execution outcome above.'
-}
+${narrative.assessment}
 
-${
-  fullPassBlockers.length === 0
-    ? 'No blocker to a full-pass claim remains in this run.'
-    : `A full-pass claim is impossible while any of these holds:\n\n${fullPassBlockers.map((entry) => `- ${entry}`).join('\n')}`
-}
+${narrative.blockers}
+
+${narrative.warnings}
 
 ${repository.finalReviewEligible ? '' : 'This run is **PROVISIONAL**: it is not bound to an approved review SHA and cannot serve as closure evidence.'}
 
@@ -3735,6 +4298,10 @@ stdout.write(
         failures: finalEvaluation.failures.length,
       },
       outcome: results.outcome,
+      blockingReasons: outcomeModel.blockingReasons.map(
+        (entry) => `${entry.severity}:${entry.code}`
+      ),
+      optionalWarnings: outcomeModel.optionalWarnings.map((entry) => entry.message),
       lifecycle: results.lifecycle,
       exitCode,
     },
@@ -3746,24 +4313,31 @@ stdout.write(
 stdout.write(`\nReport:  ${REPORT_PATH}\n`);
 stdout.write(`Results: ${RESULTS_PATH}\n\n`);
 
+for (const warning of outcomeModel.optionalWarnings) {
+  stdout.write(`  ! optional evidence — ${warning.message}\n`);
+}
+
 if (exitCode !== 0) {
-  const reasons = [
+  const detail = [
     ...baseline.blockers,
     ...(results.startup.blockers ?? []),
     ...results.outcome.automatedExecutionErrors,
     ...results.outcome.signoffUnavailable,
-    ...results.outcome.signoffIncomplete,
+    ...results.outcome.mandatorySignoffIncomplete,
     ...results.sections.flatMap((entry) => entry.failures.map((f) => `${entry.id}: ${f}`)),
     ...results.lifecycle.cleanupErrors,
   ];
 
-  stdout.write(`✗ M3 browser review — ${status}\n\n`);
-  for (const reason of reasons) {
-    stdout.write(`  - ${reason}\n`);
+  stdout.write(`\n✗ M3 browser review — ${status}\n\n`);
+  for (const reason of outcomeModel.blockingReasons) {
+    stdout.write(`  - [${reason.severity}] ${reason.code}: ${reason.message}\n`);
+  }
+  for (const reason of detail) {
+    stdout.write(`    · ${reason}\n`);
   }
   stdout.write('\n');
   process.exit(exitCode);
 }
 
-stdout.write(`✓ M3 browser review — ${status}\n\n`);
+stdout.write(`\n✓ M3 browser review — ${status}\n\n`);
 process.exit(exitCode);

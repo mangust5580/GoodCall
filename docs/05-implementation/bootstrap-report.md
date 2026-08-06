@@ -515,6 +515,52 @@ The manual section reports answers collected, answered count, complete, failed, 
 
 `--self-test` covers **73 scenarios** with no server and no browser, including every availability, persistence, fallback-reason, responsive-link and overlap-status scenario above. Two provisional automated-only runs passed on distinct dynamic ports with zero axe violations, zero diagnostics failures, 109 of 109 overlap probes measured and 12 of 12 responsive summary-link records usable. **No final interactive review was run and no browser review is claimed to have passed.**
 
+## M3-05H — Optional evidence semantics, report consistency and subpixel geometry
+
+**Status: IMPLEMENTED — AWAITING INDEPENDENT AUDIT AND CI**
+
+The independent audit of M3-05G returned **CHANGES REQUIRED** with three findings — M3G-OPTIONAL-01, M3G-REPORT-01, M3G-OVERLAP-03. CI for the M3-05G commit `16191b52314a2bc7a23fd95c901b46297025f5d8` is **not independently verified**, and nothing here claims otherwise. The accepted architecture is unchanged; each correction removes a way the harness could still misreport a run it had actually completed correctly.
+
+### Mandatory versus optional evidence
+
+The harness collected general notes and `manual-final.png` inside the same failure path as the mandatory answers. An EOF at the `notes:` prompt, or a screenshot that could not be written, was recorded as `signoffIncomplete` — so a sign-off where the user had answered all six prompts and justified both fallbacks could still resolve to **PARTIAL**. Supporting evidence was being treated as a review defect.
+
+Mandatory sign-off is now explicitly bounded: the six result prompts plus every required fallback reason. `signoff.mandatoryComplete` is set the moment that boundary is crossed, before any optional prompt runs. Two buckets replace the ambiguous one:
+
+- `mandatorySignoffIncomplete` — only interruption or failure **before** mandatory completion, still PARTIAL;
+- `optionalEvidenceWarnings` — notes not collected, screenshot not captured; recorded, reported, and never a blocker.
+
+The notes prompt is wrapped in its own handler: EOF or a `SIGINT` abort during it records a warning, keeps every mandatory answer, and preserves full-pass eligibility. It never loops waiting for optional input. The screenshot is captured after mandatory completion and its path enters the evidence list only on success. A signal arriving after mandatory completion is a `WARNING`, not a partial reason; before it, it stays PARTIAL.
+
+### One outcome model for status, exit code and report
+
+`resolveFinalStatus()` decided the status while `renderReport()` built its own `fullPassBlockers` list from a different set of conditions. The two could disagree, and a FAILED or PARTIAL report could still print _No blocker to a full-pass claim remains in this run._
+
+`evaluateOutcome()` is now the single source of truth. It returns `status`, `exitCode`, `reasons`, `blockingReasons`, `failureReasons`, `partialReasons` and `optionalWarnings`, where each reason is `{ code, severity, message }` and severity is `FAILURE`, `PARTIAL` or `WARNING`. `resolveFinalStatus()` is a thin wrapper over it. Status, exit code, the terminal summary, the report's Execution Outcome, the blocker list, the Final Assessment and `results.json` all read the same object; nothing recomputes blockers.
+
+Precedence: any `FAILURE` reason → FAILED; otherwise any `PARTIAL` reason → PARTIAL; otherwise automated-only → AUTOMATED PASS — USER SIGN-OFF PENDING; otherwise → AUTOMATED + USER REVIEW PASSED. Warnings never move the status. `renderOutcomeNarrative()` derives the Final Assessment from the status alone, and the clean full-pass sentence is reachable only from `AUTOMATED + USER REVIEW PASSED` with an empty blocker list. An automated-only run says user sign-off remains pending instead.
+
+### Subpixel overlap classification
+
+`semanticOverlap()` applied `Math.round()` to `overlapX`/`overlapY` inside the page before `classifyOverlapFinding()` compared them against the 1 px tolerance. A real 1.2 px intersection rounded to 1, and `1 > 1` is false, so a material overlap was recorded as `MEASURED_PASS`.
+
+The page now returns raw floating-point rectangles and raw overlaps. Classification uses `rawOverlapX > tolerance && rawOverlapY > tolerance` with no rounding anywhere before the comparison. `overlapX`/`overlapY` are two-decimal presentation values derived from the raw ones **after** classification, and rectangles are presented the same way. Both axes must exceed the tolerance for a material rectangle intersection. The report shows two decimals sourced from the raw values and claims no integer precision. Measured records store `rawOverlapX`, `rawOverlapY`, `overlapX`, `overlapY` and `tolerance` alongside the existing identifiers, rectangles and required flag.
+
+Verified boundaries: 1.00 × 2.00 passes, 1.01 × 2.00 fails, 1.49 × 2.00 fails, 2.00 × 0.99 passes, 2.00 × 1.00 passes, 2.00 × 1.01 fails, a negative X overlap passes, 0 × 0 passes, and 1.0001 × 1.0001 fails even though its presentation value rounds to 1.00.
+
+### Rejected variants
+
+- **Treating optional notes as mandatory** — a blank line nobody typed would block a completed sign-off.
+- **Treating a supporting screenshot failure as incomplete sign-off** — a disk error would be reported as a review defect.
+- **Maintaining a separate report-only blocker list** — the exact split that let a failed run print a clean full-pass sentence.
+- **Allowing clean full-pass wording in failed or partial reports** — the report would contradict its own status and exit code.
+- **Rounding geometry before the tolerance comparison** — a 1.2 px intersection disappears at integer precision.
+- **Storing only integer overlap evidence** — the stored numbers could not reproduce the verdict.
+
+### Verification and status
+
+`--self-test` covers **115 scenarios** with no server and no browser, including all optional-evidence, outcome-coherence and subpixel-boundary cases. Two provisional automated-only runs passed on distinct dynamic ports with zero blocking reasons, zero optional warnings, 109 of 109 overlap probes measured — 42 of them carrying genuinely fractional raw overlaps — and 12 of 12 responsive summary-link records usable. **No final interactive review was run and no browser review is claimed to have passed.**
+
 ## Next Steps
 
 M0 is complete. Next allowed step is **request review checkpoint R0**.

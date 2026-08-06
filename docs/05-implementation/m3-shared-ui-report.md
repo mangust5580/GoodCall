@@ -2,22 +2,23 @@
 
 ## Status
 
-| Task                                                                  | Status                                                                                                   |
-| --------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| M3-01 — Shared UI scaffold, layout and accessibility utilities        | **APPROVED AND CLOSED**                                                                                  |
-| M3-01A — VisuallyHidden accessibility contract correction             | **APPROVED AND CLOSED**                                                                                  |
-| M3-02 / M3-02A / M3-02B — Semantic action primitives                  | **APPROVED AND CLOSED**                                                                                  |
-| M3-03 / M3-03A — Native form controls baseline                        | **APPROVED AND CLOSED**                                                                                  |
-| M3-03B — Shared UI directory organization                             | **APPROVED AND CLOSED**                                                                                  |
-| M3-04 — Feedback, status and validation-summary primitives            | **APPROVED AND CLOSED**                                                                                  |
-| M3-05 — Shared UI runtime integration                                 | **IMPLEMENTED — CORRECTIVE TEST PASS APPLIED — AWAITING INDEPENDENT AUDIT, CI, AND USER BROWSER REVIEW** |
-| M3-05A — Shell-aware announcement ownership correction                | **APPROVED AND CLOSED**                                                                                  |
-| M3-05B — Dev MSW bootstrap restoration                                | **APPROVED AND CLOSED** with M3-05C                                                                      |
-| M3-05C — Agent policy, artifact and verifier lifecycle reconciliation | **APPROVED AND CLOSED**                                                                                  |
-| M3-05D — Bounded browser review harness                               | **CI SUCCESS — INDEPENDENT AUDIT RETURNED CHANGES REQUIRED — SUPERSEDED BY M3-05E**                      |
-| M3-05E — Browser review harness reliability and evidence integrity    | **CI SUCCESS — INDEPENDENT AUDIT RETURNED CHANGES REQUIRED — SUPERSEDED BY M3-05F**                      |
-| M3-05F — Interactive diagnostics and review evidence coherence        | **CI SUCCESS — INDEPENDENT AUDIT RETURNED CHANGES REQUIRED — SUPERSEDED BY M3-05G**                      |
-| M3-05G — Manual sign-off integrity and responsive evidence completion | **IMPLEMENTED — AWAITING INDEPENDENT AUDIT AND CI**                                                      |
+| Task                                                                           | Status                                                                                                   |
+| ------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------- |
+| M3-01 — Shared UI scaffold, layout and accessibility utilities                 | **APPROVED AND CLOSED**                                                                                  |
+| M3-01A — VisuallyHidden accessibility contract correction                      | **APPROVED AND CLOSED**                                                                                  |
+| M3-02 / M3-02A / M3-02B — Semantic action primitives                           | **APPROVED AND CLOSED**                                                                                  |
+| M3-03 / M3-03A — Native form controls baseline                                 | **APPROVED AND CLOSED**                                                                                  |
+| M3-03B — Shared UI directory organization                                      | **APPROVED AND CLOSED**                                                                                  |
+| M3-04 — Feedback, status and validation-summary primitives                     | **APPROVED AND CLOSED**                                                                                  |
+| M3-05 — Shared UI runtime integration                                          | **IMPLEMENTED — CORRECTIVE TEST PASS APPLIED — AWAITING INDEPENDENT AUDIT, CI, AND USER BROWSER REVIEW** |
+| M3-05A — Shell-aware announcement ownership correction                         | **APPROVED AND CLOSED**                                                                                  |
+| M3-05B — Dev MSW bootstrap restoration                                         | **APPROVED AND CLOSED** with M3-05C                                                                      |
+| M3-05C — Agent policy, artifact and verifier lifecycle reconciliation          | **APPROVED AND CLOSED**                                                                                  |
+| M3-05D — Bounded browser review harness                                        | **CI SUCCESS — INDEPENDENT AUDIT RETURNED CHANGES REQUIRED — SUPERSEDED BY M3-05E**                      |
+| M3-05E — Browser review harness reliability and evidence integrity             | **CI SUCCESS — INDEPENDENT AUDIT RETURNED CHANGES REQUIRED — SUPERSEDED BY M3-05F**                      |
+| M3-05F — Interactive diagnostics and review evidence coherence                 | **CI SUCCESS — INDEPENDENT AUDIT RETURNED CHANGES REQUIRED — SUPERSEDED BY M3-05G**                      |
+| M3-05G — Manual sign-off integrity and responsive evidence completion          | **INDEPENDENT AUDIT RETURNED CHANGES REQUIRED — SUPERSEDED BY M3-05H**                                   |
+| M3-05H — Optional evidence semantics, report consistency and subpixel geometry | **IMPLEMENTED — AWAITING INDEPENDENT AUDIT AND CI**                                                      |
 
 This report covers the Shared UI layer of milestone M3. It records local verification for the tasks under review. M3-01 through M3-04 are approved and closed; M3-05 and its corrective passes are recorded in their own sections below, and M3 as a whole is not closed.
 
@@ -1238,8 +1239,46 @@ All automated-only runs recorded so far remain `PROVISIONAL` and are not closure
 
 M3 remains open. M4 remains blocked.
 
+## M3-05H — Optional evidence semantics, report consistency and subpixel geometry
+
+**Status: IMPLEMENTED — AWAITING INDEPENDENT AUDIT AND CI**
+
+### M3-05G outcome
+
+Commit `16191b52314a2bc7a23fd95c901b46297025f5d8`. GitHub Actions CI for that exact SHA is **not independently verified** — no run evidence was retrievable, and neither success nor failure is claimed for it.
+
+The **independent audit returned CHANGES REQUIRED** with three findings:
+
+- **M3G-OPTIONAL-01** — optional general notes and the supporting `manual-final.png` shared the mandatory failure path, so an EOF at the notes prompt or a failed screenshot could downgrade an otherwise complete sign-off to PARTIAL.
+- **M3G-REPORT-01** — status resolution and the report's blocker list were computed from two different condition sets, so a FAILED or PARTIAL report could still print _No blocker to a full-pass claim remains in this run._
+- **M3G-OVERLAP-03** — overlap geometry was rounded to integers before the 1 px tolerance comparison, so a real 1.2 px intersection was classified as `MEASURED_PASS`.
+
+### What M3-05H changes
+
+Three tracked files: `scripts/review-m3-browser.mjs` and two implementation reports. Finding-by-finding detail: [M3-05H in the M0 bootstrap report](bootstrap-report.md#m3-05h--optional-evidence-semantics-report-consistency-and-subpixel-geometry).
+
+In short: mandatory sign-off is bounded at the six result prompts plus every required fallback reason, and optional evidence can only ever produce a warning; `evaluateOutcome()` is the single source for status, exit code, report blockers and the Final Assessment, so the clean full-pass sentence is reachable only from a genuine full pass; and overlap probes are classified on raw floating-point geometry, with two-decimal presentation values derived afterwards.
+
+### What M3-05H does not change
+
+**No product runtime change.** `src/**`, `tests/**`, `package.json`, `package-lock.json`, `AGENTS.md`, `CLAUDE.md`, the MSW worker, the Vite `publicDir` contract, `scripts/verify-dev-bootstrap.mjs`, `.github/**` and every configuration file are untouched. Unit/integration totals remain **533 in 37 files**, expected E2E remains **23**, and the bundle is unchanged. Shared UI, Home, routes and the shell are untouched, and no repository policy was rewritten.
+
+### Still owed
+
+The M3 browser review has still never produced final evidence, and none is claimed here. Every mandatory sign-off item remains mandatory — real 200 % zoom, real 400 % zoom, keyboard/focus, clipping/overlap, a real forced-colors result or a justified NOT AVAILABLE, and a screen-reader result or a justified NOT TESTED. Only the general notes and `manual-final.png` are optional.
+
+It must be run **by the user in a visible TTY** on a clean tree, bound to the approved SHA:
+
+```
+$env:GOODCALL_REVIEW_SHA="<approved SHA>"; npm run review:m3-browser
+```
+
+All automated-only runs recorded so far remain `PROVISIONAL` and are not closure evidence.
+
+M3 remains open. M4 remains blocked.
+
 ## Next Permitted Step
 
-The only permitted next step is an **independent diff audit of the M3-05G commit**, followed by GitHub Actions CI for it, and then the M3 browser review bound to that approved SHA in a visible terminal.
+The only permitted next step is an **independent diff audit of the M3-05H commit**, followed by GitHub Actions CI for it, and then the M3 browser review bound to that approved SHA in a visible terminal.
 
 M4 must not begin until M3 is recorded as APPROVED AND CLOSED. No domain work is authorised by this report.
