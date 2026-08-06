@@ -75,9 +75,9 @@ describe('Runtime brand mount', () => {
     const skipLink = document.querySelector('a[href="#main-content"]');
     expect(skipLink).not.toBeNull();
 
-    const focusable = Array.from(document.querySelectorAll('a[href]'));
+    const focusable = Array.from(document.querySelectorAll('a[href], button:not([disabled])'));
     expect(focusable.indexOf(skipLink as Element)).toBe(0);
-    expect(focusable.indexOf(brandLink())).toBe(1);
+    expect(focusable.indexOf(brandLink())).toBeGreaterThan(0);
     expect(
       (skipLink as Element).compareDocumentPosition(brandLink()) & Node.DOCUMENT_POSITION_FOLLOWING
     ).toBeTruthy();
@@ -122,7 +122,8 @@ describe('Runtime brand mount', () => {
     });
 
     const banner = screen.getByRole('banner');
-    expect(screen.queryAllByRole('navigation')).toHaveLength(0);
+    expect(within(banner).queryAllByRole('navigation')).toHaveLength(0);
+    expect(banner.querySelectorAll('nav')).toHaveLength(0);
     expect(banner.querySelectorAll('[aria-live]')).toHaveLength(0);
     expect(document.querySelectorAll('#route-announcement')).toHaveLength(1);
     expect(document.querySelectorAll('[aria-live]')).toHaveLength(1);

@@ -1,0 +1,114 @@
+.information-bar {
+  background: var(--gc-disabled-surface);
+  border-block-end: 1px solid var(--gc-border-subtle);
+}
+
+.inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--gc-spacing-sm);
+  padding-block: var(--gc-spacing-xs);
+}
+
+.city {
+  margin: 0;
+  color: var(--gc-text-secondary);
+  font-size: 0.875rem;
+  line-height: var(--gc-line-height-body);
+}
+
+.disclosure {
+  min-inline-size: 44px;
+  min-block-size: 44px;
+  padding-inline: var(--gc-spacing-sm);
+  border: 1px solid var(--gc-border);
+  border-radius: 4px;
+  background: var(--gc-surface);
+  color: var(--gc-text-primary);
+  font-family: inherit;
+  font-size: 0.875rem;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: 2px solid var(--gc-focus-ring);
+    outline-offset: 2px;
+  }
+
+  @media (forced-colors: active) {
+    &:focus-visible {
+      outline: 2px solid;
+    }
+  }
+}
+
+.links {
+  display: none;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--gc-spacing-xs) var(--gc-spacing-md);
+  inline-size: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.links[data-expanded='true'] {
+  display: flex;
+}
+
+.item {
+  display: flex;
+}
+
+.link {
+  display: inline-flex;
+  align-items: center;
+  min-block-size: 44px;
+  color: var(--gc-text-secondary);
+  font-size: 0.875rem;
+  line-height: var(--gc-line-height-body);
+  text-decoration: none;
+
+  &:hover {
+    color: var(--gc-text-primary);
+    text-decoration: underline;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--gc-focus-ring);
+    outline-offset: 2px;
+  }
+
+  @media (forced-colors: active) {
+    &:focus-visible {
+      outline: 2px solid;
+    }
+  }
+}
+
+.link-current {
+  color: var(--gc-text-primary);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 0.25em;
+}
+
+@media (width >= 64rem) {
+  .inner {
+    flex-wrap: nowrap;
+    gap: var(--gc-spacing-md);
+  }
+
+  .disclosure {
+    display: none;
+  }
+
+  .links {
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: flex-end;
+    inline-size: auto;
+    margin-inline-start: auto;
+  }
+}

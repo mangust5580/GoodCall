@@ -474,11 +474,57 @@ M4-02A corrects both classes:
 - **The canonical Header remains unimplemented.** The banner is transitional scaffolding; M4-04 owns the real Header.
 - **The brand component and SVG asset contract are unchanged**: `BrandHomeLink` API, asset selection matrix, mask strategy, accessible name, all six SVG byte lengths and SHA-256 values, and the manifest `runtime-integrated` statuses.
 - Test suite: **746 tests across 41 files**. Bundle unchanged at raw 415.49 KB / gzip 124.67 KB.
-- M4-02A status at commit time: **IMPLEMENTED — AWAITING INDEPENDENT AUDIT AND CI**.
-- **M4-03 remains blocked** until exact-SHA green CI and independent audit both close.
+- M4-02A is **APPROVED AND CLOSED**: commit `b7be1bdccd03c72ad00bea0cc8653f8f8926e7c4`, GitHub Actions run **31079420627**, job **92544592644**, conclusion **success** — Vitest 746 passed in 41 files, Playwright **57 passed, 0 failed, 0 flaky** — and the independent audit approved it. M4-02 is closed through M4-02A.
+
+## Milestone State Note — M4-03 Information Bar (2026-08-06)
+
+### Stage identity
+
+- Stage: **M4-03 — Information Bar**.
+- Baseline SHA: `b7be1bdccd03c72ad00bea0cc8653f8f8926e7c4` (M4-02A closure commit).
+- The resulting M4-03 commit SHA cannot be embedded inside its own commit; it is recorded in the untracked stage handoff.
+
+### Added in M4-03
+
+```
+src/app/shell/information-bar/
+  information-bar-items.ts        typed service-link configuration resolved from the route registry
+  InformationBar.tsx              service navigation landmark, city context, disclosure, links
+  InformationBar.module.scss      neutral strip, responsive disclosure, focus and current-route styles
+  index.ts                        the @/app/shell/information-bar public boundary
+tests/app/shell/
+  information-bar-items.test.ts             configuration contract
+  information-bar.test.tsx                  component semantics and disclosure behaviour
+  information-bar-runtime-mount.test.tsx    real application route-tree integration
+tests/e2e/information-bar.spec.ts           production-preview responsive, keyboard and axe evidence
+```
+
+### Modified in M4-03
+
+```
+src/app/shell/RootLayout.tsx                          Information Bar mounted before the transitional banner
+tests/app/shell/brand-runtime-mount.test.tsx          two M4-02A assertions rescoped for the new landmark
+docs/05-implementation/m4-canonical-shell-report.md   M4-02A closure and the M4-03 section
+```
+
+### State at report time
+
+- The Information Bar is **application-shell owned** and published from `@/app/shell/information-bar`.
+- **Five route-safe service destinations** in canonical order — `/delivery-and-payment`, `/warranty-and-returns`, `/loyalty`, `/help`, `/contacts` — resolved at module load from the existing route registry. No route key, path, ID, route object or carrier page changed.
+- The city is **static display context**: visible `Москва`, programmatic `Текущий город: Москва`. There is **no city selector, no geolocation, no auto-detection, no persistence and no confirmation state**.
+- Exactly one navigation landmark named **`Сервисная навигация`**.
+- Below 64rem the city stays visible and the five links follow a single `Информация и помощь` disclosure, closed by default; at 64rem and above the links are inline and the disclosure button is hidden. One DOM instance serves both ranges, with no JavaScript viewport detection and no new breakpoint.
+- The bar is **not sticky**. The current service destination carries `aria-current="page"` with a non-colour-only treatment.
+- Root order: skip link → route announcement → pending announcement → Information Bar → transitional brand banner → `ScrollRestoration` → outlet. Skip link remains first focusable; exactly one banner, one `main#main-content` and one `h1` remain; the M1 title/focus/scroll/announcement lifecycle is unchanged.
+- **No primary Header implementation**, no Catalog control, Search, Compare, Favorites, Cart, Account, Footer or Newsletter.
+- No Shared UI API, dependency, lockfile, asset, brand, manifest, route, tooling or workflow change.
+- Test suite: **791 tests across 44 files**, up from 746 in 41. Bundle: raw **419.75 KB** / gzip **125.66 KB**.
+- Local checks pass, including `npm run check:full`. **Local E2E was not run** — the production-preview lifecycle belongs to CI or a user-owned preview.
+- **CI is pending at commit time**, and **user visual confirmation against RTE-001 is pending**.
+- **M4-04 is blocked** until M4-03 exact-SHA green CI, independent audit and user visual confirmation all close.
 
 ## Next Repository Modifications
 
 The current implementation milestone is **M4**, whose scope must be taken from the approved architecture and UI/component/responsive contracts.
 
-**M4-03 must not begin** until the M4-02 independent audit and its exact-SHA CI both close.
+**M4-04 must not begin** until the M4-03 exact-SHA CI, independent audit and user visual confirmation all close.

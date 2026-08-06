@@ -2,14 +2,15 @@
 
 ## Status
 
-| Task                                                                   | Status                                                |
-| ---------------------------------------------------------------------- | ----------------------------------------------------- |
-| M4-01 — Shell destination safety and composition boundary              | **CLOSED THROUGH M4-01A**                             |
-| M4-01A — Catalog family catch-all correction and CI reconciliation     | **APPROVED AND CLOSED**                               |
-| M4-02 — Runtime brand/logo integration                                 | **CI FAILED ON ITS EXACT SHA — SUPERSEDED BY M4-02A** |
-| M4-02A — Brand landmark accessibility correction and E2E stabilization | **IMPLEMENTED — AWAITING INDEPENDENT AUDIT AND CI**   |
+| Task                                                                   | Status                                                                        |
+| ---------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| M4-01 — Shell destination safety and composition boundary              | **CLOSED THROUGH M4-01A**                                                     |
+| M4-01A — Catalog family catch-all correction and CI reconciliation     | **APPROVED AND CLOSED**                                                       |
+| M4-02 — Runtime brand/logo integration                                 | **CLOSED THROUGH M4-02A**                                                     |
+| M4-02A — Brand landmark accessibility correction and E2E stabilization | **APPROVED AND CLOSED**                                                       |
+| M4-03 — Information Bar                                                | **IMPLEMENTED — AWAITING INDEPENDENT AUDIT, CI AND USER VISUAL CONFIRMATION** |
 
-M4 is not approved and not closed. No canonical shell surface exists yet: Header, Footer, Information Bar, Newsletter, Search and Catalog UI all remain later stages.
+M4 is not approved and not closed. The Information Bar is the first canonical shell surface; the primary Header, Footer, Newsletter, Search and Catalog UI all remain later stages, and the brand banner remains transitional until M4-04.
 
 ## M4-01 — Shell destination safety and composition boundary
 
@@ -469,7 +470,9 @@ Superseded. CI failed for `c234ad8d…`, so M4-02 alone is not an implementation
 
 ## M4-02A — Brand landmark accessibility correction and E2E stabilization
 
-**Status at commit time: IMPLEMENTED — AWAITING INDEPENDENT AUDIT AND CI**
+**Status: APPROVED AND CLOSED**
+
+Closure evidence: commit `b7be1bdccd03c72ad00bea0cc8653f8f8926e7c4`, GitHub Actions run **31079420627**, job **92544592644**, conclusion **success** — Vitest 746 passed in 41 files, Playwright **57 passed, 0 failed, 0 flaky** (flaky count confirmed from the full job log). All five previously blocking axe `region` scenarios passed, and both previously flaky focus scenarios passed without retry. The independent audit returned **approved**. M4-02 is closed through M4-02A.
 
 ### Baseline
 
@@ -569,4 +572,158 @@ None. The diff is limited to the expected minimal set, `Shell.module.scss` neede
 
 ### Next gate
 
-Green GitHub Actions CI on the exact M4-02A SHA with zero failed and zero flaky Playwright tests, then independent diff audit. **M4-03 must not begin until both close.**
+Closed. CI passed for `b7be1bdc…` with zero failed and zero flaky tests, and the independent audit approved it, which unblocked M4-03.
+
+## M4-03 — Information Bar
+
+**Status at commit time: IMPLEMENTED — AWAITING INDEPENDENT AUDIT, CI AND USER VISUAL CONFIRMATION**
+
+### Baseline
+
+| Item                                 | Value                                      |
+| ------------------------------------ | ------------------------------------------ |
+| Branch                               | `main`                                     |
+| Baseline SHA                         | `b7be1bdccd03c72ad00bea0cc8653f8f8926e7c4` |
+| Baseline commit                      | `fix(shell): contain brand link in banner` |
+| `git rev-parse HEAD` / `origin/main` | both matched the baseline before changes   |
+| `git diff` / `git diff --cached`     | exit 0 — clean                             |
+
+### Visual evidence
+
+| Item       | Value                                                               |
+| ---------- | ------------------------------------------------------------------- |
+| Design ID  | RTE-001 — Home                                                      |
+| Local path | `artifacts/m4-03/references/RTE-001.png` (untracked, not committed) |
+| Dimensions | 1920 × 3840                                                         |
+| Format     | PNG, 8-bit, colour type 6 (RGBA)                                    |
+| Bytes      | 5 438 232                                                           |
+| SHA-256    | `cb943e0b5b525645ede341c53fb6bff7eca714a69b62c042db23d62feb7bdd64`  |
+
+The top strip was cropped at full resolution and inspected. It shows a persistent thin neutral service strip above the primary Header, with the city at the far left, utility items distributed across the width, muted compact type, and a subtle divider separating it from the Header below. It was used for hierarchy, density, spacing and proportion only.
+
+**Recorded discrepancy.** The raster's middle items are promotional claims — free delivery above a threshold, official warranty, loyalty programme — rather than the canonical service destinations. Those claims are not approved canonical fixtures, so the implementation follows the canonical contract (five navigational service links) and not the raster's copy. The raster also carries a small location-pin glyph next to the city; no approved shell icon source exists, so M4-03 is text-only.
+
+### Canonical content and routes
+
+City context is display-only: visible text `Москва`, with the programmatic context `Текущий город: Москва` supplied by a visually hidden prefix so the accessible name is not duplicated. The city is a `<p>` — not a button, link, combobox or inert pseudo-control.
+
+| Order | Visible label        | Route key                        | Resolved path           |
+| ----- | -------------------- | -------------------------------- | ----------------------- |
+| 1     | Доставка и оплата    | `information.deliveryAndPayment` | `/delivery-and-payment` |
+| 2     | Гарантия и возврат   | `help.warrantyReturns`           | `/warranty-and-returns` |
+| 3     | Программа лояльности | `loyalty.program`                | `/loyalty`              |
+| 4     | Помощь               | `help.faq`                       | `/help`                 |
+| 5     | Контакты             | `company.contacts`               | `/contacts`             |
+
+Destinations are resolved at module load through `getRouteMetadata()` from the existing route registry. The resolver rejects an unregistered key, the catch-all, any dynamic path, any non-app-relative path, any repository literal and any duplicate destination. No path literal appears in the configuration, so there is no second route registry and no destination is built by string concatenation.
+
+### Component ownership and public boundary
+
+`src/app/shell/information-bar/` publishes `InformationBar` through `@/app/shell/information-bar`. It is application-shell owned — not Shared UI, not route-domain — and the service-link array is not exported as a general Shared UI API. `PageContainer` and `VisuallyHidden` are consumed through the existing Shared UI barrel; no Shared UI API was changed.
+
+### Responsive disclosure strategy
+
+One DOM instance of each link serves both ranges. There is no duplicated compact/desktop list, no `matchMedia`, no resize listener, no `window.innerWidth` read and no new breakpoint.
+
+- Below **64rem**: the panel is `display: none` unless `data-expanded="true"`, so closed links are neither visible nor tabbable; the disclosure button is visible.
+- At **64rem and above**: CSS displays the same panel regardless of component state and hides the disclosure button.
+
+State lives in a component-local `useState`, exposed to CSS through a `data-expanded` attribute rather than the `hidden` attribute, precisely so the wide range can reveal the same panel without JavaScript viewport logic.
+
+### Landmark and disclosure semantics
+
+- Exactly one navigation landmark, `PageContainer as="nav"` with `aria-label="Сервисная навигация"`. All Information Bar content — including the city — lives inside it, which avoids recreating the axe `region` defect corrected in M4-02A.
+- The disclosure is a native `<button type="button">` labelled `Информация и помощь`, closed initially, carrying `aria-expanded` and `aria-controls` pointing at one stable `useId()` panel ID.
+- Enter and Space work through native button behaviour. Opening and closing leave focus on the button. There is no focus trap, no click-outside requirement, no hover-only access, no ARIA menu semantics, no dialog and no popover.
+- Current-route indication uses React Router `NavLink`, which sets `aria-current="page"` on the active destination. The treatment is not colour-only: the current link also gains an underline and a heavier weight, and the link text is unchanged.
+- No live region was added; the single route announcement remains the only one.
+- The bar is not sticky and not fixed.
+
+### Root composition
+
+`RootLayout` order is: skip link → route-announcement region → delayed pending-announcement region → **Information Bar** → transitional brand banner → `ScrollRestoration` → route outlet.
+
+The skip link remains the first focusable control, Information Bar controls precede the brand Home link in keyboard order, and exactly one banner, one `main#main-content` and one canonical `h1` remain. `BrandHomeLink` was not moved and the transitional banner was not converted into the canonical Header. Title, focus, scroll and announcement ownership are unchanged.
+
+### Visual character
+
+A full-width neutral strip on `--gc-disabled-surface` with a `--gc-border-subtle` bottom divider, inner content constrained by the existing `PageContainer`, 0.875rem muted type, city first, links reading as utility navigation. No promotional weight, no dark permanent city bar, no elevated card, no shadow, no gradient, no sticky treatment. Only existing semantic tokens are used; no global shell token was extracted.
+
+**Accessibility over raster density.** The 44px target contract makes the bar taller than the raster's strip. The visual thinness is preserved through small type and minimal padding, but the target contract wins where the two conflict.
+
+### Files changed
+
+| File                                                       | Change                                                      |
+| ---------------------------------------------------------- | ----------------------------------------------------------- |
+| `src/app/shell/information-bar/information-bar-items.ts`   | new — typed registry-resolved service-link configuration    |
+| `src/app/shell/information-bar/InformationBar.tsx`         | new — landmark, city context, disclosure, service links     |
+| `src/app/shell/information-bar/InformationBar.module.scss` | new — neutral strip, responsive disclosure, focus, current  |
+| `src/app/shell/information-bar/index.ts`                   | new — `@/app/shell/information-bar` boundary                |
+| `src/app/shell/RootLayout.tsx`                             | mount before the transitional banner                        |
+| `tests/app/shell/information-bar-items.test.ts`            | new — configuration contract                                |
+| `tests/app/shell/information-bar.test.tsx`                 | new — component semantics and disclosure behaviour          |
+| `tests/app/shell/information-bar-runtime-mount.test.tsx`   | new — real route-tree integration                           |
+| `tests/app/shell/brand-runtime-mount.test.tsx`             | two M4-02A assertions rescoped for the new landmark         |
+| `tests/e2e/information-bar.spec.ts`                        | new — production-preview responsive, keyboard, axe evidence |
+| `docs/05-implementation/m4-canonical-shell-report.md`      | M4-02A closure; this section                                |
+| `docs/05-implementation/repository-state.md`               | current-state note                                          |
+
+`Shell.module.scss` needed no change. No route, Shared UI, brand, asset, manifest, dependency, tooling or workflow change.
+
+### Tests
+
+Configuration coverage asserts five descriptors in canonical order with exact labels and route keys, registry-resolved paths, no dynamic or catch-all destination, no repository literal or browser-root URL, unique keys and destinations, no second registry and no concatenated path.
+
+Component coverage asserts the landmark name and containment, visible city text, the `Текущий город: Москва` programmatic context without duplication, city non-interactivity, native button semantics, closed initial state, `aria-expanded`/`aria-controls`, pointer and Enter and Space activation, focus remaining on the button, five links rendered once in canonical order with exact destinations, `aria-current="page"` on the current service route, a non-colour-only current treatment, no current link on unrelated or non-service routes, and no live region or ARIA menu semantics.
+
+Root integration coverage runs against `createApplicationRoutes()` on Home and a service carrier: one service navigation, one banner, one brand link, one `main`, one `h1`, Information Bar before the banner in DOM order, skip link before Information Bar focusables, brand link after them, unchanged titles, service navigation reaching the carrier with heading focus through the M1 lifecycle, and no duplicate announcement owner.
+
+E2E covers compact 320px closed state, the compact keyboard sequence, the opened compact panel with 44px targets, the four disclosure-mode widths (767, 768, 769, 1023) and four inline widths (1024, 1025, 1280, 1440), expanded city-first ordering and separation from the banner, base-safe navigation with hard refresh, a second destination through the disclosure, a coarse-pointer tap path using per-test context options, axe in wide/closed/open/current-route states, and forced-colors focus and current-state perceivability.
+
+### Local verification
+
+| Command                  | Result                                         |
+| ------------------------ | ---------------------------------------------- |
+| `npm run typecheck`      | PASS                                           |
+| `npm run lint`           | PASS — 0 errors, 0 warnings                    |
+| `npm run lint:styles`    | PASS                                           |
+| `npm run format:check`   | PASS                                           |
+| `npm run check:comments` | PASS                                           |
+| `npm test`               | PASS — **791 tests in 44 files**               |
+| `npm run build`          | PASS — 238 modules                             |
+| `npm run validate:build` | PASS                                           |
+| `npm run check:full`     | PASS — includes the bounded dev-bootstrap gate |
+| `git diff --check`       | PASS                                           |
+
+Bundle moves from raw 415.49 KB / gzip 124.67 KB to raw **419.75 KB** / gzip **125.66 KB**.
+
+Intentionally not run: `npm run dev`, `npm run preview`, `npm run test:e2e`, `playwright test`, `vite`, `vite preview`, `npm run review:m3-browser`, and any background or fixed-port server. CI was pending at commit time, and user visual confirmation against RTE-001 remains pending.
+
+### Rejected variants
+
+- **Reproducing the raster's promotional claims** — free-delivery and warranty claims are not approved canonical fixtures.
+- **A city selector, geolocation, persistence or confirmation banner** — explicitly out of scope; the city is display context only in M4-03.
+- **Duplicated compact and desktop link lists** — two DOM copies of the same destinations, and a second thing to keep in canonical order.
+- **`matchMedia` or a resize listener driving layout state** — JavaScript viewport detection where CSS ranges already express the contract.
+- **The `hidden` attribute on the link panel** — would block the wide range from revealing the same panel without JavaScript viewport logic.
+- **ARIA menu, dialog or popover semantics** — a disclosure is the correct pattern for a list of links.
+- **Extracting a Shared UI disclosure primitive** — premature for one application-shell consumer.
+- **Widening the Shared UI `Link` API for `aria-current`** — a local `NavLink` inside the shell boundary already provides it.
+- **Adding a location-pin icon** — no approved shell icon source exists in the repository.
+- **A sticky or dark permanent city bar** — contradicts the neutral subordinate strip and the obsolete RTE-003 direction.
+
+### Deviations
+
+One. `tests/app/shell/brand-runtime-mount.test.tsx` is outside the expected file list. Two M4-02A assertions encoded the pre-M4-03 shell exactly: the brand link was asserted to be focusable index `1`, and the document was asserted to contain zero navigation landmarks. M4-03 deliberately inserts a named navigation landmark and its controls between the skip link and the brand link, so both assertions became false by design. They were rescoped rather than weakened — the brand link must still follow the skip link in DOM and focus order, and the **banner** must still contain no navigation landmark and no live region.
+
+### Risks
+
+- User visual confirmation against RTE-001 is outstanding; the strip's proportion relative to the future Header cannot be finally judged until M4-04 exists.
+- The 44px target contract makes the bar taller than the raster strip. If the visual review rejects the density, the resolution is a design decision about target size, not a silent reduction below the contract.
+- The bar is text-only. If an approved shell icon source appears later, the city may gain its pin glyph.
+- Wide-range links are right-aligned after the city, matching the raster's distribution loosely rather than exactly; exact horizontal distribution belongs with the Header composition in M4-04.
+- `scripts/review-m3-browser.mjs` still asserts no image asset and a specific tab order; it is milestone-review tooling for a closed milestone, is not a CI gate, and was deliberately left unchanged.
+
+### Next gate
+
+Green GitHub Actions CI on the exact M4-03 SHA with zero failed and zero flaky Playwright tests, then independent diff audit, then user visual confirmation against the original RTE-001. **M4-04 must not begin until all three close.**
