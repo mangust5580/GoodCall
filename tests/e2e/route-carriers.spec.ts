@@ -69,7 +69,7 @@ test.describe('M4-01 route carriers', () => {
       await expect(page.getByText(CARRIER_NOTICE)).toBeVisible();
       await expect(heading).not.toHaveText('Page not found');
 
-      const homeLink = page.getByRole('link', { name: HOME_LINK_LABEL });
+      const homeLink = page.getByRole('link', { name: HOME_LINK_LABEL, exact: true });
       await expect(homeLink).toBeVisible();
       await expect(homeLink).toHaveAttribute('href', '/GoodCall/');
 
@@ -92,7 +92,7 @@ test.describe('M4-01 route carriers', () => {
     await page.goto('/GoodCall/promotions');
     await expect(page.locator('h1')).toHaveText('Акции');
 
-    await page.getByRole('link', { name: HOME_LINK_LABEL }).click();
+    await page.getByRole('link', { name: HOME_LINK_LABEL, exact: true }).click();
 
     await expect(page).toHaveURL('/GoodCall/');
     await expect(page.locator('h1')).toContainText('GoodCall');
@@ -102,7 +102,7 @@ test.describe('M4-01 route carriers', () => {
     await page.goto('/GoodCall/search');
     await expect(page.locator('h1')).toHaveText('Поиск');
 
-    await page.getByRole('link', { name: HOME_LINK_LABEL }).click();
+    await page.getByRole('link', { name: HOME_LINK_LABEL, exact: true }).click();
     await expect(page).toHaveURL('/GoodCall/');
 
     const headingFocused = await page.evaluate(

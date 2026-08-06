@@ -144,6 +144,8 @@ The assets are tracked and approved but not consumed. This task implements no He
 
 Actual runtime usage belongs to the M4 canonical shell or another explicitly approved component milestone. Any future integration must select a context-appropriate primary, inverse or monochrome asset, and the minimum sizes and clear-space rule remain mandatory.
 
+**Superseded:** this section describes the state during M2B. Runtime consumption began in M4-02 — see the [M4-02 runtime integration addendum](#addendum--m4-02-runtime-integration-2026-08-06). The minimum sizes and the clear-space rule remain mandatory.
+
 ## Validation And Tests
 
 Serverless contract test: `tests/brand-assets.test.ts` (50 assertions across the six assets).
@@ -214,8 +216,42 @@ Asset design approval is not a blocker; the asset family is already approved.
 
 M3 has not started. M4 owns the canonical shell and is the earliest milestone permitted to consume these assets at runtime, unless another component milestone is explicitly approved first.
 
+## Addendum — M4-02 Runtime Integration (2026-08-06)
+
+**This addendum records work performed during M4-02, not during M2B.** Everything above describes the M2B implementation, when the six approved assets were tracked and deliberately **not** consumed by any runtime component. That remained true for the whole of M2B and M3.
+
+M4-02 is the first stage to consume them at runtime.
+
+### What M4-02 integrated
+
+- An application-owned component, `BrandHomeLink`, published from `src/app/shell/brand`. It is not a Shared UI primitive, not a route-domain component, and is not exported from `src/shared/ui`.
+- **All six approved lockup/variant combinations** are reachable through a typed, exhaustive selection table: horizontal and symbol × primary, inverse and monochrome. Filenames are never derived by string concatenation; each asset is a distinct Vite module import.
+- The **primary horizontal** asset is the current runtime baseline and the only variant mounted today.
+- Inverse, monochrome and symbol variants are integrated and unit-tested but **not yet placed by a final consumer**. Placement inside the canonical Header and Footer remains later M4 work.
+
+### Accessible-name ownership
+
+The consuming component owns exactly one accessible name — `GoodCall — на главную` — declared on the link. The visual is decorative inside that link: images carry `alt=""`, the monochrome mask element carries `aria-hidden="true"`, no `<title>` is introduced, and no adjacent visible text duplicates the spoken name. The SVG files themselves still contain no accessible names, exactly as M2B specified.
+
+### Monochrome currentColor strategy
+
+Rendering the monochrome asset through an ordinary external `<img>` would have prevented inheritance and made the "consumer-owned `currentColor`" contract untrue in practice. Instead the monochrome variants render as a CSS mask over the immutable approved asset URL: `mask-image` references the Vite-imported asset and `background-color: currentcolor` supplies the visible colour. Asset bytes and geometry are unchanged, no replacement colour is hardcoded, no SVG paths are recreated inline, no `dangerouslySetInnerHTML` is used, and no dependency was added.
+
+Primary and inverse variants render as imported `<img>` resources.
+
+### Asset integrity
+
+**All six SHA-256 values and byte sizes are unchanged**, and the existing hash, geometry and forbidden-markup assertions in `tests/brand-assets.test.ts` remain intact. Only the manifest `integrationStatus` assertion changed, from `tracked-not-yet-consumed` to `runtime-integrated`.
+
+One build behaviour worth recording: Vite inlines assets below its 4 KB threshold, so the three symbol SVGs (726–736 bytes) are emitted as `data:` URIs while the three horizontal logos are emitted as files — byte-identical to source at 10208, 10208 and 10223 bytes. Inlining URL-encodes the markup and normalises attribute quoting; it changes no geometry, no fill and no viewBox. Tests verify the runtime asset against the approved source geometry rather than against a filename, so integrity is asserted in both forms.
+
+### Manifest changes
+
+Every entry now reports `integrationStatus: runtime-integrated`. The stale risk _"not yet consumed by any runtime component"_ was removed and replaced with _"placement inside the canonical Header and Footer remains later M4 work"_. Context-specific risks are preserved: inverse requires an approved dark surface, monochrome contrast belongs to the consumer, and symbol use remains restricted to constrained contexts. Approved hashes, byte sizes, geometry, viewBoxes, path counts, fill strategies, production paths and approval fields are untouched.
+
 ## See Also
 
+- [M4 Canonical Application Shell Report](m4-canonical-shell-report.md)
 - [M2B Brand Asset Manifest](m2-brand-asset-manifest.json)
 - [M2A Foundations Report](m2-foundations-report.md)
 - [M2A Asset Intake Handoff](m2-asset-intake.md)

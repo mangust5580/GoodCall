@@ -410,11 +410,58 @@ M4-01A corrects it: `catalog-family` becomes a pathless grouping route that keep
 
 - **`/catalog` remains intentionally unregistered** — no route, redirect, index page or carrier. It resolves to the existing catch-all.
 - **`/catalog/laptops` remains valid** and unchanged, through the same route ID, lazy module and loader.
-- M4-01A status at commit time: **IMPLEMENTED — AWAITING INDEPENDENT AUDIT AND CI**.
-- **M4-02 stays blocked** until exact-SHA green CI and independent audit both close.
+- M4-01A is **APPROVED AND CLOSED**: commit `ec1b113a30c64a6da9175b99e24199cf51b5af27`, GitHub Actions run **31076416986**, job **92535335985**, conclusion **success** — Vitest 697 passed in 39 files, Playwright 49 passed — and the independent audit approved it. M4-01 is closed through M4-01A.
+
+## Milestone State Note — M4-02 Runtime Brand Integration (2026-08-06)
+
+### Stage identity
+
+- Stage: **M4-02 — Runtime brand/logo integration**.
+- Baseline SHA: `ec1b113a30c64a6da9175b99e24199cf51b5af27` (M4-01A closure commit).
+- The resulting M4-02 commit SHA cannot be embedded inside its own commit; it is recorded in the untracked stage handoff.
+
+### Added in M4-02
+
+```
+src/app/shell/brand/
+  brand-assets.ts                 typed exhaustive selection over the six approved imports
+  BrandHomeLink.tsx               named Home link with a decorative brand visual
+  BrandHomeLink.module.scss       sizing minimums, contain fit, mask and focus styles
+  index.ts                        the @/app/shell/brand public boundary
+tests/app/shell/
+  brand-home-link.test.tsx        component contract across all six combinations
+  brand-runtime-mount.test.tsx    mount behaviour against the real application route tree
+tests/e2e/brand-home-link.spec.ts production-preview brand evidence
+```
+
+### Modified in M4-02
+
+```
+src/app/shell/RootLayout.tsx                          transitional brand slot after the skip link
+src/app/shell/Shell.module.scss                       transitional slot padding
+tests/brand-assets.test.ts                            integration-status assertion only
+tests/e2e/route-carriers.spec.ts                      carrier Home-link lookups made exact
+docs/05-implementation/m2-brand-asset-manifest.json   runtime-integrated; stale risk replaced
+docs/05-implementation/m2-brand-assets-report.md      M4 runtime-integration addendum
+docs/05-implementation/m4-canonical-shell-report.md   M4-01A closure and the M4-02 section
+```
+
+### State at report time
+
+- The runtime brand boundary is **application-shell owned** and published from `@/app/shell/brand`. It is not exported from `src/shared/ui`.
+- **All six approved lockup/variant combinations** — horizontal and symbol × primary, inverse and monochrome — are integrated through a typed exhaustive selection table and covered by unit tests.
+- The **primary horizontal** variant is the current runtime mount: exactly one brand Home link, in a transitional `RootLayout` slot after the skip link, with the accessible name `GoodCall — на главную`.
+- Monochrome variants render through a CSS mask so the visible colour resolves from the consumer's `currentColor`; primary and inverse render as imported images.
+- **All six SVG byte sizes and SHA-256 values are unchanged**, and the existing hash, geometry and forbidden-markup assertions remain intact.
+- **No Header, Footer, Information Bar, Newsletter, Search or Catalog UI** exists. The transitional slot is scaffolding; M4-04 will relocate the component into the canonical Header and M4-07 may reuse it in the Footer.
+- No Shared UI API change, no dependency or lockfile change, no tooling, Vite, Playwright or workflow change, and no route inventory or routing-lifecycle change.
+- Test suite: **742 tests across 41 files**, up from 697 in 39. Bundle: raw **415.49 KB** / gzip **124.67 KB**.
+- Local checks pass, including `npm run check:full`. **Local E2E was not run** — the production-preview lifecycle belongs to CI or a user-owned preview.
+- **CI is pending at commit time.** No GitHub Actions result is claimed for the M4-02 commit here.
+- **M4-03 is blocked** until M4-02 passes exact-SHA green CI and independent audit.
 
 ## Next Repository Modifications
 
 The current implementation milestone is **M4**, whose scope must be taken from the approved architecture and UI/component/responsive contracts.
 
-**M4-02 must not begin** until the M4-01 independent audit and its exact-SHA CI both close.
+**M4-03 must not begin** until the M4-02 independent audit and its exact-SHA CI both close.

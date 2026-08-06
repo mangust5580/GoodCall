@@ -2,12 +2,13 @@
 
 ## Status
 
-| Task                                                               | Status                                                |
-| ------------------------------------------------------------------ | ----------------------------------------------------- |
-| M4-01 — Shell destination safety and composition boundary          | **CI FAILED ON ITS EXACT SHA — SUPERSEDED BY M4-01A** |
-| M4-01A — Catalog family catch-all correction and CI reconciliation | **IMPLEMENTED — AWAITING INDEPENDENT AUDIT AND CI**   |
+| Task                                                               | Status                                              |
+| ------------------------------------------------------------------ | --------------------------------------------------- |
+| M4-01 — Shell destination safety and composition boundary          | **CLOSED THROUGH M4-01A**                           |
+| M4-01A — Catalog family catch-all correction and CI reconciliation | **APPROVED AND CLOSED**                             |
+| M4-02 — Runtime brand/logo integration                             | **IMPLEMENTED — AWAITING INDEPENDENT AUDIT AND CI** |
 
-M4 is not approved and not closed. No canonical shell surface exists yet.
+M4 is not approved and not closed. No canonical shell surface exists yet: Header, Footer, Information Bar, Newsletter, Search and Catalog UI all remain later stages.
 
 ## M4-01 — Shell destination safety and composition boundary
 
@@ -181,7 +182,9 @@ Superseded. CI failed for `dcf5008…`, so M4-01 alone is not an implementation 
 
 ## M4-01A — Catalog family catch-all correction and CI reconciliation
 
-**Status at commit time: IMPLEMENTED — AWAITING INDEPENDENT AUDIT AND CI**
+**Status: APPROVED AND CLOSED**
+
+Closure evidence: commit `ec1b113a30c64a6da9175b99e24199cf51b5af27`, GitHub Actions run **31076416986**, job **92535335985**, conclusion **success** — every step green including `E2E tests` (Vitest 697 passed in 39 files, Playwright 49 passed). The independent audit returned **approved**. M4-01 is closed through M4-01A.
 
 ### Baseline
 
@@ -281,4 +284,152 @@ Additionally, `tests/routing/route-carriers.integration.test.tsx` was changed be
 
 ### Next gate
 
-Green GitHub Actions CI on the exact M4-01A SHA, then independent diff audit. **M4-02 must not begin until both close.**
+Closed. CI passed for `ec1b113a…` and the independent audit approved it, which unblocked M4-02.
+
+## M4-02 — Runtime brand/logo integration
+
+**Status at commit time: IMPLEMENTED — AWAITING INDEPENDENT AUDIT AND CI**
+
+### Baseline
+
+| Item                                 | Value                                      |
+| ------------------------------------ | ------------------------------------------ |
+| Branch                               | `main`                                     |
+| Baseline SHA                         | `ec1b113a30c64a6da9175b99e24199cf51b5af27` |
+| Baseline commit                      | `fix(routing): restore catalog catch-all`  |
+| `git rev-parse HEAD` / `origin/main` | both matched the baseline before changes   |
+| `git diff` / `git diff --cached`     | exit 0 — clean                             |
+
+### Architecture and public API
+
+The brand boundary is application-shell owned and published from `src/app/shell/brand`. Header and Footer stages will later import it through `@/app/shell/brand`. It is deliberately **not** exported from `src/shared/ui`, and is not a route-domain component.
+
+```
+export type BrandLockup = 'horizontal' | 'symbol';
+export type BrandVariant = 'primary' | 'inverse' | 'monochrome';
+
+export interface BrandHomeLinkProps {
+  lockup?: BrandLockup;
+  variant?: BrandVariant;
+  className?: string;
+}
+```
+
+Defaults are `lockup="horizontal"` and `variant="primary"`. The props surface is deliberately narrow: there is no custom destination, no custom accessible label, no custom SVG markup, no arbitrary children, no geometry transform, no raw asset path and no free-form size that could bypass the approved minimums.
+
+The component renders a direct React Router `Link` inside the application-owned boundary, because the Shared UI `Link` does not expose a consumer-owned `aria-label` and its API was not changed for this GoodCall-specific component.
+
+### Asset selection
+
+A typed `Record<BrandLockup, Record<BrandVariant, BrandAsset>>` makes the mapping exhaustive — TypeScript rejects a missing combination — and every asset is a distinct Vite module import, so no filename is ever derived by concatenation.
+
+| Lockup     | Variant    | Production path                                   | Rendering |
+| ---------- | ---------- | ------------------------------------------------- | --------- |
+| horizontal | primary    | `src/assets/brand/goodcall-logo.svg`              | image     |
+| horizontal | inverse    | `src/assets/brand/goodcall-logo-inverse.svg`      | image     |
+| horizontal | monochrome | `src/assets/brand/goodcall-logo-monochrome.svg`   | mask      |
+| symbol     | primary    | `src/assets/brand/goodcall-symbol.svg`            | image     |
+| symbol     | inverse    | `src/assets/brand/goodcall-symbol-inverse.svg`    | image     |
+| symbol     | monochrome | `src/assets/brand/goodcall-symbol-monochrome.svg` | mask      |
+
+Vite inlines assets under its 4 KB threshold, so the three symbol SVGs (726–736 bytes) resolve to `data:` URIs while the three horizontal logos are emitted as files, byte-identical to source. Both forms are base-safe under `/GoodCall/`; the data URI needs no base, and the emitted file URL carries it.
+
+### Monochrome rendering strategy
+
+Rendering the monochrome asset as an ordinary external `<img>` would have made the "consumer-owned `currentColor`" contract untrue, because an external image cannot inherit colour from its link context. The monochrome variants therefore render as a CSS mask: `mask-image` points at the imported approved asset through a custom property, and `background-color: currentcolor` supplies the visible colour, so the logo genuinely resolves from the consumer's `currentColor`.
+
+Asset bytes and geometry are unchanged, no replacement colour is hardcoded, no SVG paths are recreated inline, `dangerouslySetInnerHTML` is not used, and no dependency was added. The mask element stays decorative inside the named link.
+
+### Transitional runtime mount
+
+`RootLayout` renders exactly one default `BrandHomeLink` in a plain `div` slot placed after the skip link and live regions and before `ScrollRestoration` and the route outlet. The slot is **not** wrapped in `header`, `nav`, `main` or any other landmark, has no role, no route-aware visibility, no sticky behaviour and no breakpoint-specific behaviour.
+
+This is implementation scaffolding for M4-02 only. M4-04 will relocate the same public component into the canonical Header, and M4-07 may reuse it in the Footer. It is deliberately not a partial Header.
+
+### Accessibility contract
+
+- The link owns exactly one accessible name: `GoodCall — на главную`.
+- The internal visual is decorative — `alt=""` for images, `aria-hidden="true"` for the mask — and contributes no second accessible name. No `<title>` is introduced and no adjacent visible text duplicates the spoken name.
+- The skip link remains the first focusable control; the brand link is second.
+- No landmark and no live region were added, and route focus, title, scroll and announcement ownership are unchanged.
+- Each route still owns one `main#main-content` and one canonical `h1`.
+- The link carries a `min-inline-size`/`min-block-size` of 44px, and its focus indicator is an outline that survives forced colors and does not depend on asset colour.
+- The horizontal asset never renders below 120px and the symbol never below 16px; both preserve aspect ratio with a `contain` fit, and neither uses transforms or negative margins.
+
+### Files changed
+
+| File                                                  | Change                                                               |
+| ----------------------------------------------------- | -------------------------------------------------------------------- |
+| `src/app/shell/brand/brand-assets.ts`                 | new — typed exhaustive asset selection over the six approved imports |
+| `src/app/shell/brand/BrandHomeLink.tsx`               | new — the named Home link with decorative visual                     |
+| `src/app/shell/brand/BrandHomeLink.module.scss`       | new — sizing, minimums, contain fit, mask and focus styles           |
+| `src/app/shell/brand/index.ts`                        | new — the `@/app/shell/brand` public boundary                        |
+| `src/app/shell/RootLayout.tsx`                        | transitional brand slot after the skip link                          |
+| `src/app/shell/Shell.module.scss`                     | transitional slot padding                                            |
+| `tests/app/shell/brand-home-link.test.tsx`            | new — component contract across all six combinations                 |
+| `tests/app/shell/brand-runtime-mount.test.tsx`        | new — mount behaviour against the real application route tree        |
+| `tests/brand-assets.test.ts`                          | integration-status assertion only                                    |
+| `tests/e2e/route-carriers.spec.ts`                    | carrier Home-link lookups made exact                                 |
+| `tests/e2e/brand-home-link.spec.ts`                   | new — production-preview brand evidence                              |
+| `docs/05-implementation/m2-brand-asset-manifest.json` | `runtime-integrated`; stale "not consumed" risk replaced             |
+| `docs/05-implementation/m2-brand-assets-report.md`    | M4 runtime-integration addendum                                      |
+| `docs/05-implementation/m4-canonical-shell-report.md` | M4-01A closure; this section                                         |
+| `docs/05-implementation/repository-state.md`          | current-state note                                                   |
+
+No SVG byte change, no new asset, no dependency or lockfile change, no Shared UI API change, no Vite/Playwright/workflow configuration change, and no Header, Footer, Information Bar, Newsletter, Search or Catalog UI.
+
+### Tests
+
+Component coverage asserts the destination, the exact accessible name, the absence of a second accessible name, the horizontal-primary default, every one of the six selections, the image-versus-mask strategy, the `currentColor` mask contract, the absence of inline SVG reconstruction, the 120px/16px/44px sizing contracts, aspect-ratio and contain fit, the focus indicator, consumer `className` passthrough, and that the component is absent from the Shared UI barrel.
+
+Asset assertions compare the runtime URL against the **approved source geometry** — decoding inlined data URIs and matching viewBox and every path `d` value — rather than trusting a filename, so integrity holds in both emission forms.
+
+Mount coverage runs against `createApplicationRoutes()`, the production route objects, on Home and a carrier route: exactly one brand link, one `main`, one `h1`, unchanged route titles, the brand link outside `main`, skip link first in DOM and focus order, no added landmark or live region, navigation back to Home, and no collision with the carrier's own `На главную` link.
+
+E2E adds production-preview evidence for the mounted horizontal primary logo: the named link with `href="/GoodCall/"`, a rendered visual at or above 120px, preserved aspect ratio and `contain` fit, navigation from a carrier back to Home, skip link still first focusable, 320px compact reflow with a 44px target and no page overflow, 1440px containment, and a visible focus indicator under forced colors — asserted structurally, not by colour value.
+
+### Local verification
+
+| Command                  | Result                                         |
+| ------------------------ | ---------------------------------------------- |
+| `npm run typecheck`      | PASS                                           |
+| `npm run lint`           | PASS — 0 errors, 0 warnings                    |
+| `npm run lint:styles`    | PASS                                           |
+| `npm run format:check`   | PASS                                           |
+| `npm run check:comments` | PASS                                           |
+| `npm test`               | PASS — **742 tests in 41 files**               |
+| `npm run build`          | PASS — 234 modules, brand family processed     |
+| `npm run validate:build` | PASS                                           |
+| `npm run check:full`     | PASS — includes the bounded dev-bootstrap gate |
+| `git diff --check`       | PASS                                           |
+
+Bundle moves from raw 410.20 KB / gzip 123.43 KB to raw **415.49 KB** / gzip **124.67 KB**, which is the cost of the inlined symbol data URIs and the brand styles. The three horizontal logos are emitted to `dist/assets` at 10208, 10208 and 10223 bytes — byte-identical to source.
+
+### E2E and CI status
+
+Local E2E was **not** run: `AGENTS.md` reserves the production-preview lifecycle for CI or a user-owned preview. `npm run dev`, `npm run preview`, `npm run test:e2e`, `playwright test`, `vite`, `vite preview` and `npm run review:m3-browser` were not executed. CI was pending at commit time; the exact-SHA outcome is recorded in the untracked stage handoff.
+
+### Rejected variants
+
+- **Exporting `BrandHomeLink` from `src/shared/ui`** — it is application-shell scaffolding with a GoodCall-specific accessible name, not a design-system primitive.
+- **Widening the Shared UI `Link` API to accept `aria-label`** — a public API change to serve one consumer.
+- **Rendering monochrome as a plain external `<img>`** — would claim `currentColor` ownership the rendering could not deliver.
+- **Inlining SVG paths in React or using `dangerouslySetInnerHTML`** — duplicates approved geometry into code where it can drift from the tracked asset.
+- **A free-form `size` or `width` prop** — a consumer could drop below the approved 120px/16px minimums.
+- **Building a Header shell around the mount** — M4-04 owns that; a transitional slot must not become a partial Header.
+- **Rendering several variant examples on the technical Home route** — a variant gallery is not runtime integration.
+
+### Deviations
+
+One. `tests/e2e/route-carriers.spec.ts` was changed, which earlier stages had kept untouched. The brand link's accessible name `GoodCall — на главную` contains the carrier link name `На главную` as a substring, and Playwright's `getByRole` name option matches substrings by default, so the three existing carrier lookups would have matched two links and failed on strict mode. The lookups now pass `exact: true`. No assertion was weakened and no carrier expectation changed; this is a direct, necessary consequence of introducing a second Home link.
+
+### Risks
+
+- The transitional slot is not a Header. Until M4-04 places it, the logo sits in a plain padded row above route content, which is intentional scaffolding rather than a designed surface.
+- Inverse, monochrome and symbol variants are integrated and unit-tested but unplaced. Their contrast obligations — an approved dark surface for inverse, consumer-owned contrast for monochrome — transfer to whichever stage places them.
+- Exact clear-space placement remains a Header/Footer layout responsibility. M4-02 avoids cropping, overlap and negative spacing but does not encode the geometric `x` clear-space rule.
+- The M3 browser-review harness `scripts/review-m3-browser.mjs` asserts that no image or SVG asset is present, which encoded an M3-era truth. That assertion is now intentionally obsolete. The harness is milestone-review tooling for a closed milestone, is not a CI gate, and was deliberately left unchanged by this stage.
+
+### Next gate
+
+Green GitHub Actions CI on the exact M4-02 SHA, then independent diff audit. **M4-03 must not begin until both close.**

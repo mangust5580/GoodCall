@@ -97,11 +97,11 @@ describe('Brand Asset Contract', () => {
     );
   });
 
-  it('manifest reports every asset as approved and tracked but not consumed', () => {
+  it('manifest reports every asset as approved and runtime-integrated', () => {
     for (const entry of manifest) {
       expect(entry.approvalStatus, `${entry.productionPath} approvalStatus`).toBe('approved');
       expect(entry.integrationStatus, `${entry.productionPath} integrationStatus`).toBe(
-        'tracked-not-yet-consumed'
+        'runtime-integrated'
       );
     }
   });

@@ -1,0 +1,53 @@
+.brand-home-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  min-inline-size: 44px;
+  min-block-size: 44px;
+  max-inline-size: 100%;
+  color: var(--gc-brand-ink);
+  text-decoration: none;
+
+  &:focus-visible {
+    outline: 2px solid var(--gc-focus-ring);
+    outline-offset: 2px;
+  }
+
+  @media (forced-colors: active) {
+    &:focus-visible {
+      outline: 2px solid;
+    }
+  }
+}
+
+.brand-image,
+.brand-mask {
+  display: block;
+  block-size: auto;
+}
+
+.brand-image {
+  object-fit: contain;
+}
+
+.brand-mask {
+  background-color: currentcolor;
+  mask-image: var(--gc-brand-mask-image);
+  mask-repeat: no-repeat;
+  mask-position: center;
+  mask-size: contain;
+}
+
+.horizontal .brand-image,
+.horizontal .brand-mask {
+  inline-size: 180px;
+  min-inline-size: 120px;
+  aspect-ratio: 666.664 / 84;
+}
+
+.symbol .brand-image,
+.symbol .brand-mask {
+  inline-size: 28px;
+  min-inline-size: 16px;
+  aspect-ratio: 98 / 84;
+}

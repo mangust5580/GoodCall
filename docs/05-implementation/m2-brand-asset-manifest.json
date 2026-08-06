@@ -26,10 +26,10 @@
     "minimumSize": "120px width",
     "clearSpace": "at least x on every side, where x is the central-form width of the symbol geometry",
     "approvalStatus": "approved",
-    "integrationStatus": "tracked-not-yet-consumed",
+    "integrationStatus": "runtime-integrated",
     "productionPath": "src/assets/brand/goodcall-logo.svg",
     "knownRisks": [
-      "not yet consumed by any runtime component",
+      "placement inside the canonical Header and Footer remains later M4 work",
       "contrast on non-light surfaces is consumer responsibility"
     ],
     "notes": "Wordmark outlines are identical across horizontal assets; symbol geometry is identical across all assets."
@@ -61,10 +61,10 @@
     "minimumSize": "16px",
     "clearSpace": "at least x on every side, where x is the central-form width of the symbol geometry",
     "approvalStatus": "approved",
-    "integrationStatus": "tracked-not-yet-consumed",
+    "integrationStatus": "runtime-integrated",
     "productionPath": "src/assets/brand/goodcall-symbol.svg",
     "knownRisks": [
-      "not yet consumed by any runtime component",
+      "placement inside the canonical Header and Footer remains later M4 work",
       "symbol-only form is restricted to constrained contexts"
     ],
     "notes": "Symbol geometry is identical across all assets; contains no wordmark outlines."
@@ -96,10 +96,10 @@
     "minimumSize": "120px width",
     "clearSpace": "at least x on every side, where x is the central-form width of the symbol geometry",
     "approvalStatus": "approved",
-    "integrationStatus": "tracked-not-yet-consumed",
+    "integrationStatus": "runtime-integrated",
     "productionPath": "src/assets/brand/goodcall-logo-inverse.svg",
     "knownRisks": [
-      "not yet consumed by any runtime component",
+      "placement inside the canonical Header and Footer remains later M4 work",
       "requires an approved dark surface with sufficient contrast"
     ],
     "notes": "Wordmark outlines are identical across horizontal assets; symbol geometry is identical across all assets."
@@ -131,10 +131,10 @@
     "minimumSize": "16px",
     "clearSpace": "at least x on every side, where x is the central-form width of the symbol geometry",
     "approvalStatus": "approved",
-    "integrationStatus": "tracked-not-yet-consumed",
+    "integrationStatus": "runtime-integrated",
     "productionPath": "src/assets/brand/goodcall-symbol-inverse.svg",
     "knownRisks": [
-      "not yet consumed by any runtime component",
+      "placement inside the canonical Header and Footer remains later M4 work",
       "symbol-only form is restricted to constrained contexts"
     ],
     "notes": "Symbol geometry is identical across all assets; contains no wordmark outlines."
@@ -166,10 +166,10 @@
     "minimumSize": "120px width",
     "clearSpace": "at least x on every side, where x is the central-form width of the symbol geometry",
     "approvalStatus": "approved",
-    "integrationStatus": "tracked-not-yet-consumed",
+    "integrationStatus": "runtime-integrated",
     "productionPath": "src/assets/brand/goodcall-logo-monochrome.svg",
     "knownRisks": [
-      "not yet consumed by any runtime component",
+      "placement inside the canonical Header and Footer remains later M4 work",
       "consumer owns colour and contextual contrast"
     ],
     "notes": "Wordmark outlines are identical across horizontal assets; symbol geometry is identical across all assets."
@@ -201,10 +201,10 @@
     "minimumSize": "16px",
     "clearSpace": "at least x on every side, where x is the central-form width of the symbol geometry",
     "approvalStatus": "approved",
-    "integrationStatus": "tracked-not-yet-consumed",
+    "integrationStatus": "runtime-integrated",
     "productionPath": "src/assets/brand/goodcall-symbol-monochrome.svg",
     "knownRisks": [
-      "not yet consumed by any runtime component",
+      "placement inside the canonical Header and Footer remains later M4 work",
       "consumer owns colour and contextual contrast"
     ],
     "notes": "Symbol geometry is identical across all assets; contains no wordmark outlines."

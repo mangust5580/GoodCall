@@ -8,6 +8,7 @@ import {
   useNavigation,
 } from 'react-router-dom';
 import styles from './Shell.module.scss';
+import { BrandHomeLink } from '@/app/shell/brand';
 
 export function RootLayout(): React.ReactElement {
   const location = useLocation();
@@ -102,6 +103,9 @@ export function RootLayout(): React.ReactElement {
           Loading page
         </div>
       )}
+      <div className={styles['brand-slot']}>
+        <BrandHomeLink />
+      </div>
       <ScrollRestoration getKey={(location) => location.pathname} />
       <Outlet />
     </div>
