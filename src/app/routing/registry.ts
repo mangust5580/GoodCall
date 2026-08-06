@@ -1,4 +1,10 @@
 import { z } from 'zod';
+import {
+  carrierRouteTitle,
+  carrierRoutes,
+  type CarrierRouteDescriptor,
+  type CarrierRouteKey,
+} from '@/app/routing/carriers';
 
 export const categorySlugSchema = z
   .string()
@@ -12,7 +18,8 @@ export const productSlugSchema = z
   .regex(/^[a-z0-9-]+$/, 'Product slug must be lowercase ASCII with optional digits and hyphens')
   .refine((val) => val.length > 0, 'Product slug cannot be empty');
 
-export type RouteKey = 'home' | 'catalog.category' | 'catalog.product' | 'cart' | 'error.notFound';
+export type RouteKey =
+  'home' | 'catalog.category' | 'catalog.product' | 'cart' | CarrierRouteKey | 'error.notFound';
 
 export interface RouteMetadata {
   key: RouteKey;
@@ -21,6 +28,16 @@ export interface RouteMetadata {
   access: 'public';
   title: string | ((params?: Record<string, string>) => string);
   lazy?: boolean;
+}
+
+function carrierRouteMetadata(carrier: CarrierRouteDescriptor): RouteMetadata {
+  return {
+    key: carrier.key,
+    id: carrier.id,
+    path: carrier.path,
+    access: 'public',
+    title: carrierRouteTitle(carrier),
+  };
 }
 
 export const routeRegistry: RouteMetadata[] = [
@@ -56,6 +73,7 @@ export const routeRegistry: RouteMetadata[] = [
     title: 'Cart — GoodCall',
     lazy: true,
   },
+  ...carrierRoutes.map(carrierRouteMetadata),
   {
     key: 'error.notFound',
     id: 'not-found',
@@ -93,6 +111,23 @@ export function validateRouteRegistry(): string[] {
 
     if (route.path.includes('GoodCall')) {
       errors.push(`Route path must not contain repository literal (index ${index}): ${route.path}`);
+    }
+
+    if (route.path !== '/' && route.path.endsWith('/')) {
+      errors.push(`Route path must not have a trailing slash (index ${index}): ${route.path}`);
+    }
+
+    if (route.path !== '*' && route.path !== '/') {
+      const staticSegments = route.path
+        .slice(1)
+        .split('/')
+        .filter((segment) => !segment.startsWith(':'));
+
+      if (staticSegments.some((segment) => !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(segment))) {
+        errors.push(
+          `Route path static segments must be lowercase kebab-case (index ${index}): ${route.path}`
+        );
+      }
     }
 
     if (route.path === '*') {

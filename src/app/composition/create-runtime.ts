@@ -6,6 +6,8 @@ import { RootLayout } from '@/app/shell/RootLayout';
 import { RootErrorBoundary } from '@/app/shell/RootErrorBoundary';
 import { CatalogErrorBoundary } from '@/routes/catalog/CatalogRouteErrorBoundary';
 import { categoryLoader, productLoader } from '@/app/routing/loaders';
+import { carrierRouteSegment, carrierRouteTitle, carrierRoutes } from '@/app/routing/carriers';
+import { RouteCarrierPage } from '@/routes/carrier/RouteCarrierPage';
 import type { QueryClient } from '@tanstack/react-query';
 
 export interface ApplicationRuntime {
@@ -51,6 +53,12 @@ export function createApplicationRuntime(): ApplicationRuntime {
           path: 'cart',
           lazy: () => import('@/routes/commerce/cart/route'),
         },
+        ...carrierRoutes.map((carrier) => ({
+          id: carrier.id,
+          path: carrierRouteSegment(carrier),
+          element: React.createElement(RouteCarrierPage, { heading: carrier.heading }),
+          handle: { title: carrierRouteTitle(carrier) },
+        })),
         {
           id: 'not-found',
           path: '*',

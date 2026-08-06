@@ -352,8 +352,57 @@ The sections above are historical snapshots taken at their own milestones and ar
 - **M3 — APPROVED AND CLOSED.**
 - **M4 — NEXT PERMITTED IMPLEMENTATION MILESTONE AFTER M3-06 CI.**
 
+## Milestone State Note — M4-01 Shell Destination Safety (2026-08-06)
+
+The sections above are historical snapshots. This note records the state after the first M4 implementation stage.
+
+### Stage identity
+
+- Stage: **M4-01 — Shell destination safety and composition boundary**.
+- Baseline SHA: `7db61d2eb41c56fcdc43531f21e1fe64db730604` (M3-06 closure commit).
+- The resulting M4-01 commit SHA cannot be embedded inside its own commit; it is reported in the stage handoff and recorded here by the next documentation stage.
+
+### Added in M4-01
+
+```
+src/app/routing/carriers.ts               typed carrier route descriptors, shared notice and label
+src/routes/carrier/RouteCarrierPage.tsx   the single neutral technical carrier presentation
+tests/routing/route-carriers.integration.test.tsx
+tests/e2e/route-carriers.spec.ts
+docs/05-implementation/m4-canonical-shell-report.md
+```
+
+### Modified in M4-01
+
+```
+src/app/routing/registry.ts               carrier keys and metadata; trailing-slash and kebab-case invariants
+src/app/composition/create-runtime.ts     carrier routes registered before the catch-all
+tests/routing/registry.test.ts            table-driven carrier and baseline-identity coverage
+```
+
+### Carrier route inventory
+
+Nineteen public routes, all rendered by one shared neutral carrier presentation and all registered before the catch-all:
+
+`/search`, `/comparison`, `/favorites`, `/auth`, `/delivery-and-payment`, `/warranty-and-returns`, `/loyalty`, `/help`, `/contacts`, `/promotions`, `/brands`, `/shops`, `/service-centers`, `/about`, `/blog`, `/track-order`, `/privacy-policy`, `/user-agreement`, `/public-offer`.
+
+No `/catalog` root route was added; the future Catalog entry remains the existing `/catalog/laptops`.
+
+### State at report time
+
+- Existing `home`, `catalog.category`, `catalog.product`, `cart` and `error.notFound` identities are **unchanged**, and the catch-all is still unique and last.
+- The M1 title, focus, scroll and announcement lifecycle is **unchanged**; `RootLayout` remains the only root layout and route-lifecycle owner.
+- **No canonical shell visuals exist**: no Header, Footer, Information Bar, search form, Catalog button, newsletter, sticky behaviour or responsive shell styling.
+- **No runtime brand consumption**: the six tracked brand SVGs under `src/assets/brand/` remain unconsumed, and no runtime logo component exists.
+- `src/shared/ui` public API is unchanged at **18 runtime components**; no dependency, `package.json` or lockfile change.
+- Test suite: **685 tests across 38 files**, up from 533 in 37. Expected CI E2E grows by the new data-driven carrier scenario.
+- Bundle: raw **410.18 KB** / gzip **123.44 KB**, up from 407.10 KB / 122.19 KB.
+- Local checks pass, including `npm run check:full`. **Local E2E was not run** — the production-preview lifecycle belongs to CI or a user-owned preview.
+- **CI is pending.** No GitHub Actions result is claimed for the M4-01 commit.
+- **M4-02 is blocked** until M4-01 passes independent audit and CI.
+
 ## Next Repository Modifications
 
-The next permitted implementation milestone is **M4**. Its scope must be taken from the approved architecture and UI/component/responsive contracts.
+The current implementation milestone is **M4**, whose scope must be taken from the approved architecture and UI/component/responsive contracts.
 
-This M3-06 stage is documentation-only and authorises no implementation change.
+**M4-02 must not begin** until the M4-01 independent audit and its exact-SHA CI both close.
