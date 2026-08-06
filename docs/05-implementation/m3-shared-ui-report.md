@@ -16,7 +16,8 @@
 | M3-05C — Agent policy, artifact and verifier lifecycle reconciliation | **APPROVED AND CLOSED**                                                                                  |
 | M3-05D — Bounded browser review harness                               | **CI SUCCESS — INDEPENDENT AUDIT RETURNED CHANGES REQUIRED — SUPERSEDED BY M3-05E**                      |
 | M3-05E — Browser review harness reliability and evidence integrity    | **CI SUCCESS — INDEPENDENT AUDIT RETURNED CHANGES REQUIRED — SUPERSEDED BY M3-05F**                      |
-| M3-05F — Interactive diagnostics and review evidence coherence        | **IMPLEMENTED — AWAITING INDEPENDENT AUDIT AND CI**                                                      |
+| M3-05F — Interactive diagnostics and review evidence coherence        | **CI SUCCESS — INDEPENDENT AUDIT RETURNED CHANGES REQUIRED — SUPERSEDED BY M3-05G**                      |
+| M3-05G — Manual sign-off integrity and responsive evidence completion | **IMPLEMENTED — AWAITING INDEPENDENT AUDIT AND CI**                                                      |
 
 This report covers the Shared UI layer of milestone M3. It records local verification for the tasks under review. M3-01 through M3-04 are approved and closed; M3-05 and its corrective passes are recorded in their own sections below, and M3 as a whole is not closed.
 
@@ -1203,8 +1204,42 @@ All automated-only runs recorded so far remain `PROVISIONAL` and are not closure
 
 M3 remains open. M4 remains blocked.
 
+## M3-05G — Manual sign-off integrity and responsive evidence completion
+
+**Status: IMPLEMENTED — AWAITING INDEPENDENT AUDIT AND CI**
+
+### M3-05F outcome
+
+GitHub Actions run **30973880138**, job 92203767213, checked SHA `402cb2e3b7a0d8dd4928587cb74efa3402f60a1d`, conclusion **success** — Dev bootstrap, TypeCheck, ESLint, Stylelint, Prettier, comment check, 533 unit/integration tests in 37 files, build, build validation and 23 production-preview E2E all green, bundle raw 407.10 KB / gzip 122.19 KB.
+
+The **independent audit returned CHANGES REQUIRED** with five findings — M3F-PARTIAL-02, M3F-MANUAL-01, M3F-RESPONSIVE-02, M3F-OVERLAP-02, M3F-MANUAL-02. CI cannot observe any of them, because CI never runs the harness.
+
+Each finding is a way the harness could still report better than the run proved: an unopenable review window classified as an application failure, manual answers held in a local object until the last prompt returned, responsive evidence that counted Error Summary links instead of proving them usable, overlap probes that could go unresolved while the report claimed no intersections, and fallback sign-off answers accepted with no explanation.
+
+### What M3-05G changes
+
+Three tracked files: `scripts/review-m3-browser.mjs` and two implementation reports. Finding-by-finding detail: [M3-05G in the M0 bootstrap report](bootstrap-report.md#m3-05g--manual-sign-off-integrity-and-responsive-evidence-completion).
+
+In short: the sign-off availability boundary now covers page creation, diagnostics registration and initial page preparation; manual answers persist the moment they are accepted and a recorded FAIL survives EOF, `SIGINT` and `SIGTERM`; `NOT AVAILABLE` and `NOT TESTED` each require a validated reason; both Error Summary links are proven visible, contained, unobscured and keyboard-activatable at every viewport; and every overlap probe resolves to an explicit status, with an unresolved required probe failing its state.
+
+### What M3-05G does not change
+
+**No product runtime change.** `src/**`, `tests/**`, `package.json`, `package-lock.json`, `AGENTS.md`, `CLAUDE.md`, the MSW worker, the Vite `publicDir` contract, `scripts/verify-dev-bootstrap.mjs`, `.github/**` and every configuration file are untouched. Unit/integration totals remain **533 in 37 files**, expected E2E remains **23**, and the bundle is unchanged. No repository policy was rewritten and no automated test was adjusted.
+
+### Still owed
+
+The M3 browser review has still never produced final evidence, and none is claimed here. It must be run **by the user in a visible TTY** — the harness refuses to open a sign-off window without one — bound to the approved SHA on a clean tree:
+
+```
+$env:GOODCALL_REVIEW_SHA="<approved SHA>"; npm run review:m3-browser
+```
+
+All automated-only runs recorded so far remain `PROVISIONAL` and are not closure evidence. Real browser zoom, real OS forced-colors mode and screen-reader behaviour remain unverified.
+
+M3 remains open. M4 remains blocked.
+
 ## Next Permitted Step
 
-The only permitted next step is an **independent diff audit of the M3-05F commit**, followed by GitHub Actions CI for it, and then the M3 browser review bound to that approved SHA in a visible terminal.
+The only permitted next step is an **independent diff audit of the M3-05G commit**, followed by GitHub Actions CI for it, and then the M3 browser review bound to that approved SHA in a visible terminal.
 
 M4 must not begin until M3 is recorded as APPROVED AND CLOSED. No domain work is authorised by this report.

@@ -41,6 +41,14 @@ const AXE_HTML_CAP = 400;
 const MIN_VISIBLE_AREA_RATIO = 0.9;
 const OBSCURATION_SAMPLES = 5;
 const MIN_UNOBSCURED_SAMPLES = 4;
+const MIN_FALLBACK_REASON_LENGTH = 3;
+
+const OVERLAP_STATUS = {
+  MEASURED_PASS: 'MEASURED_PASS',
+  MEASURED_FAIL: 'MEASURED_FAIL',
+  UNRESOLVED: 'UNRESOLVED',
+  NOT_APPLICABLE: 'NOT_APPLICABLE',
+};
 
 const DIAGNOSTIC_KINDS = [
   'pageErrors',
@@ -127,8 +135,29 @@ const MANUAL_PROMPTS = [
   { key: '400% zoom', allowed: ['PASS', 'FAIL'] },
   { key: 'keyboard/focus', allowed: ['PASS', 'FAIL'] },
   { key: 'clipping/overlap', allowed: ['PASS', 'FAIL'] },
-  { key: 'forced colors', allowed: ['PASS', 'FAIL', 'NOT AVAILABLE'] },
-  { key: 'screen reader', allowed: ['PASS', 'FAIL', 'NOT TESTED'] },
+  {
+    key: 'forced colors',
+    allowed: ['PASS', 'FAIL', 'NOT AVAILABLE'],
+    fallback: { value: 'NOT AVAILABLE', reasonKey: 'forced colors reason' },
+  },
+  {
+    key: 'screen reader',
+    allowed: ['PASS', 'FAIL', 'NOT TESTED'],
+    fallback: { value: 'NOT TESTED', reasonKey: 'screen reader reason' },
+  },
+];
+
+const MANUAL_FALLBACK_REASONS = MANUAL_PROMPTS.filter(
+  (prompt) => prompt.fallback !== undefined
+).map((prompt) => ({
+  key: prompt.key,
+  trigger: prompt.fallback.value,
+  reasonKey: prompt.fallback.reasonKey,
+}));
+
+const SUMMARY_LINK_TARGETS = [
+  { index: 0, name: 'Name', selector: NAME_FIELD },
+  { index: 1, name: 'Category', selector: CATEGORY_FIELD },
 ];
 
 const MANUAL_CHECKLIST = `
@@ -149,6 +178,7 @@ Manual sign-off in the Playwright review window:
 8. Confirm focus is visible and not obscured.
 9. Test real OS forced-colors mode only if available.
 10. Test a screen reader only if available.
+11. NOT AVAILABLE and NOT TESTED each require a short, concrete reason.
 `;
 
 const STATUS = {
@@ -394,15 +424,201 @@ function evaluateDiagnostics(aggregate) {
   return { failures, aggregate };
 }
 
+function createManualAnswerRecord() {
+  return {};
+}
+
+function isValidFallbackReason(value) {
+  if (typeof value !== 'string') {
+    return false;
+  }
+
+  const trimmed = value.trim();
+
+  if (trimmed.length < MIN_FALLBACK_REASON_LENGTH) {
+    return false;
+  }
+
+  return trimmed.replace(/[\p{P}\p{S}\s]/gu, '').length > 0;
+}
+
 function summariseManual(answers) {
-  if (answers === null) {
+  if (answers === null || answers === undefined) {
     return null;
   }
 
-  const complete = MANUAL_PROMPTS.every((prompt) => typeof answers[prompt.key] === 'string');
+  const answeredCount = MANUAL_PROMPTS.filter(
+    (prompt) => typeof answers[prompt.key] === 'string'
+  ).length;
+  const answersComplete = answeredCount === MANUAL_PROMPTS.length;
   const failed = MANUAL_PROMPTS.some((prompt) => answers[prompt.key] === 'FAIL');
 
-  return { complete, failed, answers };
+  const requiredReasons = MANUAL_FALLBACK_REASONS.filter(
+    (entry) => answers[entry.key] === entry.trigger
+  );
+  const missingReasons = requiredReasons
+    .filter((entry) => !isValidFallbackReason(answers[entry.reasonKey]))
+    .map((entry) => entry.reasonKey);
+  const fallbackReasonsComplete = missingReasons.length === 0;
+
+  return {
+    complete: answersComplete && fallbackReasonsComplete,
+    answersComplete,
+    failed,
+    answeredCount,
+    promptCount: MANUAL_PROMPTS.length,
+    fallbackReasonsComplete,
+    missingReasons,
+    answers,
+  };
+}
+
+function evaluateSummaryLinkEvidence(record) {
+  const failures = [];
+  const label = `summary link ${String(record.index + 1)}`;
+
+  if (record.visible !== true) {
+    failures.push(`${label} is not visible`);
+  }
+
+  const box = record.boundingBox;
+
+  if (box === null || box === undefined) {
+    failures.push(`${label} has no bounding box`);
+  } else if (box.width <= 0 || box.height <= 0) {
+    failures.push(`${label} has a zero-area box ${String(box.width)}x${String(box.height)}`);
+  }
+
+  if (record.visibleAreaRatio < MIN_VISIBLE_AREA_RATIO) {
+    failures.push(
+      `${label}: only ${(record.visibleAreaRatio * 100).toFixed(1)}% of the link is inside the viewport`
+    );
+  }
+
+  if (record.unobscuredSampleCount < MIN_UNOBSCURED_SAMPLES) {
+    failures.push(
+      `${label}: only ${String(record.unobscuredSampleCount)} of ${String(record.sampleCount)} sample points resolve to the link`
+    );
+  }
+
+  if (record.activationFocusedLink === false) {
+    failures.push(`${label} could not take keyboard focus`);
+  }
+
+  if (record.activationPassed !== true) {
+    failures.push(`${label} did not move focus to ${String(record.activationTarget)}`);
+  }
+
+  return failures;
+}
+
+function classifyOverlapFinding(finding, viewport, state, tolerance) {
+  const identity = {
+    viewport,
+    state,
+    pairName: finding.pairName,
+    leftIdentifier: finding.leftIdentifier,
+    rightIdentifier: finding.rightIdentifier,
+  };
+
+  if (finding.unresolved === true) {
+    if (finding.required === false) {
+      return {
+        ...identity,
+        status: OVERLAP_STATUS.NOT_APPLICABLE,
+        reason: finding.reason,
+        required: false,
+        failed: false,
+      };
+    }
+
+    return {
+      ...identity,
+      status: OVERLAP_STATUS.UNRESOLVED,
+      reason: finding.reason,
+      required: true,
+      failed: true,
+    };
+  }
+
+  const failed = finding.overlapX > tolerance && finding.overlapY > tolerance;
+
+  return {
+    ...identity,
+    status: failed ? OVERLAP_STATUS.MEASURED_FAIL : OVERLAP_STATUS.MEASURED_PASS,
+    leftRect: finding.leftRect,
+    rightRect: finding.rightRect,
+    overlapX: finding.overlapX,
+    overlapY: finding.overlapY,
+    tolerance,
+    required: finding.required !== false,
+    failed,
+  };
+}
+
+function summariseOverlap(records) {
+  const count = (status) => records.filter((entry) => entry.status === status).length;
+
+  const measuredPass = count(OVERLAP_STATUS.MEASURED_PASS);
+  const measuredFail = count(OVERLAP_STATUS.MEASURED_FAIL);
+  const unresolved = count(OVERLAP_STATUS.UNRESOLVED);
+  const notApplicable = count(OVERLAP_STATUS.NOT_APPLICABLE);
+  const measured = measuredPass + measuredFail;
+  const declared = records.length;
+  const allRequiredMeasured = unresolved === 0 && measured + notApplicable === declared;
+
+  return {
+    declared,
+    measured,
+    measuredPass,
+    measuredFail,
+    unresolved,
+    notApplicable,
+    allRequiredMeasured,
+    clean: measuredFail === 0 && allRequiredMeasured,
+  };
+}
+
+function overlapGeometryFailures(records) {
+  const failures = [];
+  const measuredFailures = records.filter((entry) => entry.status === OVERLAP_STATUS.MEASURED_FAIL);
+  const unresolvedRequired = records.filter((entry) => entry.status === OVERLAP_STATUS.UNRESOLVED);
+
+  if (measuredFailures.length > 0) {
+    failures.push(
+      `${String(measuredFailures.length)} overlapping regions (${measuredFailures.map((entry) => entry.pairName).join(', ')})`
+    );
+  }
+
+  if (unresolvedRequired.length > 0) {
+    failures.push(
+      `${String(unresolvedRequired.length)} unresolved required overlap probes (${unresolvedRequired
+        .map((entry) => `${entry.pairName}: ${String(entry.reason)}`)
+        .join('; ')})`
+    );
+  }
+
+  return failures;
+}
+
+async function createSignoffEnvironment(steps) {
+  const owned = { browser: null, context: null, page: null };
+
+  try {
+    owned.browser = await steps.launchBrowser();
+    owned.context = await steps.createContext(owned.browser);
+    owned.page = await steps.createPage(owned.context);
+    await steps.attachDiagnostics(owned.page);
+    await steps.preparePage(owned.page);
+
+    return { ...owned, available: true, reason: null };
+  } catch (error) {
+    return {
+      ...owned,
+      available: false,
+      reason: `sign-off environment unavailable: ${toMessage(error)}`,
+    };
+  }
 }
 
 function collectRepositoryEvidence() {
@@ -474,7 +690,7 @@ function readPlaywrightVersion() {
   }
 }
 
-function runSelfTest() {
+async function runSelfTest() {
   const base = {
     mode: 'automated-only',
     baselineEligible: true,
@@ -493,15 +709,35 @@ function runSelfTest() {
 
   const interactive = { ...base, mode: 'interactive' };
 
-  const completeManual = summariseManual({
+  const completeAnswers = {
     '200% zoom': 'PASS',
     '400% zoom': 'PASS',
     'keyboard/focus': 'PASS',
     'clipping/overlap': 'PASS',
     'forced colors': 'NOT AVAILABLE',
     'screen reader': 'NOT TESTED',
+    'forced colors reason': 'no OS high-contrast mode on this machine',
+    'screen reader reason': 'no screen reader installed on this machine',
     notes: '',
-  });
+  };
+
+  const passAnswers = {
+    '200% zoom': 'PASS',
+    '400% zoom': 'PASS',
+    'keyboard/focus': 'PASS',
+    'clipping/overlap': 'PASS',
+    'forced colors': 'PASS',
+    'screen reader': 'PASS',
+    notes: '',
+  };
+
+  const missingForcedColorsReason = { ...completeAnswers };
+  delete missingForcedColorsReason['forced colors reason'];
+
+  const missingScreenReaderReason = { ...completeAnswers };
+  delete missingScreenReaderReason['screen reader reason'];
+
+  const completeManual = summariseManual(completeAnswers);
 
   const failedManual = summariseManual({
     '200% zoom': 'FAIL',
@@ -525,8 +761,10 @@ function runSelfTest() {
   const cleanRepo = { ...dirtyRepo, trackedTreeClean: true };
 
   const failures = [];
+  let scenarioCount = 0;
 
   const record = (ok, line) => {
+    scenarioCount += 1;
     stdout.write(`  ${ok ? '✓' : '✗'} ${line}\n`);
     if (!ok) {
       failures.push(line);
@@ -760,6 +998,361 @@ function runSelfTest() {
     'interactive diagnostics reach the final evaluation'
   );
 
+  const signoffEnvironmentCases = [
+    { name: 'headed browser launch unavailable', failAt: 'launchBrowser' },
+    { name: 'interactive context unavailable', failAt: 'createContext' },
+    { name: 'interactive page unavailable', failAt: 'createPage' },
+    { name: 'interactive diagnostics initialization unavailable', failAt: 'attachDiagnostics' },
+    { name: 'initial sign-off page preparation unavailable', failAt: 'preparePage' },
+  ];
+
+  for (const testCase of signoffEnvironmentCases) {
+    const stub = (name, value) => () => {
+      if (testCase.failAt === name) {
+        throw new Error(`${name} unavailable`);
+      }
+      return value;
+    };
+
+    const environment = await createSignoffEnvironment({
+      launchBrowser: stub('launchBrowser', { id: 'browser' }),
+      createContext: stub('createContext', { id: 'context' }),
+      createPage: stub('createPage', { id: 'page' }),
+      attachDiagnostics: stub('attachDiagnostics', { id: 'sink' }),
+      preparePage: stub('preparePage', undefined),
+    });
+
+    const outcome = {
+      ...interactive,
+      signoffUnavailable: environment.available ? 0 : 1,
+      automatedExecutionErrors: 0,
+    };
+    const environmentStatus = resolveFinalStatus(outcome);
+
+    record(
+      !environment.available &&
+        environmentStatus === STATUS.PARTIAL &&
+        exitCodeForStatus(environmentStatus) === 1 &&
+        outcome.automatedExecutionErrors === 0,
+      `${testCase.name} -> PARTIAL / exit 1, no automated execution error`
+    );
+  }
+
+  const readyEnvironment = await createSignoffEnvironment({
+    launchBrowser: () => ({ id: 'browser' }),
+    createContext: () => ({ id: 'context' }),
+    createPage: () => ({ id: 'page' }),
+    attachDiagnostics: () => ({ id: 'sink' }),
+    preparePage: () => undefined,
+  });
+  record(
+    readyEnvironment.available &&
+      readyEnvironment.page !== null &&
+      readyEnvironment.reason === null,
+    'complete sign-off environment resolves as available'
+  );
+
+  const partialEnvironment = await createSignoffEnvironment({
+    launchBrowser: () => ({ id: 'browser' }),
+    createContext: () => {
+      throw new Error('context unavailable');
+    },
+    createPage: () => ({ id: 'page' }),
+    attachDiagnostics: () => ({ id: 'sink' }),
+    preparePage: () => undefined,
+  });
+  record(
+    partialEnvironment.browser !== null && partialEnvironment.context === null,
+    'sign-off environment failure preserves owned references for cleanup'
+  );
+
+  const interruptedFail = createManualAnswerRecord();
+  interruptedFail['200% zoom'] = 'PASS';
+  interruptedFail['400% zoom'] = 'FAIL';
+
+  const interruptedPass = createManualAnswerRecord();
+  interruptedPass['200% zoom'] = 'PASS';
+  interruptedPass['400% zoom'] = 'PASS';
+
+  const interruptionCases = [
+    {
+      name: 'manual FAIL then SIGINT',
+      answers: interruptedFail,
+      outcome: { signoffInterrupted: true },
+      expected: STATUS.FAILED,
+    },
+    {
+      name: 'manual FAIL then EOF',
+      answers: interruptedFail,
+      outcome: { signoffIncomplete: 1 },
+      expected: STATUS.FAILED,
+    },
+    {
+      name: 'manual FAIL then late sign-off unavailability',
+      answers: interruptedFail,
+      outcome: { signoffUnavailable: 1 },
+      expected: STATUS.FAILED,
+    },
+    {
+      name: 'partial PASS then SIGINT',
+      answers: interruptedPass,
+      outcome: { signoffInterrupted: true },
+      expected: STATUS.PARTIAL,
+    },
+    {
+      name: 'partial PASS then EOF',
+      answers: interruptedPass,
+      outcome: { signoffIncomplete: 1 },
+      expected: STATUS.PARTIAL,
+    },
+  ];
+
+  for (const testCase of interruptionCases) {
+    const interruptedStatus = resolveFinalStatus({
+      ...interactive,
+      ...testCase.outcome,
+      manual: summariseManual(testCase.answers),
+    });
+    record(
+      interruptedStatus === testCase.expected && exitCodeForStatus(interruptedStatus) === 1,
+      `${testCase.name} -> ${interruptedStatus} / exit 1`
+    );
+  }
+
+  record(
+    interruptedFail['200% zoom'] === 'PASS' &&
+      summariseManual(interruptedFail).answeredCount === 2 &&
+      summariseManual(interruptedFail).failed,
+    'incremental answer record retains prior answers through interruption'
+  );
+  record(
+    summariseManual(interruptedPass).answeredCount === 2 &&
+      !summariseManual(interruptedPass).answersComplete &&
+      !summariseManual(interruptedPass).failed,
+    'manual summary operates on a partial answer record'
+  );
+
+  record(
+    !summariseManual(missingForcedColorsReason).complete &&
+      !summariseManual(missingForcedColorsReason).fallbackReasonsComplete &&
+      resolveFinalStatus({
+        ...interactive,
+        manual: summariseManual(missingForcedColorsReason),
+      }) === STATUS.PARTIAL,
+    'NOT AVAILABLE without a forced-colors reason -> incomplete / PARTIAL'
+  );
+  record(
+    !summariseManual(missingScreenReaderReason).complete &&
+      resolveFinalStatus({
+        ...interactive,
+        manual: summariseManual(missingScreenReaderReason),
+      }) === STATUS.PARTIAL,
+    'NOT TESTED without a screen-reader reason -> incomplete / PARTIAL'
+  );
+  record(
+    summariseManual(completeAnswers).complete &&
+      summariseManual(completeAnswers).fallbackReasonsComplete,
+    'both fallbacks with valid reasons -> manual record complete'
+  );
+  record(
+    summariseManual(passAnswers).complete &&
+      summariseManual(passAnswers).fallbackReasonsComplete &&
+      summariseManual(passAnswers).missingReasons.length === 0,
+    'PASS manual results require no fallback reason'
+  );
+  record(
+    !isValidFallbackReason('') &&
+      !isValidFallbackReason('  ') &&
+      !isValidFallbackReason('...') &&
+      !isValidFallbackReason('x') &&
+      isValidFallbackReason('no OS high-contrast mode'),
+    'fallback reason validation rejects blank and punctuation-only text'
+  );
+
+  const persistedFallback = createManualAnswerRecord();
+  persistedFallback['forced colors'] = 'NOT AVAILABLE';
+  persistedFallback['forced colors reason'] = 'no OS high-contrast mode on this machine';
+  record(
+    summariseManual(persistedFallback).answeredCount === 1 &&
+      summariseManual(persistedFallback).fallbackReasonsComplete,
+    'fallback reason persists with its answer before the next prompt'
+  );
+
+  const usableLink = (index) => ({
+    index,
+    name: index === 0 ? 'Name' : 'Category',
+    visible: true,
+    boundingBox: { top: 12, left: 16, width: 184, height: 22 },
+    visibleAreaRatio: 1,
+    unobscuredSampleCount: 5,
+    sampleCount: 5,
+    activationTarget: index === 0 ? NAME_FIELD : CATEGORY_FIELD,
+    activationMethod: 'keyboard Enter',
+    activationFocusedLink: true,
+    activationPassed: true,
+  });
+
+  record(
+    evaluateSummaryLinkEvidence(usableLink(0)).length === 0 &&
+      evaluateSummaryLinkEvidence(usableLink(1)).length === 0,
+    'both responsive summary links usable -> no link failure'
+  );
+  record(
+    evaluateSummaryLinkEvidence({ ...usableLink(0), visible: false }).length === 1,
+    'hidden responsive summary link fails its viewport'
+  );
+  record(
+    evaluateSummaryLinkEvidence({ ...usableLink(1), unobscuredSampleCount: 1 }).length === 1,
+    'obscured responsive summary link fails its viewport'
+  );
+  record(
+    evaluateSummaryLinkEvidence({ ...usableLink(0), visibleAreaRatio: 0.4 }).length === 1,
+    'partially clipped responsive summary link fails its viewport'
+  );
+  record(
+    evaluateSummaryLinkEvidence({ ...usableLink(1), activationPassed: false }).length === 1,
+    'responsive summary link activation failure fails its viewport'
+  );
+  record(
+    evaluateSummaryLinkEvidence({ ...usableLink(0), boundingBox: null }).length === 1,
+    'responsive summary link without a bounding box fails its viewport'
+  );
+
+  const linkFailingViewport = {
+    viewport: '320x568',
+    states: [
+      { state: 'initial', failures: [] },
+      {
+        state: 'invalid',
+        failures: evaluateSummaryLinkEvidence({ ...usableLink(1), activationPassed: false }),
+      },
+      { state: 'success', failures: [] },
+    ],
+  };
+  linkFailingViewport.status = resolveViewportStatus(linkFailingViewport.states);
+  record(
+    linkFailingViewport.status === 'FAIL',
+    'viewport cannot pass while a summary link is unusable'
+  );
+
+  const measuredProbe = (overlapX, overlapY) => ({
+    pairName: 'form actions',
+    leftIdentifier: 'button:Validate demonstration',
+    rightIdentifier: 'button:Reset demonstration',
+    required: true,
+    unresolved: false,
+    leftRect: { top: 0, left: 0, width: 100, height: 40 },
+    rightRect: { top: 0, left: 110, width: 100, height: 40 },
+    overlapX,
+    overlapY,
+  });
+
+  const measuredPass = classifyOverlapFinding(
+    measuredProbe(-10, 40),
+    '320x568',
+    'invalid',
+    OVERLAP_TOLERANCE_PX
+  );
+  const measuredFail = classifyOverlapFinding(
+    measuredProbe(30, 20),
+    '320x568',
+    'invalid',
+    OVERLAP_TOLERANCE_PX
+  );
+  const unresolvedRequired = classifyOverlapFinding(
+    {
+      pairName: 'error summary links',
+      leftIdentifier: 'summaryLinkOne',
+      rightIdentifier: 'summaryLinkTwo',
+      required: true,
+      unresolved: true,
+      reason: 'right target "summaryLinkTwo" did not resolve',
+    },
+    '320x568',
+    'invalid',
+    OVERLAP_TOLERANCE_PX
+  );
+  const unresolvedOptional = classifyOverlapFinding(
+    {
+      pairName: 'optional probe',
+      leftIdentifier: 'left',
+      rightIdentifier: 'right',
+      required: false,
+      unresolved: true,
+      reason: 'left target "left" did not resolve',
+    },
+    '320x568',
+    'invalid',
+    OVERLAP_TOLERANCE_PX
+  );
+
+  record(
+    measuredPass.status === OVERLAP_STATUS.MEASURED_PASS &&
+      !measuredPass.failed &&
+      measuredPass.leftRect !== undefined &&
+      measuredPass.rightRect !== undefined &&
+      measuredPass.tolerance === OVERLAP_TOLERANCE_PX,
+    'measured clear probe -> MEASURED_PASS with rectangles and overlap values'
+  );
+  record(
+    measuredFail.status === OVERLAP_STATUS.MEASURED_FAIL && measuredFail.failed,
+    'measured intersecting probe -> MEASURED_FAIL'
+  );
+  record(
+    unresolvedRequired.status === OVERLAP_STATUS.UNRESOLVED &&
+      unresolvedRequired.failed &&
+      unresolvedRequired.required &&
+      typeof unresolvedRequired.reason === 'string',
+    'unresolved required probe -> UNRESOLVED with a stored reason and failed: true'
+  );
+  record(
+    unresolvedOptional.status === OVERLAP_STATUS.NOT_APPLICABLE &&
+      !unresolvedOptional.failed &&
+      unresolvedOptional.required === false &&
+      typeof unresolvedOptional.reason === 'string',
+    'unresolved optional probe -> NOT_APPLICABLE'
+  );
+  record(
+    overlapGeometryFailures([unresolvedRequired]).length === 1,
+    'unresolved required probe appends a state-local failure'
+  );
+  record(
+    overlapGeometryFailures([unresolvedOptional]).length === 0,
+    'unresolved optional probe appends no state-local failure'
+  );
+  record(
+    overlapGeometryFailures([measuredFail]).length === 1,
+    'measured intersection appends a state-local failure'
+  );
+
+  const cleanOverlap = summariseOverlap([measuredPass, measuredPass]);
+  record(
+    cleanOverlap.clean &&
+      cleanOverlap.allRequiredMeasured &&
+      cleanOverlap.measuredPass === 2 &&
+      cleanOverlap.declared === 2,
+    'fully measured probe set may claim clean overlap coverage'
+  );
+  record(
+    !summariseOverlap([measuredPass, unresolvedRequired]).clean &&
+      summariseOverlap([measuredPass, unresolvedRequired]).unresolved === 1 &&
+      !summariseOverlap([measuredPass, unresolvedRequired]).allRequiredMeasured,
+    'unresolved required probe prevents a clean-overlap claim'
+  );
+  record(
+    !summariseOverlap([measuredFail]).clean && summariseOverlap([measuredFail]).measuredFail === 1,
+    'measured intersection prevents a clean-overlap claim'
+  );
+  record(
+    summariseOverlap([measuredPass, unresolvedOptional]).clean &&
+      summariseOverlap([measuredPass, unresolvedOptional]).notApplicable === 1,
+    'optional NOT_APPLICABLE probe does not block a clean-overlap claim'
+  );
+
+  stdout.write(
+    `\n${String(scenarioCount)} scenarios: ${String(scenarioCount - failures.length)} passed, ${String(failures.length)} failed\n`
+  );
+
   return failures;
 }
 
@@ -768,7 +1361,7 @@ const selfTest = process.argv.includes('--self-test');
 
 if (selfTest) {
   stdout.write('\n🔍 M3 browser review — self-test (no server, no browser)\n\n');
-  const selfTestFailures = runSelfTest();
+  const selfTestFailures = await runSelfTest();
   if (selfTestFailures.length > 0) {
     stdout.write('\n✗ self-test failed\n');
     for (const failure of selfTestFailures) {
@@ -854,6 +1447,7 @@ const results = {
     signoffUnavailable: [],
     signoffInterrupted: false,
     signoffIncomplete: [],
+    signoffCollectionStarted: false,
   },
   manual: null,
   screenshots: [],
@@ -1032,8 +1626,10 @@ async function clippedElements(page) {
 }
 
 async function semanticOverlap(page, probes, tolerance, viewportLabel, state) {
+  const declarations = probes.map((probe) => ({ ...probe, required: probe.required !== false }));
+
   const findings = await page.evaluate(
-    ([definitions, allowance]) => {
+    ([definitions]) => {
       const describedError = (controlId) => {
         const control = document.getElementById(controlId);
         const tokens = (control?.getAttribute('aria-describedby') ?? '').split(' ').filter(Boolean);
@@ -1090,25 +1686,25 @@ async function semanticOverlap(page, probes, tolerance, viewportLabel, state) {
         const left = resolvers[definition.left]?.() ?? null;
         const right = resolvers[definition.right]?.() ?? null;
 
-        if (left === null || right === null || left === right) {
+        const unresolvedReason =
+          left === null
+            ? `left target "${definition.left}" did not resolve`
+            : right === null
+              ? `right target "${definition.right}" did not resolve`
+              : left === right
+                ? `"${definition.left}" and "${definition.right}" resolved to the same element`
+                : left.contains(right) || right.contains(left)
+                  ? `"${definition.left}" and "${definition.right}" resolved to a nested pair`
+                  : null;
+
+        if (unresolvedReason !== null) {
           output.push({
             pairName: definition.pair,
             leftIdentifier: definition.left,
             rightIdentifier: definition.right,
-            resolved: false,
-            failed: false,
-          });
-          continue;
-        }
-
-        if (left.contains(right) || right.contains(left)) {
-          output.push({
-            pairName: definition.pair,
-            leftIdentifier: identify(left),
-            rightIdentifier: identify(right),
-            resolved: true,
-            nested: true,
-            failed: false,
+            required: definition.required,
+            unresolved: true,
+            reason: unresolvedReason,
           });
           continue;
         }
@@ -1124,8 +1720,8 @@ async function semanticOverlap(page, probes, tolerance, viewportLabel, state) {
           pairName: definition.pair,
           leftIdentifier: identify(left),
           rightIdentifier: identify(right),
-          resolved: true,
-          nested: false,
+          required: definition.required,
+          unresolved: false,
           leftRect: {
             top: Math.round(leftRect.top),
             left: Math.round(leftRect.left),
@@ -1140,20 +1736,28 @@ async function semanticOverlap(page, probes, tolerance, viewportLabel, state) {
           },
           overlapX: Math.round(overlapX),
           overlapY: Math.round(overlapY),
-          failed: overlapX > allowance && overlapY > allowance,
         });
       }
 
       return output;
     },
-    [probes, tolerance]
+    [declarations]
   );
 
-  for (const finding of findings) {
-    results.overlap.push({ viewport: viewportLabel, state, tolerance, ...finding });
+  const records = findings.map((finding) =>
+    classifyOverlapFinding(finding, viewportLabel, state, tolerance)
+  );
+
+  for (const record of records) {
+    results.overlap.push(record);
   }
 
-  return findings.filter((finding) => finding.failed);
+  return {
+    records,
+    summary: summariseOverlap(records),
+    measuredFailures: records.filter((entry) => entry.status === OVERLAP_STATUS.MEASURED_FAIL),
+    unresolvedRequired: records.filter((entry) => entry.status === OVERLAP_STATUS.UNRESOLVED),
+  };
 }
 
 async function runStartupChecks(page, url, sink) {
@@ -1299,14 +1903,21 @@ async function sectionInitialStructure(page, url) {
   s.check((await horizontalOverflow(page)) <= 1, 'horizontal overflow at 1280x800');
   s.check((await clippedElements(page)) === 0, 'clipped text at 1280x800');
 
-  const overlaps = await semanticOverlap(
+  const overlap = await semanticOverlap(
     page,
     OVERLAP_PROBES.initial,
     OVERLAP_TOLERANCE_PX,
     '1280x800',
     'initial'
   );
-  s.check(overlaps.length === 0, `overlapping regions: ${JSON.stringify(overlaps.slice(0, 3))}`);
+
+  for (const failure of overlapGeometryFailures(overlap.records)) {
+    s.check(false, failure);
+  }
+
+  s.note(
+    `overlap probes: ${String(overlap.summary.measured)} measured, ${String(overlap.summary.unresolved)} unresolved, ${String(overlap.summary.notApplicable)} N/A`
+  );
 
   await shot(page, 'automated-1280x800.png');
 }
@@ -1775,7 +2386,7 @@ async function sectionReset(page, url) {
 async function measureGeometry(page, label, state, probes) {
   const overflow = await horizontalOverflow(page);
   const clipped = await clippedElements(page);
-  const overlaps = await semanticOverlap(page, probes, OVERLAP_TOLERANCE_PX, label, state);
+  const overlap = await semanticOverlap(page, probes, OVERLAP_TOLERANCE_PX, label, state);
 
   const failures = [];
 
@@ -1785,13 +2396,144 @@ async function measureGeometry(page, label, state, probes) {
   if (clipped > 0) {
     failures.push(`${String(clipped)} clipped elements`);
   }
-  if (overlaps.length > 0) {
-    failures.push(
-      `${String(overlaps.length)} overlapping regions (${overlaps.map((entry) => entry.pairName).join(', ')})`
-    );
+
+  failures.push(...overlapGeometryFailures(overlap.records));
+
+  return {
+    geometry: {
+      overflow,
+      clipped,
+      overlaps: overlap.measuredFailures.length,
+      unresolvedRequiredProbes: overlap.unresolvedRequired.length,
+      overlapProbes: overlap.summary,
+    },
+    failures,
+  };
+}
+
+async function ensureInvalidState(page) {
+  const summary = page.getByRole('region', { name: SUMMARY_TITLE });
+
+  if ((await summary.count()) === 0) {
+    await page.getByRole('button', { name: SUBMIT_LABEL }).click();
+    await summary.waitFor();
   }
 
-  return { geometry: { overflow, clipped, overlaps: overlaps.length }, failures };
+  return summary;
+}
+
+async function measureSummaryLinkGeometry(page, index, samples) {
+  return page.evaluate(
+    ([linkIndex, sampleCount]) => {
+      const links = Array.from(
+        document.querySelectorAll('main#main-content section[tabindex="-1"] a')
+      );
+      const el = links[linkIndex];
+
+      if (el === undefined) {
+        return null;
+      }
+
+      const rect = el.getBoundingClientRect();
+      const owns = (hit) => hit !== null && (hit === el || el.contains(hit) || hit.contains(el));
+
+      const inset = 0.15;
+      const points = [
+        [rect.left + rect.width / 2, rect.top + rect.height / 2],
+        [rect.left + rect.width * inset, rect.top + rect.height * inset],
+        [rect.right - rect.width * inset, rect.top + rect.height * inset],
+        [rect.left + rect.width * inset, rect.bottom - rect.height * inset],
+        [rect.right - rect.width * inset, rect.bottom - rect.height * inset],
+      ].slice(0, sampleCount);
+
+      const unobscuredSampleCount = points.filter(([x, y]) =>
+        owns(document.elementFromPoint(x, y))
+      ).length;
+
+      const visibleWidth = Math.max(
+        0,
+        Math.min(rect.right, window.innerWidth) - Math.max(rect.left, 0)
+      );
+      const visibleHeight = Math.max(
+        0,
+        Math.min(rect.bottom, window.innerHeight) - Math.max(rect.top, 0)
+      );
+      const area = rect.width * rect.height;
+
+      return {
+        text: (el.textContent ?? '').trim(),
+        href: el.getAttribute('href'),
+        boundingBox: {
+          top: Math.round(rect.top),
+          left: Math.round(rect.left),
+          width: Math.round(rect.width),
+          height: Math.round(rect.height),
+        },
+        visibleAreaRatio: area === 0 ? 0 : (visibleWidth * visibleHeight) / area,
+        unobscuredSampleCount,
+        sampleCount: points.length,
+      };
+    },
+    [index, samples]
+  );
+}
+
+async function collectSummaryLinkEvidence(page) {
+  const records = [];
+
+  for (const target of SUMMARY_LINK_TARGETS) {
+    const summary = await ensureInvalidState(page);
+    const link = summary.getByRole('link').nth(target.index);
+
+    if ((await link.count()) === 0) {
+      records.push({
+        index: target.index,
+        name: target.name,
+        text: null,
+        href: null,
+        visible: false,
+        boundingBox: null,
+        visibleAreaRatio: 0,
+        unobscuredSampleCount: 0,
+        sampleCount: OBSCURATION_SAMPLES,
+        activationTarget: target.selector,
+        activationMethod: 'keyboard Enter',
+        activationFocusedLink: false,
+        activationPassed: false,
+      });
+      continue;
+    }
+
+    await link.scrollIntoViewIfNeeded().catch(() => undefined);
+
+    const visible = await link.isVisible();
+    const geometry = await measureSummaryLinkGeometry(page, target.index, OBSCURATION_SAMPLES);
+
+    await link.focus();
+    const activationFocusedLink = await link.evaluate((el) => el === document.activeElement);
+    await page.keyboard.press('Enter');
+    const activationPassed = await page
+      .locator(target.selector)
+      .evaluate((el) => el === document.activeElement);
+
+    records.push({
+      index: target.index,
+      name: target.name,
+      text: geometry === null ? null : geometry.text,
+      href: geometry === null ? null : geometry.href,
+      visible,
+      boundingBox: geometry === null ? null : geometry.boundingBox,
+      visibleAreaRatio: geometry === null ? 0 : Number(geometry.visibleAreaRatio.toFixed(3)),
+      unobscuredSampleCount: geometry === null ? 0 : geometry.unobscuredSampleCount,
+      sampleCount: geometry === null ? OBSCURATION_SAMPLES : geometry.sampleCount,
+      activationTarget: target.selector,
+      activationMethod: 'keyboard Enter',
+      activationFocusedLink,
+      activationPassed,
+    });
+  }
+
+  return records;
 }
 
 async function sectionResponsive(page, url) {
@@ -1803,7 +2545,13 @@ async function sectionResponsive(page, url) {
     await gotoHome(page, url);
 
     const initial = { state: 'initial', failures: [], geometry: {}, visibility: {} };
-    const invalid = { state: 'invalid', failures: [], geometry: {}, visibility: {} };
+    const invalid = {
+      state: 'invalid',
+      failures: [],
+      geometry: {},
+      visibility: {},
+      summaryLinks: [],
+    };
     const success = { state: 'success', failures: [], geometry: {}, visibility: {} };
 
     const initialGeometry = await measureGeometry(page, label, 'initial', OVERLAP_PROBES.initial);
@@ -1873,6 +2621,14 @@ async function sectionResponsive(page, url) {
     if (!invalid.visibility.submitVisible || !invalid.visibility.resetVisible) {
       invalid.failures.push('form actions not visible');
     }
+
+    invalid.summaryLinks = await collectSummaryLinkEvidence(page);
+
+    for (const record of invalid.summaryLinks) {
+      invalid.failures.push(...evaluateSummaryLinkEvidence(record));
+    }
+
+    await ensureInvalidState(page);
 
     await page.locator(NAME_FIELD).fill('Demonstration');
     await page.locator(CATEGORY_FIELD).selectOption('laptops');
@@ -2307,14 +3063,13 @@ async function sectionRouting(page, url) {
   );
 }
 
-async function runInteractiveSignoff(page, url, signal) {
-  await gotoHome(page, url);
+async function runInteractiveSignoff(page, url, signal, answers) {
+  await page.bringToFront().catch(() => undefined);
 
   stdout.write(`\n${MANUAL_CHECKLIST}\n`);
   stdout.write(`Review window is open at ${url}\n\n`);
 
   const rl = createInterface({ input: stdin, output: stdout });
-  const answers = {};
 
   try {
     for (const prompt of MANUAL_PROMPTS) {
@@ -2331,7 +3086,24 @@ async function runInteractiveSignoff(page, url, signal) {
           stdout.write(`  expected one of: ${prompt.allowed.join(', ')}\n`);
         }
       }
+
       answers[prompt.key] = value;
+
+      if (prompt.fallback !== undefined && value === prompt.fallback.value) {
+        let reason = '';
+        while (reason === '') {
+          const raw = (await rl.question(`${prompt.fallback.reasonKey}: `, { signal })).trim();
+          if (isValidFallbackReason(raw)) {
+            reason = raw;
+          } else {
+            stdout.write(
+              `  ${prompt.fallback.value} needs a concrete reason of at least ${String(MIN_FALLBACK_REASON_LENGTH)} characters\n`
+            );
+          }
+        }
+
+        answers[prompt.fallback.reasonKey] = reason;
+      }
     }
 
     answers.notes = (await rl.question('notes: ', { signal })).trim();
@@ -2436,24 +3208,31 @@ try {
       results.outcome.signoffUnavailable.push(String(signoffAvailability.reason));
       printSignoffHandoff(approvedSha);
     } else {
-      try {
-        interactiveBrowser = await chromium.launch({ headless: false });
-        interactiveContext = await interactiveBrowser.newContext({ viewport: DESKTOP_VIEWPORT });
-      } catch (error) {
-        results.outcome.signoffUnavailable.push(
-          `headed browser could not launch: ${toMessage(error)}`
-        );
-      }
+      const environment = await createSignoffEnvironment({
+        launchBrowser: () => chromium.launch({ headless: false }),
+        createContext: (browser) => browser.newContext({ viewport: DESKTOP_VIEWPORT }),
+        createPage: (context) => context.newPage(),
+        attachDiagnostics: (interactivePage) => createDiagnostics(interactivePage, 'interactive'),
+        preparePage: (interactivePage) => gotoHome(interactivePage, localUrl),
+      });
 
-      if (interactiveContext !== null) {
-        const interactivePage = await interactiveContext.newPage();
-        createDiagnostics(interactivePage, 'interactive');
+      interactiveBrowser = environment.browser;
+      interactiveContext = environment.context;
+
+      if (!environment.available) {
+        results.outcome.signoffUnavailable.push(String(environment.reason));
+      } else {
+        const interactivePage = environment.page;
+
+        results.manual = createManualAnswerRecord();
+        results.outcome.signoffCollectionStarted = true;
 
         try {
-          results.manual = await runInteractiveSignoff(
+          await runInteractiveSignoff(
             interactivePage,
             localUrl,
-            abortController.signal
+            abortController.signal,
+            results.manual
           );
         } catch (error) {
           if (results.outcome.signoffInterrupted) {
@@ -2524,6 +3303,27 @@ const interactiveIncluded = diagnosticSinks.some((sink) => sink.scope === 'inter
 const diagnosticsPassed = recordDiagnosticsSection(finalEvaluation, interactiveIncluded);
 
 const manualSummary = summariseManual(results.manual);
+const interruptedAfterAnswers =
+  manualSummary !== null &&
+  manualSummary.answeredCount > 0 &&
+  (results.outcome.signoffInterrupted ||
+    results.outcome.signoffIncomplete.length > 0 ||
+    results.outcome.signoffUnavailable.length > 0);
+const overlapTotals = summariseOverlap(results.overlap);
+const summaryLinkEvidence = results.viewports.flatMap((entry) =>
+  entry.states
+    .filter((state) => state.state === 'invalid')
+    .flatMap((state) =>
+      (state.summaryLinks ?? []).map((record) => ({
+        viewport: entry.viewport,
+        record,
+        failures: evaluateSummaryLinkEvidence(record),
+      }))
+    )
+);
+const summaryLinkFailureCount = summaryLinkEvidence.filter(
+  (entry) => entry.failures.length > 0
+).length;
 const automatedFailures = results.sections.filter(
   (entry) => entry.id !== 'M' && entry.status === 'FAIL'
 );
@@ -2550,10 +3350,21 @@ const exitCode = exitCodeForStatus(status);
 results.status = status;
 results.exitCode = exitCode;
 results.finishedAt = new Date().toISOString();
+results.overlapSummary = overlapTotals;
+results.summaryLinkFailures = summaryLinkFailureCount;
 results.manualSummary =
   manualSummary === null
     ? null
-    : { complete: manualSummary.complete, failed: manualSummary.failed };
+    : {
+        complete: manualSummary.complete,
+        answersComplete: manualSummary.answersComplete,
+        failed: manualSummary.failed,
+        answeredCount: manualSummary.answeredCount,
+        promptCount: manualSummary.promptCount,
+        fallbackReasonsComplete: manualSummary.fallbackReasonsComplete,
+        missingReasons: manualSummary.missingReasons,
+        interruptedAfterAnswers,
+      };
 
 function renderReport() {
   const lifecycle = results.lifecycle;
@@ -2592,13 +3403,65 @@ function renderReport() {
     )
     .join('\n');
 
-  const overlapFailures = results.overlap.filter((entry) => entry.failed);
+  const overlapFailures = results.overlap.filter(
+    (entry) => entry.status === OVERLAP_STATUS.MEASURED_FAIL
+  );
+  const overlapUnresolved = results.overlap.filter(
+    (entry) => entry.status === OVERLAP_STATUS.UNRESOLVED
+  );
+
+  const summaryLinkRows = summaryLinkEvidence
+    .map(
+      (entry) =>
+        `| ${entry.viewport} | ${entry.record.name} | ${String(entry.record.visible)} | ${(entry.record.visibleAreaRatio * 100).toFixed(1)}% | ${String(entry.record.unobscuredSampleCount)}/${String(entry.record.sampleCount)} | ${entry.record.activationMethod} | ${String(entry.record.activationPassed)} | ${entry.failures.length === 0 ? '—' : entry.failures.join('; ')} |`
+    )
+    .join('\n');
 
   const manual = results.manual;
   const manualRow = (label, key) =>
     `| ${label} | ${manual === null ? 'NOT COLLECTED' : (manual[key] ?? 'NOT COLLECTED')} | ${
       manual === null ? 'no sign-off phase in this run' : '—'
     } |`;
+
+  const manualReasonRow = (label, entry) => {
+    if (manual === null) {
+      return `| ${label} | NOT COLLECTED | no sign-off phase in this run |`;
+    }
+
+    const answer = manual[entry.key];
+
+    if (typeof answer !== 'string') {
+      return `| ${label} | NOT COLLECTED | \`${entry.key}\` was never answered |`;
+    }
+
+    if (answer !== entry.trigger) {
+      return `| ${label} | NOT REQUIRED | \`${entry.key}\` answered ${answer} |`;
+    }
+
+    const reason = manual[entry.reasonKey];
+
+    return isValidFallbackReason(reason)
+      ? `| ${label} | ${String(reason)} | required because \`${entry.key}\` = ${entry.trigger} |`
+      : `| ${label} | MISSING | required because \`${entry.key}\` = ${entry.trigger} |`;
+  };
+
+  const fullPassBlockers = [
+    manualSummary === null ? 'no manual answers were collected' : null,
+    manualSummary !== null && !manualSummary.answersComplete
+      ? `manual answers are incomplete (${String(manualSummary.answeredCount)} of ${String(manualSummary.promptCount)})`
+      : null,
+    manualSummary !== null && manualSummary.failed ? 'a manual FAIL was recorded' : null,
+    manualSummary !== null && !manualSummary.fallbackReasonsComplete
+      ? `fallback reason missing: ${manualSummary.missingReasons.join(', ')}`
+      : null,
+    outcome.signoffUnavailable.length > 0 ? 'the sign-off environment was unavailable' : null,
+    overlapTotals.unresolved > 0
+      ? `${String(overlapTotals.unresolved)} required overlap probes were unresolved`
+      : null,
+    summaryLinkFailureCount > 0
+      ? `${String(summaryLinkFailureCount)} responsive Error Summary links were not usable`
+      : null,
+  ].filter((entry) => entry !== null);
 
   const defects = results.sections
     .filter((entry) => entry.status === 'FAIL')
@@ -2708,13 +3571,44 @@ Each viewport is measured in three states. Viewport status is PASS only when all
 | --- | --- | --- | --- | --- |
 ${viewportRows}
 
+### Responsive Error Summary Links
+
+Both links are inspected independently in the invalid state at every viewport: visibility, bounding box, viewport containment ratio, multi-point obscuration sampling and keyboard activation of the field each link points at. A viewport cannot pass while either link is unusable.
+
+| Viewport | Link | Visible | Visible area | Unobscured | Activation | Focus reached | Failures |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+${summaryLinkRows || '| — | — | — | — | — | — | — | not measured |'}
+
 ## Overlap Probes
 
-Semantic adjacent-region probes with a documented ${String(OVERLAP_TOLERANCE_PX)} px border-touch tolerance. Probes recorded: ${String(results.overlap.length)}; failing: ${String(overlapFailures.length)}.
+Semantic adjacent-region probes with a documented ${String(OVERLAP_TOLERANCE_PX)} px border-touch tolerance. Every probe resolves to exactly one status: \`MEASURED_PASS\`, \`MEASURED_FAIL\`, \`UNRESOLVED\` or \`NOT_APPLICABLE\`. Only a probe explicitly declared \`required: false\` may be \`NOT_APPLICABLE\`; an unresolved required probe is a failure of the state that declared it.
 
-${overlapFailures.length === 0 ? 'No material intersections detected.' : overlapFailures.map((entry) => `- ${entry.viewport} ${entry.state} — ${entry.pairName}: overlapX ${String(entry.overlapX)}, overlapY ${String(entry.overlapY)}`).join('\n')}
+| Count | Value |
+| --- | --- |
+| declared | ${String(overlapTotals.declared)} |
+| measured | ${String(overlapTotals.measured)} |
+| measured pass | ${String(overlapTotals.measuredPass)} |
+| measured fail | ${String(overlapTotals.measuredFail)} |
+| unresolved (required) | ${String(overlapTotals.unresolved)} |
+| not applicable (optional) | ${String(overlapTotals.notApplicable)} |
+| all required probes measured | ${String(overlapTotals.allRequiredMeasured)} |
 
-Full rectangles and overlap values for every probe: \`${RESULTS_PATH}\`.
+${
+  overlapTotals.clean
+    ? 'No material intersections detected.'
+    : [
+        ...overlapFailures.map(
+          (entry) =>
+            `- MEASURED_FAIL — ${entry.viewport} ${entry.state} — ${entry.pairName}: overlapX ${String(entry.overlapX)}, overlapY ${String(entry.overlapY)}`
+        ),
+        ...overlapUnresolved.map(
+          (entry) =>
+            `- UNRESOLVED — ${entry.viewport} ${entry.state} — ${entry.pairName}: ${String(entry.reason)}`
+        ),
+      ].join('\n')
+}
+
+Full rectangles, overlap values, statuses and unresolved reasons for every probe: \`${RESULTS_PATH}\`.
 
 ## Focus Evidence
 
@@ -2743,16 +3637,29 @@ Affected-node evidence — targets, failure summaries and capped HTML excerpts �
 
 ## Manual Sign-off
 
-| Check | Result | Notes |
+- answers collected: ${manual === null ? 'none' : String(Object.keys(manual).length)}
+- answered count: ${manualSummary === null ? '0' : `${String(manualSummary.answeredCount)} of ${String(manualSummary.promptCount)}`}
+- complete: ${manualSummary === null ? 'false' : String(manualSummary.complete)}
+- failed: ${manualSummary === null ? 'not collected' : String(manualSummary.failed)}
+- fallback reasons complete: ${manualSummary === null ? 'not collected' : String(manualSummary.fallbackReasonsComplete)}
+- missing fallback reasons: ${manualSummary === null || manualSummary.missingReasons.length === 0 ? 'none' : manualSummary.missingReasons.join(', ')}
+- sign-off collection started: ${String(outcome.signoffCollectionStarted)}
+- interrupted after answers: ${String(interruptedAfterAnswers)}
+
+Every answer is persisted the moment it is accepted, so an EOF, \`SIGINT\` or \`SIGTERM\` after an answer cannot discard it. Answers already recorded are reported below even when the sign-off ended early.
+
+| Check | Result | Reason/notes |
 | --- | --- | --- |
 ${manualRow('200% zoom', '200% zoom')}
 ${manualRow('400% zoom', '400% zoom')}
 ${manualRow('keyboard/focus', 'keyboard/focus')}
 ${manualRow('clipping/overlap', 'clipping/overlap')}
 ${manualRow('real forced colors', 'forced colors')}
+${manualReasonRow('forced colors reason', MANUAL_FALLBACK_REASONS[0])}
 ${manualRow('screen reader', 'screen reader')}
+${manualReasonRow('screen reader reason', MANUAL_FALLBACK_REASONS[1])}
 
-${manual === null ? 'No user answers were collected in this mode.' : `User notes:\n\n> ${manual.notes || '(none)'}`}
+${manual === null ? 'No user answers were collected in this mode.' : `User notes — kept separate from fallback reasons and never accepted as justification:\n\n> ${manual.notes || '(none)'}`}
 
 ## Defects
 
@@ -2774,13 +3681,20 @@ ${
         : 'The review failed. See defects and execution outcome above.'
 }
 
+${
+  fullPassBlockers.length === 0
+    ? 'No blocker to a full-pass claim remains in this run.'
+    : `A full-pass claim is impossible while any of these holds:\n\n${fullPassBlockers.map((entry) => `- ${entry}`).join('\n')}`
+}
+
 ${repository.finalReviewEligible ? '' : 'This run is **PROVISIONAL**: it is not bound to an approved review SHA and cannot serve as closure evidence.'}
 
 ## Remaining Risks
 
 - Viewport width is not browser zoom; the responsive matrix does not prove 200 % or 400 % reflow.
 - Forced-colors coverage here is Playwright emulation, not a real OS high-contrast mode.
-- Screen-reader announcement behaviour is not automatable and is not claimed.
+- Axe does not replace a screen-reader review; announcement behaviour is not automatable and is not claimed.
+- Automated Error Summary link activation is harness-driven keyboard activation of a focused link. It does not replace the user's keyboard sign-off.
 
 ## Next Step
 
@@ -2812,6 +3726,9 @@ stdout.write(
       startup: results.startup.healthy ?? false,
       sections: results.sections.map((entry) => `${entry.id}:${entry.status}`),
       viewports: results.viewports.map((entry) => `${entry.viewport}:${entry.status}`),
+      overlap: overlapTotals,
+      summaryLinkFailures: summaryLinkFailureCount,
+      manual: results.manualSummary,
       axeViolations,
       diagnostics: {
         interactiveIncluded: results.diagnostics.interactiveIncluded,

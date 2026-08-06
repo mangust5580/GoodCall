@@ -461,6 +461,60 @@ Allow-list entries now require `pattern`, a non-empty `reason`, an explicit `sco
 - **Pattern-only diagnostics allow-list** — one entry would silence a message across every scope and kind.
 - **Launching a headed browser when stdin is not interactive** — opens a window nobody can answer and then blocks.
 
+## M3-05G — Manual sign-off integrity and responsive evidence completion
+
+**Status: IMPLEMENTED — AWAITING INDEPENDENT AUDIT AND CI**
+
+The independent audit of M3-05F returned **CHANGES REQUIRED** with five findings — M3F-PARTIAL-02, M3F-MANUAL-01, M3F-RESPONSIVE-02, M3F-OVERLAP-02, M3F-MANUAL-02 — after CI run **30973880138** passed for SHA `402cb2e3b7a0d8dd4928587cb74efa3402f60a1d`. CI cannot see any of them: it never runs the harness. The accepted M3-05D architecture is unchanged again; every correction closes a way the harness could still describe a run more favourably than the run deserved.
+
+### Complete sign-off environment boundary
+
+Only `chromium.launch({ headless: false })` and `newContext()` were treated as sign-off availability. `interactiveContext.newPage()`, the interactive diagnostics sink and the first navigation sat outside that boundary, so a machine that could not open a review window produced an `automatedExecutionErrors` entry and a **FAILED** status — the application blamed for a missing environment.
+
+All five pre-sign-off operations are now one boundary inside `createSignoffEnvironment()`: launch, context, page, diagnostics registration, initial page preparation. Any failure among them records `signoffUnavailable`, never `automatedExecutionErrors`, and resolves to **PARTIAL**. The function returns whatever it managed to own — browser, context, page — so `finally` still closes it; a cleanup failure is the only thing that can escalate the run to FAILED. A `signoffCollectionStarted` marker splits the lifecycle: failures before it are `signoffUnavailable`, failures after it are `signoffIncomplete` unless a signal already marked the run interrupted. Application diagnostics stay under the final diagnostics gate and can still produce FAILED.
+
+### Incremental manual answer persistence
+
+`runInteractiveSignoff()` built a local `answers` object and `results.manual` was assigned only after the last prompt returned. An EOF, `SIGINT` or `SIGTERM` at prompt five discarded four collected answers — including a recorded **FAIL**, which then degraded to PARTIAL.
+
+The record is created in the main lifecycle scope by `createManualAnswerRecord()` and handed to the sign-off function, which no longer owns the only copy. Each accepted value is written into that shared record **before the next question is asked**, and fallback reasons are persisted the same way. `summariseManual()` operates on partial records and reports `answeredCount`, `answersComplete`, `failed`, `fallbackReasonsComplete` and `missingReasons` separately.
+
+Precedence after an interruption: any persisted mandatory `FAIL` resolves to **FAILED**, ahead of `signoffInterrupted`, `signoffIncomplete` and a late `signoffUnavailable`. Persisted answers without a FAIL, but incomplete, resolve to **PARTIAL**. Cleanup and runtime hard failures keep their existing precedence.
+
+### Fallback reason contract
+
+`NOT AVAILABLE` for forced colors and `NOT TESTED` for a screen reader remain permitted, but neither can complete a sign-off unexplained. Two conditional fields — `forced colors reason` and `screen reader reason` — are prompted **only** when the corresponding answer is the fallback value, and never when it is PASS or FAIL. A reason must be a trimmed string of at least 3 characters that is not punctuation-only; the prompt repeats until it is. A fallback answer whose reason is missing or invalid makes the manual record incomplete and the run **PARTIAL**. General notes stay a separate field and are never accepted as justification.
+
+### Per-viewport Error Summary link usability
+
+The responsive matrix recorded `summaryLinks: <count>`, which proves DOM presence and nothing else. Both links are now inspected independently in the invalid state at every one of the six viewports, and each record stores `index`, `text`, `visible`, `boundingBox`, `visibleAreaRatio`, `unobscuredSampleCount`, `sampleCount`, `activationTarget` and `activationPassed` inside that viewport's invalid-state record.
+
+A link passes only with `isVisible()`, a non-null bounding box of non-zero width and height, at least 90 % of its area inside the viewport after scrolling into view, and at least 4 of 5 unobscured sample points — the same geometry model the focus evidence uses, never centre-point-only. Activation is **keyboard** for both links: the link takes focus, `Enter` is pressed, and `document.activeElement` must be `#m3-demo-name` for the Name link and `#m3-demo-category` for the Category link. The invalid state is re-established between the two activations. Every failed check is appended to that viewport's invalid-state failure array, so a viewport cannot read PASS while a summary link is unusable.
+
+### Explicit overlap probe statuses
+
+A probe whose targets did not resolve was stored as `resolved: false, failed: false`: coverage silently shrank while the report still claimed no intersections. Every probe now resolves to exactly one status — `MEASURED_PASS`, `MEASURED_FAIL`, `UNRESOLVED` or `NOT_APPLICABLE`. Probes are `required: true` by default; the shipped set declares no optional probes.
+
+A required probe with a missing left target, a missing right target, the same element on both sides, or an unexpected nesting is **UNRESOLVED**, carries the reason, is `failed: true` and appends a state-local failure through `overlapGeometryFailures()`. `NOT_APPLICABLE` is reachable only for a probe explicitly declared `required: false`, stores its reason and is excluded from measured totals. Measured records carry viewport, state, pair name, both identifiers, both rectangles, `overlapX`, `overlapY`, tolerance, status and verdict. The report prints declared, measured, measured pass, measured fail, unresolved and not-applicable counts, and the sentence _No material intersections detected._ is emitted only when measured failures and unresolved probes are both zero and every required probe was measured.
+
+### Report contract
+
+The manual section reports answers collected, answered count, complete, failed, both fallback reasons, fallback-reasons-complete and interrupted-after-answers, and its table has a dedicated `Reason/notes` column with explicit rows for `forced colors reason` and `screen reader reason`. Answers already collected are printed even when the sign-off ended early — a partial record no longer renders as six `NOT COLLECTED` rows. The final assessment lists every blocker to a full-pass claim: a missing fallback reason, any manual FAIL, incomplete answers, an unavailable sign-off environment, unresolved required overlap probes, or unusable responsive summary links.
+
+### Rejected variants
+
+- **Treating `newPage()` or diagnostics registration as automated application execution** — the exact split that turned an unopenable review window into a product failure.
+- **Returning manual answers only after the final prompt** — one keystroke of interruption erases everything already answered.
+- **Discarding a prior FAIL after an interruption** — the harness would report PARTIAL for a defect the user had already recorded.
+- **Accepting fallback answers without justification** — `NOT AVAILABLE` and `NOT TESTED` would complete a sign-off while proving nothing.
+- **Treating a summary-link count as usability evidence** — presence in the DOM is not visibility, containment or activation.
+- **Treating unresolved overlap probes as successful** — coverage shrinks silently and the clean claim survives.
+- **Claiming clean overlap coverage when required probes were not measured** — the report would describe probes that never ran.
+
+### Verification and status
+
+`--self-test` covers **73 scenarios** with no server and no browser, including every availability, persistence, fallback-reason, responsive-link and overlap-status scenario above. Two provisional automated-only runs passed on distinct dynamic ports with zero axe violations, zero diagnostics failures, 109 of 109 overlap probes measured and 12 of 12 responsive summary-link records usable. **No final interactive review was run and no browser review is claimed to have passed.**
+
 ## Next Steps
 
 M0 is complete. Next allowed step is **request review checkpoint R0**.
