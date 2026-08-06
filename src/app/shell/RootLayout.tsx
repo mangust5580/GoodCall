@@ -8,8 +8,8 @@ import {
   useNavigation,
 } from 'react-router-dom';
 import styles from './Shell.module.scss';
-import { BrandHomeLink } from '@/app/shell/brand';
 import { InformationBar } from '@/app/shell/information-bar';
+import { SiteHeader } from '@/app/shell/site-header';
 
 export function RootLayout(): React.ReactElement {
   const location = useLocation();
@@ -105,9 +105,7 @@ export function RootLayout(): React.ReactElement {
         </div>
       )}
       <InformationBar />
-      <header className={styles['brand-slot']}>
-        <BrandHomeLink />
-      </header>
+      <SiteHeader />
       <ScrollRestoration getKey={(location) => location.pathname} />
       <Outlet />
     </div>

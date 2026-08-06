@@ -114,7 +114,7 @@ describe('Runtime brand mount', () => {
     expect(document.querySelector('main#main-content')?.querySelector('header')).toBeNull();
   });
 
-  it('introduces no navigation landmark and no extra live region', async () => {
+  it('keeps the brand link out of any navigation landmark and adds no live region', async () => {
     renderApplicationAt('/search');
 
     await waitFor(() => {
@@ -122,8 +122,12 @@ describe('Runtime brand mount', () => {
     });
 
     const banner = screen.getByRole('banner');
-    expect(within(banner).queryAllByRole('navigation')).toHaveLength(0);
-    expect(banner.querySelectorAll('nav')).toHaveLength(0);
+
+    expect(brandLink().closest('nav')).toBeNull();
+    expect(within(banner).getAllByRole('navigation')).toHaveLength(1);
+    expect(within(banner).getAllByRole('navigation', { name: 'Основная навигация' })).toHaveLength(
+      1
+    );
     expect(banner.querySelectorAll('[aria-live]')).toHaveLength(0);
     expect(document.querySelectorAll('#route-announcement')).toHaveLength(1);
     expect(document.querySelectorAll('[aria-live]')).toHaveLength(1);

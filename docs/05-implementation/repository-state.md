@@ -542,12 +542,61 @@ M4-03A corrects all of it without touching the Information Bar's visual or struc
 
 - **No visual, CSS, RootLayout, route, dependency, Shared UI, asset, tooling or workflow change.**
 - Test suite: **803 tests across 44 files**. Bundle essentially unchanged at raw 419.76 KB / gzip 125.66 KB.
-- M4-03A status at commit time: **IMPLEMENTED — AWAITING INDEPENDENT AUDIT, CI AND USER VISUAL CONFIRMATION**.
-- **CI is pending at commit time**, and **user visual confirmation against RTE-001 is pending**.
-- **M4-04 remains blocked** until M4-03A exact-SHA green CI, independent audit and user visual confirmation all close.
+- M4-03A is **APPROVED AND CLOSED**: commit `54d9eb954fda1b582db49c1d3df217d8ea6723ca`, GitHub Actions run **31085424042**, job **92563626221**, conclusion **success** — Vitest 803 passed in 44 files, Playwright **78 passed, 0 failed, 0 flaky**. The independent technical audit approved it and the user confirmed the wide inline, compact closed and compact open visual states. M4-03 is closed through M4-03A.
+
+## Milestone State Note — M4-04 Primary Header Core (2026-08-06)
+
+### Stage identity
+
+- Stage: **M4-04 — Primary Header core: Catalog entry and Global Search**.
+- Baseline SHA: `54d9eb954fda1b582db49c1d3df217d8ea6723ca` (M4-03A closure commit).
+- The resulting M4-04 commit SHA cannot be embedded inside its own commit; it is recorded in the untracked stage handoff.
+
+### Added in M4-04
+
+```
+src/app/shell/site-header/
+  header-core-config.ts           registry-derived destinations, canonical labels, query helpers
+  GlobalSearchForm.tsx            named search form with validation and URL synchronization
+  GlobalSearchForm.module.scss    search composition
+  SiteHeader.tsx                  banner, brand, primary navigation, Catalog, Search
+  SiteHeader.module.scss          Header surface and responsive composition
+  index.ts                        the @/app/shell/site-header public boundary
+tests/app/shell/
+  header-core-config.test.ts             configuration and public-barrel contract
+  global-search-form.test.tsx            search semantics, sync, submit, validation
+  site-header.test.tsx                   landmarks, Catalog, canonical order, deferred actions
+  site-header-runtime-mount.test.tsx     real application route-tree integration
+tests/e2e/site-header.spec.ts            responsive, keyboard, Catalog, Search and axe evidence
+```
+
+### Modified in M4-04
+
+```
+src/app/shell/RootLayout.tsx                          transitional brand banner replaced by SiteHeader
+src/app/shell/Shell.module.scss                       obsolete brand-slot rule removed
+tests/app/shell/brand-runtime-mount.test.tsx          one M4-02A assertion rescoped for the Header navigation
+docs/05-implementation/m4-canonical-shell-report.md   M4-03A closure and the M4-04 section
+```
+
+### State at report time
+
+- The **primary `SiteHeader`** is application-shell owned and published from `@/app/shell/site-header`, which exports only `SiteHeader`.
+- **The brand moved into the canonical Header.** The transitional brand banner is gone; `BrandHomeLink` is consumed unchanged through `@/app/shell/brand` and keeps its `GoodCall — на главную` name.
+- **Catalog is a temporary route-safe entry** to `/catalog/laptops`, derived from the existing `catalog.category` route with `generatePath` and the schema-validated representative slug `laptops`. **`/catalog` remains unregistered** and still reaches the global catch-all; the current state does not leak to other category paths.
+- One **primary navigation** named `Основная навигация`, alongside the Information Bar's separate `Сервисная навигация`.
+- One **always-visible Search form** named `Поиск по каталогу`, with a persistently visible label, `type="search"`, `name="q"` and a `Найти` submit. It navigates to `/search?q=…` through Router history, trims the query, synchronises from the URL, and shows the local error `Введите поисковый запрос.` for an empty query without navigating.
+- Canonical Header order is **Logo → Catalog → Search** in both DOM and focus order; no Compare, Favorites, Cart or Account action exists and no empty placeholder was added.
+- **Compact uses a two-row composition** — identity row, then a full-width Search row — and medium, wide and expanded compose one row. No new breakpoint and no JavaScript viewport detection.
+- The **Header is not sticky**, and **no Header icon set** was introduced; text controls are the M4-04 boundary.
+- No route, registry, carrier, loader, Shared UI, Foundations, asset, dependency, lockfile, Playwright or workflow change.
+- Test suite: **869 tests across 48 files**, up from 803 in 44. Bundle: raw **424.50 KB** / gzip **126.86 KB**.
+- Local checks pass, including `npm run check:full`. **Local E2E was not run** — the production-preview lifecycle belongs to CI or a user-owned preview.
+- **CI is pending at commit time**, and **user visual confirmation against RTE-001 and CMP-001 is pending**.
+- **M4-05 is blocked** until M4-04 exact-SHA green CI, independent audit and user visual confirmation all close.
 
 ## Next Repository Modifications
 
 The current implementation milestone is **M4**, whose scope must be taken from the approved architecture and UI/component/responsive contracts.
 
-**M4-04 must not begin** until the M4-03 exact-SHA CI, independent audit and user visual confirmation all close.
+**M4-05 must not begin** until the M4-04 exact-SHA CI, independent audit and user visual confirmation all close.

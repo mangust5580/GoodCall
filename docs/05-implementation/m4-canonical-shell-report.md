@@ -8,10 +8,11 @@
 | M4-01A — Catalog family catch-all correction and CI reconciliation            | **APPROVED AND CLOSED**                                                       |
 | M4-02 — Runtime brand/logo integration                                        | **CLOSED THROUGH M4-02A**                                                     |
 | M4-02A — Brand landmark accessibility correction and E2E stabilization        | **APPROVED AND CLOSED**                                                       |
-| M4-03 — Information Bar                                                       | **CI FAILED ON ITS EXACT SHA — SUPERSEDED BY M4-03A**                         |
-| M4-03A — Information Bar E2E correction and exact active-state reconciliation | **IMPLEMENTED — AWAITING INDEPENDENT AUDIT, CI AND USER VISUAL CONFIRMATION** |
+| M4-03 — Information Bar                                                       | **CLOSED THROUGH M4-03A**                                                     |
+| M4-03A — Information Bar E2E correction and exact active-state reconciliation | **APPROVED AND CLOSED**                                                       |
+| M4-04 — Primary Header core: Catalog entry and Global Search                  | **IMPLEMENTED — AWAITING INDEPENDENT AUDIT, CI AND USER VISUAL CONFIRMATION** |
 
-M4 is not approved and not closed. The Information Bar is the first canonical shell surface; the primary Header, Footer, Newsletter, Search and Catalog UI all remain later stages, and the brand banner remains transitional until M4-04.
+M4 is not approved and not closed. The Information Bar and the primary Header core now exist; Header route actions, the shell icon set, Footer and Newsletter all remain later stages. The transitional brand banner was replaced by the canonical Header in M4-04.
 
 ## M4-01 — Shell destination safety and composition boundary
 
@@ -760,7 +761,9 @@ Superseded. CI failed for `71a0addf…`, so M4-03 alone is not an implementation
 
 ## M4-03A — Information Bar E2E correction and exact active-state reconciliation
 
-**Status at commit time: IMPLEMENTED — AWAITING INDEPENDENT AUDIT, CI AND USER VISUAL CONFIRMATION**
+**Status: APPROVED AND CLOSED**
+
+Closure evidence: M4-03 commit `71a0addfb8e461affd91d788fde493fce5acb765`, corrected by M4-03A commit `54d9eb954fda1b582db49c1d3df217d8ea6723ca`. GitHub Actions run **31085424042**, job **92563626221**, conclusion **success** — Vitest 803 passed in 44 files, Playwright **78 passed, 0 failed, 0 flaky**. All twelve previous M4-03 failures passed and the exact active-route regressions passed. The independent technical audit returned **approved**, and the user confirmed the visual result for the wide inline, compact closed and compact open states. M4-03 is closed through M4-03A.
 
 ### Baseline
 
@@ -858,4 +861,157 @@ None beyond the expected file set. `tests/app/shell/information-bar-runtime-moun
 
 ### Next gate
 
-Green GitHub Actions CI on the exact M4-03A SHA with zero failed and zero flaky Playwright tests, then independent diff audit, then user visual confirmation against the original RTE-001. **M4-04 must not begin until all three close.**
+Closed. CI passed for `54d9eb95…` with zero failed and zero flaky tests, the independent audit approved it and the user confirmed the visual result, which unblocked M4-04.
+
+## M4-04 — Primary Header core: Catalog entry and Global Search
+
+**Status at commit time: IMPLEMENTED — AWAITING INDEPENDENT AUDIT, CI AND USER VISUAL CONFIRMATION**
+
+### Baseline
+
+| Item                                 | Value                                            |
+| ------------------------------------ | ------------------------------------------------ |
+| Branch                               | `main`                                           |
+| Baseline SHA                         | `54d9eb954fda1b582db49c1d3df217d8ea6723ca`       |
+| Baseline commit                      | `fix(shell): reconcile information bar behavior` |
+| `git rev-parse HEAD` / `origin/main` | both matched the baseline before changes         |
+| `git diff` / `git diff --cached`     | exit 0 — clean                                   |
+
+### Visual evidence
+
+| Source  | Path                                     | Dimensions  | Bytes     | SHA-256                                                            |
+| ------- | ---------------------------------------- | ----------- | --------- | ------------------------------------------------------------------ |
+| RTE-001 | `artifacts/m4-03/references/RTE-001.png` | 1920 × 3840 | 5 438 232 | `cb943e0b5b525645ede341c53fb6bff7eca714a69b62c042db23d62feb7bdd64` |
+| CMP-001 | `artifacts/m4-04/references/CMP-001.png` | 1920 × 3412 | 4 354 263 | `127c41f4604135c8e6a89ae6614d5702a3b55a69bfb26ebfea4e4c15a5dfe772` |
+
+RTE-001 was re-verified against its recorded evidence; all three values match. Both sources remain local, ignored through `.git/info/exclude` and uncommitted.
+
+**CMP-001 inspection method.** A 1:3 downscaled overview located section **01 “Header & Navigation”** at the top of the sheet. That region was then cropped losslessly at native resolution — `x=0, y=140, w=1920, h=440`, no scaling — and inspected. It contains four labelled reference rows: `Информационная панель`, `Основной хедер`, `Навигация по категориям` and `Хлебные крошки`.
+
+The `Основной хедер` row is the relevant evidence: a white rounded surface carrying, left to right, the GoodCall horizontal lockup, a solid violet Catalog control, a bordered Search field that takes the dominant width, then a divider and four icon actions with counters. That confirms the canonical order and the relative salience of Catalog versus Search.
+
+**Recorded discrepancies**, all resolved in favour of the canonical contract:
+
+- the sheet labels the Catalog control `Каталог товаров`; the canonical contract specifies exactly `Каталог`;
+- the sheet's Search uses placeholder-only labelling with a magnifier glyph; the contract requires a persistently visible label and a text submit, and M4-04 forbids icons;
+- the sheet renders the Information Bar as a violet strip; the implemented Information Bar is the approved neutral strip from RTE-001, already closed and user-confirmed in M4-03A;
+- the sheet's four Header actions with counters are M4-05 scope and are not implemented here.
+
+### Catalog bounded decision
+
+The Catalog control is a normal Router navigation link, not a surface. There is no mega-menu, drawer, disclosure or taxonomy, and no `/catalog` root route — `/catalog` still reaches the global catch-all.
+
+| Property            | Value                                               |
+| ------------------- | --------------------------------------------------- |
+| Visible label       | `Каталог`                                           |
+| Route key           | `catalog.category`                                  |
+| Registry path       | `/catalog/:categorySlug`                            |
+| Representative slug | `laptops`, validated through `categorySlugSchema`   |
+| Destination         | `/catalog/laptops`, built with `generatePath`       |
+| Current state       | `aria-current="page"` on the exact destination only |
+
+`end` on the `NavLink` keeps `/catalog/phones` and `/catalog/laptops/extra` from inheriting the current state.
+
+### Search contract
+
+A Header-owned form, not a Shared UI primitive. It reuses `TextField` and `Button` unchanged — both already satisfy the 44px target contract, and `TextField` already provides a visible label, `aria-describedby` error association, `aria-invalid` and a 2px invalid border, so no Shared UI API was widened.
+
+- `role="search"` with `aria-label="Поиск по каталогу"`; visible label `Поиск по каталогу`; `type="search"`; `name="q"`; submit `Найти`.
+- Submit trims leading and trailing whitespace and preserves internal spacing and characters, then navigates with `URLSearchParams` encoding to `/search?q=…` through Router history under the existing basename. No `window.location`, no literal `/GoodCall/`.
+- Empty or whitespace-only input does not navigate: it shows exactly `Введите поисковый запрос.`, associates it with the field, sets `aria-invalid="true"` and focuses the field. Editing clears the error.
+- The field synchronises from the URL on the Search route only — direct entry, query-only navigation and POP all reflect the current `q`; a missing `q` resolves to empty. No history list, no persistence, no store, no suggestions, no results.
+
+### Component boundary
+
+`src/app/shell/site-header/` publishes only `SiteHeader` through `@/app/shell/site-header`. Labels, route paths, query helpers, the representative slug, `GlobalSearchForm` and the configuration types stay internal. `BrandHomeLink` is consumed through `@/app/shell/brand` — brand markup is not recreated and no SVG is imported directly.
+
+### Landmarks and accessibility
+
+One page-level banner; one primary navigation `Основная навигация`; one search landmark `Поиск по каталогу`; the Information Bar keeps its separate `Сервисная навигация`. The brand link keeps its `GoodCall — на главную` name and sits outside any navigation landmark. No live region was added and route title, focus, scroll and announcement ownership are unchanged.
+
+Focus order — compact: skip link → Information Bar disclosure → brand → Catalog → Search field → Search submit. Wide: skip link → five service links → brand → Catalog → Search field → Search submit.
+
+### Responsive composition
+
+Mobile-first SCSS Modules over the approved ranges; no new breakpoint, no JavaScript viewport detection, no duplicated markup, no CSS reordering.
+
+- **Compact (< 48rem):** identity row holds brand and Catalog; the Search form takes a full-width second row via `flex: 1 1 100%`.
+- **Medium and above (≥ 48rem):** the identity block stops growing and the Search slot takes the remaining width, composing one row.
+- **Wide and expanded:** the same one-row core, with Search absorbing the extra space rather than adding ornamental whitespace.
+
+The Header is not sticky and has no fixed height.
+
+### Root composition
+
+`RootLayout` order is skip link → route announcement → pending announcement → Information Bar → `SiteHeader` → `ScrollRestoration` → outlet. The transitional `brand-slot` wrapper and its `Shell.module.scss` rule were removed.
+
+### Files changed
+
+| File                                                     | Change                                                      |
+| -------------------------------------------------------- | ----------------------------------------------------------- |
+| `src/app/shell/site-header/header-core-config.ts`        | new — registry-derived destinations, labels, query helpers  |
+| `src/app/shell/site-header/GlobalSearchForm.tsx`         | new — named search form with validation and URL sync        |
+| `src/app/shell/site-header/GlobalSearchForm.module.scss` | new — search composition                                    |
+| `src/app/shell/site-header/SiteHeader.tsx`               | new — banner, brand, primary nav, Catalog, Search           |
+| `src/app/shell/site-header/SiteHeader.module.scss`       | new — Header surface and responsive composition             |
+| `src/app/shell/site-header/index.ts`                     | new — `@/app/shell/site-header` boundary                    |
+| `src/app/shell/RootLayout.tsx`                           | transitional banner replaced by `SiteHeader`                |
+| `src/app/shell/Shell.module.scss`                        | obsolete `brand-slot` rule removed                          |
+| `tests/app/shell/header-core-config.test.ts`             | new — configuration and public-barrel contract              |
+| `tests/app/shell/global-search-form.test.tsx`            | new — search semantics, sync, submit, validation            |
+| `tests/app/shell/site-header.test.tsx`                   | new — landmarks, Catalog, canonical order, deferred actions |
+| `tests/app/shell/site-header-runtime-mount.test.tsx`     | new — real route-tree integration                           |
+| `tests/app/shell/brand-runtime-mount.test.tsx`           | one M4-02A assertion rescoped for the Header navigation     |
+| `tests/e2e/site-header.spec.ts`                          | new — responsive, keyboard, Catalog, Search, axe evidence   |
+| `docs/05-implementation/m4-canonical-shell-report.md`    | M4-03A closure; this section                                |
+| `docs/05-implementation/repository-state.md`             | current-state note                                          |
+
+No route, registry, carrier, loader, Shared UI, Foundations, asset, dependency, lockfile, Playwright config or workflow change.
+
+### Local verification
+
+| Command                  | Result                                         |
+| ------------------------ | ---------------------------------------------- |
+| `npm run typecheck`      | PASS                                           |
+| `npm run lint`           | PASS — 0 errors, 0 warnings                    |
+| `npm run lint:styles`    | PASS                                           |
+| `npm run format:check`   | PASS                                           |
+| `npm run check:comments` | PASS                                           |
+| `npm test`               | PASS — **869 tests in 48 files**               |
+| `npm run build`          | PASS — 244 modules                             |
+| `npm run validate:build` | PASS                                           |
+| `npm run check:full`     | PASS — includes the bounded dev-bootstrap gate |
+| `git diff --check`       | PASS                                           |
+
+Bundle moves from raw 419.76 KB / gzip 125.66 KB to raw **424.50 KB** / gzip **126.86 KB**.
+
+Intentionally not run: `npm run dev`, `npm run preview`, `npm run test:e2e`, `playwright test`, `vite`, `vite preview`, `npm run review:m3-browser`, background or fixed-port servers, and user browser automation. CI was pending at commit time and user visual confirmation remains pending.
+
+### Rejected variants
+
+- **A Catalog button with `aria-haspopup`** — it opens nothing in M4-04; a fake disclosure would misstate the affordance.
+- **Registering `/catalog`** — explicitly prohibited; the catch-all behaviour is covered by existing tests.
+- **Hardcoding `/catalog/laptops`** — `generatePath` over the registry path keeps one source of truth.
+- **Placeholder-only Search labelling as in CMP-001** — the contract requires a persistently visible label.
+- **Icon-only Search submit** — no approved shell icon source exists; icons are an M4-05 prerequisite.
+- **Extending `TextField` with an adornment API** — a Shared UI change to serve one shell consumer.
+- **A Shared UI search primitive** — the Search form is shell-specific, not a design-system pattern.
+- **Empty action placeholders for M4-05** — hidden or nameless controls in the focus order.
+- **A sticky Header** — outside the M4-04 boundary.
+- **`matchMedia` for the compact two-row switch** — CSS ranges already express it.
+
+### Deviations
+
+One. `tests/app/shell/brand-runtime-mount.test.tsx` is outside the expected file list. An M4-02A assertion required the banner to contain **no** navigation landmark, which encoded the pre-Header shell; the canonical Header legitimately places the primary navigation inside the banner. The assertion was rescoped rather than weakened: the brand link must still sit outside any navigation landmark, and the banner must now contain exactly one navigation, named `Основная навигация`, with no live region.
+
+### Risks
+
+- User visual confirmation against RTE-001 and CMP-001 is outstanding; Search dominance and Catalog salience are judged against a raster whose copy and iconography deliberately differ.
+- Header actions are absent, so the wide Header currently ends after Search. The composition will shift when M4-05 appends four actions, and the Search flex basis may need revisiting then.
+- Catalog points at a representative category rather than a catalog surface. It is a route-safe placeholder and must be revisited when the Catalog surface milestone lands.
+- The 44px target contract keeps the Header taller than the raster's proportions, as it already does for the Information Bar.
+- `scripts/review-m3-browser.mjs` still asserts no image asset and a specific tab order, both long obsolete. It is milestone-review tooling for a closed milestone, is not a CI gate, and was deliberately left unchanged.
+
+### Next gate
+
+Green GitHub Actions CI on the exact M4-04 SHA with zero failed and zero flaky Playwright tests, then independent diff audit, then user visual confirmation against RTE-001 and CMP-001. **M4-05 must not begin until all three close.**
