@@ -2,9 +2,10 @@
 
 ## Status
 
-| Task                                                      | Status                                              |
-| --------------------------------------------------------- | --------------------------------------------------- |
-| M4-01 — Shell destination safety and composition boundary | **IMPLEMENTED — AWAITING INDEPENDENT AUDIT AND CI** |
+| Task                                                               | Status                                                |
+| ------------------------------------------------------------------ | ----------------------------------------------------- |
+| M4-01 — Shell destination safety and composition boundary          | **CI FAILED ON ITS EXACT SHA — SUPERSEDED BY M4-01A** |
+| M4-01A — Catalog family catch-all correction and CI reconciliation | **IMPLEMENTED — AWAITING INDEPENDENT AUDIT AND CI**   |
 
 M4 is not approved and not closed. No canonical shell surface exists yet.
 
@@ -129,7 +130,24 @@ Bundle moves from raw 407.10 KB / gzip 122.19 KB to raw **410.18 KB** / gzip **1
 
 Local E2E was **not** run: `AGENTS.md` reserves the production-preview server lifecycle for CI or a user-owned preview. `npm run dev`, `npm run preview`, `npm run test:e2e`, `playwright test`, `vite`, `vite preview` and `npm run review:m3-browser` were not executed. The only server-bearing command used was the repository-owned bounded verifier through `npm run check:full`, which met every `AGENTS.md` constraint and released its own server and browser.
 
-No CI result is claimed. GitHub Actions evidence for the exact M4-01 SHA is still outstanding.
+**CI failed on the exact M4-01 SHA.**
+
+| Item         | Value                                      |
+| ------------ | ------------------------------------------ |
+| Commit       | `dcf5008652061b6618ef32fab685e4362ea62bf6` |
+| Workflow run | 31074911879                                |
+| Job          | 92530710353 — `test (24.x)`                |
+| Conclusion   | **failure**                                |
+
+Every step through `Build` and `Validate build` passed. The `E2E tests` step failed: **48 passed, 1 failed**, reproduced on the initial attempt and both retries.
+
+Failing scenario — `tests/e2e/route-carriers.spec.ts:114`, _M4-01 route carriers › an unregistered path still renders the catch-all_: navigating to `/GoodCall/catalog` expected an `h1` containing `Page not found` and found no `h1` at all.
+
+Root cause: `catalog-family` was declared with `path: 'catalog'` and its only child with `path: ':categorySlug'`. The parent had neither a renderable element nor an index route, so `/catalog` matched the parent and rendered an empty outlet instead of falling through to `path: '*'`. The Playwright trace warning — _Matched leaf route at location "/catalog" does not have an element or Component_ — is consistent with that composition. This was not a flake and not CI infrastructure.
+
+The defect escaped local verification because the M4-01 integration tests built their own simplified route definitions instead of exercising the production route tree.
+
+**M4-01 was not accepted on that SHA, and M4-02 remained blocked.** The correction is [M4-01A](#m4-01a--catalog-family-catch-all-correction-and-ci-reconciliation).
 
 ### Rejected variants
 
@@ -159,4 +177,108 @@ This report is new. `docs/05-implementation/repository-state.md` gains an M4-01 
 
 ### Next gate
 
-Independent diff audit of the exact M4-01 commit, then green GitHub Actions CI for that same SHA. **M4-02 must not begin until both close.**
+Superseded. CI failed for `dcf5008…`, so M4-01 alone is not an implementation candidate; the gate moved to [M4-01A](#m4-01a--catalog-family-catch-all-correction-and-ci-reconciliation).
+
+## M4-01A — Catalog family catch-all correction and CI reconciliation
+
+**Status at commit time: IMPLEMENTED — AWAITING INDEPENDENT AUDIT AND CI**
+
+### Baseline
+
+| Item                                 | Value                                      |
+| ------------------------------------ | ------------------------------------------ |
+| Branch                               | `main`                                     |
+| Baseline SHA                         | `dcf5008652061b6618ef32fab685e4362ea62bf6` |
+| Baseline commit                      | `feat(shell): establish M4 route carriers` |
+| `git rev-parse HEAD` / `origin/main` | both matched the baseline before changes   |
+| `git diff` / `git diff --cached`     | exit 0 — clean                             |
+
+### Catalog family composition correction
+
+`catalog-family` is now a **pathless grouping route** that still owns `CatalogErrorBoundary`, and its category child owns the full path `catalog/:categorySlug`.
+
+| Before                                          | After                                                   |
+| ----------------------------------------------- | ------------------------------------------------------- |
+| `catalog-family` with `path: 'catalog'`         | `catalog-family` pathless, `errorElement` retained      |
+| `catalog-category` with `path: ':categorySlug'` | `catalog-category` with `path: 'catalog/:categorySlug'` |
+
+Consequences:
+
+- `/catalog/laptops` resolves exactly as before, through the same route ID, the same lazy module and the same `categoryLoader`;
+- the category URL contract stays `/catalog/:categorySlug`;
+- `/catalog` no longer matches an empty parent leaf and reaches the existing global catch-all;
+- `CatalogErrorBoundary` still scopes loader rejections for the category route;
+- no `/catalog` index route, redirect, root page or carrier was added — `/catalog` remains intentionally unregistered as a destination.
+
+Product routing, cart routing, carrier routing and catch-all ordering are untouched, as are `RootLayout` ownership, the title/focus/scroll/announcement lifecycle, skip-link behaviour, route-owned `main#main-content`, canonical route IDs and keys, the carrier inventory and content, and the `/GoodCall/` project base.
+
+### Regression-test seam
+
+The defect escaped because local integration tests declared their own simplified route trees. `createApplicationRoutes()` is now a focused exported function in the narrowly scoped module `src/app/composition/application-routes.ts`, and `createApplicationRuntime()` consumes exactly that function. Serverless Vitest builds a memory router from the **same route objects** production hands to `createBrowserRouter`.
+
+The extraction went to an adjacent module rather than staying in `create-runtime.ts` out of technical necessity: `create-runtime.ts` imports `publicConfig`, which validates `import.meta.env.MODE` against `development | production` at module load and therefore throws under Vitest's `test` mode. Keeping the route tree there would have left it unimportable by serverless tests, reproducing the exact blind spot this stage exists to close. `application-routes.ts` has no configuration dependency; `create-runtime.ts` keeps `publicConfig` for the router `basename`. No second registry or duplicated route tree was introduced.
+
+`tests/routing/application-routes.integration.test.tsx` asserts against that shared tree: `/catalog` renders the catch-all with exactly one `main#main-content` and one `h1` containing `Page not found`, keeps the not-found title contract and leaves no empty outlet; `/catalog/laptops` still resolves through the category route with its slug rendered; an invalid category slug still surfaces through `CatalogErrorBoundary`; a deeper unknown catalog path still reaches the catch-all; and Home, Product, Cart, a representative carrier and an unknown path all remain green.
+
+The regression was proven red-then-green: against the baseline composition the four `/catalog` assertions failed, and they pass after the correction.
+
+### Lifecycle test determinism
+
+`tests/routing/route-carriers.integration.test.tsx` carried a race: the POP and query-only assertions blurred the active element without first waiting for the `requestAnimationFrame` focus that `RootLayout` schedules on PUSH, so a late frame could focus the heading after the blur. Measured locally at roughly one failure in two runs, it would have reddened CI intermittently.
+
+Both tests now wait until PUSH focus has actually landed on the heading, assert the blur took effect, and only then exercise POP or query-only navigation. The assertions are stricter than before, not weaker, and the lifecycle behaviour under test is unchanged. Six consecutive runs pass.
+
+### Files changed
+
+| File                                                    | Change                                                                    |
+| ------------------------------------------------------- | ------------------------------------------------------------------------- |
+| `src/app/composition/application-routes.ts`             | new — the production route tree with the corrected catalog family         |
+| `src/app/composition/create-runtime.ts`                 | consumes `createApplicationRoutes()`; keeps `publicConfig` for `basename` |
+| `tests/routing/application-routes.integration.test.tsx` | new — regression coverage against the real application route objects      |
+| `tests/routing/route-carriers.integration.test.tsx`     | POP and query-only focus assertions made deterministic                    |
+| `docs/05-implementation/m4-canonical-shell-report.md`   | M4-01 failure evidence and this corrective section                        |
+| `docs/05-implementation/repository-state.md`            | current-state note reconciled                                             |
+
+`tests/e2e/route-carriers.spec.ts` is **unchanged** — the failing assertion is valid and was preserved.
+
+### Local verification
+
+| Command                  | Result                                         |
+| ------------------------ | ---------------------------------------------- |
+| `npm run typecheck`      | PASS                                           |
+| `npm run lint`           | PASS — 0 errors, 0 warnings                    |
+| `npm run lint:styles`    | PASS                                           |
+| `npm run format:check`   | PASS                                           |
+| `npm run check:comments` | PASS                                           |
+| `npm test`               | PASS — **697 tests in 39 files**               |
+| `npm run build`          | PASS                                           |
+| `npm run validate:build` | PASS                                           |
+| `npm run check:full`     | PASS — includes the bounded dev-bootstrap gate |
+| `git diff --check`       | PASS                                           |
+
+Bundle: raw **410.20 KB** / gzip **123.43 KB**, unchanged from M4-01 within rounding.
+
+Local E2E was **not** run, per `AGENTS.md`. The E2E fix cannot be claimed from serverless tests alone; only exact-SHA CI can confirm it.
+
+### E2E and CI status
+
+CI was pending at commit time. No result is claimed in this document; the exact-SHA outcome is recorded in the untracked stage handoff.
+
+### Rejected variants
+
+- **Registering `/catalog` as a route, index page or carrier** — project decisions explicitly prohibit it as a runtime destination.
+- **Redirecting `/catalog` to `/catalog/laptops`** — invents navigation policy this stage does not own and hides the composition defect instead of fixing it.
+- **Giving `catalog-family` an element** — makes `/catalog` a real destination by another name.
+- **Weakening or deleting the failing E2E assertion** — it was correct and caught a real defect.
+- **Raising Playwright retries or timeouts** — the failure was deterministic, not flaky.
+- **Duplicating the corrected route tree into tests** — the same blind spot that let the defect through.
+
+### Deviations
+
+One, documented above: the route tree was extracted into the adjacent `application-routes.ts` rather than exported from `create-runtime.ts`, because `create-runtime.ts` cannot be imported under Vitest. The stage's allowed-files list anticipates one narrowly scoped adjacent route-composition module.
+
+Additionally, `tests/routing/route-carriers.integration.test.tsx` was changed beyond the catalog defect to remove a genuine intermittent failure that would otherwise redden the corrective CI run. It is an existing routing integration test file, which the stage permits.
+
+### Next gate
+
+Green GitHub Actions CI on the exact M4-01A SHA, then independent diff audit. **M4-02 must not begin until both close.**

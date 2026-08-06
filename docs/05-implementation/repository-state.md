@@ -358,9 +358,10 @@ The sections above are historical snapshots. This note records the state after t
 
 ### Stage identity
 
-- Stage: **M4-01 — Shell destination safety and composition boundary**.
-- Baseline SHA: `7db61d2eb41c56fcdc43531f21e1fe64db730604` (M3-06 closure commit).
-- The resulting M4-01 commit SHA cannot be embedded inside its own commit; it is reported in the stage handoff and recorded here by the next documentation stage.
+- Stage: **M4-01 — Shell destination safety and composition boundary**, corrected by **M4-01A — Catalog family catch-all correction and CI reconciliation**.
+- M4-01 baseline SHA: `7db61d2eb41c56fcdc43531f21e1fe64db730604` (M3-06 closure commit).
+- M4-01 commit: `dcf5008652061b6618ef32fab685e4362ea62bf6`.
+- M4-01A baseline SHA: `dcf5008652061b6618ef32fab685e4362ea62bf6`. Its own resulting commit SHA cannot be embedded inside that commit; it is recorded in the untracked stage handoff.
 
 ### Added in M4-01
 
@@ -395,11 +396,22 @@ No `/catalog` root route was added; the future Catalog entry remains the existin
 - **No canonical shell visuals exist**: no Header, Footer, Information Bar, search form, Catalog button, newsletter, sticky behaviour or responsive shell styling.
 - **No runtime brand consumption**: the six tracked brand SVGs under `src/assets/brand/` remain unconsumed, and no runtime logo component exists.
 - `src/shared/ui` public API is unchanged at **18 runtime components**; no dependency, `package.json` or lockfile change.
-- Test suite: **685 tests across 38 files**, up from 533 in 37. Expected CI E2E grows by the new data-driven carrier scenario.
-- Bundle: raw **410.18 KB** / gzip **123.44 KB**, up from 407.10 KB / 122.19 KB.
+- Test suite: **697 tests across 39 files**, up from 533 in 37. Expected CI E2E grows by the data-driven carrier scenario.
+- Bundle: raw **410.20 KB** / gzip **123.43 KB**, up from 407.10 KB / 122.19 KB.
 - Local checks pass, including `npm run check:full`. **Local E2E was not run** — the production-preview lifecycle belongs to CI or a user-owned preview.
-- **CI is pending.** No GitHub Actions result is claimed for the M4-01 commit.
-- **M4-02 is blocked** until M4-01 passes independent audit and CI.
+
+### M4-01 CI failure and the M4-01A correction
+
+CI for the M4-01 commit `dcf5008652061b6618ef32fab685e4362ea62bf6` — run **31074911879**, job **92530710353** — concluded **failure**. Every step through `Build` and `Validate build` passed; `E2E tests` reported **48 passed, 1 failed** on the initial attempt and both retries.
+
+Confirmed root cause: `catalog-family` was declared with `path: 'catalog'` while its only child used `path: ':categorySlug'`, and the parent had neither a renderable element nor an index route. `/catalog` therefore matched the empty parent and rendered a bare outlet instead of falling through to the global catch-all, so the E2E assertion that `/GoodCall/catalog` renders `Page not found` correctly failed. The defect escaped local verification because the M4-01 integration tests declared their own simplified route trees rather than the production one.
+
+M4-01A corrects it: `catalog-family` becomes a pathless grouping route that keeps `CatalogErrorBoundary`, and the category child owns `catalog/:categorySlug`. `createApplicationRoutes()` moved to `src/app/composition/application-routes.ts` so serverless tests can exercise the same route objects production uses, and a regression test proven red-then-green covers `/catalog`.
+
+- **`/catalog` remains intentionally unregistered** — no route, redirect, index page or carrier. It resolves to the existing catch-all.
+- **`/catalog/laptops` remains valid** and unchanged, through the same route ID, lazy module and loader.
+- M4-01A status at commit time: **IMPLEMENTED — AWAITING INDEPENDENT AUDIT AND CI**.
+- **M4-02 stays blocked** until exact-SHA green CI and independent audit both close.
 
 ## Next Repository Modifications
 

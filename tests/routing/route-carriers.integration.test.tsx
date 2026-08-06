@@ -160,10 +160,13 @@ describe('M4-01 carrier lifecycle contracts', () => {
     await router.navigate('/contacts');
 
     await waitFor(() => {
-      expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Контакты');
+      const heading = screen.getByRole('heading', { level: 1 });
+      expect(heading).toHaveTextContent('Контакты');
+      expect(document.activeElement).toBe(heading);
     });
 
     (document.activeElement as HTMLElement | null)?.blur();
+    expect(document.activeElement).toBe(document.body);
 
     await router.navigate(-1);
 
@@ -175,13 +178,22 @@ describe('M4-01 carrier lifecycle contracts', () => {
   });
 
   it('does not re-focus the heading on query-only navigation', async () => {
-    const router = renderAt(['/search']);
+    const router = renderAt(['/']);
 
     await waitFor(() => {
-      expect(document.title).toBe('Поиск — GoodCall');
+      expect(document.title).toBe('GoodCall');
+    });
+
+    await router.navigate('/search');
+
+    await waitFor(() => {
+      const heading = screen.getByRole('heading', { level: 1 });
+      expect(heading).toHaveTextContent('Поиск');
+      expect(document.activeElement).toBe(heading);
     });
 
     (document.activeElement as HTMLElement | null)?.blur();
+    expect(document.activeElement).toBe(document.body);
 
     await router.navigate('/search?q=test');
 
