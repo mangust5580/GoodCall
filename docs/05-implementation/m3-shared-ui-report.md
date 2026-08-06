@@ -2,25 +2,30 @@
 
 ## Status
 
-| Task                                                                           | Status                                                                                                   |
-| ------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------- |
-| M3-01 — Shared UI scaffold, layout and accessibility utilities                 | **APPROVED AND CLOSED**                                                                                  |
-| M3-01A — VisuallyHidden accessibility contract correction                      | **APPROVED AND CLOSED**                                                                                  |
-| M3-02 / M3-02A / M3-02B — Semantic action primitives                           | **APPROVED AND CLOSED**                                                                                  |
-| M3-03 / M3-03A — Native form controls baseline                                 | **APPROVED AND CLOSED**                                                                                  |
-| M3-03B — Shared UI directory organization                                      | **APPROVED AND CLOSED**                                                                                  |
-| M3-04 — Feedback, status and validation-summary primitives                     | **APPROVED AND CLOSED**                                                                                  |
-| M3-05 — Shared UI runtime integration                                          | **IMPLEMENTED — CORRECTIVE TEST PASS APPLIED — AWAITING INDEPENDENT AUDIT, CI, AND USER BROWSER REVIEW** |
-| M3-05A — Shell-aware announcement ownership correction                         | **APPROVED AND CLOSED**                                                                                  |
-| M3-05B — Dev MSW bootstrap restoration                                         | **APPROVED AND CLOSED** with M3-05C                                                                      |
-| M3-05C — Agent policy, artifact and verifier lifecycle reconciliation          | **APPROVED AND CLOSED**                                                                                  |
-| M3-05D — Bounded browser review harness                                        | **CI SUCCESS — INDEPENDENT AUDIT RETURNED CHANGES REQUIRED — SUPERSEDED BY M3-05E**                      |
-| M3-05E — Browser review harness reliability and evidence integrity             | **CI SUCCESS — INDEPENDENT AUDIT RETURNED CHANGES REQUIRED — SUPERSEDED BY M3-05F**                      |
-| M3-05F — Interactive diagnostics and review evidence coherence                 | **CI SUCCESS — INDEPENDENT AUDIT RETURNED CHANGES REQUIRED — SUPERSEDED BY M3-05G**                      |
-| M3-05G — Manual sign-off integrity and responsive evidence completion          | **INDEPENDENT AUDIT RETURNED CHANGES REQUIRED — SUPERSEDED BY M3-05H**                                   |
-| M3-05H — Optional evidence semantics, report consistency and subpixel geometry | **IMPLEMENTED — AWAITING INDEPENDENT AUDIT AND CI**                                                      |
+| Task                                                                           | Status                                                            |
+| ------------------------------------------------------------------------------ | ----------------------------------------------------------------- |
+| M3-01 — Shared UI scaffold, layout and accessibility utilities                 | **APPROVED AND CLOSED**                                           |
+| M3-01A — VisuallyHidden accessibility contract correction                      | **APPROVED AND CLOSED**                                           |
+| M3-02 / M3-02A / M3-02B — Semantic action primitives                           | **APPROVED AND CLOSED**                                           |
+| M3-03 / M3-03A — Native form controls baseline                                 | **APPROVED AND CLOSED**                                           |
+| M3-03B — Shared UI directory organization                                      | **APPROVED AND CLOSED**                                           |
+| M3-04 — Feedback, status and validation-summary primitives                     | **APPROVED AND CLOSED**                                           |
+| M3-05 — Shared UI runtime integration                                          | **APPROVED AND CLOSED**                                           |
+| M3-05A — Shell-aware announcement ownership correction                         | **APPROVED AND CLOSED**                                           |
+| M3-05B — Dev MSW bootstrap restoration                                         | **APPROVED AND CLOSED** with M3-05C                               |
+| M3-05C — Agent policy, artifact and verifier lifecycle reconciliation          | **APPROVED AND CLOSED**                                           |
+| M3-05D — Bounded browser review harness                                        | **SUPERSEDED — CORRECTIVE CHAIN CLOSED BY M3-05H**                |
+| M3-05E — Browser review harness reliability and evidence integrity             | **SUPERSEDED — CORRECTIVE CHAIN CLOSED BY M3-05H**                |
+| M3-05F — Interactive diagnostics and review evidence coherence                 | **SUPERSEDED — CORRECTIVE CHAIN CLOSED BY M3-05H**                |
+| M3-05G — Manual sign-off integrity and responsive evidence completion          | **SUPERSEDED — CORRECTIVE CHAIN CLOSED BY M3-05H**                |
+| M3-05H — Optional evidence semantics, report consistency and subpixel geometry | **APPROVED AND CLOSED**                                           |
+| M3-06 — M3 closure documentation and M4 unblocking                             | **IMPLEMENTED — AWAITING INDEPENDENT DOCUMENTATION AUDIT AND CI** |
 
-This report covers the Shared UI layer of milestone M3. It records local verification for the tasks under review. M3-01 through M3-04 are approved and closed; M3-05 and its corrective passes are recorded in their own sections below, and M3 as a whole is not closed.
+**M3 implementation milestone — APPROVED AND CLOSED.**
+
+This report covers the Shared UI layer of milestone M3. M3-01 through M3-04, M3-05 and its corrective passes are all closed; the corrective chain that ran from M3-05D to M3-05H is closed by M3-05H, and the final interactive browser review is approved. Full evidence: [M3 Closure](#m3-closure).
+
+M3-06 is a **documentation-only recording step**. Its own commit still awaits an independent documentation audit and CI, which is why it is not marked approved above. That pending verification applies to the documentation commit alone and does **not** reopen the approved M3 implementation evidence.
 
 ### M3-01 / M3-01A closure evidence
 
@@ -905,7 +910,7 @@ The local info/success/warning colours are technical, not canonical. Tone differ
 
 ## M3-05 — Shared UI runtime integration
 
-**Status: IMPLEMENTED — CORRECTIVE TEST PASS APPLIED — AWAITING INDEPENDENT AUDIT, CI, AND USER BROWSER REVIEW**
+**Status: APPROVED AND CLOSED**
 
 The corrective pass is [M3-05A](#m3-05a--shell-aware-announcement-ownership-correction). It changed test assertions and this report only; the M3-05 runtime is unchanged.
 
@@ -1064,7 +1069,7 @@ No status assertion was deleted or weakened.
 
 ## M3-05B — Dev MSW bootstrap restoration
 
-**Status: IMPLEMENTED — AWAITING INDEPENDENT AUDIT AND CI**
+**Status: APPROVED AND CLOSED**
 
 ### Why this sits inside M3
 
@@ -1085,13 +1090,13 @@ Full root cause, design, production-exclusion evidence and rejected variants: [B
 - The 18 route-level RTL tests, the 23 E2E scenarios and the announcement-ownership contract are **unchanged**.
 - Unit/integration totals move from 522 in 36 files to **533 in 37 files** — 8 new bootstrap-failure tests plus 3 `publicDir` contract tests.
 - Expected CI E2E remains **23**.
-- The M3 browser review is still **owed**. It has to be re-run once M3-05B is audited and green in CI. Nothing about M3-05 or M3-05A is confirmed or contradicted by this task.
+- At that stage the M3 browser review was still **owed**; it had to be re-run once M3-05B was audited and green in CI. Nothing about M3-05 or M3-05A was confirmed or contradicted by that task.
 
-M3 remains open and M4 remains blocked.
+At that stage M3 was still open and M4 still blocked; both were resolved by the evidence in [M3 Closure](#m3-closure).
 
 ## M3-05C — Agent policy, generated artifact and verifier lifecycle reconciliation
 
-**Status: IMPLEMENTED — AWAITING INDEPENDENT AUDIT AND CI**
+**Status: APPROVED AND CLOSED**
 
 ### M3-05B outcome
 
@@ -1115,17 +1120,17 @@ Full finding-by-finding detail: [M3-05C in the M0 bootstrap report](bootstrap-re
 
 ### Still owed
 
-The M3 browser review remains **blocked until the corrective chain closes** — it has not been re-run and nothing about it is claimed here. M3 remains open and M4 remains blocked.
+At that stage the M3 browser review was still blocked until the corrective chain closed; it had not been re-run and nothing about it was claimed there. At that stage M3 was still open and M4 still blocked; both were resolved by the evidence in [M3 Closure](#m3-closure).
 
 ## M3-05D — Bounded browser review harness
 
-**Status: IMPLEMENTED — AWAITING INDEPENDENT AUDIT AND CI**
+**Status: SUPERSEDED — CORRECTIVE CHAIN CLOSED BY M3-05H**
 
 ### Position in the chain
 
 M3-05B and M3-05C are **APPROVED AND CLOSED**; BR-01 is resolved and the development bootstrap is operational and CI-protected. Baseline CI for M3-05C: run 30970141078, job 92192476289, checked SHA `9ec8c671e564e1185313d3f8315288fde2e4e209`, conclusion success — Dev bootstrap green, ESLint 0 warnings, 533 tests in 37 files, build and validation green, 23 production-preview E2E passing.
 
-The **M3 browser review is still owed.** It has never produced evidence: the first attempt was blocked by BR-01 before any assertion ran, and afterwards no policy-legal way to run a browser review existed.
+At that stage the **M3 browser review was still owed.** It had never produced evidence: the first attempt was blocked by BR-01 before any assertion ran, and afterwards no policy-legal way to run a browser review existed. It was finally run and approved at M3-05H — see [M3 Closure](#m3-closure).
 
 ### What this task adds
 
@@ -1139,15 +1144,15 @@ No product runtime change. Shared UI, Home, routes, the shell, the routing lifec
 
 ### Implementing the harness is not passing the review
 
-Two `--automated-only` runs passed locally during implementation, on distinct dynamic ports, with zero axe violations and clean cleanup. That evidence is **provisional**: it was produced by a harness that has not yet been independently audited, and it carries no user sign-off. The M3 browser review must be re-run after M3-05D is approved and CI is green for its exact SHA.
+Two `--automated-only` runs passed locally during implementation, on distinct dynamic ports, with zero axe violations and clean cleanup. That evidence is **provisional**: it was produced by a harness that had not yet been independently audited, and it carries no user sign-off. At that stage the M3 browser review still had to be re-run after M3-05D was approved and CI was green for its exact SHA.
 
 Real browser zoom, real OS forced-colors mode and screen-reader behaviour remain unverified and are not claimed anywhere.
 
-M3 remains open. M4 remains blocked.
+At that stage M3 was still open and M4 still blocked; both were resolved by the evidence in [M3 Closure](#m3-closure).
 
 ## M3-05E — Browser review harness reliability and evidence integrity
 
-**Status: IMPLEMENTED — AWAITING INDEPENDENT AUDIT AND CI**
+**Status: SUPERSEDED — CORRECTIVE CHAIN CLOSED BY M3-05H**
 
 ### M3-05D outcome
 
@@ -1169,13 +1174,13 @@ Four tracked files: `AGENTS.md`, `scripts/review-m3-browser.mjs` and two impleme
 
 The provisional automated-only runs recorded during M3-05D — and those recorded during this stage — are **discarded as closure evidence**. They were produced by unaudited harness versions, are not bound to an approved SHA, and carry no user sign-off. The harness now marks such runs `PROVISIONAL` and refuses to treat them as final.
 
-The M3 browser review remains **owed**. It must be re-run bound to an approved SHA after M3-05E is audited and CI is green for that exact commit. Real browser zoom, real OS forced-colors mode and screen-reader behaviour remain unverified.
+At that stage the M3 browser review was still **owed**: it had to be re-run bound to an approved SHA after M3-05E was audited and CI was green for that exact commit, and real browser zoom, real OS forced-colors mode and screen-reader behaviour were unverified.
 
-M3 remains open. M4 remains blocked.
+At that stage M3 was still open and M4 still blocked; both were resolved by the evidence in [M3 Closure](#m3-closure).
 
 ## M3-05F — Interactive diagnostics and review evidence coherence
 
-**Status: IMPLEMENTED — AWAITING INDEPENDENT AUDIT AND CI**
+**Status: SUPERSEDED — CORRECTIVE CHAIN CLOSED BY M3-05H**
 
 ### M3-05E outcome
 
@@ -1203,11 +1208,11 @@ $env:GOODCALL_REVIEW_SHA="<approved SHA>"; npm run review:m3-browser
 
 All automated-only runs recorded so far remain `PROVISIONAL` and are not closure evidence. Real browser zoom, real OS forced-colors mode and screen-reader behaviour remain unverified.
 
-M3 remains open. M4 remains blocked.
+At that stage M3 was still open and M4 still blocked; both were resolved by the evidence in [M3 Closure](#m3-closure).
 
 ## M3-05G — Manual sign-off integrity and responsive evidence completion
 
-**Status: IMPLEMENTED — AWAITING INDEPENDENT AUDIT AND CI**
+**Status: SUPERSEDED — CORRECTIVE CHAIN CLOSED BY M3-05H**
 
 ### M3-05F outcome
 
@@ -1237,11 +1242,11 @@ $env:GOODCALL_REVIEW_SHA="<approved SHA>"; npm run review:m3-browser
 
 All automated-only runs recorded so far remain `PROVISIONAL` and are not closure evidence. Real browser zoom, real OS forced-colors mode and screen-reader behaviour remain unverified.
 
-M3 remains open. M4 remains blocked.
+At that stage M3 was still open and M4 still blocked; both were resolved by the evidence in [M3 Closure](#m3-closure).
 
 ## M3-05H — Optional evidence semantics, report consistency and subpixel geometry
 
-**Status: IMPLEMENTED — AWAITING INDEPENDENT AUDIT AND CI**
+**Status: APPROVED AND CLOSED**
 
 ### M3-05G outcome
 
@@ -1275,10 +1280,59 @@ $env:GOODCALL_REVIEW_SHA="<approved SHA>"; npm run review:m3-browser
 
 All automated-only runs recorded so far remain `PROVISIONAL` and are not closure evidence.
 
-M3 remains open. M4 remains blocked.
+At the time that section was written, M3 was still open and M4 still blocked. Both were resolved by the evidence recorded in [M3 Closure](#m3-closure).
+
+## M3 Closure
+
+M3-05H was independently approved, its exact SHA passed GitHub Actions CI, and the final interactive browser review ran on clean `main` and was independently approved.
+
+| Evidence                         | Value                                      |
+| -------------------------------- | ------------------------------------------ |
+| Approved implementation SHA      | `2f8e37932b31a96dacb0c9d90e8b221d3120abd4` |
+| CI run                           | 31069745421                                |
+| CI job                           | 92514999778                                |
+| CI conclusion                    | success                                    |
+| Unit/integration                 | 533 passed in 37 files                     |
+| E2E                              | 23 passed                                  |
+| Bundle                           | 407.10 KB raw / 122.19 KB gzip             |
+| Browser-review class             | FINAL-ELIGIBLE                             |
+| Browser-review result            | AUTOMATED + USER REVIEW PASSED             |
+| Browser-review exit code         | 0                                          |
+| Blocking reasons                 | none                                       |
+| Browser-review independent audit | APPROVED                                   |
+
+### Final browser-review results
+
+- Sections **A–M: 13/13 PASS**.
+- Responsive viewports **6/6 PASS** — 320×568, 375×667, 768×1024, 1024×768, 1280×800 and 1024×500, each measured in the initial, invalid and success states.
+- Semantic overlap probes: **109 declared, 109 measured, 109 pass, 0 fail, 0 unresolved, 0 not applicable**.
+- Responsive Error Summary links: **12/12 usable** — visible, contained, unobscured and keyboard-activatable at every viewport.
+- Axe violations **0**; final runtime diagnostics **0**, with interactive diagnostics included.
+- Mandatory manual checks **6/6 PASS** — 200 % zoom, 400 % zoom, keyboard/focus, clipping/overlap, real forced colors and screen reader. All six were answered PASS, so no fallback reason was required.
+- Browser, context and server cleanup passed; port released; no user browser or profile was touched.
+
+One optional-evidence warning was recorded: `manual-final.png` could not be captured because the page had already closed. It is optional supporting evidence, so it produced a `WARNING` rather than a blocker and changed neither the status, the exit code nor closure eligibility.
+
+The review report and `results.json` remain **untracked** local evidence under `artifacts/`; they are not committed.
+
+### Corrective-chain disposition
+
+| Stage  | Historical outcome | Closure disposition         |
+| ------ | ------------------ | --------------------------- |
+| M3-05D | changes required   | superseded                  |
+| M3-05E | changes required   | superseded                  |
+| M3-05F | changes required   | superseded                  |
+| M3-05G | changes required   | superseded                  |
+| M3-05H | approved           | closes the corrective chain |
+
+The detailed stage sections above are kept as the historical record. None of M3-05D through M3-05G is described as an individually approved implementation.
+
+### Open questions
+
+**No active M3 closure blocker remains.** Design and implementation questions belonging to M4 are not resolved by M3 and are out of scope for this report.
 
 ## Next Permitted Step
 
-The only permitted next step is an **independent diff audit of the M3-05H commit**, followed by GitHub Actions CI for it, and then the M3 browser review bound to that approved SHA in a visible terminal.
+**M4 is the next permitted implementation milestone**, after the M3-06 documentation-only commit passes CI and receives restricted-diff confirmation.
 
-M4 must not begin until M3 is recorded as APPROVED AND CLOSED. No domain work is authorised by this report.
+M4 scope must be taken from the approved architecture and UI/component/responsive contracts. No M4 work begins in this stage, and no domain scope is authorised by this report.

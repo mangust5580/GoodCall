@@ -272,6 +272,8 @@ The technical Home placeholder (`src/routes/home/HomePage.tsx` and its route-loc
 - **M3-05 awaits independent diff audit, GitHub Actions CI and user browser review.** M3 is not closed.
 - M4 — canonical shell and runtime logo consumption — remains deferred.
 
+**Superseded:** the two status lines above describe the state on 2026-08-04. M3-05 and the M3 milestone are now approved and closed, and the test baseline has since moved to 533 across 37 files. See [Milestone State Note — M3 Closure](#milestone-state-note--m3-closure-2026-08-06).
+
 ## Milestone State Note — M3-05B Dev MSW Bootstrap (2026-08-05)
 
 The M0 sections above describe a repository in which MSW startup was configured but the worker asset had never been generated, so `npm run dev` rendered nothing. That claim of an operational development MSW setup was stale and is corrected here.
@@ -311,12 +313,47 @@ package.json                            verify:dev-bootstrap script, added to ch
 - `check:full` is no longer serverless — it runs the dev-bootstrap gate, which owns and releases its own server and browser.
 - M3-05B awaits independent diff audit and GitHub Actions CI. The M3 browser review still has to be re-run.
 
+**Superseded:** the line above describes the state on 2026-08-05. M3-05B and M3-05C are approved and closed, and the M3 browser review has since been re-run and approved. See [Milestone State Note — M3 Closure](#milestone-state-note--m3-closure-2026-08-06).
+
+## Milestone State Note — M3 Closure (2026-08-06)
+
+The sections above are historical snapshots taken at their own milestones and are not a current repository census. This note records the state at M3 closure.
+
+### Current implemented state
+
+- `src/shared/ui` exposes **18 runtime components** through one public barrel, `src/shared/ui/index.ts`.
+- The technical Home placeholder (`src/routes/home/HomePage.tsx`) remains the Shared UI verification surface, and **all 18 components are consumed there**.
+- The development MSW bootstrap is operational and CI-protected by the `Dev bootstrap` gate.
+- Final test baseline: **533 tests across 37 files**.
+- Production-preview E2E: **23**.
+- Bundle: **407.10 KB raw / 122.19 KB gzip**.
+
+### Closure evidence
+
+- Approved implementation SHA: `2f8e37932b31a96dacb0c9d90e8b221d3120abd4`.
+- GitHub Actions run **31069745421**, job **92514999778**, checked SHA `2f8e37932b31a96dacb0c9d90e8b221d3120abd4`, conclusion **success**.
+- Final interactive browser review — **APPROVED**: `AUTOMATED + USER REVIEW PASSED`, exit code 0.
+- Evidence class **FINAL-ELIGIBLE** — exact-SHA match on branch `main` with a clean tracked tree.
+- **Zero blocking reasons.** Browser, context and server cleanup succeeded and the port was released.
+- The one optional-evidence warning — `manual-final.png` not captured — is non-blocking by design and did not affect the result.
+- Review artifacts (`artifacts/M3-browser-review.md`, `artifacts/m3-browser-review/results.json`) remain **untracked** local evidence.
+
+### Current boundaries
+
+- No canonical `Header`.
+- No canonical `Footer`.
+- No runtime logo component.
+- The six tracked brand SVGs under `src/assets/brand/` remain **unconsumed** at runtime.
+- The technical Home is **not** the canonical storefront Home and says so in visible copy.
+- No M4 shell implementation exists yet.
+
+### Milestone state
+
+- **M3 — APPROVED AND CLOSED.**
+- **M4 — NEXT PERMITTED IMPLEMENTATION MILESTONE AFTER M3-06 CI.**
+
 ## Next Repository Modifications
 
-M0 is complete. Future milestones will add:
+The next permitted implementation milestone is **M4**. Its scope must be taken from the approved architecture and UI/component/responsive contracts.
 
-- M1: Route composition, data fetching, state management
-- M2+: Business domain, authentication, UI components, styling
-- Later: Design system, performance optimizations, analytics
-
-No breaking changes to M0 configuration files are anticipated, but architecture zone dependencies may evolve as permitted by 04A-C contracts.
+This M3-06 stage is documentation-only and authorises no implementation change.

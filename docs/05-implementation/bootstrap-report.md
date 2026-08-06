@@ -235,7 +235,7 @@ Steps:
 
 ## BR-01 — Development MSW bootstrap restoration (M3-05B)
 
-**Status: IMPLEMENTED — AWAITING INDEPENDENT AUDIT AND CI**
+**Status: APPROVED AND CLOSED**
 
 ### Symptom
 
@@ -291,7 +291,7 @@ The worker therefore cannot reach `dist/` by construction, and the existing buil
 
 ## M3-05C — Agent policy, generated artifact and verifier lifecycle reconciliation
 
-**Status: IMPLEMENTED — AWAITING INDEPENDENT AUDIT AND CI**
+**Status: APPROVED AND CLOSED**
 
 The independent audit of M3-05B returned **CHANGES REQUIRED** with four findings. None of them disputes the accepted design: the MSW worker, the `publicDir` contract, the explicit worker URL, the fail-closed startup and the runtime application are all unchanged by this pass.
 
@@ -327,11 +327,11 @@ No force-kill fallback was added. The verifier still releases everything through
 
 ### Status
 
-M3-05B's implementation remains accepted **in design**, but the corrective chain is not closed: M3-05C awaits its own independent audit and CI run. The M3 browser review is still owed and has not been re-run.
+At that stage M3-05B's implementation was accepted **in design**, the corrective chain was not yet closed, M3-05C awaited its own independent audit and CI run, and the M3 browser review was still owed. M3-05B and M3-05C are now approved and closed; the corrective chain closed at M3-05H and the browser review is approved. See [M3-06](#m3-06--m3-closure-documentation-and-m4-unblocking).
 
 ## M3-05D — Bounded browser review harness
 
-**Status: IMPLEMENTED — AWAITING INDEPENDENT AUDIT AND CI**
+**Status: SUPERSEDED — CORRECTIVE CHAIN CLOSED BY M3-05H**
 
 ### Why a second policy exception was required
 
@@ -367,7 +367,7 @@ Any browser-review evidence produced before the harness itself is independently 
 
 ## M3-05E — Browser review harness reliability and evidence integrity
 
-**Status: IMPLEMENTED — AWAITING INDEPENDENT AUDIT AND CI**
+**Status: SUPERSEDED — CORRECTIVE CHAIN CLOSED BY M3-05H**
 
 The independent audit of M3-05D returned **CHANGES REQUIRED** with seven findings. The accepted M3-05D architecture is unchanged: the same repository-owned command, Vite Node API, dynamic loopback port, isolated Chromium, headed sign-off phase, untracked artifacts, and no product-runtime coupling. What changed is whether the harness can be trusted to tell the truth about a run.
 
@@ -414,11 +414,11 @@ Every viewport is measured in three states — initial, invalid and success — 
 
 ### Verification and status
 
-A `--self-test` mode exercises the status and baseline logic without starting a server or a browser. Provisional automated-only runs are labelled as such. **Implementing the harness is not passing the review**: the final review must be re-run bound to an approved SHA after independent audit and green CI.
+A `--self-test` mode exercises the status and baseline logic without starting a server or a browser. Provisional automated-only runs are labelled as such. **Implementing the harness is not passing the review**: at that stage the final review still had to be run bound to an approved SHA after independent audit and green CI. It was, at M3-05H — see [M3-06](#m3-06--m3-closure-documentation-and-m4-unblocking).
 
 ## M3-05F — Interactive diagnostics and review evidence coherence
 
-**Status: IMPLEMENTED — AWAITING INDEPENDENT AUDIT AND CI**
+**Status: SUPERSEDED — CORRECTIVE CHAIN CLOSED BY M3-05H**
 
 The independent audit of M3-05E returned **CHANGES REQUIRED** with six findings plus an operational risk. The accepted architecture is unchanged; each correction closes a way the harness could report something the run did not prove.
 
@@ -463,7 +463,7 @@ Allow-list entries now require `pattern`, a non-empty `reason`, an explicit `sco
 
 ## M3-05G — Manual sign-off integrity and responsive evidence completion
 
-**Status: IMPLEMENTED — AWAITING INDEPENDENT AUDIT AND CI**
+**Status: SUPERSEDED — CORRECTIVE CHAIN CLOSED BY M3-05H**
 
 The independent audit of M3-05F returned **CHANGES REQUIRED** with five findings — M3F-PARTIAL-02, M3F-MANUAL-01, M3F-RESPONSIVE-02, M3F-OVERLAP-02, M3F-MANUAL-02 — after CI run **30973880138** passed for SHA `402cb2e3b7a0d8dd4928587cb74efa3402f60a1d`. CI cannot see any of them: it never runs the harness. The accepted M3-05D architecture is unchanged again; every correction closes a way the harness could still describe a run more favourably than the run deserved.
 
@@ -517,7 +517,7 @@ The manual section reports answers collected, answered count, complete, failed, 
 
 ## M3-05H — Optional evidence semantics, report consistency and subpixel geometry
 
-**Status: IMPLEMENTED — AWAITING INDEPENDENT AUDIT AND CI**
+**Status: APPROVED AND CLOSED**
 
 The independent audit of M3-05G returned **CHANGES REQUIRED** with three findings — M3G-OPTIONAL-01, M3G-REPORT-01, M3G-OVERLAP-03. CI for the M3-05G commit `16191b52314a2bc7a23fd95c901b46297025f5d8` is **not independently verified**, and nothing here claims otherwise. The accepted architecture is unchanged; each correction removes a way the harness could still misreport a run it had actually completed correctly.
 
@@ -559,13 +559,76 @@ Verified boundaries: 1.00 × 2.00 passes, 1.01 × 2.00 fails, 1.49 × 2.00 fails
 
 ### Verification and status
 
-`--self-test` covers **115 scenarios** with no server and no browser, including all optional-evidence, outcome-coherence and subpixel-boundary cases. Two provisional automated-only runs passed on distinct dynamic ports with zero blocking reasons, zero optional warnings, 109 of 109 overlap probes measured — 42 of them carrying genuinely fractional raw overlaps — and 12 of 12 responsive summary-link records usable. **No final interactive review was run and no browser review is claimed to have passed.**
+`--self-test` covers **115 scenarios** with no server and no browser, including all optional-evidence, outcome-coherence and subpixel-boundary cases. Two provisional automated-only runs passed on distinct dynamic ports with zero blocking reasons, zero optional warnings, 109 of 109 overlap probes measured — 42 of them carrying genuinely fractional raw overlaps — and 12 of 12 responsive summary-link records usable. Those runs were provisional; the closure evidence below comes from the final interactive review.
+
+### M3-05H closure evidence
+
+| Item                             | Value                                              |
+| -------------------------------- | -------------------------------------------------- |
+| Approved implementation SHA      | `2f8e37932b31a96dacb0c9d90e8b221d3120abd4`         |
+| Commit                           | `fix(test): reconcile M3 review outcomes`          |
+| Independent code audit           | **APPROVED** — all three findings resolved         |
+| GitHub Actions run / job         | 31069745421 / 92514999778                          |
+| CI checked SHA                   | `2f8e37932b31a96dacb0c9d90e8b221d3120abd4`         |
+| CI conclusion                    | **success**                                        |
+| Unit/integration                 | **533 passed in 37 files**                         |
+| Production-preview E2E           | **23 passed**                                      |
+| Bundle                           | raw **407.10 KB** / gzip **122.19 KB**             |
+| Final browser review             | **AUTOMATED + USER REVIEW PASSED**, exit 0         |
+| Browser-review evidence class    | **FINAL-ELIGIBLE** — exact SHA, `main`, clean tree |
+| Blocking reasons                 | **none**                                           |
+| Independent browser-review audit | **APPROVED**                                       |
+
+CI confirmed Dev bootstrap, TypeScript, ESLint, Stylelint, Prettier, the authored-comment check, unit/integration, build and build validation.
+
+The review recorded one optional-evidence warning — `manual-final.png` could not be captured because the page had already closed. Under the M3-05H model that is explicitly optional supporting evidence: it produced a `WARNING`, not a blocker, and did not alter the status, the exit code or closure eligibility. Full result detail lives in the untracked review artifacts; it is not duplicated here.
+
+## M3-06 — M3 closure documentation and M4 unblocking
+
+**Status: IMPLEMENTED — AWAITING INDEPENDENT DOCUMENTATION AUDIT AND CI**
+
+This stage is documentation-only. It records closure evidence that already exists; it changes no product runtime, test, package, tooling, workflow, policy or architecture contract. The commit cannot approve itself, so its own verification is still pending — that pending state does not reopen the approved M3 implementation evidence.
+
+### Closure evidence
+
+- M3-01 through M3-04 — **APPROVED AND CLOSED**.
+- M3-05 — **APPROVED AND CLOSED**; M3-05A — **APPROVED AND CLOSED**; M3-05B and M3-05C — **APPROVED AND CLOSED**.
+- M3-05D through M3-05G — **SUPERSEDED — CORRECTIVE CHAIN CLOSED BY M3-05H**. Each returned CHANGES REQUIRED at its own audit; none is retrospectively described as an individually approved implementation.
+- M3-05H — **APPROVED AND CLOSED**, bound to SHA `2f8e37932b31a96dacb0c9d90e8b221d3120abd4` with CI run 31069745421 (job 92514999778, conclusion success).
+- Final interactive browser review — **APPROVED**: `AUTOMATED + USER REVIEW PASSED`, exit 0, `FINAL-ELIGIBLE`, sections A–M 13/13 PASS, 6/6 viewports PASS in all three states, 109/109 overlap probes measured and passing, 12/12 responsive Error Summary links usable, 0 Axe violations, 0 final runtime diagnostics with interactive diagnostics included, 6/6 mandatory manual checks PASS, cleanup and port release passed, no user browser or profile touched, no blocking reasons.
+- M3 implementation milestone — **APPROVED AND CLOSED**.
+
+### Accepted decisions
+
+- Closure is bound to the exact SHA `2f8e37932b31a96dacb0c9d90e8b221d3120abd4`; CI run 31069745421 verifies that same SHA.
+- The final browser review ran on clean `main` with an exact-SHA match, so its evidence class is `FINAL-ELIGIBLE` rather than provisional.
+- The `manual-final.png` capture failure is optional supporting evidence, not a defect, and does not affect closure eligibility.
+- Browser-review artifacts stay untracked under `artifacts/`; they are local evidence and are not committed.
+- M4 is the next permitted implementation milestone once this documentation-only commit passes CI and its restricted diff is independently confirmed.
+
+### Rejected variants
+
+- **Closing M3 from provisional automated-only evidence** — a provisional run is not bound to an approved SHA and carries no user sign-off.
+- **Accepting a browser review from a dirty tree or a mismatched SHA** — the artefact reviewed would not be the artefact approved.
+- **Treating `manual-final.png` as mandatory evidence** — a supporting screenshot failure would block a completed review, the exact defect M3-05H removed.
+- **Committing the local browser-review artifacts** — evidence files are untracked by design and CI never produces them.
+- **Starting M4 inside the closure-documentation stage** — closure and implementation are separate gates.
+- **Rewriting the historical corrective outcomes as if they had individually passed audit** — M3-05D through M3-05G returned CHANGES REQUIRED, and that record stands.
+
+### Remaining risks
+
+These are factual, non-blocking limitations of what M3 covers. None is an M3 closure blocker.
+
+- The browser review covers the current technical Shared UI verification surface, not canonical storefront visuals.
+- Real forced-colors and screen-reader results were user assertions recorded in the manual sign-off; no automated check can substitute for them.
+- Header, Footer, the canonical shell and runtime logo consumption remain M4 work.
+- The six tracked brand SVGs remain unconsumed at runtime at M3 closure.
 
 ## Next Steps
 
-M0 is complete. Next allowed step is **request review checkpoint R0**.
+M3 implementation is approved and closed.
 
-Do not proceed to M1 or later implementations without explicit approval.
+After the M3-06 documentation-only commit passes CI and its restricted diff is independently confirmed, **M4 is the next permitted implementation milestone**. Its scope comes from the approved architecture and UI/component/responsive contracts; nothing in this stage authorises implementation changes or new scope.
 
 ## Deviations from Spec
 
