@@ -106,11 +106,37 @@ test.describe('M4-02 runtime brand link', () => {
   test('skip link remains the first focusable control', async ({ page }) => {
     await page.goto('/GoodCall/');
 
-    await page.keyboard.press('Tab');
-    await expect(page.locator('a[href="#main-content"]')).toBeFocused();
+    const skipLink = page.locator('a[href="#main-content"]');
+    const brandLink = page.getByRole('link', { name: BRAND_LINK_LABEL, exact: true });
+
+    await expect(skipLink).toHaveCount(1);
+    await expect(brandLink).toHaveCount(1);
+
+    const focusOrigin = await page.evaluate(() => {
+      const active = document.activeElement;
+
+      if (active instanceof HTMLElement && active !== document.body) {
+        active.blur();
+      }
+
+      document.body.focus();
+
+      const reset = document.activeElement;
+      return {
+        isSkipLink:
+          reset instanceof HTMLAnchorElement && reset.getAttribute('href') === '#main-content',
+        isBrandLink: reset instanceof HTMLElement && reset.hasAttribute('aria-label'),
+      };
+    });
+
+    expect(focusOrigin.isSkipLink).toBe(false);
+    expect(focusOrigin.isBrandLink).toBe(false);
 
     await page.keyboard.press('Tab');
-    await expect(page.getByRole('link', { name: BRAND_LINK_LABEL, exact: true })).toBeFocused();
+    await expect(skipLink).toBeFocused();
+
+    await page.keyboard.press('Tab');
+    await expect(brandLink).toBeFocused();
   });
 
   test('compact viewport keeps the target size without page overflow', async ({ page }) => {

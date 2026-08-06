@@ -105,10 +105,9 @@ test.describe('M4-01 route carriers', () => {
     await page.getByRole('link', { name: HOME_LINK_LABEL, exact: true }).click();
     await expect(page).toHaveURL('/GoodCall/');
 
-    const headingFocused = await page.evaluate(
-      () => document.activeElement === document.querySelector('h1')
-    );
-    expect(headingFocused).toBe(true);
+    const heading = page.locator('h1');
+    await expect(heading).toHaveCount(1);
+    await expect(heading).toBeFocused();
   });
 
   test('an unregistered path still renders the catch-all', async ({ page }) => {

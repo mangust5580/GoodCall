@@ -103,9 +103,9 @@ export function RootLayout(): React.ReactElement {
           Loading page
         </div>
       )}
-      <div className={styles['brand-slot']}>
+      <header className={styles['brand-slot']}>
         <BrandHomeLink />
-      </div>
+      </header>
       <ScrollRestoration getKey={(location) => location.pathname} />
       <Outlet />
     </div>

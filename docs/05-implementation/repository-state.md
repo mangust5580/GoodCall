@@ -457,8 +457,25 @@ docs/05-implementation/m4-canonical-shell-report.md   M4-01A closure and the M4-
 - No Shared UI API change, no dependency or lockfile change, no tooling, Vite, Playwright or workflow change, and no route inventory or routing-lifecycle change.
 - Test suite: **742 tests across 41 files**, up from 697 in 39. Bundle: raw **415.49 KB** / gzip **124.67 KB**.
 - Local checks pass, including `npm run check:full`. **Local E2E was not run** — the production-preview lifecycle belongs to CI or a user-owned preview.
-- **CI is pending at commit time.** No GitHub Actions result is claimed for the M4-02 commit here.
-- **M4-03 is blocked** until M4-02 passes exact-SHA green CI and independent audit.
+
+### M4-02 CI failure and the M4-02A correction
+
+CI for the M4-02 commit `c234ad8dabb6db78da0ac5dab1b6bb67b6a28ddd` — run **31078039148**, job **92540284189** — concluded **failure**. Vitest passed (742 in 41 files); Playwright reported **57 total, 50 passed, 5 failed, 2 flaky**.
+
+All five blocking failures were the same axe rule, `region` — _All page content should be contained by landmarks_ — on the violating node `<div class="brand-slot">`: the two `bootstrap.spec.ts` axe scans (Home and 404), the reduced-motion/forced-colors scenario, and the two `route-carriers.spec.ts` axe scans. Root cause: the transitional brand slot held meaningful interactive content outside the route-owned `main` and inside no landmark.
+
+Two further tests were flaky for test-synchronization reasons, not runtime defects: the skip-link focus-order test depended on a nondeterministic initial focus position after `page.goto()`, and the carrier heading-focus test read `document.activeElement` before the `requestAnimationFrame` focus callback ran.
+
+M4-02A corrects both classes:
+
+- the transitional brand slot is now a semantic `header`, making it the page-level **banner landmark**; it stays outside `main`, carries no `role` and no `aria-label`, and preserves the skip link as the first focusable control;
+- the skip-link E2E establishes a deterministic neutral focus origin before pressing `Tab`, and the heading-focus E2E uses Playwright's auto-waiting `toBeFocused()`. No runtime tab order, focus lifecycle, Playwright configuration, retry count or timeout was changed, and no sleep was added.
+
+- **The canonical Header remains unimplemented.** The banner is transitional scaffolding; M4-04 owns the real Header.
+- **The brand component and SVG asset contract are unchanged**: `BrandHomeLink` API, asset selection matrix, mask strategy, accessible name, all six SVG byte lengths and SHA-256 values, and the manifest `runtime-integrated` statuses.
+- Test suite: **746 tests across 41 files**. Bundle unchanged at raw 415.49 KB / gzip 124.67 KB.
+- M4-02A status at commit time: **IMPLEMENTED — AWAITING INDEPENDENT AUDIT AND CI**.
+- **M4-03 remains blocked** until exact-SHA green CI and independent audit both close.
 
 ## Next Repository Modifications
 

@@ -2,11 +2,12 @@
 
 ## Status
 
-| Task                                                               | Status                                              |
-| ------------------------------------------------------------------ | --------------------------------------------------- |
-| M4-01 — Shell destination safety and composition boundary          | **CLOSED THROUGH M4-01A**                           |
-| M4-01A — Catalog family catch-all correction and CI reconciliation | **APPROVED AND CLOSED**                             |
-| M4-02 — Runtime brand/logo integration                             | **IMPLEMENTED — AWAITING INDEPENDENT AUDIT AND CI** |
+| Task                                                                   | Status                                                |
+| ---------------------------------------------------------------------- | ----------------------------------------------------- |
+| M4-01 — Shell destination safety and composition boundary              | **CLOSED THROUGH M4-01A**                             |
+| M4-01A — Catalog family catch-all correction and CI reconciliation     | **APPROVED AND CLOSED**                               |
+| M4-02 — Runtime brand/logo integration                                 | **CI FAILED ON ITS EXACT SHA — SUPERSEDED BY M4-02A** |
+| M4-02A — Brand landmark accessibility correction and E2E stabilization | **IMPLEMENTED — AWAITING INDEPENDENT AUDIT AND CI**   |
 
 M4 is not approved and not closed. No canonical shell surface exists yet: Header, Footer, Information Bar, Newsletter, Search and Catalog UI all remain later stages.
 
@@ -407,7 +408,39 @@ Bundle moves from raw 410.20 KB / gzip 123.43 KB to raw **415.49 KB** / gzip **1
 
 ### E2E and CI status
 
-Local E2E was **not** run: `AGENTS.md` reserves the production-preview lifecycle for CI or a user-owned preview. `npm run dev`, `npm run preview`, `npm run test:e2e`, `playwright test`, `vite`, `vite preview` and `npm run review:m3-browser` were not executed. CI was pending at commit time; the exact-SHA outcome is recorded in the untracked stage handoff.
+Local E2E was **not** run: `AGENTS.md` reserves the production-preview lifecycle for CI or a user-owned preview. `npm run dev`, `npm run preview`, `npm run test:e2e`, `playwright test`, `vite`, `vite preview` and `npm run review:m3-browser` were not executed.
+
+**CI failed on the exact M4-02 SHA.**
+
+| Item         | Value                                       |
+| ------------ | ------------------------------------------- |
+| Commit       | `c234ad8dabb6db78da0ac5dab1b6bb67b6a28ddd`  |
+| Workflow run | 31078039148                                 |
+| Job          | 92540284189 — `test (24.x)`                 |
+| Conclusion   | **failure**                                 |
+| Vitest       | 742 passed in 41 files                      |
+| Playwright   | 57 total — 50 passed, **5 failed**, 2 flaky |
+
+Every step through `Build` and `Validate build` passed; `E2E tests` failed.
+
+**Five blocking failures, all the same axe rule `region`** — _All page content should be contained by landmarks_ — on the violating node `<div class="brand-slot">`:
+
+- `tests/e2e/bootstrap.spec.ts` › M1 Routing and Navigation › axe scan Home passes
+- `tests/e2e/bootstrap.spec.ts` › M1 Routing and Navigation › axe scan 404 passes
+- `tests/e2e/bootstrap.spec.ts` › M3 Shared UI integration › reduced motion and forced colors keep the invalid state accessible
+- `tests/e2e/route-carriers.spec.ts` › M4-01 route carriers › axe scan of a standard carrier passes
+- `tests/e2e/route-carriers.spec.ts` › M4-01 route carriers › axe scan of a legal carrier passes
+
+Each reproduced on the initial attempt and both retries.
+
+Root cause: the transitional brand slot was a plain `div` holding meaningful interactive content, placed outside the route-owned `main` and inside no landmark. The M4-02 constraint that forbade `header`, `nav` or any other landmark for this wrapper was wrong for a root-level placement — content outside `main` still has to belong to a landmark.
+
+**Two flaky tests**, both test-synchronization defects rather than runtime defects:
+
+- `tests/e2e/brand-home-link.spec.ts` › skip link remains the first focusable control — the first `Tab` did not focus the skip link on one attempt because the initial document focus position after `page.goto()` is nondeterministic; the retry passed.
+- `tests/e2e/route-carriers.spec.ts` › client navigation to a carrier focuses its heading — the URL assertion resolved before the `requestAnimationFrame` focus callback ran, and an immediate `page.evaluate()` read `document.activeElement` too early; the retry passed.
+
+**M4-02 was not accepted on this SHA, and M4-03 remained blocked.** The correction is [M4-02A](#m4-02a--brand-landmark-accessibility-correction-and-e2e-stabilization).
 
 ### Rejected variants
 
@@ -432,4 +465,108 @@ One. `tests/e2e/route-carriers.spec.ts` was changed, which earlier stages had ke
 
 ### Next gate
 
-Green GitHub Actions CI on the exact M4-02 SHA, then independent diff audit. **M4-03 must not begin until both close.**
+Superseded. CI failed for `c234ad8d…`, so M4-02 alone is not an implementation candidate; the gate moved to [M4-02A](#m4-02a--brand-landmark-accessibility-correction-and-e2e-stabilization).
+
+## M4-02A — Brand landmark accessibility correction and E2E stabilization
+
+**Status at commit time: IMPLEMENTED — AWAITING INDEPENDENT AUDIT AND CI**
+
+### Baseline
+
+| Item                                 | Value                                      |
+| ------------------------------------ | ------------------------------------------ |
+| Branch                               | `main`                                     |
+| Baseline SHA                         | `c234ad8dabb6db78da0ac5dab1b6bb67b6a28ddd` |
+| Baseline commit                      | `feat(shell): integrate runtime brand`     |
+| `git rev-parse HEAD` / `origin/main` | both matched the baseline before changes   |
+| `git diff` / `git diff --cached`     | exit 0 — clean                             |
+
+### Landmark correction
+
+The transitional brand slot changed from a plain `div` to a semantic `header`:
+
+```
+<header className={styles['brand-slot']}>
+  <BrandHomeLink />
+</header>
+```
+
+That `header` is a child of the shell root and of no other landmark, so it is the page-level **banner**. It needs no explicit `role` and carries no `aria-label`. It stays after the skip link and live-region infrastructure and before `ScrollRestoration` and the route outlet, so the skip link remains the first focusable control and the brand link the second. All global brand content is now contained by a landmark, which is exactly what axe `region` requires.
+
+`Shell.module.scss` is unchanged: `header` carries no default margin or display behaviour that would need normalising, and the build output is byte-for-byte the same size as M4-02.
+
+**This is not the canonical Header stage.** No Catalog control, Search, Compare, Favorites, Cart, Account, city selector, Information Bar, responsive composition, sticky behaviour, navigation landmark, toolbar semantics or duplicate brand link was added. M4-04 still owns the canonical Header and will replace this transitional banner.
+
+### E2E stabilization
+
+Both fixes are test-side only. No runtime tab order, focus lifecycle, `requestAnimationFrame` timing, Playwright configuration, retry count or timeout was changed, and no sleep was introduced.
+
+- **Skip-link focus order.** The test now establishes a deterministic focus origin before traversal: it blurs any active element, focuses `document.body`, and asserts the reset element is neither the skip link nor the brand link. Only then does it press `Tab` twice, asserting the skip link and then the brand link. It still proves real keyboard traversal — the skip link is never focused directly as the test action.
+- **Route-heading focus.** The immediate `page.evaluate()` read is replaced with Playwright's auto-waiting `await expect(heading).toBeFocused()`, which retries until the `requestAnimationFrame` callback has run. The assertion still proves the actual runtime focus lifecycle through a real client-side link click.
+
+### Axe coverage
+
+None of the five blocking assertions was modified. No rule was disabled, no selector excluded, no violation filtered, no expected count reduced and no retry removed. The corrected DOM is expected to pass the existing scans unchanged.
+
+### Files changed
+
+| File                                                  | Change                                                       |
+| ----------------------------------------------------- | ------------------------------------------------------------ |
+| `src/app/shell/RootLayout.tsx`                        | transitional brand slot `div` → `header` (banner landmark)   |
+| `tests/app/shell/brand-runtime-mount.test.tsx`        | banner-landmark coverage replacing the no-landmark assertion |
+| `tests/e2e/brand-home-link.spec.ts`                   | deterministic focus origin before keyboard traversal         |
+| `tests/e2e/route-carriers.spec.ts`                    | auto-waiting focus assertion                                 |
+| `docs/05-implementation/m4-canonical-shell-report.md` | M4-02 failure evidence; this section                         |
+| `docs/05-implementation/repository-state.md`          | current-state note reconciled                                |
+
+### Preserved brand contract
+
+Unchanged by this correction: the `BrandHomeLink` public API, the asset selection matrix, primary/inverse/monochrome behaviour, the CSS mask strategy, the accessible name `GoodCall — на главную`, the Home destination `/`, imported asset URLs, all six SVG byte lengths and SHA-256 values, the manifest `runtime-integrated` statuses, the minimum-size contracts and the focus styling. `src/app/shell/brand/**`, `src/assets/brand/**`, `src/shared/**`, `package.json`, `package-lock.json`, `playwright.config.ts` and `.github/**` show an empty diff.
+
+### Integration coverage
+
+Runtime-mount tests now assert, on Home and a carrier route: exactly one banner, rendered as `header` with no `role` and no `aria-label`; the banner contains exactly one brand Home link; the banner sits outside `main` and is not nested in another `header`; no navigation landmark exists; no extra live region exists — the single route announcement remains the only one; one `main`; one `h1`; the skip link still precedes the brand link in DOM and focus order; and route titles and headings are preserved.
+
+### Local verification
+
+| Command                  | Result                                         |
+| ------------------------ | ---------------------------------------------- |
+| `npm run typecheck`      | PASS                                           |
+| `npm run lint`           | PASS — 0 errors, 0 warnings                    |
+| `npm run lint:styles`    | PASS                                           |
+| `npm run format:check`   | PASS                                           |
+| `npm run check:comments` | PASS                                           |
+| `npm test`               | PASS — **746 tests in 41 files**               |
+| `npm run build`          | PASS — 234 modules                             |
+| `npm run validate:build` | PASS                                           |
+| `npm run check:full`     | PASS — includes the bounded dev-bootstrap gate |
+| `git diff --check`       | PASS                                           |
+
+Bundle is **unchanged** at raw 415.49 KB / gzip 124.67 KB, confirming the correction is semantic rather than stylistic.
+
+Local E2E was **not** run, per `AGENTS.md`. The axe and focus fixes cannot be claimed from serverless tests alone; only exact-SHA CI can confirm them. CI was pending at commit time; the outcome is recorded in the untracked stage handoff.
+
+### Rejected variants
+
+- **Suppressing or excluding the axe `region` rule, or excluding `.brand-slot`** — hides a real accessibility defect instead of fixing it.
+- **Moving the brand link inside route-owned `main`** — would put global shell content in the route's landmark and break single-`main` ownership.
+- **Adding `role="banner"` to the `div`** — a semantic `header` at root level already exposes the banner role; an explicit role would be redundant.
+- **Giving the banner an `aria-label`** — nothing to disambiguate with a single banner, and it would encode Header content policy this stage does not own.
+- **Implementing the canonical Header now** — M4-04 owns it; a landmark fix must not become a shell stage.
+- **`skipLink.focus()` in the flaky test** — would delete the very keyboard-traversal evidence the test exists to provide.
+- **An arbitrary sleep or a raised timeout for the focus race** — masks the race instead of synchronising on the real condition.
+- **Changing `RootLayout` focus timing or removing `requestAnimationFrame`** — the runtime lifecycle was correct; only the tests were unsynchronised.
+
+### Deviations
+
+None. The diff is limited to the expected minimal set, `Shell.module.scss` needed no change, and the brand component, asset contract and manifest were left untouched.
+
+### Risks
+
+- The banner is transitional. Until M4-04, the page exposes a banner landmark containing only a logo, which is valid but not a designed Header.
+- The two E2E stabilisations are verified locally only by reasoning about the failure mode; their real proof is a green CI run with zero flaky results.
+- The remaining M4-02 risks still stand: unplaced inverse/monochrome/symbol variants carry their contrast obligations forward, clear-space placement belongs to Header/Footer stages, and `scripts/review-m3-browser.mjs` still asserts no image asset is present, an M3-era truth now intentionally obsolete.
+
+### Next gate
+
+Green GitHub Actions CI on the exact M4-02A SHA with zero failed and zero flaky Playwright tests, then independent diff audit. **M4-03 must not begin until both close.**

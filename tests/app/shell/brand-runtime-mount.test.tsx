@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import { createMemoryRouter, RouterProvider } from 'react-router-dom';
 import { createApplicationRoutes } from '@/app/composition/application-routes';
 import { BRAND_HOME_LINK_LABEL } from '@/app/shell/brand';
@@ -83,21 +83,49 @@ describe('Runtime brand mount', () => {
     ).toBeTruthy();
   });
 
-  it('adds no landmark and no live region around the brand slot', async () => {
+  it.each(MOUNTED_ROUTES)('%s contains the brand link in one banner landmark', async (path) => {
+    renderApplicationAt(path);
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { level: 1 })).toBeInTheDocument();
+    });
+
+    expect(screen.getAllByRole('banner')).toHaveLength(1);
+
+    const banner = screen.getByRole('banner');
+    expect(banner.tagName.toLowerCase()).toBe('header');
+    expect(banner.getAttribute('role')).toBeNull();
+    expect(banner.getAttribute('aria-label')).toBeNull();
+    expect(banner.contains(brandLink())).toBe(true);
+    expect(within(banner).getAllByRole('link', { name: BRAND_HOME_LINK_LABEL })).toHaveLength(1);
+  });
+
+  it.each(MOUNTED_ROUTES)('%s keeps the banner outside main and unnested', async (path) => {
+    renderApplicationAt(path);
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { level: 1 })).toBeInTheDocument();
+    });
+
+    const banner = screen.getByRole('banner');
+    expect(banner.closest('main')).toBeNull();
+    expect(banner.parentElement?.closest('header')).toBeNull();
+    expect(document.querySelectorAll('header')).toHaveLength(1);
+    expect(document.querySelector('main#main-content')?.querySelector('header')).toBeNull();
+  });
+
+  it('introduces no navigation landmark and no extra live region', async () => {
     renderApplicationAt('/search');
 
     await waitFor(() => {
       expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Поиск');
     });
 
-    const slot = brandLink().parentElement;
-    expect(slot?.tagName.toLowerCase()).toBe('div');
-    expect(slot?.getAttribute('role')).toBeNull();
-    expect(slot?.closest('header')).toBeNull();
-    expect(slot?.closest('nav')).toBeNull();
-    expect(slot?.closest('main')).toBeNull();
+    const banner = screen.getByRole('banner');
+    expect(screen.queryAllByRole('navigation')).toHaveLength(0);
+    expect(banner.querySelectorAll('[aria-live]')).toHaveLength(0);
     expect(document.querySelectorAll('#route-announcement')).toHaveLength(1);
-    expect(slot?.querySelectorAll('[aria-live]')).toHaveLength(0);
+    expect(document.querySelectorAll('[aria-live]')).toHaveLength(1);
   });
 
   it('navigates back to Home from a carrier route', async () => {
