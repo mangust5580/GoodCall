@@ -21,9 +21,10 @@
 | M4-06 — Newsletter pre-footer and deterministic local subscription lifecycle  | **APPROVED AND CLOSED THROUGH M4-06A AND M4-06B**                             |
 | M4-06A — Newsletter form and session-persistence architecture reconciliation  | **APPROVED AND CLOSED THROUGH M4-06B**                                        |
 | M4-06B — Newsletter pending-test act cleanup and evidence reconciliation      | **APPROVED AND CLOSED**                                                       |
-| M4-07 — Canonical Footer                                                      | **IMPLEMENTED THROUGH M4-07B — VISUAL CONFIRMATION PENDING**                  |
-| M4-07A — Footer E2E failure evidence recovery and correction                  | **TECHNICALLY APPROVED — VISUAL GATE FAILED; CORRECTED BY M4-07B**            |
-| M4-07B — Footer responsive grid visual correction                             | **IMPLEMENTED — AWAITING INDEPENDENT AUDIT, CI AND USER VISUAL CONFIRMATION** |
+| M4-07 — Canonical Footer                                                      | **IMPLEMENTED THROUGH M4-07C — VISUAL CONFIRMATION PENDING**                  |
+| M4-07A — Footer E2E failure evidence recovery and correction                  | **TECHNICALLY APPROVED**                                                      |
+| M4-07B — Footer responsive grid visual correction                             | **TECHNICALLY APPROVED; USER VISUAL GATE FOUND BRAND ALIGNMENT DEFECT**       |
+| M4-07C — Footer Brand vertical alignment correction                           | **IMPLEMENTED — AWAITING INDEPENDENT AUDIT, CI AND USER VISUAL CONFIRMATION** |
 
 M4 is not approved and not closed. The Information Bar, the primary Header core, the Header route actions, the Newsletter pre-footer and the canonical Footer now exist. The transitional brand banner was replaced by the canonical Header in M4-04.
 
@@ -2792,6 +2793,178 @@ Unit totals are unchanged because production semantics did not change — only t
 
 Local Playwright was not run; `AGENTS.md` keeps the E2E suite CI-owned.
 
+### M4-07B exact-SHA CI — technically approved
+
+The M4-07B commit `d65c5fec1de1c5aa666475993f74466bbf1d6ca4` — `fix(shell): correct footer responsive grid` — was independently confirmed green.
+
+| Item                            | Value                                      |
+| ------------------------------- | ------------------------------------------ |
+| SHA                             | `d65c5fec1de1c5aa666475993f74466bbf1d6ca4` |
+| Run                             | 31166647625                                |
+| Job                             | 92828878232                                |
+| Attempt                         | 1                                          |
+| Vitest                          | 1182 passed / 59 files                     |
+| `site-footer.test.tsx`          | 42                                         |
+| `footer-navigation.test.ts`     | 12                                         |
+| `footer-runtime-mount.test.tsx` | 12                                         |
+| `company.test.ts`               | 11                                         |
+| shell asset suite               | 44                                         |
+| Playwright                      | 216 passed                                 |
+| Failed                          | 0                                          |
+| Flaky                           | 0                                          |
+| Retries                         | none                                       |
+| Duration                        | 1.7m                                       |
+| Build                           | 266 modules, success                       |
+| Build validation                | success                                    |
+
+Bundle at that SHA: total **476.57 KB raw / 143.04 KB gzip**; main JS **438.29 KB raw / 134.30 KB gzip**.
+
+M4-07B is therefore **technically approved**. Its expanded track allocation, wide Brand plus compact 2×2 grid, breakpoint geometry and 1920px content-density E2E are frozen and carried into M4-07C unchanged.
+
 ### Next gate
 
-Green exact-SHA CI with zero failed, zero flaky and no retries, including the new wide compact-grid and 1920px expanded scenarios; then independent audit; then **renewed user visual confirmation** at 1920, 1440, 1279, 1280, 1024, 768 and 320 plus the 404 Footer. **M4-08 must not begin until all three close.**
+M4-07B's technical gate is closed. Its visual gate is superseded by **M4-07C**, which corrects the Brand vertical alignment defect the user found during that review. **M4-08 must not begin until M4-07C closes.**
+
+## M4-07C — Footer Brand vertical alignment correction
+
+**Status at commit time: IMPLEMENTED — AWAITING INDEPENDENT AUDIT, CI AND USER VISUAL CONFIRMATION**
+
+### Baseline
+
+| Item                                 | Value                                        |
+| ------------------------------------ | -------------------------------------------- |
+| Branch                               | `main`                                       |
+| Baseline SHA                         | `d65c5fec1de1c5aa666475993f74466bbf1d6ca4`   |
+| Baseline commit                      | `fix(shell): correct footer responsive grid` |
+| Parent                               | `4691bbfe85443d0e2a42d1fa86c5c49b0bb46e70`   |
+| `git rev-parse HEAD` / `origin/main` | both matched the baseline before changes     |
+
+### User visual finding
+
+User review of the M4-07B Footer at 1920, 1440, 1279, 1280 and 1024 accepted the width and grid work: the expanded width allocation is correct, Contacts is no longer starved, 1279 correctly uses the wide Brand plus compact grid, 1280 correctly transitions to the expanded five-column band, and 1024 correctly uses the wide compact-grid layout.
+
+One defect remained and failed the visual gate. Inside the Brand block the **GoodCall logo sat well below the top of the Footer content area, and the store descriptor sat much farther below the logo**, leaving a large artificial empty vertical band between them. The block read as stretched across the available grid height instead of as a compact content cluster. The effect was strongest at _wide_, where the Brand spans two outer grid rows.
+
+### Root cause
+
+Verified against the resolved cascade for `.brand`, not assumed:
+
+1. `.brand` is a grid item of `.inner`. Nothing in the Footer stylesheet, `BrandHomeLink.module.scss` or `styles/foundations/_reset.scss` sets `align-self` on it, so it resolves to `normal`, which stretches an auto-sized block-level grid item to the full block size of its grid area. At _wide_ that area is two rows tall; at _expanded_ it is as tall as the tallest column, Contacts.
+2. `.brand` is itself `display: grid` and did **not** set `align-content`, so it resolved to `normal`, which behaves as **`stretch`** for a grid container. Its two implicit rows are `auto`-sized, and per CSS Box Alignment `stretch` grows auto-sized tracks equally to fill the container. Both Brand rows therefore absorbed half of the surplus grid height each.
+3. `.brand-link` is `display: inline-flex` with `align-items: center` and `min-block-size: 44px`. Stretched to the inflated first row, it centred the 180 × 22.68px logo lockup inside it — which is why the logo appeared pushed **down** from the block-start.
+4. The descriptor started at the block-start of the equally inflated second row, so the visible logo-to-descriptor distance was the configured gap **plus** the surplus absorbed by both rows.
+
+The outer grid tracks were never the cause. The defect was entirely the Brand's own internal `align-content` default.
+
+### Minimal SCSS correction
+
+One declaration, in `src/app/shell/footer/SiteFooter.module.scss`:
+
+Before:
+
+```scss
+.brand {
+  display: grid;
+  gap: var(--gc-spacing-sm);
+  min-inline-size: 0;
+}
+```
+
+After:
+
+```scss
+.brand {
+  display: grid;
+  align-content: start;
+  gap: var(--gc-spacing-sm);
+  min-inline-size: 0;
+}
+```
+
+`align-content: start` keeps both Brand rows `max-content`-sized and packs them at the block-start. The logo row collapses to its 44px target height, the descriptor follows it by exactly `--gc-spacing-sm`, and the surplus grid height now accumulates **below** the descriptor where it is invisible. `align-self` was deliberately **not** added: `.brand` may keep filling its grid area, because only its internal track sizing was wrong. No second alignment property was needed and none was added.
+
+### Frozen responsive grid contract
+
+Confirmed unchanged by diff — the SCSS change is a single added line and touches nothing else:
+
+| Range                      | Contract                                         | State     |
+| -------------------------- | ------------------------------------------------ | --------- |
+| Wide 64rem–79.999rem       | `minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 1fr)` | unchanged |
+| Wide Brand                 | `grid-row: span 2`                               | unchanged |
+| Expanded ≥ 80rem           | `1.35fr \| 1.1fr \| 0.8fr \| 1fr \| 1.35fr`      | unchanged |
+| Expanded Brand             | `grid-row: auto`                                 | unchanged |
+| Breakpoints                | 48rem, 64rem, 80rem                              | unchanged |
+| Column gaps, block padding | unchanged                                        | unchanged |
+| `PageContainer`            | unchanged                                        | unchanged |
+
+No track ratio, breakpoint, container, padding, contact width or navigation width was touched. M4-07C is not a grid-ratio tuning stage.
+
+### Markup, content and runtime freeze
+
+`SiteFooter.tsx` is unchanged — the SCSS-only correction was sufficient, so no markup change was made or needed. COMPANY-001, Footer navigation, legal links, payment indicators, the runtime copyright, the social and app-store exclusions, `RootLayout`, route policy, Header, Newsletter, the Information Bar, Shared UI, `PageContainer`, routes, dependencies and assets are all unchanged. No content was deleted, truncated or abbreviated, no font size was reduced, and no absolute positioning, transform, translate, negative margin, fixed Footer height or JavaScript viewport detection was introduced.
+
+### E2E regression evidence
+
+`tests/e2e/footer.spec.ts` gains one helper pair, `resolveBrandGeometry` and `expectCompactBrandCluster`, integrated into the **existing** wide and expanded scenarios rather than a new test — so the Playwright total stays at 216 as a consequence of the chosen integration, not as a preserved number.
+
+`resolveBrandGeometry` reads, in one in-page evaluation from the descriptor: the Brand grid area box, the Brand logo link box, the descriptor box, and the **computed `row-gap` of the Brand grid**. Nothing is hard-coded from a screenshot and no x/y coordinate is encoded.
+
+`expectCompactBrandCluster` then asserts three things, each with a 2px rendering tolerance:
+
+| Assertion                                         | Proves                                                              |
+| ------------------------------------------------- | ------------------------------------------------------------------- |
+| `logo.top - brandArea.top ≤ 2px`                  | the logo sits at the block-start of the Brand grid area             |
+| `logo.height ≤ 44 + 2px`                          | the logo row is content-sized, **not** stretched over the grid area |
+| `\|descriptor.top - logo.bottom - rowGap\| ≤ 2px` | the descriptor follows the logo by exactly the configured gap       |
+
+The second assertion is the discriminator. The logo link is measured rather than the SVG lockup inside it, because the lockup's intrinsic line-box geometry would make the comparison unstable; the link is a real Brand grid child, so its height directly reports whether the row was stretched.
+
+Coverage points:
+
+| Viewport       | Range                                  |
+| -------------- | -------------------------------------- |
+| 1279px         | wide — Brand spans two outer grid rows |
+| 1280px, 1281px | expanded                               |
+| 1920px         | expanded, content-density scenario     |
+
+All M4-07B geometry coverage is retained unweakened: 1920 content-aware widths, 1279/1280/1281, 1023/1024/1025, 767/768/769, compact disclosures, navigation, legal links, 404, keyboard traversal, 200% and 400% zoom, coarse pointer, forced colors, reduced motion and the five axe scans. No test was skipped, marked `fixme`, given an arbitrary wait or granted an axe suppression, and no timeout or retry was raised.
+
+### Accessibility
+
+`align-content` is a purely visual track-alignment property. DOM order, source order, focus order, the single DOM instance per Footer link, the `BrandHomeLink` accessible name, disclosure semantics, `aria-current`, the 44 × 44 targets, visible focus, forced-colors behaviour, the absence of horizontal overflow and the 200%/400% zoom contracts are all untouched.
+
+### Files changed
+
+| File                                                  | Kind       | Why                                              |
+| ----------------------------------------------------- | ---------- | ------------------------------------------------ |
+| `src/app/shell/footer/SiteFooter.module.scss`         | production | `align-content: start` on `.brand` — one line    |
+| `tests/e2e/footer.spec.ts`                            | test       | Brand internal alignment regression evidence     |
+| `docs/05-implementation/m4-canonical-shell-report.md` | docs       | M4-07B CI evidence, status wording, this section |
+| `docs/05-implementation/repository-state.md`          | docs       | current-state note                               |
+
+### Local verification
+
+| Command                                        | Result                                       |
+| ---------------------------------------------- | -------------------------------------------- |
+| `npm run typecheck`                            | PASS                                         |
+| `npm run lint`                                 | PASS                                         |
+| `npm run lint:styles`                          | PASS                                         |
+| `npm run format:check`                         | PASS                                         |
+| `npm run check:comments`                       | PASS                                         |
+| `npm test`                                     | PASS — **1182 tests in 59 files**, unchanged |
+| `npm run build`                                | PASS — 266 modules                           |
+| `npm run validate:build`                       | PASS                                         |
+| `npm run check:full`                           | PASS                                         |
+| Static: M4-07B track ratios                    | unchanged                                    |
+| Static: viewport JS in Footer                  | none                                         |
+| Static: negative margin / transform / absolute | none added                                   |
+| Static: Footer content or markup change        | none                                         |
+| `git diff --check`                             | clean                                        |
+
+Unit totals are unchanged because production semantics did not change — only one stylesheet declaration. Bundle moves from total raw 476.57 KB / gzip 143.04 KB to **476.59 KB / 143.04 KB**; main JS raw is unchanged at **438.29 KB**, confirming the change is CSS-only.
+
+Local Playwright was not run; `AGENTS.md` keeps the E2E suite CI-owned, so the new Brand geometry assertion is proved by CI rather than locally. The root cause was correspondingly established from the resolved cascade and the CSS Box Alignment specification rather than from a locally rendered browser.
+
+### Next gate
+
+Green exact-SHA CI with zero failed, zero flaky and no retries, including the new Brand cluster assertions at 1279, 1280, 1281 and 1920; then independent audit; then **renewed user visual confirmation** at 1920, 1279 and 1024 first, and — if those pass — control review at 768, 320 closed, 320 with a disclosure open, and the 404 Footer. **M4-07C and M4-07 remain open. M4-08 must not begin until all three close.**

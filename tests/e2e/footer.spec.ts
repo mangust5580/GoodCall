@@ -30,6 +30,7 @@ const LEGAL_LINKS = [
 
 const MINIMUM_TARGET = 44;
 const ROW_TOLERANCE = 4;
+const ALIGNMENT_TOLERANCE = 2;
 
 interface Box {
   x: number;
@@ -113,6 +114,75 @@ async function renderedLineCount(locator: Locator, name: string): Promise<number
   }
 
   return lines;
+}
+
+interface BrandGeometry {
+  rowGap: number;
+  areaTop: number;
+  logoTop: number;
+  logoBottom: number;
+  logoHeight: number;
+  descriptorTop: number;
+}
+
+async function resolveBrandGeometry(page: Page): Promise<BrandGeometry> {
+  const geometry = await footer(page)
+    .getByText(DESCRIPTOR)
+    .evaluate((descriptor): BrandGeometry | null => {
+      const area = descriptor.parentElement;
+      const logo = area?.querySelector('a') ?? null;
+
+      if (area === null || logo === null) {
+        return null;
+      }
+
+      const areaBox = area.getBoundingClientRect();
+      const logoBox = logo.getBoundingClientRect();
+      const descriptorBox = descriptor.getBoundingClientRect();
+      const rowGap = parseFloat(window.getComputedStyle(area).rowGap);
+
+      if (!Number.isFinite(rowGap)) {
+        return null;
+      }
+
+      return {
+        rowGap,
+        areaTop: areaBox.top,
+        logoTop: logoBox.top,
+        logoBottom: logoBox.bottom,
+        logoHeight: logoBox.height,
+        descriptorTop: descriptorBox.top,
+      };
+    });
+
+  expect(geometry, 'the Brand area must expose a measurable row gap and boxes').not.toBeNull();
+
+  if (geometry === null) {
+    throw new Error('Brand geometry is not measurable');
+  }
+
+  return geometry;
+}
+
+async function expectCompactBrandCluster(page: Page): Promise<void> {
+  const brand = await resolveBrandGeometry(page);
+
+  expect(brand.rowGap, 'the Brand grid declares a positive row gap').toBeGreaterThan(0);
+
+  expect(
+    brand.logoTop - brand.areaTop,
+    'the Brand logo starts at the block-start of its grid area'
+  ).toBeLessThanOrEqual(ALIGNMENT_TOLERANCE);
+
+  expect(
+    brand.logoHeight,
+    'the Brand logo row stays content-sized instead of stretching over the grid area'
+  ).toBeLessThanOrEqual(MINIMUM_TARGET + ALIGNMENT_TOLERANCE);
+
+  expect(
+    Math.abs(brand.descriptorTop - brand.logoBottom - brand.rowGap),
+    'the descriptor follows the logo by the configured Brand gap'
+  ).toBeLessThanOrEqual(ALIGNMENT_TOLERANCE);
 }
 
 async function expectSingleLineContact(page: Page, name: string): Promise<void> {
@@ -317,6 +387,8 @@ test.describe('M4-07 canonical Footer', () => {
         await expectWideCompactGrid(page);
       }
 
+      await expectCompactBrandCluster(page);
+
       expect(await horizontalOverflow(page)).toBeLessThanOrEqual(1);
     });
   }
@@ -328,6 +400,7 @@ test.describe('M4-07 canonical Footer', () => {
     await expectFooterInventory(page);
     await expectAllNavigationVisible(page);
     await expectExpandedFiveColumns(page);
+    await expectCompactBrandCluster(page);
 
     const brand = await resolveBox(brandColumn(page), 'brand column');
     const company = await resolveBox(groupColumn(page, GROUPS[1].title), GROUPS[1].title);

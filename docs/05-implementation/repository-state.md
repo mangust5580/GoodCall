@@ -961,8 +961,39 @@ Separately confirmed: approved **UI-FTR-001** requires _wide_ (64rem–79.999rem
 - **CI is pending at commit time**, and **renewed user visual confirmation is pending** at 1920, 1440, 1279, 1280, 1024, 768 and 320 plus the 404 Footer.
 - **M4-08 remains blocked** until M4-07B exact-SHA green CI, independent audit and user visual confirmation all close.
 
+## Milestone State Note — M4-07C Footer Brand Vertical Alignment Correction (2026-08-07)
+
+### M4-07B technical closure
+
+M4-07B — commit `d65c5fec1de1c5aa666475993f74466bbf1d6ca4`, run **31166647625**, job **92828878232**, attempt 1 — concluded success: Vitest **1182 passed in 59 files** (site-footer 42, footer-navigation 12, footer-runtime-mount 12, company 11, shell asset suite 44), Playwright **216 passed, 0 failed, 0 flaky**, no retries, duration 1.7m, build 266 modules, build validation success. Bundle: total **476.57 KB raw / 143.04 KB gzip**; main JS **438.29 KB raw / 134.30 KB gzip**. M4-07B is **technically approved**. Its expanded track allocation, wide Brand plus compact 2×2 grid, breakpoint geometry and 1920px content-density E2E are frozen and carried into M4-07C unchanged.
+
+### M4-07B visual gate found a Brand alignment defect
+
+User review at 1920, 1440, 1279, 1280 and 1024 **accepted** the M4-07B width and grid work: expanded width allocation is correct, Contacts is no longer starved, 1279 correctly uses the wide Brand plus compact grid, 1280 correctly transitions to the expanded five-column band, and 1024 correctly uses the wide compact-grid layout.
+
+One defect failed the gate. Inside the Brand block the **logo sat well below the top of the Footer content area and the descriptor sat much farther below the logo**, leaving a large artificial empty vertical band between them; the block read as stretched across the grid height instead of as a compact cluster. The effect was strongest at _wide_, where the Brand spans two outer grid rows. **A production layout defect, not a test defect.**
+
+### Verified root cause
+
+`.brand` is a grid item with no `align-self` anywhere in the cascade, so it stretches to its full grid area — two rows tall at wide. `.brand` is itself `display: grid` and did not set `align-content`, which therefore resolved to `normal`, behaving as **`stretch`** for a grid container: its two `auto` rows each absorbed half the surplus height. `.brand-link` is `inline-flex` with `align-items: center`, so stretched to the inflated first row it centred the logo lockup — pushing the logo down — while the descriptor started at the block-start of the equally inflated second row. The outer tracks were never the cause; only the Brand's own internal `align-content` default was wrong.
+
+### M4-07C corrective state
+
+- Baseline SHA `d65c5fec1de1c5aa666475993f74466bbf1d6ca4`; the resulting M4-07C commit SHA is recorded in the untracked stage handoff.
+- **One production line**: `align-content: start` added to `.brand` in `src/app/shell/footer/SiteFooter.module.scss`. Both Brand rows stay `max-content`-sized and pack at block-start; the surplus grid height now accumulates below the descriptor. `align-self` was deliberately not added — a single declaration was sufficient and was verified against the resolved cascade before editing.
+- **M4-07B grid contract frozen and confirmed unchanged by diff**: wide `1.2fr | 1fr | 1fr` with Brand `grid-row: span 2`; expanded `1.35fr | 1.1fr | 0.8fr | 1fr | 1.35fr` with Brand `grid-row: auto`; breakpoints 48/64/80rem, column gaps, block padding, contact and navigation widths and `PageContainer` all untouched.
+- **`SiteFooter.tsx` is unchanged** — the SCSS-only correction was sufficient, so no markup change was made. COMPANY-001, Footer content and navigation, legal links, payment indicators, runtime copyright, social and app-store exclusions, `RootLayout`, routes, Header, Newsletter, Information Bar, Shared UI, dependencies and assets are all unchanged.
+- **No workaround**: no negative margin, absolute positioning, transform or translate, no fixed Footer height, no padding tuning to mask the gap, no font-size reduction, no content truncation and no JavaScript viewport detection.
+- **E2E regression evidence** is integrated into the existing wide and expanded scenarios via `resolveBrandGeometry` and `expectCompactBrandCluster` in `tests/e2e/footer.spec.ts`. At 1279, 1280, 1281 and 1920 the helpers assert, within a 2px tolerance, that the logo starts at the block-start of the Brand area, that the **logo row stays content-sized rather than stretched** — the discriminator against the defect — and that the descriptor follows the logo by the Brand grid's **computed** `row-gap`. The logo link is measured rather than the SVG lockup, whose intrinsic line-box geometry would be unstable. No coordinate is hard-coded from a screenshot.
+- Playwright stays at **216** as a consequence of integrating rather than adding a scenario, not as a preserved number. All M4-07B geometry coverage is retained unweakened, along with compact disclosures, navigation, legal links, 404, keyboard, 200%/400% zoom, coarse pointer, forced colours, reduced motion and the five axe scans. No skip, `fixme`, arbitrary wait, axe suppression, timeout increase or retry increase.
+- **Accessibility unaffected**: `align-content` is a visual track-alignment property only. DOM/source/focus order, one DOM instance per link, the `BrandHomeLink` accessible name, disclosure semantics, `aria-current`, 44 × 44 targets, visible focus, forced-colors behaviour, absence of horizontal overflow and the zoom contracts are unchanged.
+- Test totals unchanged at **1182 across 59 files**. Bundle: total raw **476.59 KB** / gzip **143.04 KB**; main JS raw unchanged at **438.29 KB**, confirming a CSS-only change.
+- Local checks pass, including `npm run check:full`. **Local E2E was not run** — the Playwright suite remains CI-owned, so the new Brand geometry assertion is proved by CI, and the root cause was established from the resolved cascade and the CSS Box Alignment specification rather than a locally rendered browser.
+- **CI is pending at commit time**, and **user visual confirmation is pending** at 1920, 1279 and 1024 first, then control review at 768, 320 closed, 320 with a disclosure open, and the 404 Footer.
+- **M4-07C and M4-07 remain open. M4-08 remains blocked** until M4-07C exact-SHA green CI, independent audit and user visual confirmation all close.
+
 ## Next Repository Modifications
 
 The current implementation milestone is **M4**, whose scope must be taken from the approved architecture and UI/component/responsive contracts.
 
-**M4-08 must not begin** until the M4-07B exact-SHA CI, independent audit and renewed user visual confirmation at 1920, 1440, 1279, 1280, 1024, 768 and 320 widths — including the compact disclosure states and the 404 Footer — all close.
+**M4-08 must not begin** until the M4-07C exact-SHA CI, independent audit and user visual confirmation — first at 1920, 1279 and 1024, then control review at 768, 320 closed, 320 with a disclosure open and the 404 Footer — all close.

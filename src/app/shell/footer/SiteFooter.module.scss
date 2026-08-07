@@ -12,6 +12,7 @@
 
 .brand {
   display: grid;
+  align-content: start;
   gap: var(--gc-spacing-sm);
   min-inline-size: 0;
 }
