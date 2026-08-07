@@ -990,10 +990,48 @@ One defect failed the gate. Inside the Brand block the **logo sat well below the
 - Test totals unchanged at **1182 across 59 files**. Bundle: total raw **476.59 KB** / gzip **143.04 KB**; main JS raw unchanged at **438.29 KB**, confirming a CSS-only change.
 - Local checks pass, including `npm run check:full`. **Local E2E was not run** — the Playwright suite remains CI-owned, so the new Brand geometry assertion is proved by CI, and the root cause was established from the resolved cascade and the CSS Box Alignment specification rather than a locally rendered browser.
 - **CI is pending at commit time**, and **user visual confirmation is pending** at 1920, 1279 and 1024 first, then control review at 768, 320 closed, 320 with a disclosure open, and the 404 Footer.
-- **M4-07C and M4-07 remain open. M4-08 remains blocked** until M4-07C exact-SHA green CI, independent audit and user visual confirmation all close.
+- **M4-07C and M4-07 remain open. M4-08 remains blocked** until M4-07C exact-SHA green CI, independent audit and user visual confirmation all close. _Superseded — all three gates have since closed; see the M4-07 Closure note below._
+
+## Milestone State Note — M4-07 Closure (2026-08-07)
+
+### Current implemented state
+
+The canonical Footer is **complete and approved**. Final Footer SHA `4f5758f7f2432b33ffcc046c71d432687c91d943` — `fix(shell): align footer brand content`.
+
+### Closure evidence
+
+M4-07C — run **31187557011**, job **92895857271**, attempt 1 — concluded success. Independent audit retrieved and read the **full** job log, so these are exact values: Vitest **1182 passed in 59 files** (`site-footer.test.tsx` 42, `footer-navigation.test.ts` 12, `footer-runtime-mount.test.tsx` 12, `company.test.ts` 11, shell asset suite 44), Playwright **216 passed, 0 failed, 0 flaky**, **no retries**, duration **1.2m**, build **266 modules** success, build validation success. Bundle: total **476.59 KB raw / 143.04 KB gzip**; main JS **438.29 KB raw / 134.31 KB gzip**.
+
+The M4-07C note above records that the implementing agent could not download the job log — no `gh` CLI or GitHub token in that environment, 403 unauthenticated — and therefore left the flaky and retry figures unverified. **Independent audit has since resolved that gap**, confirming 0 flaky and no retries.
+
+### Final user visual and manual approval
+
+Approved by the user across the whole Footer surface: expanded at ~1920px and ~1440px; the wide/expanded boundary at 1279/1280; wide at ~1024px; medium at 768px; compact 320px with all disclosures closed; compact 320px with one disclosure independently open; and the 404 Footer at compact width.
+
+Confirmed in every state: the expanded five-column structure is usable, Contacts is no longer starved, canonical address wrapping is acceptable, the wide range uses the Brand area plus a compact 2×2 grid, the boundary transitions correctly, the Brand logo and descriptor form a **compact block-start cluster with no artificial vertical gap**, the M4-07B grid correction did not regress, and there is no visible horizontal overflow or clipping. At compact, the three navigation groups are independently controlled and Contacts stays visible whether groups are closed or one is open. On the 404 route the Footer is present and the Newsletter is absent.
+
+### Current Footer responsive behaviour
+
+- **Compact < 48rem** — Brand and Contacts always visible; three independent navigation disclosures.
+- **Medium ≥ 48rem, < 64rem** — two-column wrapping.
+- **Wide ≥ 64rem, < 80rem** — expanded Brand area plus a compact 2×2 grid; grid `1.2fr | 1fr | 1fr` with the Brand spanning two rows.
+- **Expanded ≥ 80rem** — five canonical columns, content-aware: `1.35fr | 1.1fr | 0.8fr | 1fr | 1.35fr`.
+- **Brand internal layout** — `align-content: start`, so both Brand rows stay content-sized and pack at the block-start and surplus grid height accumulates below the descriptor.
+- Shell order is `route main → Newsletter → Footer` on normal routes and `route main → Footer` on 404.
+- Unchanged and current: one DOM instance per navigation link, canonical source and focus order, no viewport JavaScript, COMPANY-001 as content owner, exactly three legal links, text-only Visa/Mastercard demo indicators, the runtime copyright year, no active social links and no app-store badges.
+
+### Milestone state
+
+- **M4-07A — APPROVED AND CLOSED** (test-only E2E correction; no production Footer change).
+- **M4-07B — APPROVED AND CLOSED** (expanded content-aware allocation; authoritative wide contract corrected to Brand plus compact grid).
+- **M4-07C — APPROVED AND CLOSED** (one-line `align-content: start` Brand internal alignment fix).
+- **M4-07 — APPROVED AND CLOSED THROUGH M4-07A/B/C.**
+- **No open M4-07 blocker.**
+- **M4 overall remains not approved and not closed** while later stages exist.
+- The Footer link set remains an **implementation working subset, not a canonical resolution**; FTR-001 leaves the final set open and `footer-navigation.ts` is the single replacement point. Non-blocking.
 
 ## Next Repository Modifications
 
 The current implementation milestone is **M4**, whose scope must be taken from the approved architecture and UI/component/responsive contracts.
 
-**M4-08 must not begin** until the M4-07C exact-SHA CI, independent audit and user visual confirmation — first at 1920, 1279 and 1024, then control review at 768, 320 closed, 320 with a disclosure open and the 404 Footer — all close.
+**M4-08 is UNBLOCKED and NOT STARTED.** The M4-07 chain closed on exact-SHA green CI, independent audit and full user visual confirmation across expanded, wide, medium, compact closed, compact open and the 404 Footer. No M4-08 scope, implementation, tests or documentation has been created.

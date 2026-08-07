@@ -2,31 +2,62 @@
 
 ## Status
 
-| Task                                                                          | Status                                                                        |
-| ----------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
-| M4-01 — Shell destination safety and composition boundary                     | **CLOSED THROUGH M4-01A**                                                     |
-| M4-01A — Catalog family catch-all correction and CI reconciliation            | **APPROVED AND CLOSED**                                                       |
-| M4-02 — Runtime brand/logo integration                                        | **CLOSED THROUGH M4-02A**                                                     |
-| M4-02A — Brand landmark accessibility correction and E2E stabilization        | **APPROVED AND CLOSED**                                                       |
-| M4-03 — Information Bar                                                       | **CLOSED THROUGH M4-03A**                                                     |
-| M4-03A — Information Bar E2E correction and exact active-state reconciliation | **APPROVED AND CLOSED**                                                       |
-| M4-04 — Primary Header core: Catalog entry and Global Search                  | **APPROVED AND CLOSED THROUGH M4-04A AND M4-04B**                             |
-| M4-04A — Compact Header layout correction and E2E geometry stabilization      | **CLOSED THROUGH M4-04B**                                                     |
-| M4-04B — Deterministic keyboard focus origin and CI reconciliation            | **APPROVED AND CLOSED**                                                       |
-| M4-05-ICN — Application-owned shell icon set                                  | **APPROVED AND CLOSED**                                                       |
-| M4-05-ICN-A — Comparison icon semantic correction                             | **CLOSED THROUGH M4-05-ICN-B**                                                |
-| M4-05-ICN-B — Comparison marker legibility correction                         | **APPROVED AND CLOSED**                                                       |
-| M4-05 — Header route actions: Comparison, Favorites, Cart and Account         | **APPROVED AND CLOSED THROUGH M4-05A**                                        |
-| M4-05A — Header action E2E accessible-name assertion correction               | **APPROVED AND CLOSED**                                                       |
-| M4-06 — Newsletter pre-footer and deterministic local subscription lifecycle  | **APPROVED AND CLOSED THROUGH M4-06A AND M4-06B**                             |
-| M4-06A — Newsletter form and session-persistence architecture reconciliation  | **APPROVED AND CLOSED THROUGH M4-06B**                                        |
-| M4-06B — Newsletter pending-test act cleanup and evidence reconciliation      | **APPROVED AND CLOSED**                                                       |
-| M4-07 — Canonical Footer                                                      | **IMPLEMENTED THROUGH M4-07C — VISUAL CONFIRMATION PENDING**                  |
-| M4-07A — Footer E2E failure evidence recovery and correction                  | **TECHNICALLY APPROVED**                                                      |
-| M4-07B — Footer responsive grid visual correction                             | **TECHNICALLY APPROVED; USER VISUAL GATE FOUND BRAND ALIGNMENT DEFECT**       |
-| M4-07C — Footer Brand vertical alignment correction                           | **IMPLEMENTED — AWAITING INDEPENDENT AUDIT, CI AND USER VISUAL CONFIRMATION** |
+| Task                                                                          | Status                                            |
+| ----------------------------------------------------------------------------- | ------------------------------------------------- |
+| M4-01 — Shell destination safety and composition boundary                     | **CLOSED THROUGH M4-01A**                         |
+| M4-01A — Catalog family catch-all correction and CI reconciliation            | **APPROVED AND CLOSED**                           |
+| M4-02 — Runtime brand/logo integration                                        | **CLOSED THROUGH M4-02A**                         |
+| M4-02A — Brand landmark accessibility correction and E2E stabilization        | **APPROVED AND CLOSED**                           |
+| M4-03 — Information Bar                                                       | **CLOSED THROUGH M4-03A**                         |
+| M4-03A — Information Bar E2E correction and exact active-state reconciliation | **APPROVED AND CLOSED**                           |
+| M4-04 — Primary Header core: Catalog entry and Global Search                  | **APPROVED AND CLOSED THROUGH M4-04A AND M4-04B** |
+| M4-04A — Compact Header layout correction and E2E geometry stabilization      | **CLOSED THROUGH M4-04B**                         |
+| M4-04B — Deterministic keyboard focus origin and CI reconciliation            | **APPROVED AND CLOSED**                           |
+| M4-05-ICN — Application-owned shell icon set                                  | **APPROVED AND CLOSED**                           |
+| M4-05-ICN-A — Comparison icon semantic correction                             | **CLOSED THROUGH M4-05-ICN-B**                    |
+| M4-05-ICN-B — Comparison marker legibility correction                         | **APPROVED AND CLOSED**                           |
+| M4-05 — Header route actions: Comparison, Favorites, Cart and Account         | **APPROVED AND CLOSED THROUGH M4-05A**            |
+| M4-05A — Header action E2E accessible-name assertion correction               | **APPROVED AND CLOSED**                           |
+| M4-06 — Newsletter pre-footer and deterministic local subscription lifecycle  | **APPROVED AND CLOSED THROUGH M4-06A AND M4-06B** |
+| M4-06A — Newsletter form and session-persistence architecture reconciliation  | **APPROVED AND CLOSED THROUGH M4-06B**            |
+| M4-06B — Newsletter pending-test act cleanup and evidence reconciliation      | **APPROVED AND CLOSED**                           |
+| M4-07 — Canonical Footer                                                      | **APPROVED AND CLOSED THROUGH M4-07A/B/C**        |
+| M4-07A — Footer E2E failure evidence recovery and correction                  | **APPROVED AND CLOSED**                           |
+| M4-07B — Footer responsive grid visual correction                             | **APPROVED AND CLOSED**                           |
+| M4-07C — Footer Brand vertical alignment correction                           | **APPROVED AND CLOSED**                           |
 
-M4 is not approved and not closed. The Information Bar, the primary Header core, the Header route actions, the Newsletter pre-footer and the canonical Footer now exist. The transitional brand banner was replaced by the canonical Header in M4-04.
+M4 is not approved and not closed. The Information Bar, the primary Header core, the Header route actions, the Newsletter pre-footer and the canonical Footer now exist. The transitional brand banner was replaced by the canonical Header in M4-04. **M4-08 is unblocked and not started.**
+
+### M4-07 closure evidence
+
+The M4-07 chain closed at commit `4f5758f7f2432b33ffcc046c71d432687c91d943` — `fix(shell): align footer brand content`. Independent audit retrieved and read the full exact-SHA job log; the figures below are exact, not inferred.
+
+| Item                              | Value                                      |
+| --------------------------------- | ------------------------------------------ |
+| M4-07C commit                     | `4f5758f7f2432b33ffcc046c71d432687c91d943` |
+| Workflow run                      | 31187557011                                |
+| Job                               | 92895857271                                |
+| Run attempt                       | 1                                          |
+| Vitest                            | **1182 passed in 59 files**                |
+| — `site-footer.test.tsx`          | 42                                         |
+| — `footer-navigation.test.ts`     | 12                                         |
+| — `footer-runtime-mount.test.tsx` | 12                                         |
+| — `company.test.ts`               | 11                                         |
+| Shell asset suite                 | **44 passed**                              |
+| Playwright                        | **216 passed**                             |
+| Failed                            | 0                                          |
+| Flaky                             | 0                                          |
+| Retries                           | none                                       |
+| Playwright duration               | 1.2m                                       |
+| Build / build validation          | success — 266 modules                      |
+| Independent technical audit       | **approved**                               |
+| User visual confirmation          | **approved**                               |
+
+Bundle at closure: total **476.59 KB raw / 143.04 KB gzip**; main JS **438.29 KB raw / 134.31 KB gzip**.
+
+User confirmation covered the expanded Footer at ~1920px and ~1440px, the wide/expanded boundary at 1279/1280, the wide Footer at ~1024px, the medium Footer at 768px, the compact Footer at 320px with all disclosures closed, the compact Footer at 320px with one disclosure independently open, and the 404 Footer at compact width. In every state the Brand logo and descriptor form a compact block-start cluster with no artificial vertical band, the M4-07B width and grid correction holds, and there is no visible horizontal overflow or clipping.
+
+M4-07C is **APPROVED AND CLOSED**. M4-07B is **APPROVED AND CLOSED**. M4-07A is **APPROVED AND CLOSED**. M4-07 is **APPROVED AND CLOSED THROUGH M4-07A/B/C**. That unblocks M4-08.
 
 ### M4-06 closure evidence
 
@@ -2508,6 +2539,8 @@ Two.
 
 Green GitHub Actions CI on the exact M4-07 SHA with zero failed, zero flaky and no retries, then independent diff audit, then user visual confirmation at 1440, 1024, 768 and 320 widths including compact disclosure states and the 404 Footer. **M4-08 must not begin until all three close.**
 
+_Historical. Superseded — this gate closed through M4-07A/B/C; see **M4-07 closure evidence** and **M4-07 — final closure**._
+
 ### M4-07 initial exact-SHA CI — failed
 
 Recorded as historical fact. The first CI for the M4-07 implementation SHA was **red**.
@@ -2599,6 +2632,8 @@ Local E2E was not run; `AGENTS.md` keeps the Playwright suite CI-owned. Bundle u
 ### Next gate
 
 Green exact-SHA CI with zero failed, zero flaky and no retries, with all 41 previously failing scenarios reaching and passing their substantive assertions; then independent audit; then user visual confirmation at 1440, 1024, 768 and 320 including the compact disclosure states and the 404 Footer. **M4-08 must not begin until all three close.**
+
+_Historical. Superseded — M4-07A is **APPROVED AND CLOSED**; the parent visual gate closed through M4-07B and M4-07C._
 
 ### M4-07A exact-SHA CI — technically approved
 
@@ -2823,7 +2858,9 @@ M4-07B is therefore **technically approved**. Its expanded track allocation, wid
 
 ### Next gate
 
-M4-07B's technical gate is closed. Its visual gate is superseded by **M4-07C**, which corrects the Brand vertical alignment defect the user found during that review. **M4-08 must not begin until M4-07C closes.**
+M4-07B's technical gate is closed. Its visual gate is superseded by **M4-07C**, which corrects the Brand vertical alignment defect the user found during that review.
+
+_M4-07C has since closed. M4-07B is **APPROVED AND CLOSED**._
 
 ## M4-07C — Footer Brand vertical alignment correction
 
@@ -2967,4 +3004,105 @@ Local Playwright was not run; `AGENTS.md` keeps the E2E suite CI-owned, so the n
 
 ### Next gate
 
-Green exact-SHA CI with zero failed, zero flaky and no retries, including the new Brand cluster assertions at 1279, 1280, 1281 and 1920; then independent audit; then **renewed user visual confirmation** at 1920, 1279 and 1024 first, and — if those pass — control review at 768, 320 closed, 320 with a disclosure open, and the 404 Footer. **M4-07C and M4-07 remain open. M4-08 must not begin until all three close.**
+Green exact-SHA CI with zero failed, zero flaky and no retries, including the new Brand cluster assertions at 1279, 1280, 1281 and 1920; then independent audit; then **renewed user visual confirmation** at 1920, 1279 and 1024 first, and — if those pass — control review at 768, 320 closed, 320 with a disclosure open, and the 404 Footer.
+
+_All three gates have since closed. M4-07C is **APPROVED AND CLOSED**; see **M4-07 — final closure** below._
+
+## M4-07 — final closure
+
+**Status: APPROVED AND CLOSED THROUGH M4-07A/B/C**
+
+### Final SHA
+
+| Item             | Value                                      |
+| ---------------- | ------------------------------------------ |
+| Final Footer SHA | `4f5758f7f2432b33ffcc046c71d432687c91d943` |
+| Commit           | `fix(shell): align footer brand content`   |
+| Branch           | `main`                                     |
+
+### Exact M4-07C CI evidence
+
+Independent audit retrieved and read the **full** exact-SHA job log. These values are exact.
+
+| Item                            | Value                  |
+| ------------------------------- | ---------------------- |
+| Run                             | 31187557011            |
+| Job                             | 92895857271            |
+| Attempt                         | 1                      |
+| Vitest                          | 1182 passed / 59 files |
+| `site-footer.test.tsx`          | 42 passed              |
+| `footer-navigation.test.ts`     | 12 passed              |
+| `footer-runtime-mount.test.tsx` | 12 passed              |
+| `company.test.ts`               | 11 passed              |
+| shell asset suite               | 44 passed              |
+| Playwright                      | 216 passed             |
+| Failed                          | 0                      |
+| Flaky                           | 0                      |
+| Retries                         | none                   |
+| Playwright duration             | 1.2m                   |
+| Build                           | 266 modules, success   |
+| Build validation                | success                |
+
+Bundle: total **476.59 KB raw / 143.04 KB gzip**; main JS **438.29 KB raw / 134.31 KB gzip**.
+
+At M4-07C commit time the implementing agent could not download the job log — no `gh` CLI and no GitHub token were available in that environment, and the Actions log endpoint returns 403 unauthenticated — so the flaky and retry figures were recorded as unverified. **Independent audit has since resolved that evidence gap**: the log confirms **0 flaky** and **no retries**, exactly as the table above states.
+
+### Independent technical approval
+
+M4-07C is independently technically approved. The production change is one declaration — `align-content: start` on `.brand` in `src/app/shell/footer/SiteFooter.module.scss`. It changed no Footer content, no Footer markup, no M4-07B grid ratio, no breakpoint, and none of `PageContainer`, COMPANY-001, routes, Header, Newsletter, Information Bar, Shared UI, dependencies, assets, configs or workflows.
+
+### Final user visual and manual approval matrix
+
+| Viewport / state         | Verdict      | Confirmed                                                                                                                                                  |
+| ------------------------ | ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Expanded ~1920px         | **approved** | five-column structure usable; Contacts no longer starved; canonical address wrapping acceptable; Brand a compact block-start cluster; no overflow          |
+| Expanded ~1440px         | **approved** | same expanded composition holds                                                                                                                            |
+| Wide/expanded ~1279/1280 | **approved** | boundary transitions correctly between the wide compact grid and the expanded band                                                                         |
+| Wide ~1024px             | **approved** | expanded Brand area plus compact 2×2 grid; Contacts readable                                                                                               |
+| Medium 768px             | **approved** | two-column wrapping; groups visible without disclosures; Brand compact; Contacts readable; utility/legal layer wraps correctly; no overflow or clipping    |
+| Compact 320px, closed    | **approved** | Brand and descriptor visible; three independent disclosure controls, all able to remain closed; Contacts always visible; payment/legal/copyright reachable |
+| Compact 320px, one open  | **approved** | the opened group's links render in normal document flow; other groups stay independently controlled; Contacts visible; layout within viewport              |
+| 404 route, compact       | **approved** | catch-all renders; Footer present; Newsletter absent; Brand, disclosures, Contacts and the legal/payment/copyright layer all present                       |
+
+Across all states: the Brand logo and descriptor form a compact block-start cluster with **no artificial large vertical gap**, and the M4-07B grid correction did not regress. **This closes the M4-07 user visual gate.**
+
+### Final responsive implementation state
+
+| Range                   | Composition                                                                 |
+| ----------------------- | --------------------------------------------------------------------------- |
+| Compact < 48rem         | Brand and Contacts always visible; three independent navigation disclosures |
+| Medium ≥ 48rem, < 64rem | two-column wrapping                                                         |
+| Wide ≥ 64rem, < 80rem   | expanded Brand area plus a compact 2×2 grid for the remaining blocks        |
+| Expanded ≥ 80rem        | five canonical columns with content-aware track allocation                  |
+
+- Expanded grid: `1.35fr | 1.1fr | 0.8fr | 1fr | 1.35fr`
+- Wide grid: `1.2fr | 1fr | 1fr`, Brand spanning two rows
+- Brand internal layout: `align-content: start`
+
+Also current: one DOM instance per navigation link; canonical source and focus order; no JavaScript viewport detection; Footer present on 404 with the Newsletter absent; COMPANY-001 as the content owner; exactly three legal links; text-only Visa/Mastercard demo indicators; the runtime copyright year; no active social links; no app-store badges.
+
+### Final 404 composition
+
+```
+404:            route main → Footer
+normal routes:  route main → Newsletter → Footer
+```
+
+### Remaining non-blocking note
+
+The Footer link set remains an **implementation-level working subset, not a canonical resolution**. FTR-001 leaves the final set open, and `footer-navigation.ts` stays the single replacement point when a later canonical decision fixes it. This is **not** an M4-07 blocker and does not affect closure.
+
+### Closure statuses
+
+| Stage  | Status                                     |
+| ------ | ------------------------------------------ |
+| M4-07A | **APPROVED AND CLOSED**                    |
+| M4-07B | **APPROVED AND CLOSED**                    |
+| M4-07C | **APPROVED AND CLOSED**                    |
+| M4-07  | **APPROVED AND CLOSED THROUGH M4-07A/B/C** |
+
+Accurate history: M4-07A was a test-only E2E correction that reached technical approval with no production Footer change. The **parent M4-07** visual review then exposed the expanded/wide layout issues that M4-07B corrected. The **parent** visual review after M4-07B then exposed the Brand internal alignment issue that M4-07C corrected. M4-07A itself did not fail visual review.
+
+### Next gate
+
+**M4-08 is UNBLOCKED and NOT STARTED.** M4 overall remains not approved and not closed while later stages exist.
