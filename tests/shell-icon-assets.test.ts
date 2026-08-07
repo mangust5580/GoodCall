@@ -102,8 +102,10 @@ const BANNED_ICON_DEPENDENCIES = [
   'react-icons',
 ];
 const SIZE_CEILING_BYTES = 3000;
-const COMPARISON_RELATION_MARKER =
+const REJECTED_COMPARISON_CONVERGING_MARKER =
   'M10.25 12h3.5m0 0-1.45-1.45M13.75 12l-1.45 1.45M10.25 12l1.45-1.45M10.25 12l1.45 1.45';
+const COMPARISON_UPPER_DIRECTIONAL_ROW = 'M9.25 10.1h5.5m-1.35-1.3 1.35 1.3-1.35 1.3';
+const COMPARISON_LOWER_DIRECTIONAL_ROW = 'M14.75 13.9h-5.5m1.35-1.3-1.35 1.3 1.35 1.3';
 
 function productionPath(assetId: string): string {
   return `src/assets/icons/shell/${assetId}.svg`;
@@ -204,11 +206,14 @@ describe('Shell Icon Asset Contract', () => {
     expect(manifest.map((entry) => entry.productionPath)).toEqual(EXPECTED_PRODUCTION_PATHS);
   });
 
-  it('keeps the corrected comparison geometry distinct from the Catalog tile grid', () => {
+  it('keeps the corrected comparison marker distinct from the Catalog tile grid', () => {
     const catalogDocument = parseSvg(readSource(productionPath('catalog')));
-    const comparisonDocument = parseSvg(readSource(productionPath('comparison')));
+    const comparisonSource = readSource(productionPath('comparison'));
+    const comparisonDocument = parseSvg(comparisonSource);
     const comparisonRects = Array.from(comparisonDocument.querySelectorAll('rect'));
-    const comparisonPath = comparisonDocument.querySelector('path');
+    const comparisonPaths = Array.from(comparisonDocument.querySelectorAll('path'), (marker) =>
+      marker.getAttribute('d')
+    );
 
     expect(elementCountFor(catalogDocument, 'rect'), 'Catalog tile count').toBe(4);
     expect(elementCountFor(catalogDocument, 'path'), 'Catalog relation marker path').toBe(0);
@@ -216,12 +221,21 @@ describe('Shell Icon Asset Contract', () => {
     expect(
       comparisonRects.map((rect) => rect.getAttribute('width')),
       'Comparison card widths'
-    ).toEqual(['5.5', '5.5']);
-    expect(comparisonPath?.getAttribute('d'), 'Comparison relation marker').toBe(
-      COMPARISON_RELATION_MARKER
-    );
+    ).toEqual(['5.4', '5.4']);
+    expect(comparisonPaths, 'Comparison separated directional rows').toEqual([
+      COMPARISON_UPPER_DIRECTIONAL_ROW,
+      COMPARISON_LOWER_DIRECTIONAL_ROW,
+    ]);
     expect(
-      readSource(productionPath('comparison')).includes('M6.9 9h1.2'),
+      comparisonPaths.every((pathData) => pathData !== null && !/[Aa]/.test(pathData)),
+      'Comparison avoids circular-arrow path commands'
+    ).toBe(true);
+    expect(
+      comparisonSource.includes(REJECTED_COMPARISON_CONVERGING_MARKER),
+      'Comparison does not keep the rejected center-converging marker'
+    ).toBe(false);
+    expect(
+      comparisonSource.includes('M6.9 9h1.2'),
       'Comparison does not keep the rejected list-column marks'
     ).toBe(false);
   });

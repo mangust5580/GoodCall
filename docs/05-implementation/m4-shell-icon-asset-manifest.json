@@ -89,14 +89,14 @@
     "viewBox": "0 0 24 24",
     "intrinsicWidth": 24,
     "intrinsicHeight": 24,
-    "fileSizeBytes": 435,
-    "sha256": "b9ce0fae1f130e4d830805212e8d7005fba072d269b2fbff6ae3a3c907c28006",
+    "fileSizeBytes": 451,
+    "sha256": "960541877f591f97d795f689c226fcf7e7607dc9cbb7a7aaf3e8cc5de3d4e61b",
     "elementCounts": {
       "svg": 1,
       "rect": 2,
-      "path": 1
+      "path": 2
     },
-    "pathCount": 1,
+    "pathCount": 2,
     "fillStrategy": "fixed-monochrome-stroke",
     "fixedColors": ["#000000"],
     "strokeWidth": "1.9",
@@ -117,9 +117,9 @@
     "approvalStatus": "awaiting-independent-asset-audit-and-user-visual-confirmation",
     "integrationStatus": "produced-not-integrated",
     "knownRisks": [
-      "corrected comparison metaphor still requires independent visual confirmation at 16px and 20px"
+      "separated directional-row marker requires independent visual confirmation at 16px and 20px"
     ],
-    "notes": "Two simplified product/card entities plus one central bidirectional marker communicate alternatives with a relationship, differentiating comparison from the Catalog four-tile grid without refresh or sync semantics."
+    "notes": "Two simplified product/card entities plus separated opposing directional rows communicate comparison without center-converging arrowheads, circular refresh or sync semantics."
   },
   {
     "assetId": "favorites",

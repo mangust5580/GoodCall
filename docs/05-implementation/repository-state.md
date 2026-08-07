@@ -692,7 +692,7 @@ All six use `viewBox="0 0 24 24"`, intrinsic `24 × 24`, a shared `1.9` rounded 
 - Manifest: `docs/05-implementation/m4-shell-icon-asset-manifest.json`.
 - Report: `docs/05-implementation/m4-shell-icon-assets-report.md`.
 - Source-level validation: `tests/shell-icon-assets.test.ts`.
-- Local review artifact: `artifacts/m4-05/review/shell-icon-contact-sheet.png`, `1900 × 1250`, `113 250` bytes, SHA-256 `a4ae3a297150b22974aae9c53624a55edd1173dfd282d4056aa169095ee154ad`, regenerated from the actual SVG file bytes, ignored and uncommitted.
+- Local review artifact: `artifacts/m4-05/review/shell-icon-contact-sheet.png`, `2200 × 1500`, `142 827` bytes, SHA-256 `1c01b1d35849ebc798e5874d93c1331c65d23dcf8648d1989f1f1210b57d68ef`, regenerated from the actual SVG file bytes, ignored and uncommitted.
 
 The manifest status remains `approvalStatus: awaiting-independent-asset-audit-and-user-visual-confirmation` and `integrationStatus: produced-not-integrated`.
 
@@ -701,9 +701,16 @@ The manifest status remains `approvalStatus: awaiting-independent-asset-audit-an
 - M4-05-ICN exact-SHA CI succeeded for commit `cd971f954649c83415056db56386544bf4b2e274`: workflow run `31142675965`, job `92755640110`, Vitest **920 passed in 49 files**, shell icon asset suite **40 passed**, Playwright **108 passed**, **0 failed**, **0 flaky**, build **success**, workflow conclusion **success**.
 - The technical asset contract was approved for the family, and Catalog, Search, Favorites, Cart and Account remain approved and byte-identical to the M4-05-ICN baseline.
 - `comparison.svg` was corrected through **M4-05-ICN-A** because the prior two rounded panels with internal list marks read ambiguously as server racks, columns, devices or lists and was too close to Catalog at 16px and 20px.
-- The corrected Comparison metaphor is two simplified product/card entities plus one central bidirectional horizontal relation marker. Catalog remains a four-tile category grid, so the corrected Comparison asset is structurally and visually distinct in the regenerated contact sheet.
-- `tests/shell-icon-assets.test.ts` now preserves the prior source asset contract and adds a bounded source-level assertion that Comparison has two product/card rectangles and the explicit central relation marker while Catalog remains four tiles with no relation-marker path.
-- CI is pending at commit time for M4-05-ICN-A. User visual confirmation is pending.
+- M4-05-ICN-A exact-SHA CI succeeded for commit `69c0eca78e91cd66acad7f031d756454bd90dea5`: workflow run `31144366072`, job `92760669561`, Vitest **921 passed in 49 files**, shell icon asset suite **41 passed**, Playwright **108 passed**, **0 failed**, **0 flaky**, build **success**, workflow conclusion **success**.
+- The M4-05-ICN-A technical correction was valid, but the visual gate failed only for Comparison. The center-converging marker collapsed at 16px, read as a clasp at 20px, and merged into a diamond or bow-tie at 24px and 32px.
+
+### M4-05-ICN-B correction state
+
+- `comparison.svg` was corrected through **M4-05-ICN-B** by replacing the center-converging marker with Option A: two separated directional rows.
+- The final Comparison metaphor keeps two simplified product/card entities, with an upper left-to-right row and a lower right-to-left row. Catalog remains a four-tile category grid, and the separated marker makes Comparison structurally distinct from Catalog without refresh, sync or circular-arrow semantics.
+- Catalog, Search, Favorites, Cart and Account remain byte-identical to the M4-05-ICN baseline.
+- `tests/shell-icon-assets.test.ts` preserves the prior source asset contract and now rejects the M4-05-ICN-A converging marker, the original list-column marks and circular-arrow path commands.
+- CI is pending at commit time for M4-05-ICN-B. User visual confirmation is pending.
 
 ### State at report time
 
@@ -718,4 +725,4 @@ The manifest status remains `approvalStatus: awaiting-independent-asset-audit-an
 
 The current implementation milestone is **M4**, whose scope must be taken from the approved architecture and UI/component/responsive contracts.
 
-**M4-05 runtime implementation must not begin** until the M4-05-ICN-A asset diff audit, exact-SHA CI and user visual confirmation of `artifacts/m4-05/review/shell-icon-contact-sheet.png` all close.
+**M4-05 runtime implementation must not begin** until the M4-05-ICN-B asset diff audit, exact-SHA CI and user visual confirmation of `artifacts/m4-05/review/shell-icon-contact-sheet.png` all close.

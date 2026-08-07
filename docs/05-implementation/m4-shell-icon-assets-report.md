@@ -6,7 +6,7 @@ IMPLEMENTED — AWAITING INDEPENDENT ASSET AUDIT, CI AND USER VISUAL CONFIRMATIO
 
 The M4-05-ICN stage produced the application-owned shell icon source set required before M4-05 Header route actions. The assets are not approved by this report and are not runtime-integrated.
 
-M4-05-ICN-A corrects the single blocking visual-semantic defect in `comparison.svg`. The corrected icon keeps the approved family contract, preserves the other five SVG assets byte-for-byte, and remains awaiting independent asset audit, exact-SHA CI and user visual confirmation.
+M4-05-ICN-A corrected the product/entity structure and passed exact-SHA CI, but its center-converging marker remained visually insufficient. M4-05-ICN-B replaces that marker with separated directional rows while preserving the approved family contract and the other five SVG assets byte-for-byte.
 
 ## Baseline
 
@@ -45,7 +45,7 @@ The selected family direction is a clean monochrome outline set with rounded lin
 | ---------- | --------------------------------------- | ----: | ------------------------------------------------------------------ |
 | catalog    | `src/assets/icons/shell/catalog.svg`    |   449 | `d300da2ef73302ca9c56abde611bedf53daad2a03a345ef0ce4fa62e72f4edb2` |
 | search     | `src/assets/icons/shell/search.svg`     |   281 | `9d83689fae2d84e027e9d52ef93787529d1f0851f8882ef2c14eeb70921cedd7` |
-| comparison | `src/assets/icons/shell/comparison.svg` |   435 | `b9ce0fae1f130e4d830805212e8d7005fba072d269b2fbff6ae3a3c907c28006` |
+| comparison | `src/assets/icons/shell/comparison.svg` |   451 | `960541877f591f97d795f689c226fcf7e7607dc9cbb7a7aaf3e8cc5de3d4e61b` |
 | favorites  | `src/assets/icons/shell/favorites.svg`  |   376 | `1df513b8e9292e0d4ac73d0e9b0c98340bc8e2306f9b1fe41ba924c8154c7493` |
 | cart       | `src/assets/icons/shell/cart.svg`       |   385 | `a2dfe084f4c9e5484c208278ffc4f1cedbe110d622acaacf99691d7d57e7558a` |
 | account    | `src/assets/icons/shell/account.svg`    |   314 | `e79c601fae31f7ff4b0d7fffb056858bf91a5e0a91177346bcf4c5ac1441d093` |
@@ -56,7 +56,7 @@ Catalog uses four rounded tiles to communicate structured category access withou
 
 Search uses the canonical magnifying-glass metaphor with a circular lens and balanced diagonal handle, without embedding an input field.
 
-Comparison uses two simplified product/card entities with one central bidirectional horizontal relation marker, so the icon reads as two alternatives being compared rather than server racks, list columns, refresh, sync, analytics or legal scales.
+Comparison uses two simplified product/card entities with two separated opposing directional rows, so the icon reads as alternatives being compared rather than server racks, list columns, refresh, sync, analytics or legal scales.
 
 Favorites uses a neutral outline heart for saved items and deliberately avoids a filled active-state variant.
 
@@ -84,18 +84,18 @@ Local ignored review artifact: `artifacts/m4-05/review/shell-icon-contact-sheet.
 
 | Item              | Value                                                                                                                               |
 | ----------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| Dimensions        | `1900 × 1250`                                                                                                                       |
-| Bytes             | `113 250`                                                                                                                           |
-| SHA-256           | `a4ae3a297150b22974aae9c53624a55edd1173dfd282d4056aa169095ee154ad`                                                                  |
+| Dimensions        | `2200 × 1500`                                                                                                                       |
+| Bytes             | `142 827`                                                                                                                           |
+| SHA-256           | `1c01b1d35849ebc798e5874d93c1331c65d23dcf8648d1989f1f1210b57d68ef`                                                                  |
 | Generation method | Bounded foreground headless Playwright rasterization from the actual six production SVG file bytes loaded from disk, with no server |
 
-The regenerated contact sheet is review evidence only. It is not a Header mockup and does not include counters, active-route state or approval claims. It includes the required light row, dark/brand row, 16px, 20px, 24px and 32px sizes, construction/safe-area evidence and a dedicated Catalog-vs-Comparison block at 16px, 20px and 24px.
+The regenerated contact sheet is review evidence only. It is not a Header mockup and does not include counters, active-route state or approval claims. It includes the required light row, dark/brand row, 16px, 20px, 24px and 32px sizes, construction/safe-area evidence, a dedicated Catalog-vs-Comparison block at 16px, 20px, 24px and 32px, and a zoomed comparison-marker detail derived from the actual SVG.
 
 ## Asset Validation
 
 `tests/shell-icon-assets.test.ts` validates the six source SVG files, the absence of unexpected shell SVGs, root geometry, structural SVG constraints, allowed paint, opacity, forbidden markup, manifest order, manifest byte identity, unapproved statuses, consuming-component accessibility ownership, no runtime source imports and no third-party icon dependency.
 
-M4-05-ICN-A adds a bounded source-level differentiation assertion: Catalog remains the four-tile grid with no path marker, while Comparison must contain exactly two product/card rectangles and the explicit central relation marker. This protects the corrected source structure without claiming browser-independent proof of human semantic recognition.
+M4-05-ICN-B keeps a bounded source-level differentiation assertion: Catalog remains the four-tile grid with no path marker, while Comparison must contain exactly two product/card rectangles and two separated non-circular directional rows. The test rejects both the original list-column marks and the M4-05-ICN-A center-converging marker without claiming browser-independent proof of human semantic recognition.
 
 ## M4-05-ICN-A Correction
 
@@ -106,6 +106,27 @@ Blocking defect: the previous `comparison.svg` used two vertical rounded rectang
 Correction: only `src/assets/icons/shell/comparison.svg` changed among production icons. The final geometry uses two 5.5px-wide product/card rectangles at opposite sides of the 24px viewBox and one central bidirectional horizontal relation marker. Catalog remains four equal rounded tiles; Comparison now has two larger card silhouettes plus the visible relation marker, making the two assets distinguishable at 16px and 20px in the regenerated contact sheet.
 
 Final corrected asset identity: `435` bytes, SHA-256 `b9ce0fae1f130e4d830805212e8d7005fba072d269b2fbff6ae3a3c907c28006`, element counts `svg=1`, `rect=2`, `path=1`, path count `1`, paint values `#000000` and `none`.
+
+M4-05-ICN-A exact-SHA CI succeeded for commit `69c0eca78e91cd66acad7f031d756454bd90dea5`: workflow run `31144366072`, job `92760669561`, Vitest `921 passed in 49 files`, shell icon asset suite `41 passed`, Playwright `108 passed`, `0 failed`, `0 flaky`, build `success`, workflow conclusion `success`.
+
+The technical correction was valid, but the visual gate failed only for Comparison. At 16px the relation marker nearly collapsed and the icon read primarily as two narrow panels. At 20px the marker read as a clasp or compact connector. At 24px and 32px the converging arrowheads merged into a diamond or bow-tie. The root cause was the center-converging arrowhead geometry, short shaft and optical overlap after rasterization.
+
+## M4-05-ICN-B Correction
+
+Baseline: `69c0eca78e91cd66acad7f031d756454bd90dea5`, the M4-05-ICN-A commit `fix(assets): clarify comparison icon`.
+
+Selected marker option: Option A, two separated directional rows. The upper row points left-to-right and the lower row points right-to-left. The arrowheads sit at opposite row ends, so they no longer converge into one optical center.
+
+Final geometry:
+
+- Left product/card entity: `rect x="2.75" y="6.75" width="5.4" height="10.5" rx="1.4"`.
+- Right product/card entity: `rect x="15.85" y="6.75" width="5.4" height="10.5" rx="1.4"`.
+- Upper relation row: `M9.25 10.1h5.5m-1.35-1.3 1.35 1.3-1.35 1.3`.
+- Lower relation row: `M14.75 13.9h-5.5m1.35-1.3-1.35 1.3 1.35 1.3`.
+
+Small-size review from the regenerated actual-SVG contact sheet: at 16px the two-card silhouette remains present and the marker reads as separated horizontal directional detail rather than a dot or clasp; at 20px both directional rows are visible and distinct from the cards; at 24px and 32px there is no central diamond or bow-tie and the relation marker remains balanced against the cards.
+
+Final corrected asset identity: `451` bytes, SHA-256 `960541877f591f97d795f689c226fcf7e7607dc9cbb7a7aaf3e8cc5de3d4e61b`, element counts `svg=1`, `rect=2`, `path=2`, path count `2`, paint values `#000000` and `none`.
 
 The five approved SVGs remain byte-identical to the M4-05-ICN baseline. Runtime M4-05 has not started, no runtime source imports any shell icon, and the assets remain `produced-not-integrated`.
 
@@ -135,7 +156,7 @@ No runtime Header, Search, Catalog, route, Shared UI, CSS, dependency, lockfile,
 | `npm test`                                       | PASS — **921 tests in 49 files**                                                                              |
 | `npm run build`                                  | PASS — 244 modules, bundle unchanged at raw **424.75 KB** / gzip **126.90 KB** because icons are not imported |
 | `npm run validate:build`                         | PASS                                                                                                          |
-| `npm run check:full`                             | PASS — includes bounded `verify:dev-bootstrap`, dynamic port `58457`, cleanup and port release verified       |
+| `npm run check:full`                             | PASS — includes bounded `verify:dev-bootstrap`, dynamic port `58649`, cleanup and port release verified       |
 | `git diff --check`                               | PASS — no whitespace errors                                                                                   |
 | deterministic asset inspection                   | PASS — viewBox, byte sizes, SHA-256, element counts, forbidden markup and allowed paint match the manifest    |
 | ignore checks                                    | PASS — `AUDIT.md`, RTE-001, CMP-001 and contact sheet remain ignored                                          |
@@ -144,7 +165,7 @@ Non-blocking warnings observed during Vitest/check:full: the existing Vite nativ
 
 ## CI Status
 
-Pending at commit time for M4-05-ICN-A. Exact-SHA CI must pass before this correction can be considered an implementation candidate.
+Pending at commit time for M4-05-ICN-B. Exact-SHA CI must pass before this correction can be considered an implementation candidate.
 
 ## Deviations
 
@@ -152,7 +173,7 @@ None from the asset scope. The repository does not contain tracked copies of the
 
 ## Risks
 
-The corrected comparison icon uses an explicit relation marker, but still requires independent visual review at 16px and 20px to confirm the intended comparison reading.
+The corrected comparison icon now uses separated directional rows, but still requires independent visual review at 16px and 20px to confirm the intended comparison reading.
 
 Runtime M4-05 will still need to prove accessible names, visible label behavior, responsive action layout, current-route state, counters and forced-colors behavior without changing these source SVG semantics.
 
