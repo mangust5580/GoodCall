@@ -108,12 +108,13 @@ describe('Newsletter runtime mount', () => {
       expect(document.querySelector('main#main-content')).not.toBeNull();
     });
 
-    it('adds no Footer markup', async () => {
+    it('keeps the Newsletter outside the single Footer landmark', async () => {
       renderApplicationAt('/');
       await waitForHeading();
 
-      expect(document.querySelectorAll('footer')).toHaveLength(0);
-      expect(screen.queryAllByRole('contentinfo')).toHaveLength(0);
+      expect(document.querySelectorAll('footer')).toHaveLength(1);
+      expect(screen.queryAllByRole('contentinfo')).toHaveLength(1);
+      expect(newsletterSections()[0]?.closest('footer')).toBeNull();
     });
   });
 

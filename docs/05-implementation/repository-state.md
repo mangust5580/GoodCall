@@ -873,8 +873,37 @@ M4-06A is **not closed**; M4-06 is **not closed**.
 - **CI is pending at commit time**, and **user visual/manual form confirmation is pending** for the corrected architecture, including the reload-restored subscribed state.
 - **M4-07 remains blocked** until M4-06B exact-SHA green and warning-free CI, independent audit and user visual/manual form confirmation all close.
 
+## Milestone State Note — M4-07 Canonical Footer (2026-08-07)
+
+### M4-06 chain closure
+
+M4-06B — commit `d668c66d2862fa8453e509628406caf6f815ba14`, run **31156679746**, job **92797582412**, attempt 1 — concluded **success**: Vitest **1105 passed in 55 files**, Newsletter focused **126** (section 47, session storage 26), shell icon asset suite **44 passed**, Playwright **182 passed, 0 failed, 0 flaky**, no retries, duration 1.3m, **0 `NewsletterSection` act warnings**, build and build validation success. The independent technical audit approved it and the user confirmed the runtime visually and manually at 1440/1024/768/320 across the initial, invalid, newly subscribed and reload-restored states.
+
+M4-06B is **APPROVED AND CLOSED**; M4-06A is **APPROVED AND CLOSED THROUGH M4-06B**; M4-06 is **APPROVED AND CLOSED THROUGH M4-06A AND M4-06B**. That unblocked M4-07.
+
+### M4-07 implementation state
+
+- Baseline SHA `d668c66d2862fa8453e509628406caf6f815ba14`; the resulting M4-07 commit SHA is recorded in the untracked stage handoff.
+- **A canonical light Footer now renders after the Newsletter** as the single `contentinfo` landmark, application-shell owned under `src/app/shell/footer/`, whose barrel exports only `SiteFooter`.
+- **Five canonical blocks in canonical source order** — Brand, Покупателям, Компания, Помощь, Контакты — plus a lower utility row.
+- **COMPANY-001 now has one application content owner** at `src/app/content/company.ts`. The Footer imports from it and owns no contact literals of its own. Support phone `8 800 100-10-10` → `tel:88001001010`; support email `info@goodcall.ru` → `mailto:info@goodcall.ru`; support hours `Ежедневно, 09:00–21:00`; head office `123112, г. Москва, Пресненская наб., д. 8, стр. 1, офис 45-12`; office hours `Пн–Пт, 09:00–18:00`. No 24/7 human-support claim, no invented company facts, no remote loading.
+- **The Footer link set is an implementation working subset, not a canonical resolution.** FTR-001 leaves the final set open; `footer-navigation.ts` is the single replacement point. Eleven route links across three groups, all resolved from the route registry.
+- **Footer visible labels follow the canonical name registry** while destinations come from the current registry. Five current carrier headings still use shorter forms (`Гарантия и возврат`, `Программа лояльности`, `Акции`, `Помощь`, `Отследить заказ`). **No carrier heading, route path or route key was changed**; the discrepancy is asserted in both directions and recorded as a non-blocking terminology reconciliation item for the later route-content stage.
+- **Exactly three canonical legal links** — Политика конфиденциальности, Пользовательское соглашение, Публичная оферта — inside a `Правовая информация` navigation landmark.
+- **Payment indicators are static non-interactive text** — `Visa •••• 4242` and `Mastercard •••• 8888` — with no expiry, card number, CVV, bank logo, checkout control or generated asset.
+- **Copyright derives the year at runtime**; a unit test fakes the clock to 2032 and a static test forbids any hard-coded recent year.
+- **No social links or placeholders** (the canonical active set is empty) and **no app-store badges**.
+- **The Footer is present on the catch-all/404 while the Newsletter remains absent** — Footer visibility is deliberately not coupled to the Newsletter route policy.
+- **Responsive model:** compact single column with three independent disclosures and Brand/Contacts always visible; medium two-column wrapping; wide Brand area plus a compact grid; expanded five columns. One DOM instance of every link list, CSS-range-only switching, no `matchMedia`, no resize listener, no CSS `order` divergence.
+- No new route, dependency, lockfile, asset, Shared UI API, Header, Information Bar, Newsletter runtime, Playwright config or workflow change.
+- Test suite: **1182 tests across 59 files**, up from 1105 in 55, including **77 focused Footer tests** (company 11, navigation 12, section 42, runtime mount 12). Bundle total raw **476.47 KB** / gzip **143.02 KB**; main JS raw **438.29 KB** / gzip **134.30 KB**.
+- Four existing runtime-mount specs were rescoped because reusing the approved `BrandHomeLink` in the Footer legitimately produces a second identically-named brand link; assertions now hold per shell landmark rather than per document.
+- Local checks pass, including `npm run check:full`. **Local E2E was not run.**
+- **CI is pending at commit time**, and **user visual confirmation is pending**, including compact disclosure states and the 404 Footer.
+- **M4-08 remains blocked** until M4-07 exact-SHA green CI, independent audit and user visual confirmation all close.
+
 ## Next Repository Modifications
 
 The current implementation milestone is **M4**, whose scope must be taken from the approved architecture and UI/component/responsive contracts.
 
-**M4-07 must not begin** until the M4-06B exact-SHA green and warning-free CI, independent audit and user visual/manual form confirmation at expanded, wide, medium and compact widths — including the reload-restored subscribed state — all close.
+**M4-08 must not begin** until the M4-07 exact-SHA CI, independent audit and user visual confirmation at 1440, 1024, 768 and 320 widths — including the compact disclosure states and the 404 Footer — all close.

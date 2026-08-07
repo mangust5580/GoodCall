@@ -53,7 +53,7 @@ describe('Site Header runtime mount', () => {
     expect(screen.getAllByRole('navigation', { name: 'Основная навигация' })).toHaveLength(1);
     expect(screen.getAllByRole('banner')).toHaveLength(1);
     expect(screen.getAllByRole('search', { name: 'Поиск по каталогу' })).toHaveLength(1);
-    expect(screen.getAllByRole('link', { name: BRAND_HOME_LINK_LABEL })).toHaveLength(1);
+    expect(within(banner()).getAllByRole('link', { name: BRAND_HOME_LINK_LABEL })).toHaveLength(1);
     expect(document.querySelectorAll('main#main-content')).toHaveLength(1);
     expect(document.querySelectorAll('h1')).toHaveLength(1);
   });
@@ -92,7 +92,9 @@ describe('Site Header runtime mount', () => {
     });
 
     const header = banner();
-    expect(header.contains(screen.getByRole('link', { name: BRAND_HOME_LINK_LABEL }))).toBe(true);
+    expect(header.contains(within(header).getByRole('link', { name: BRAND_HOME_LINK_LABEL }))).toBe(
+      true
+    );
     expect(header.contains(within(primaryNav()).getByRole('link', { name: 'Каталог' }))).toBe(true);
     expect(header.contains(searchLandmark())).toBe(true);
   });
@@ -127,7 +129,7 @@ describe('Site Header runtime mount', () => {
     const serviceNav = screen.getByRole('navigation', { name: INFORMATION_BAR_NAV_LABEL });
     const disclosureIndex = focusables.indexOf(within(serviceNav).getByRole('button'));
     const brandIndex = focusables.indexOf(
-      screen.getByRole('link', { name: BRAND_HOME_LINK_LABEL })
+      within(banner()).getByRole('link', { name: BRAND_HOME_LINK_LABEL })
     );
     const catalogIndex = focusables.indexOf(screen.getByRole('link', { name: 'Каталог' }));
     const fieldIndex = focusables.indexOf(searchField());

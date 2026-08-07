@@ -153,9 +153,14 @@ test.describe('M4-06 Newsletter pre-footer', () => {
       boxBottom(main) - ROW_TOLERANCE
     );
 
-    await expect(page.locator('footer')).toHaveCount(0);
-    await expect(page.getByRole('contentinfo')).toHaveCount(0);
+    await expect(page.locator('footer')).toHaveCount(1);
+    await expect(page.getByRole('contentinfo')).toHaveCount(1);
     await expect(routeMain(page)).toHaveCount(1);
+
+    const footerBox = await resolveBox(page.getByRole('contentinfo'), 'Footer');
+    expect(footerBox.y, 'Footer follows the Newsletter').toBeGreaterThanOrEqual(
+      boxBottom(section) - ROW_TOLERANCE
+    );
 
     expect(await horizontalOverflow(page)).toBeLessThanOrEqual(1);
     expect(problems.pageErrors).toHaveLength(0);

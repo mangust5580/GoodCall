@@ -11,6 +11,7 @@ import styles from './Shell.module.scss';
 import { InformationBar } from '@/app/shell/information-bar';
 import { SiteHeader } from '@/app/shell/site-header';
 import { NewsletterSection } from '@/app/shell/newsletter';
+import { SiteFooter } from '@/app/shell/footer';
 import { isNewsletterVisible } from '@/app/routing/route-shell-policy';
 
 export function RootLayout(): React.ReactElement {
@@ -111,6 +112,7 @@ export function RootLayout(): React.ReactElement {
       <ScrollRestoration getKey={(location) => location.pathname} />
       <Outlet />
       <NewsletterSection visible={isNewsletterVisible(matches)} />
+      <SiteFooter />
     </div>
   );
 }

@@ -2,27 +2,55 @@
 
 ## Status
 
-| Task                                                                          | Status                                                                                    |
-| ----------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| M4-01 — Shell destination safety and composition boundary                     | **CLOSED THROUGH M4-01A**                                                                 |
-| M4-01A — Catalog family catch-all correction and CI reconciliation            | **APPROVED AND CLOSED**                                                                   |
-| M4-02 — Runtime brand/logo integration                                        | **CLOSED THROUGH M4-02A**                                                                 |
-| M4-02A — Brand landmark accessibility correction and E2E stabilization        | **APPROVED AND CLOSED**                                                                   |
-| M4-03 — Information Bar                                                       | **CLOSED THROUGH M4-03A**                                                                 |
-| M4-03A — Information Bar E2E correction and exact active-state reconciliation | **APPROVED AND CLOSED**                                                                   |
-| M4-04 — Primary Header core: Catalog entry and Global Search                  | **APPROVED AND CLOSED THROUGH M4-04A AND M4-04B**                                         |
-| M4-04A — Compact Header layout correction and E2E geometry stabilization      | **CLOSED THROUGH M4-04B**                                                                 |
-| M4-04B — Deterministic keyboard focus origin and CI reconciliation            | **APPROVED AND CLOSED**                                                                   |
-| M4-05-ICN — Application-owned shell icon set                                  | **APPROVED AND CLOSED**                                                                   |
-| M4-05-ICN-A — Comparison icon semantic correction                             | **CLOSED THROUGH M4-05-ICN-B**                                                            |
-| M4-05-ICN-B — Comparison marker legibility correction                         | **APPROVED AND CLOSED**                                                                   |
-| M4-05 — Header route actions: Comparison, Favorites, Cart and Account         | **APPROVED AND CLOSED THROUGH M4-05A**                                                    |
-| M4-05A — Header action E2E accessible-name assertion correction               | **APPROVED AND CLOSED**                                                                   |
-| M4-06 — Newsletter pre-footer and deterministic local subscription lifecycle  | **CHANGES REQUIRED — ARCHITECTURE RECONCILIATION IMPLEMENTED IN M4-06A**                  |
-| M4-06A — Newsletter form and session-persistence architecture reconciliation  | **CHANGES REQUIRED — TEST-QUALITY CORRECTION IMPLEMENTED IN M4-06B**                      |
-| M4-06B — Newsletter pending-test act cleanup and evidence reconciliation      | **IMPLEMENTED — AWAITING INDEPENDENT AUDIT, CI AND USER VISUAL/MANUAL FORM CONFIRMATION** |
+| Task                                                                          | Status                                                                        |
+| ----------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| M4-01 — Shell destination safety and composition boundary                     | **CLOSED THROUGH M4-01A**                                                     |
+| M4-01A — Catalog family catch-all correction and CI reconciliation            | **APPROVED AND CLOSED**                                                       |
+| M4-02 — Runtime brand/logo integration                                        | **CLOSED THROUGH M4-02A**                                                     |
+| M4-02A — Brand landmark accessibility correction and E2E stabilization        | **APPROVED AND CLOSED**                                                       |
+| M4-03 — Information Bar                                                       | **CLOSED THROUGH M4-03A**                                                     |
+| M4-03A — Information Bar E2E correction and exact active-state reconciliation | **APPROVED AND CLOSED**                                                       |
+| M4-04 — Primary Header core: Catalog entry and Global Search                  | **APPROVED AND CLOSED THROUGH M4-04A AND M4-04B**                             |
+| M4-04A — Compact Header layout correction and E2E geometry stabilization      | **CLOSED THROUGH M4-04B**                                                     |
+| M4-04B — Deterministic keyboard focus origin and CI reconciliation            | **APPROVED AND CLOSED**                                                       |
+| M4-05-ICN — Application-owned shell icon set                                  | **APPROVED AND CLOSED**                                                       |
+| M4-05-ICN-A — Comparison icon semantic correction                             | **CLOSED THROUGH M4-05-ICN-B**                                                |
+| M4-05-ICN-B — Comparison marker legibility correction                         | **APPROVED AND CLOSED**                                                       |
+| M4-05 — Header route actions: Comparison, Favorites, Cart and Account         | **APPROVED AND CLOSED THROUGH M4-05A**                                        |
+| M4-05A — Header action E2E accessible-name assertion correction               | **APPROVED AND CLOSED**                                                       |
+| M4-06 — Newsletter pre-footer and deterministic local subscription lifecycle  | **APPROVED AND CLOSED THROUGH M4-06A AND M4-06B**                             |
+| M4-06A — Newsletter form and session-persistence architecture reconciliation  | **APPROVED AND CLOSED THROUGH M4-06B**                                        |
+| M4-06B — Newsletter pending-test act cleanup and evidence reconciliation      | **APPROVED AND CLOSED**                                                       |
+| M4-07 — Canonical Footer                                                      | **IMPLEMENTED — AWAITING INDEPENDENT AUDIT, CI AND USER VISUAL CONFIRMATION** |
 
-M4 is not approved and not closed. The Information Bar, the primary Header core, the Header route actions and the Newsletter pre-footer now exist. The Footer remains a later stage. The transitional brand banner was replaced by the canonical Header in M4-04.
+M4 is not approved and not closed. The Information Bar, the primary Header core, the Header route actions, the Newsletter pre-footer and the canonical Footer now exist. The transitional brand banner was replaced by the canonical Header in M4-04.
+
+### M4-06 closure evidence
+
+| Item                                   | Value                                      |
+| -------------------------------------- | ------------------------------------------ |
+| M4-06B commit                          | `d668c66d2862fa8453e509628406caf6f815ba14` |
+| Workflow run                           | 31156679746                                |
+| Job                                    | 92797582412                                |
+| Run attempt                            | 1                                          |
+| Vitest                                 | **1105 passed in 55 files**                |
+| Newsletter focused total               | **126**                                    |
+| — `newsletter-section.test.tsx`        | 47                                         |
+| — `newsletter-session-storage.test.ts` | 26                                         |
+| Shell icon asset suite                 | **44 passed**                              |
+| Playwright                             | **182 passed**                             |
+| Failed                                 | 0                                          |
+| Flaky                                  | 0                                          |
+| Retries                                | none                                       |
+| Playwright duration                    | 1.3m                                       |
+| `NewsletterSection` act warnings       | **0**                                      |
+| Build / build validation               | success                                    |
+| Independent technical audit            | **approved**                               |
+| User visual/manual confirmation        | **approved**                               |
+
+User confirmation covered the initial Newsletter at 1440px, 1024px, 768px and 320px, the invalid validation state, the newly subscribed state and the reload-restored subscribed state; and manually the 400 ms pending state, reload restoration of the subscribed state and normalized email, invalid-submit focus, invalid→invalid revalidation, invalid→valid error clearing through validation, keyboard submit without an unwanted success focus jump, editing after success removing the success and persisted consent, and reload after that edit not restoring the old subscription.
+
+M4-06B is **APPROVED AND CLOSED**. M4-06A is **APPROVED AND CLOSED THROUGH M4-06B**. M4-06 is **APPROVED AND CLOSED THROUGH M4-06A AND M4-06B**. That unblocked M4-07.
 
 M4-04B closure evidence: commit `d7b02e0169391177b6cd4641d598b8a10bdaf553`, workflow run `31138021965`, job `92741720296`, workflow conclusion `success`, Vitest `880 passed in 48 files`, Playwright `108 passed`, `0 failed`, `0 flaky`, no retry marker, independent technical audit approved and user visual confirmation approved at `1440px`, `768px` and `320px`.
 
@@ -2279,3 +2307,200 @@ None beyond the standing evidence limitation that the canonical `03-*` and `04*`
 ### Next gate
 
 Green GitHub Actions CI on the exact M4-06B SHA with zero failed, zero flaky, no retries and **zero `NewsletterSection`-specific `act(...)` warnings in the job log**, then independent diff and log audit, then user visual and manual form confirmation. **M4-07 must not begin until all three close.**
+
+## M4-07 — Canonical Footer
+
+**Status at commit time: IMPLEMENTED — AWAITING INDEPENDENT AUDIT, CI AND USER VISUAL CONFIRMATION**
+
+### Baseline
+
+| Item                                 | Value                                                |
+| ------------------------------------ | ---------------------------------------------------- |
+| Branch                               | `main`                                               |
+| Baseline SHA                         | `d668c66d2862fa8453e509628406caf6f815ba14`           |
+| Baseline commit                      | `fix(test): clean newsletter pending timer teardown` |
+| Parent SHA                           | `6be4a4266af3ac95ced1603788a07902a8e31f25`           |
+| `git rev-parse HEAD` / `origin/main` | both matched the baseline before changes             |
+| `git diff` / `git diff --cached`     | exit 0 — clean                                       |
+
+RTE-001 was re-verified at `1920 × 3840`, `5 438 232` bytes, SHA-256 `cb943e0b5b525645ede341c53fb6bff7eca714a69b62c042db23d62feb7bdd64`, and remains ignored and uncommitted with CMP-001 and the shell icon contact sheet. It informed only the light Footer hierarchy, the Newsletter-to-Footer relationship, column density, vertical spacing, utility-row placement and relative typography. The obsolete logo, obsolete contact values, unconfirmed social destinations, a fixed copyright year, app-store badges, the dense RTE-003 treatment and raster payment logos were all deliberately not reproduced.
+
+### Canonical structure
+
+One light global `<footer>` — the single `contentinfo` landmark — mounted after the Newsletter, with the five canonical blocks in canonical source order:
+
+1. **Brand** — the existing `BrandHomeLink` (horizontal, primary) plus the exact COMPANY-001 descriptor;
+2. **Покупателям**;
+3. **Компания**;
+4. **Помощь**;
+5. **Контакты**.
+
+A lower utility row follows with demo payment indicators, the three canonical legal links and the runtime copyright.
+
+### COMPANY-001 ownership
+
+The repository had no COMPANY-001 owner, so one narrow application-owned fixture boundary was added at `src/app/content/company.ts`. The Footer imports from it and owns **no** contact literals of its own — asserted by a static test over the Footer source.
+
+| Field               | Value                                                                                             |
+| ------------------- | ------------------------------------------------------------------------------------------------- |
+| Brand name          | `GoodCall`                                                                                        |
+| Display name        | `Интернет-магазин электроники GoodCall`                                                           |
+| Descriptor          | `Интернет-магазин электроники и аксессуаров с доставкой, самовывозом и поддержкой после покупки.` |
+| Mission             | `Сделать выбор и покупку техники понятными и удобными.`                                           |
+| Head office         | `123112, г. Москва, Пресненская наб., д. 8, стр. 1, офис 45-12`                                   |
+| Office hours        | `Пн–Пт, 09:00–18:00`                                                                              |
+| Support phone       | `8 800 100-10-10` → `tel:88001001010`                                                             |
+| Support email       | `info@goodcall.ru` → `mailto:info@goodcall.ru`                                                    |
+| Support hours       | `Ежедневно, 09:00–21:00`                                                                          |
+| Active social links | none                                                                                              |
+
+The `tel:` URI is derived from the approved display value by stripping non-digits; the displayed value is unchanged. No founding year, customer count, distributor claim, partnership or 24/7 human-support claim exists, and no remote content loading was introduced.
+
+### Working Footer navigation subset
+
+FTR-001 explicitly leaves the final Footer link set open. **This is an implementation-level working subset, not a canonical resolution**, and it remains replaceable when a later canonical decision fixes the final set.
+
+| Group       | Route key                        | Visible label              | Destination             |
+| ----------- | -------------------------------- | -------------------------- | ----------------------- |
+| Покупателям | `information.deliveryAndPayment` | Доставка и оплата          | `/delivery-and-payment` |
+| Покупателям | `help.warrantyReturns`           | Гарантия, возврат и ремонт | `/warranty-and-returns` |
+| Покупателям | `loyalty.program`                | Бонусная программа         | `/loyalty`              |
+| Покупателям | `promotions.list`                | Акции и спецпредложения    | `/promotions`           |
+| Покупателям | `brands.directory`               | Бренды                     | `/brands`               |
+| Компания    | `company.about`                  | О компании                 | `/about`                |
+| Компания    | `blog.list`                      | Блог                       | `/blog`                 |
+| Компания    | `locations.shops`                | Магазины                   | `/shops`                |
+| Помощь      | `help.faq`                       | Помощь и ответы на вопросы | `/help`                 |
+| Помощь      | `order.tracking`                 | Отслеживание заказа        | `/track-order`          |
+| Помощь      | `locations.serviceCenters`       | Сервисные центры           | `/service-centers`      |
+
+Контакты is a content block sourced from COMPANY-001, not a fourth navigation list, and no filler `Все контакты` link was invented.
+
+### Terminology discrepancy — recorded, not silently reconciled
+
+Footer visible labels follow the canonical name registry; several current carrier route headings still use shorter forms:
+
+| Footer label (canonical registry) | Current carrier heading |
+| --------------------------------- | ----------------------- |
+| Гарантия, возврат и ремонт        | Гарантия и возврат      |
+| Бонусная программа                | Программа лояльности    |
+| Акции и спецпредложения           | Акции                   |
+| Помощь и ответы на вопросы        | Помощь                  |
+| Отслеживание заказа               | Отследить заказ         |
+
+Destinations resolve from the current route registry and **no carrier heading, route path or route key was changed**. A test asserts both sides of this discrepancy so it cannot drift unnoticed. This is a **non-blocking terminology reconciliation item for the later route-content stage**.
+
+### Route resolution
+
+`footer-navigation.ts` resolves every destination through `getRouteMetadata()` and rejects, at module resolution, a missing route key, the catch-all, a dynamic path, a non-app-relative path, the repository literal and any duplicate destination across the whole Footer. Tests additionally prove no route path is authored as a literal in the configuration source and that no `/GoodCall/` string appears anywhere in the Footer boundary.
+
+All navigation and legal links are Router `NavLink` with exact `end` matching. `aria-current="page"` appears only on the exact active link, styled with underline plus weight rather than colour alone, and the visible text never changes when active. Contact and brand links never receive a current state.
+
+### Component boundary and root composition
+
+`src/app/shell/footer/` is application-shell owned. Its barrel exports only `SiteFooter`; navigation definitions, payment fixtures, disclosure state and route helpers stay internal. No Shared UI change was needed.
+
+Runtime order is now skip link and announcement infrastructure → Information Bar → Site Header → route-owned `main#main-content` → Newsletter where route policy allows → Site Footer. The Footer renders **unconditionally** and is deliberately **not** coupled to `isNewsletterVisible()`, so the canonical 404 keeps the Footer while the Newsletter is absent.
+
+### Responsive composition
+
+| Range                    | Composition                                                                                                  |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------ |
+| Compact `< 48rem`        | single column; Brand and Contacts always visible; the three navigation groups become independent disclosures |
+| Medium `48rem–63.999rem` | two-column wrapping; all link lists visible; no disclosure controls                                          |
+| Wide `64rem–79.999rem`   | Brand area plus a compact four-block grid; all links visible                                                 |
+| Expanded `>= 80rem`      | five canonical columns with wider Brand area and increased block spacing                                     |
+
+The utility row spans the Footer below the main grid at every range.
+
+### Compact disclosures
+
+One DOM instance of each link list, component-local `useState`, a native `<button type="button">`, a `useId()` panel, `aria-expanded`, `aria-controls` and a `data-expanded` hook. CSS hides the panel only in the compact range and hides the disclosure button from 48rem upward. There is no `matchMedia`, no resize listener, no `innerWidth`, no duplicated compact and desktop lists and no CSS `order` divergence — all asserted statically.
+
+Each button carries a precise accessible name — `Показать раздел «Покупателям»` / `Скрыть раздел «Покупателям»` — rather than relying on a chevron. Group titles stay visible in every state, toggling never moves focus, groups are independent, and no announcement is produced.
+
+### Legal utility row, payment and copyright
+
+Exactly three legal links resolved from `legal.privacyPolicy`, `legal.userAgreement` and `legal.publicOffer`, inside a navigation landmark named `Правовая информация`. No fourth legal link, no cookies or requisites entry.
+
+Payment is a static, non-interactive text group titled `Демонстрационные способы оплаты` containing exactly `Visa •••• 4242` and `Mastercard •••• 8888`. No expiry, primary state, full number, CVV, bank logo, checkout control or generated payment asset.
+
+Copyright renders `© {runtime year} GoodCall. Все права защищены.`, with the year read from `new Date()` at render. A unit test fakes the system clock to 2032 and asserts `© 2032 GoodCall. Все права защищены.`, and a static test forbids any hard-coded recent year in the Footer source.
+
+Social links render **nothing** — no placeholder icon, no disabled control, no empty `Социальные сети` heading — because the canonical active social set is empty. No app-store badges.
+
+### Accessibility
+
+One `contentinfo`, outside `main`, adding no `h1` and no live region. Three navigation landmarks named `Покупателям`, `Компания` and `Помощь`, plus `Правовая информация` — all distinct. Contacts is a definition list with an `<address>` head office and textually distinguished support and office hours. Phone and email use `tel:` and `mailto:`. Interactive targets meet 44 × 44 CSS px. No ARIA menu semantics, no focus trap, no route-announcement mutation.
+
+### Files changed
+
+| File                                                     | Change                                                      |
+| -------------------------------------------------------- | ----------------------------------------------------------- |
+| `src/app/content/company.ts`                             | new — COMPANY-001 application content owner                 |
+| `src/app/shell/footer/footer-navigation.ts`              | new — route-safe navigation and legal configuration         |
+| `src/app/shell/footer/footer-content.ts`                 | new — Footer-owned titles, payment fixtures, copyright      |
+| `src/app/shell/footer/FooterLinkGroup.tsx`               | new — disclosure-capable navigation group                   |
+| `src/app/shell/footer/SiteFooter.tsx`                    | new — five canonical blocks and the utility row             |
+| `src/app/shell/footer/SiteFooter.module.scss`            | new — light Footer and responsive composition               |
+| `src/app/shell/footer/index.ts`                          | new — the narrow public boundary                            |
+| `src/app/shell/RootLayout.tsx`                           | mounts the Footer after the Newsletter                      |
+| `tests/app/content/company.test.ts`                      | new — 11 tests                                              |
+| `tests/app/shell/footer-navigation.test.ts`              | new — 12 tests                                              |
+| `tests/app/shell/site-footer.test.tsx`                   | new — 42 tests                                              |
+| `tests/app/shell/footer-runtime-mount.test.tsx`          | new — 12 tests                                              |
+| `tests/e2e/footer.spec.ts`                               | new — responsive, navigation, 404, zoom, forced colors, axe |
+| `tests/app/shell/brand-runtime-mount.test.tsx`           | brand-link assertions rescoped per shell landmark           |
+| `tests/app/shell/site-header-runtime-mount.test.tsx`     | brand-link assertions scoped to the banner                  |
+| `tests/app/shell/information-bar-runtime-mount.test.tsx` | brand-link assertions scoped to the banner                  |
+| `tests/app/shell/newsletter-runtime-mount.test.tsx`      | Footer landmark now expected after the Newsletter           |
+| `tests/e2e/newsletter.spec.ts`                           | Footer landmark now expected after the Newsletter           |
+| `docs/05-implementation/m4-canonical-shell-report.md`    | M4-06 closure; this section                                 |
+| `docs/05-implementation/repository-state.md`             | current-state note                                          |
+
+No route, registry, carrier, Header, Information Bar, Newsletter runtime, Shared UI, asset, dependency, lockfile, Playwright config or workflow change.
+
+### Local verification
+
+| Command                      | Result                                                                                                 |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------ |
+| Focused Footer tests         | PASS — **77 tests** across four files                                                                  |
+| `npm run typecheck`          | PASS                                                                                                   |
+| `npm run lint`               | PASS — 0 errors, 0 warnings                                                                            |
+| `npm run lint:styles`        | PASS                                                                                                   |
+| `npm run format:check`       | PASS                                                                                                   |
+| `npm run check:comments`     | PASS                                                                                                   |
+| `npm test`                   | PASS — **1182 tests in 59 files**                                                                      |
+| `npm run build`              | PASS — 266 modules                                                                                     |
+| `npm run validate:build`     | PASS                                                                                                   |
+| `npm run check:full`         | PASS — includes the bounded dev-bootstrap gate                                                         |
+| Static architecture searches | PASS — no repository literal, app-store, social, duplicated COMPANY literal, viewport JS or fixed year |
+| `git diff --check`           | PASS                                                                                                   |
+
+Bundle:
+
+| Measure       | Raw           | Gzipped       |
+| ------------- | ------------- | ------------- |
+| **Total**     | **476.47 KB** | **143.02 KB** |
+| Main JS chunk | 438.29 KB     | 134.30 KB     |
+
+Intentionally not run: `npm run dev`, `npm run preview`, `npm run test:e2e`, `playwright test`, `vite`, `vite preview`, `npm run review:m3-browser`, background or fixed-port servers, and user browser automation. CI was pending at commit time and user visual confirmation remains pending.
+
+### Deviations
+
+Two.
+
+1. **Four existing runtime-mount test files were rescoped beyond the anticipated `contentinfo` update.** Reusing the approved `BrandHomeLink` in the Footer — which this stage mandates — produces a second link with the same accessible name as the Header's. `BrandHomeLink` hard-codes that name and its API may not change here, so the duplication is inherent to the required design. The assertions were **rescoped, not weakened**: `brand-runtime-mount`, `site-header-runtime-mount` and `information-bar-runtime-mount` now assert exactly one brand link **per shell landmark** and two in the document, and still prove the Header brand link sits outside `main`, outside any `nav` and after the skip link. Both links point at `/`, so the shared name is the correct same-destination pattern rather than an ambiguity.
+2. **The canonical `03-*` and `04*` documents are not tracked in this repository** — only `docs/05-implementation/` exists, as has held throughout M4. FTR-001, FTR-003, FTR-004, COMPANY-001, the canonical name registry and the payment fixtures were taken from the stage prompt, which quotes them verbatim. This is an evidence limitation, not a conflict.
+
+### Risks
+
+- The Footer link set is an implementation working subset. When the canonical final set is fixed, `footer-navigation.ts` and its tests are the single place to change.
+- The Footer/carrier terminology discrepancy is asserted in both directions, so the later route-content stage must update the test alongside the headings.
+- Two brand links share one accessible name across Header and Footer. It is correct for same-destination links, but if a future decision wants distinct names, `BrandHomeLink` needs an API addition, which is out of scope here.
+- The compact disclosure relies on CSS ranges only; jsdom cannot evaluate them, so breakpoint geometry is proven exclusively by Playwright.
+- User visual confirmation is outstanding, including the compact disclosure states and the 404 Footer.
+
+### Next gate
+
+Green GitHub Actions CI on the exact M4-07 SHA with zero failed, zero flaky and no retries, then independent diff audit, then user visual confirmation at 1440, 1024, 768 and 320 widths including compact disclosure states and the 404 Footer. **M4-08 must not begin until all three close.**

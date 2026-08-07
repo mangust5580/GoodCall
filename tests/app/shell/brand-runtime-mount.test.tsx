@@ -11,7 +11,23 @@ function renderApplicationAt(path: string) {
 }
 
 function brandLink(): HTMLElement {
-  return screen.getByRole('link', { name: BRAND_HOME_LINK_LABEL });
+  return within(screen.getByRole('banner')).getByRole('link', { name: BRAND_HOME_LINK_LABEL });
+}
+
+function footerBrandLink(): HTMLElement {
+  return within(screen.getByRole('contentinfo')).getByRole('link', {
+    name: BRAND_HOME_LINK_LABEL,
+  });
+}
+
+function expectOneBrandLinkPerShellLandmark(): void {
+  expect(
+    within(screen.getByRole('banner')).getAllByRole('link', { name: BRAND_HOME_LINK_LABEL })
+  ).toHaveLength(1);
+  expect(
+    within(screen.getByRole('contentinfo')).getAllByRole('link', { name: BRAND_HOME_LINK_LABEL })
+  ).toHaveLength(1);
+  expect(screen.getAllByRole('link', { name: BRAND_HOME_LINK_LABEL })).toHaveLength(2);
 }
 
 const MOUNTED_ROUTES: ReadonlyArray<readonly [string, string, string]> = [
@@ -31,8 +47,9 @@ describe('Runtime brand mount', () => {
       expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(heading);
     });
 
-    expect(screen.getAllByRole('link', { name: BRAND_HOME_LINK_LABEL })).toHaveLength(1);
+    expectOneBrandLinkPerShellLandmark();
     expect(brandLink()).toHaveAttribute('href', '/');
+    expect(footerBrandLink()).toHaveAttribute('href', '/');
   });
 
   it.each(MOUNTED_ROUTES)('%s keeps one main and one h1', async (path, heading) => {
@@ -63,6 +80,7 @@ describe('Runtime brand mount', () => {
 
     const main = document.querySelector('main#main-content');
     expect(main?.contains(brandLink())).toBe(false);
+    expect(main?.contains(footerBrandLink())).toBe(false);
   });
 
   it('places the skip link before the brand link in DOM and focus order', async () => {
@@ -124,6 +142,7 @@ describe('Runtime brand mount', () => {
     const banner = screen.getByRole('banner');
 
     expect(brandLink().closest('nav')).toBeNull();
+    expect(footerBrandLink().closest('nav')).toBeNull();
     expect(within(banner).getAllByRole('navigation')).toHaveLength(2);
     expect(within(banner).getAllByRole('navigation', { name: 'Основная навигация' })).toHaveLength(
       1
@@ -151,7 +170,7 @@ describe('Runtime brand mount', () => {
       );
     });
 
-    expect(screen.getAllByRole('link', { name: BRAND_HOME_LINK_LABEL })).toHaveLength(1);
+    expectOneBrandLinkPerShellLandmark();
   });
 
   it('does not duplicate the carrier Home link accessible name', async () => {
@@ -162,6 +181,6 @@ describe('Runtime brand mount', () => {
     });
 
     expect(screen.getAllByRole('link', { name: 'На главную' })).toHaveLength(1);
-    expect(screen.getAllByRole('link', { name: BRAND_HOME_LINK_LABEL })).toHaveLength(1);
+    expectOneBrandLinkPerShellLandmark();
   });
 });

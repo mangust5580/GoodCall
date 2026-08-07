@@ -16,7 +16,7 @@ function serviceNav(): HTMLElement {
 }
 
 function brandLink(): HTMLElement {
-  return screen.getByRole('link', { name: BRAND_HOME_LINK_LABEL });
+  return within(screen.getByRole('banner')).getByRole('link', { name: BRAND_HOME_LINK_LABEL });
 }
 
 const MOUNTED_ROUTES: ReadonlyArray<readonly [string, string, string]> = [
@@ -38,7 +38,9 @@ describe('Information Bar runtime mount', () => {
 
     expect(screen.getAllByRole('navigation', { name: INFORMATION_BAR_NAV_LABEL })).toHaveLength(1);
     expect(screen.getAllByRole('banner')).toHaveLength(1);
-    expect(screen.getAllByRole('link', { name: BRAND_HOME_LINK_LABEL })).toHaveLength(1);
+    expect(
+      within(screen.getByRole('banner')).getAllByRole('link', { name: BRAND_HOME_LINK_LABEL })
+    ).toHaveLength(1);
     expect(document.querySelectorAll('main#main-content')).toHaveLength(1);
     expect(document.querySelectorAll('h1')).toHaveLength(1);
   });
