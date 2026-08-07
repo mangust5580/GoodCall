@@ -19,7 +19,8 @@
 | M4-05 — Header route actions: Comparison, Favorites, Cart and Account         | **APPROVED AND CLOSED THROUGH M4-05A**                                                    |
 | M4-05A — Header action E2E accessible-name assertion correction               | **APPROVED AND CLOSED**                                                                   |
 | M4-06 — Newsletter pre-footer and deterministic local subscription lifecycle  | **CHANGES REQUIRED — ARCHITECTURE RECONCILIATION IMPLEMENTED IN M4-06A**                  |
-| M4-06A — Newsletter form and session-persistence architecture reconciliation  | **IMPLEMENTED — AWAITING INDEPENDENT AUDIT, CI AND USER VISUAL/MANUAL FORM CONFIRMATION** |
+| M4-06A — Newsletter form and session-persistence architecture reconciliation  | **CHANGES REQUIRED — TEST-QUALITY CORRECTION IMPLEMENTED IN M4-06B**                      |
+| M4-06B — Newsletter pending-test act cleanup and evidence reconciliation      | **IMPLEMENTED — AWAITING INDEPENDENT AUDIT, CI AND USER VISUAL/MANUAL FORM CONFIRMATION** |
 
 M4 is not approved and not closed. The Information Bar, the primary Header core, the Header route actions and the Newsletter pre-footer now exist. The Footer remains a later stage. The transitional brand banner was replaced by the canonical Header in M4-04.
 
@@ -2102,7 +2103,14 @@ Unchanged: canonical copy, the visible demo-boundary wording, the 400 ms delay, 
 | Static architecture searches       | PASS — no localStorage/IndexedDB/cookie/cross-tab/network/store/account, RHF imported, `@hookform/resolvers` absent |
 | `git diff --check`                 | PASS                                                                                                                |
 
-Bundle moves from raw 435.44 KB / gzip 129.54 KB to raw **464.79 KB** / gzip **131.93 KB**; the increase is `react-hook-form`.
+Bundle, as reported by `report:sizes`:
+
+| Measure       | Raw           | Gzipped       |
+| ------------- | ------------- | ------------- |
+| **Total**     | **464.79 KB** | **140.03 KB** |
+| Main JS chunk | 431.07 KB     | 131.93 KB     |
+
+The increase over M4-06 is `react-hook-form`. An earlier revision of this section reported `464.79 KB raw / 131.93 KB gzip`, which incorrectly combined the **total** raw size with the **main-JS** gzip size; the corrected figures above supersede it.
 
 Intentionally not run: `npm run dev`, `npm run preview`, `npm run test:e2e`, `playwright test`, `vite`, `vite preview`, `npm run review:m3-browser`, background or fixed-port servers, and user browser automation. CI was pending at commit time and user visual/manual form confirmation remains pending.
 
@@ -2118,6 +2126,156 @@ One. The canonical `03-*` and `04*` contract documents are **not tracked in this
 - The 400 ms pending window remains brief for manual observation and for E2E pending assertions.
 - User visual and manual form confirmation is outstanding, now including the reload-restored subscribed state.
 
+### Exact-SHA CI result and independent audit
+
+The full GitHub Actions job log has been independently read. Any earlier statement in this report that the M4-06A job log or its warning lines could not be read is **obsolete and withdrawn**.
+
+| Item                                   | Value                                               |
+| -------------------------------------- | --------------------------------------------------- |
+| Commit                                 | `6be4a4266af3ac95ced1603788a07902a8e31f25`          |
+| Workflow run                           | 31155129840                                         |
+| Job                                    | 92792857216                                         |
+| Run attempt                            | 1                                                   |
+| Vitest                                 | **1105 passed in 55 files**                         |
+| Newsletter focused total               | **126** across four files                           |
+| — `newsletter-content.test.ts`         | 23                                                  |
+| — `newsletter-session-storage.test.ts` | **26**                                              |
+| — `newsletter-section.test.tsx`        | 47                                                  |
+| — `newsletter-runtime-mount.test.tsx`  | 30                                                  |
+| Shell icon asset suite                 | **44 passed**                                       |
+| Playwright                             | **182 passed** (`Running 182 tests using 1 worker`) |
+| Failed                                 | 0                                                   |
+| Flaky                                  | 0                                                   |
+| Retries                                | none — no retry markers                             |
+| Playwright duration                    | 1.3m                                                |
+| Build / build validation               | success                                             |
+| Workflow conclusion                    | success                                             |
+
+**Independent audit result: CHANGES REQUIRED — TEST-QUALITY CORRECTION IMPLEMENTED IN M4-06B.**
+
+The architecture reconciliation itself was accepted: the React Hook Form migration, Zod ownership, versioned session persistence, revalidation timing and the runtime are all approved. The stage failed only its test-quality gate, because the exact-SHA log still contains **8 `NewsletterSection`-specific `act(...)` warning emissions**:
+
+| Scenario                                                                                  | Emissions |
+| ----------------------------------------------------------------------------------------- | --------- |
+| `valid submission lifecycle > enters pending immediately with one owned announced status` | 4         |
+| `valid submission lifecycle > does not persist consent during the pending phase`          | 4         |
+
+Root cause: the shared `afterEach` in `tests/app/shell/newsletter-section.test.tsx` called `vi.runOnlyPendingTimers()`, which executed the pending 400 ms Newsletter completion callback **after** the assertions of the two tests that intentionally end in `submitting`. That callback performs React and RHF state updates outside `act`. It is a test-lifecycle defect, not a runtime defect.
+
+M4-06A is therefore **not closed**; it is corrected by M4-06B below.
+
 ### Next gate
 
-Green GitHub Actions CI on the exact M4-06A SHA with zero failed, zero flaky, no retries and no Newsletter-owned `act(...)` warning, then independent diff audit, then user visual and manual form confirmation. **M4-07 must not begin until all three close.**
+M4-06A is superseded by **M4-06B**. **M4-07 must not begin until M4-06B closes.**
+
+## M4-06B — Newsletter pending-test act cleanup and evidence reconciliation
+
+**Status at commit time: IMPLEMENTED — AWAITING INDEPENDENT AUDIT, CI AND USER VISUAL/MANUAL FORM CONFIRMATION**
+
+### Baseline
+
+| Item                                 | Value                                                |
+| ------------------------------------ | ---------------------------------------------------- |
+| Branch                               | `main`                                               |
+| Baseline SHA                         | `6be4a4266af3ac95ced1603788a07902a8e31f25`           |
+| Baseline commit                      | `fix(shell): reconcile newsletter form architecture` |
+| Parent SHA                           | `6e82fa863a5e67cecba6802d7ffbc0d82a7d6691`           |
+| `git rev-parse HEAD` / `origin/main` | both matched the baseline before changes             |
+| `git diff` / `git diff --cached`     | exit 0 — clean                                       |
+
+### Scope
+
+Test-only, plus documentation reconciliation. The single behavioural change is the fake-timer teardown in `tests/app/shell/newsletter-section.test.tsx`.
+
+### Root cause
+
+Two tests intentionally finish while the Newsletter is still in `submitting`, because that is exactly what they assert. The shared teardown then ran:
+
+```
+vi.runOnlyPendingTimers();
+```
+
+which executed the still-pending 400 ms completion callback after those assertions. The callback performs React and RHF state updates on a component that is still mounted at that point, outside any `act()` scope, so React emitted `An update to NewsletterSection inside a test was not wrapped in act(...)` — 4 emissions per affected test, 8 in total.
+
+Tests that intentionally complete the lifecycle were never affected, because they advance the timer inside the existing helper:
+
+```
+await act(async () => {
+  vi.advanceTimersByTime(NEWSLETTER_SUBMIT_DELAY_MS);
+});
+```
+
+### Correction
+
+Teardown now **cancels** the outstanding timer instead of executing it:
+
+```
+vi.clearAllTimers();
+vi.useRealTimers();
+window.sessionStorage.clear();
+vi.restoreAllMocks();
+```
+
+Cancellation is the right ownership boundary: a unit test that deliberately ends in the pending state should not have the application's success transition run against it afterwards. The success transition, the timer completion, the persisted payload after success and unmount cleanup all have their own explicit coverage, so nothing is lost by not running the callback during cleanup.
+
+Two supporting strengthenings, both additive:
+
+- the unmount test now asserts `vi.getTimerCount()` is `1` while pending and `0` after `unmount()`, so timer-leak cleanup is proven directly rather than inferred from teardown execution;
+- each of the two pending-state tests now asserts `vi.getTimerCount()` is `1` at its end, making explicit that they finish with a completion still scheduled — which is precisely what teardown must cancel.
+
+No console mocking, no warning filtering, no React environment change, no removal of fake timers, no deletion or weakening of the two tests, and no advancing of the 400 ms timer merely to silence cleanup.
+
+### Runtime freeze
+
+**No production file changed.** `NewsletterSection.tsx`, `NewsletterSection.module.scss`, `newsletter-schema.ts`, `newsletter-session-storage.ts`, `newsletter-content.ts`, `index.ts`, `RootLayout.tsx`, `route-shell-policy.ts` and the catch-all route are all untouched, as are `package.json`, `package-lock.json`, Shared UI, routes, Header, Information Bar, assets, the Playwright configuration and the workflow.
+
+Every accepted M4-06A contract remains frozen: `react-hook-form@^7.84.0`, `mode: 'onSubmit'`, `reValidateMode: 'onChange'`, the Zod-backed resolver, change and blur revalidation, `reset({ email })` after normalized success, the `goodcall.newsletter` key at version 1, subscribed state plus normalized email, safe corrupt-payload handling, no cross-tab sync, no backend, the 400 ms lifecycle, the synchronous duplicate-submit guard, restored success visible but not live-announced, event-driven success announced, the typed route visibility policy and the existing responsive layout.
+
+### Files changed
+
+| File                                                  | Change                                                   |
+| ----------------------------------------------------- | -------------------------------------------------------- |
+| `tests/app/shell/newsletter-section.test.tsx`         | teardown cancels timers; timer-count assertions added    |
+| `docs/05-implementation/m4-canonical-shell-report.md` | M4-06A CI/audit reconciliation, bundle fix; this section |
+| `docs/05-implementation/repository-state.md`          | M4-06B state note and bundle fix                         |
+
+### Local verification
+
+| Command                               | Result                                                 |
+| ------------------------------------- | ------------------------------------------------------ |
+| Focused `newsletter-section.test.tsx` | PASS — **47 tests**                                    |
+| Focused Newsletter warning scan       | PASS — **0** `NewsletterSection … not wrapped in act`  |
+| All four Newsletter suites            | PASS — **126 tests**, 0 Newsletter act warnings        |
+| `npm run typecheck`                   | PASS                                                   |
+| `npm run lint`                        | PASS — 0 errors, 0 warnings                            |
+| `npm run lint:styles`                 | PASS                                                   |
+| `npm run format:check`                | PASS                                                   |
+| `npm run check:comments`              | PASS                                                   |
+| `npm test`                            | PASS — **1105 tests in 55 files**                      |
+| Full-suite warning scan               | PASS — **0** `NewsletterSection`-specific act warnings |
+| `npm run build`                       | PASS — 259 modules                                     |
+| `npm run validate:build`              | PASS                                                   |
+| `npm run check:full`                  | PASS — includes the bounded dev-bootstrap gate         |
+| `git diff --check`                    | PASS                                                   |
+
+All warning scans redirected both stdout and stderr to a file and counted occurrences with `grep -c`, rather than relying on exit codes or on a shell variable that can drop stderr.
+
+**The M4-06A warning was not reproducible locally.** It did not appear in an isolated run of the file, in the full suite, or with `CI=true`, either before or after the fix. The exact-SHA CI log is authoritative, and the mechanism it identifies is unambiguous in the code, so the correction was applied on that basis. Recorded honestly rather than claimed as a local reproduction.
+
+Bundle unchanged, as expected for a test-only stage — total raw **464.79 KB** / gzip **140.03 KB**; main JS raw **431.07 KB** / gzip **131.93 KB**.
+
+Intentionally not run: `npm run dev`, `npm run preview`, `npm run test:e2e`, `playwright test`, `vite`, `vite preview`, `npm run review:m3-browser`, background or fixed-port servers, and user browser automation. CI was pending at commit time and user visual/manual form confirmation remains pending.
+
+### Deviations
+
+None beyond the standing evidence limitation that the canonical `03-*` and `04*` contract documents are not tracked in this repository.
+
+### Risks
+
+- The warning could not be reproduced locally, so the fix is verified by mechanism and by CI rather than by a local before/after difference. If the exact-SHA log still shows the warning, the remaining cause is environmental rather than the teardown.
+- `vi.clearAllTimers()` cancels every fake timer in teardown, including any that a future test might rely on running afterwards. Timer completion is now always explicit inside a test, which is the intended contract.
+- User visual and manual form confirmation is still outstanding for the corrected architecture, including the reload-restored subscribed state.
+
+### Next gate
+
+Green GitHub Actions CI on the exact M4-06B SHA with zero failed, zero flaky, no retries and **zero `NewsletterSection`-specific `act(...)` warnings in the job log**, then independent diff and log audit, then user visual and manual form confirmation. **M4-07 must not begin until all three close.**

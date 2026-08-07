@@ -101,7 +101,7 @@ describe('NewsletterSection', () => {
   });
 
   afterEach(() => {
-    vi.runOnlyPendingTimers();
+    vi.clearAllTimers();
     vi.useRealTimers();
     window.sessionStorage.clear();
     vi.restoreAllMocks();
@@ -317,6 +317,7 @@ describe('NewsletterSection', () => {
       expect(statuses).toHaveLength(1);
       expect(statuses[0]?.getAttribute('role')).toBe('status');
       expect(statuses[0]).toHaveTextContent(NEWSLETTER_PENDING_STATUS);
+      expect(vi.getTimerCount(), 'the test ends while a completion is still scheduled').toBe(1);
     });
 
     it('does not persist consent during the pending phase', async () => {
@@ -326,6 +327,7 @@ describe('NewsletterSection', () => {
       await submit();
 
       expect(storedConsent()).toBeNull();
+      expect(vi.getTimerCount(), 'the test ends while a completion is still scheduled').toBe(1);
     });
 
     it('resolves to the canonical success message in the same status owner', async () => {
@@ -560,14 +562,18 @@ describe('NewsletterSection', () => {
   });
 
   describe('boundaries', () => {
-    it('clears a pending timer safely on unmount', async () => {
+    it('cancels the pending timer on unmount without leaking a completion', async () => {
       const { unmount } = render(<NewsletterSection />);
 
       await typeEmail(VALID_EMAIL);
       await submit();
 
+      expect(vi.getTimerCount(), 'a completion is scheduled while pending').toBe(1);
+
+      unmount();
+
+      expect(vi.getTimerCount(), 'unmount cancels the scheduled completion').toBe(0);
       expect(() => {
-        unmount();
         vi.advanceTimersByTime(NEWSLETTER_SUBMIT_DELAY_MS * 2);
       }).not.toThrow();
     });

@@ -839,14 +839,42 @@ M4-06 is **not accepted**; it is reconciled by M4-06A.
 - **Restored success is rendered statically; only a new in-session success is announced** through `role="status"`. Pending always announces, and validation errors stay field-associated.
 - Editing a restored or newly subscribed email clears the result and removes the persisted key immediately; a second success overwrites the stored email.
 - **Unchanged:** canonical copy, demo-boundary wording, 400 ms lifecycle, synchronous duplicate-submit guard, one status slot, placement after route `main`, absent Footer, typed route-shell visibility policy and catch-all override, responsive composition and `NewsletterSection.module.scss`.
-- Test suite: **1105 tests across 55 files**, up from 1057 in 54, including **126 focused Newsletter tests** across four files (23 content/schema, 47 section, 30 runtime mount, 26 session storage). Bundle: raw **464.79 KB** / gzip **131.93 KB**.
+- Test suite: **1105 tests across 55 files**, up from 1057 in 54, including **126 focused Newsletter tests** across four files (23 content/schema, 47 section, 30 runtime mount, 26 session storage). Bundle total: raw **464.79 KB** / gzip **140.03 KB**; main JS chunk raw **431.07 KB** / gzip **131.93 KB**. (An earlier revision mixed total raw with main-JS gzip.)
 - Focused Newsletter test output contains **no `NewsletterSection … not wrapped in act(...)` warning**.
 - Local checks pass, including `npm run check:full`. **Local E2E was not run.**
 - **CI is pending at commit time**, and **user visual/manual form confirmation is pending**, now including the reload-restored subscribed state.
 - **M4-07 remains blocked** until M4-06A exact-SHA green CI, independent audit and user visual/manual form confirmation all close.
 
+## Milestone State Note — M4-06B Newsletter Pending-Test Act Cleanup (2026-08-07)
+
+### M4-06A exact CI and independent audit
+
+The full job log for the M4-06A commit `6be4a4266af3ac95ced1603788a07902a8e31f25` — run **31155129840**, job **92792857216**, run attempt 1 — has been independently read. Any earlier claim that it was unavailable is withdrawn.
+
+Exact results: Vitest **1105 passed in 55 files**; Newsletter focused **126** across four files (content 23, session storage **26**, section 47, runtime mount 30); shell icon asset suite **44 passed**; Playwright **182 passed**, 0 failed, 0 flaky, no retries, duration 1.3m; build and build validation success; workflow conclusion success.
+
+**The M4-06A architecture is accepted** — the React Hook Form migration, Zod ownership, versioned session persistence, revalidation timing and the runtime were all approved. The stage failed only its **test-quality gate**: the log contains **8 `NewsletterSection`-specific `act(...)` warning emissions**, four in `enters pending immediately with one owned announced status` and four in `does not persist consent during the pending phase`.
+
+Root cause: the shared `afterEach` called `vi.runOnlyPendingTimers()`, executing the pending 400 ms completion callback after those two tests' assertions and therefore performing React/RHF state updates outside `act`. A test-lifecycle defect, not a runtime defect.
+
+M4-06A is **not closed**; M4-06 is **not closed**.
+
+### M4-06B corrective implementation state
+
+- Baseline SHA `6be4a4266af3ac95ced1603788a07902a8e31f25`; the resulting M4-06B commit SHA is recorded in the untracked stage handoff.
+- **Test-only correction.** Teardown now calls `vi.clearAllTimers()` — cancelling the outstanding completion instead of executing it — before restoring real timers and clearing storage and mocks.
+- The two pending-state tests still finish in `submitting` and now assert that a completion is genuinely scheduled at that point; the unmount test asserts the timer count drops from 1 to 0, so leak cleanup is proven directly rather than inferred from teardown.
+- **No console suppression, no warning filtering, no React environment change, no fake-timer removal, no deleted or weakened tests, and no timer advanced merely to silence cleanup.**
+- **Runtime is frozen.** No production file, `package.json`, `package-lock.json`, Shared UI, route, route-policy, SCSS, asset, Playwright config or workflow change. All accepted M4-06A contracts remain in force.
+- Test suite unchanged in size: **1105 tests across 55 files**, including **126 focused Newsletter tests**. Local scans of the focused file, all four Newsletter suites and the full suite report **zero `NewsletterSection`-specific act warnings**, with stdout and stderr both captured.
+- The M4-06A warning was **not reproducible locally** in any configuration tried, including `CI=true`; the CI log is authoritative and the mechanism is unambiguous in the code, so the correction was applied on that basis.
+- Bundle evidence corrected: total raw **464.79 KB** / gzip **140.03 KB**; main JS chunk raw **431.07 KB** / gzip **131.93 KB**. The previous "464.79 KB raw / 131.93 KB gzip" mixed total raw with main-JS gzip.
+- Local checks pass, including `npm run check:full`. **Local E2E was not run.**
+- **CI is pending at commit time**, and **user visual/manual form confirmation is pending** for the corrected architecture, including the reload-restored subscribed state.
+- **M4-07 remains blocked** until M4-06B exact-SHA green and warning-free CI, independent audit and user visual/manual form confirmation all close.
+
 ## Next Repository Modifications
 
 The current implementation milestone is **M4**, whose scope must be taken from the approved architecture and UI/component/responsive contracts.
 
-**M4-07 must not begin** until the M4-06A exact-SHA CI, independent audit and user visual/manual form confirmation at expanded, wide, medium and compact widths — including the reload-restored subscribed state — all close.
+**M4-07 must not begin** until the M4-06B exact-SHA green and warning-free CI, independent audit and user visual/manual form confirmation at expanded, wide, medium and compact widths — including the reload-restored subscribed state — all close.
