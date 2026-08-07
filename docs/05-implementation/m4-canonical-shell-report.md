@@ -2,27 +2,28 @@
 
 ## Status
 
-| Task                                                                          | Status                                                                                   |
-| ----------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| M4-01 — Shell destination safety and composition boundary                     | **CLOSED THROUGH M4-01A**                                                                |
-| M4-01A — Catalog family catch-all correction and CI reconciliation            | **APPROVED AND CLOSED**                                                                  |
-| M4-02 — Runtime brand/logo integration                                        | **CLOSED THROUGH M4-02A**                                                                |
-| M4-02A — Brand landmark accessibility correction and E2E stabilization        | **APPROVED AND CLOSED**                                                                  |
-| M4-03 — Information Bar                                                       | **CLOSED THROUGH M4-03A**                                                                |
-| M4-03A — Information Bar E2E correction and exact active-state reconciliation | **APPROVED AND CLOSED**                                                                  |
-| M4-04 — Primary Header core: Catalog entry and Global Search                  | **APPROVED AND CLOSED THROUGH M4-04A AND M4-04B**                                        |
-| M4-04A — Compact Header layout correction and E2E geometry stabilization      | **CLOSED THROUGH M4-04B**                                                                |
-| M4-04B — Deterministic keyboard focus origin and CI reconciliation            | **APPROVED AND CLOSED**                                                                  |
-| M4-05-ICN — Application-owned shell icon set                                  | **APPROVED AND CLOSED**                                                                  |
-| M4-05-ICN-A — Comparison icon semantic correction                             | **CLOSED THROUGH M4-05-ICN-B**                                                           |
-| M4-05-ICN-B — Comparison marker legibility correction                         | **APPROVED AND CLOSED**                                                                  |
-| M4-05 — Header route actions: Comparison, Favorites, Cart and Account         | **APPROVED AND CLOSED THROUGH M4-05A**                                                   |
-| M4-05A — Header action E2E accessible-name assertion correction               | **APPROVED AND CLOSED**                                                                  |
-| M4-06 — Newsletter pre-footer and deterministic local subscription lifecycle  | **APPROVED AND CLOSED THROUGH M4-06A AND M4-06B**                                        |
-| M4-06A — Newsletter form and session-persistence architecture reconciliation  | **APPROVED AND CLOSED THROUGH M4-06B**                                                   |
-| M4-06B — Newsletter pending-test act cleanup and evidence reconciliation      | **APPROVED AND CLOSED**                                                                  |
-| M4-07 — Canonical Footer                                                      | **IMPLEMENTED THROUGH M4-07A — AWAITING INDEPENDENT AUDIT AND USER VISUAL CONFIRMATION** |
-| M4-07A — Footer E2E failure evidence recovery and correction                  | **IMPLEMENTED — AWAITING INDEPENDENT AUDIT, CI AND USER VISUAL CONFIRMATION**            |
+| Task                                                                          | Status                                                                        |
+| ----------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| M4-01 — Shell destination safety and composition boundary                     | **CLOSED THROUGH M4-01A**                                                     |
+| M4-01A — Catalog family catch-all correction and CI reconciliation            | **APPROVED AND CLOSED**                                                       |
+| M4-02 — Runtime brand/logo integration                                        | **CLOSED THROUGH M4-02A**                                                     |
+| M4-02A — Brand landmark accessibility correction and E2E stabilization        | **APPROVED AND CLOSED**                                                       |
+| M4-03 — Information Bar                                                       | **CLOSED THROUGH M4-03A**                                                     |
+| M4-03A — Information Bar E2E correction and exact active-state reconciliation | **APPROVED AND CLOSED**                                                       |
+| M4-04 — Primary Header core: Catalog entry and Global Search                  | **APPROVED AND CLOSED THROUGH M4-04A AND M4-04B**                             |
+| M4-04A — Compact Header layout correction and E2E geometry stabilization      | **CLOSED THROUGH M4-04B**                                                     |
+| M4-04B — Deterministic keyboard focus origin and CI reconciliation            | **APPROVED AND CLOSED**                                                       |
+| M4-05-ICN — Application-owned shell icon set                                  | **APPROVED AND CLOSED**                                                       |
+| M4-05-ICN-A — Comparison icon semantic correction                             | **CLOSED THROUGH M4-05-ICN-B**                                                |
+| M4-05-ICN-B — Comparison marker legibility correction                         | **APPROVED AND CLOSED**                                                       |
+| M4-05 — Header route actions: Comparison, Favorites, Cart and Account         | **APPROVED AND CLOSED THROUGH M4-05A**                                        |
+| M4-05A — Header action E2E accessible-name assertion correction               | **APPROVED AND CLOSED**                                                       |
+| M4-06 — Newsletter pre-footer and deterministic local subscription lifecycle  | **APPROVED AND CLOSED THROUGH M4-06A AND M4-06B**                             |
+| M4-06A — Newsletter form and session-persistence architecture reconciliation  | **APPROVED AND CLOSED THROUGH M4-06B**                                        |
+| M4-06B — Newsletter pending-test act cleanup and evidence reconciliation      | **APPROVED AND CLOSED**                                                       |
+| M4-07 — Canonical Footer                                                      | **IMPLEMENTED THROUGH M4-07B — VISUAL CONFIRMATION PENDING**                  |
+| M4-07A — Footer E2E failure evidence recovery and correction                  | **TECHNICALLY APPROVED — VISUAL GATE FAILED; CORRECTED BY M4-07B**            |
+| M4-07B — Footer responsive grid visual correction                             | **IMPLEMENTED — AWAITING INDEPENDENT AUDIT, CI AND USER VISUAL CONFIRMATION** |
 
 M4 is not approved and not closed. The Information Bar, the primary Header core, the Header route actions, the Newsletter pre-footer and the canonical Footer now exist. The transitional brand banner was replaced by the canonical Header in M4-04.
 
@@ -2597,3 +2598,200 @@ Local E2E was not run; `AGENTS.md` keeps the Playwright suite CI-owned. Bundle u
 ### Next gate
 
 Green exact-SHA CI with zero failed, zero flaky and no retries, with all 41 previously failing scenarios reaching and passing their substantive assertions; then independent audit; then user visual confirmation at 1440, 1024, 768 and 320 including the compact disclosure states and the 404 Footer. **M4-08 must not begin until all three close.**
+
+### M4-07A exact-SHA CI — technically approved
+
+| Item                              | Value                                      |
+| --------------------------------- | ------------------------------------------ |
+| Corrective SHA                    | `4691bbfe85443d0e2a42d1fa86c5c49b0bb46e70` |
+| Workflow run                      | 31164683544                                |
+| Job                               | 92822946093                                |
+| Run attempt                       | 1                                          |
+| Vitest                            | **1182 passed in 59 files**                |
+| — `site-footer.test.tsx`          | 42                                         |
+| — `footer-navigation.test.ts`     | 12                                         |
+| — `footer-runtime-mount.test.tsx` | 12                                         |
+| — `company.test.ts`               | 11                                         |
+| — shell icon asset suite          | 44                                         |
+| Playwright                        | **215 passed**                             |
+| Failed / flaky / retries          | 0 / 0 / none                               |
+| Playwright duration               | 1.7m                                       |
+| Build                             | 266 modules, success                       |
+| Build validation                  | success                                    |
+
+The full job log was independently read. M4-07A is **technically approved**: it corrected only test ownership and assertion defects, leaving the Footer production code and stylesheet untouched.
+
+Baseline bundle at that SHA: total raw **476.47 KB** / gzip **143.02 KB**; main JS raw **438.29 KB** / gzip **134.30 KB**.
+
+### M4-07 user visual finding — expanded Footer rejected
+
+User visual review at a **1920px** viewport after M4-07A found the Footer technically correct but visually unacceptable:
+
+- the Footer fits with no page-level horizontal overflow;
+- but the five-column expanded grid distributes width poorly;
+- Brand receives a disproportionately large track;
+- Contacts receives the same ordinary `1fr` track as much shorter blocks;
+- the long canonical head-office address wraps into too many lines;
+- operational Contacts content becomes narrow and tall;
+- the Footer becomes visually over-stretched vertically.
+
+**Verdict: the M4-07 visual gate failed.** This is a production layout defect, not a test defect — `scrollWidth <= clientWidth` was never sufficient evidence of an acceptable composition.
+
+**Implementation cause**, quantified against the real container. `PageContainer width="content"` caps at `80rem` = 1280px with 32px gutters, so the Footer content box is **1216px at both 1440px and 1920px viewports**. With `minmax(0, 1.6fr) repeat(4, minmax(0, 1fr))` and a 32px column gap:
+
+| Column      | Track | Width      |
+| ----------- | ----- | ---------- |
+| Brand       | 1.6fr | **≈311px** |
+| Покупателям | 1fr   | ≈194px     |
+| Компания    | 1fr   | ≈194px     |
+| Помощь      | 1fr   | ≈194px     |
+| Контакты    | 1fr   | **≈194px** |
+
+Contacts had to fit a 61-character address in ≈194px while Brand held ≈311px. Content density was ignored entirely.
+
+### UI-FTR-001 wide-range contract mismatch
+
+A second, previously missed conflict surfaced during the same audit. The approved `04C-ui-component-responsive-contracts.md` **UI-FTR-001** defines:
+
+| Range    | Canonical Footer contract                                          |
+| -------- | ------------------------------------------------------------------ |
+| Expanded | five canonical columns                                             |
+| **Wide** | **expanded Brand area plus compact grid**                          |
+| Medium   | two-column wrapping layout                                         |
+| Compact  | Brand/Contacts visible; link groups become independent disclosures |
+
+The M4-07 implementation used a **five-track single-row layout from 64rem upward**, and the M4-07 E2E encoded that mistake as an explicit assertion — _"wide keeps the five blocks on one band"_ — which contradicts UI-FTR-001. The test therefore locked in the wrong contract instead of catching it.
+
+**04C is authoritative and was not modified.** M4-07B corrects the implementation and the tests to match it.
+
+## M4-07B — Footer responsive grid visual correction
+
+**Status at commit time: IMPLEMENTED — AWAITING INDEPENDENT AUDIT, CI AND USER VISUAL CONFIRMATION**
+
+### Baseline
+
+| Item                                 | Value                                      |
+| ------------------------------------ | ------------------------------------------ |
+| Branch                               | `main`                                     |
+| Baseline SHA                         | `4691bbfe85443d0e2a42d1fa86c5c49b0bb46e70` |
+| Baseline commit                      | `fix(test): correct footer e2e assertions` |
+| Parent                               | `bddf291785bdc0d85619dbbf819e0e601ae0af75` |
+| `git rev-parse HEAD` / `origin/main` | both matched the baseline before changes   |
+
+### Layout decision
+
+**Option A was taken and proved sufficient**: keep the existing `PageContainer width="content"` container and correct only the grid tracks and composition. `src/shared/ui/layout/PageContainer/` is **unchanged**, so the Footer stays aligned with the Newsletter and the rest of the shell and no Footer-specific container exception exists. Option B (a Footer-specific wider container) was not needed, and Option C (fewer than five expanded columns) is forbidden by UI-FTR-001.
+
+The whole correction is **12 lines of SCSS**. `SiteFooter.tsx` is unchanged: the five canonical blocks are already direct grid children in canonical order, so `grid-row: span 2` on the Brand block produces the approved wide composition through auto-placement, with no wrapper markup, no duplicate blocks, no CSS `order` and no JavaScript viewport detection.
+
+### Expanded composition (≥ 80rem)
+
+Before:
+
+```
+grid-template-columns: minmax(0, 1.6fr) repeat(4, minmax(0, 1fr));
+```
+
+After:
+
+```
+grid-template-columns:
+  minmax(0, 1.35fr)   /* Brand       */
+  minmax(0, 1.1fr)    /* Покупателям */
+  minmax(0, 0.8fr)    /* Компания    */
+  minmax(0, 1fr)      /* Помощь      */
+  minmax(0, 1.35fr);  /* Контакты    */
+```
+
+Five canonical columns remain, in canonical source order. The ratio is content-driven, not decorative:
+
+| Column      | Track  | Width  | Rationale                                  |
+| ----------- | ------ | ------ | ------------------------------------------ |
+| Brand       | 1.35fr | ≈262px | meaningful but no longer dominant          |
+| Покупателям | 1.1fr  | ≈214px | its labels are the longest navigation copy |
+| Компания    | 0.8fr  | ≈155px | `О компании`, `Блог`, `Магазины` are short |
+| Помощь      | 1fr    | ≈194px | medium-length labels                       |
+| Контакты    | 1.35fr | ≈262px | owns the long operational content          |
+
+Contacts gains **+35%** width (194 → 262px) and Brand gives up **−16%** (311 → 262px); the track sum is unchanged at 5.6fr, so the band still fills the container exactly. The head-office address moves from roughly five wrapped lines to two, and phone, email, support hours and office hours each fit on one line.
+
+### Wide composition (64rem – 79.999rem)
+
+Before: five tracks in one band — contradicting UI-FTR-001.
+
+After:
+
+```
+grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 1fr);
+.brand { grid-row: span 2; }
+```
+
+which places the existing DOM order as:
+
+```
+Brand | Покупателям | Компания
+Brand | Помощь      | Контакты
+```
+
+At 1024px this gives Brand ≈336px and each grid column ≈280px, so Contacts has more room at _wide_ than it previously had at _expanded_. The `grid-row` span is explicitly reset to `auto` at 80rem so the expanded band stays a single row.
+
+### Preserved medium and compact composition
+
+Medium (48rem–63.999rem) keeps its two-column wrapping layout with no disclosure controls — the `grid-row: span 2` rule starts only at 64rem, so medium is untouched. Compact (<48rem) keeps the accepted single-column architecture with three independent disclosures, one DOM instance per link list and unchanged source order.
+
+### Semantic and runtime freeze
+
+No change to Footer semantics or content: one `contentinfo` outside route `main`, present on 404 with the Newsletter absent, one `BrandHomeLink`, the COMPANY-001 owner and values, phone and email hrefs, route-safe navigation, visible route labels, exactly three legal links, the Visa/Mastercard demo indicators, the runtime copyright year, no social links, no app-store badges, disclosure semantics, `aria-current`, `:focus-visible` styling, forced-colors behaviour and 44 × 44 targets. No content was deleted, abbreviated or truncated, and no font size was reduced as a layout workaround.
+
+### E2E reconciliation
+
+The incorrect wide assumption is gone. `tests/e2e/footer.spec.ts` now proves the approved contract geometrically rather than proving only the absence of overflow:
+
+| Range                  | Assertion                                                                                                                                                                         |
+| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1023px                 | medium two-column wrapping; Contacts wraps below the Brand row                                                                                                                    |
+| 1024px, 1025px, 1279px | `expectWideCompactGrid` — Покупателям and Компания share row 1, Помощь and Контакты share row 2, the compact grid keeps a stable first column, and the Brand area spans both rows |
+| 1280px, 1281px         | `expectExpandedFiveColumns` — five columns, strictly progressing x, no overlap, one band                                                                                          |
+| **1920px (new)**       | expanded geometry plus content-need allocation                                                                                                                                    |
+
+The new 1920px scenario asserts that Contacts is wider than the short Компания column, that Contacts is not materially narrower than Brand, that the head-office address renders in at most three lines, that phone and email stay on one line, that no primary navigation label wraps to three or more lines, and that the utility row stays below the grid.
+
+Line counts are derived from bounding height divided by computed line-height with rounding, never from screenshots, and no exact x coordinate is hard-coded. New block-level column locators — the Brand descriptor, each group `<nav>` and the contacts `<dl>` — measure real grid-cell widths, which the headings could not because they are flex items sized to content.
+
+All existing substantive coverage is retained unchanged: 320px disclosures, navigation, legal links, 404, keyboard traversal, 200% and 400% zoom, coarse pointer, forced colors, reduced motion, the five axe scans and current-state behaviour.
+
+### Files changed
+
+| File                                                  | Kind       | Why                                                             |
+| ----------------------------------------------------- | ---------- | --------------------------------------------------------------- |
+| `src/app/shell/footer/SiteFooter.module.scss`         | production | content-aware expanded tracks; wide Brand + compact grid        |
+| `tests/e2e/footer.spec.ts`                            | test       | wide contract corrected; 1920px expanded evidence added         |
+| `docs/05-implementation/m4-canonical-shell-report.md` | docs       | M4-07A closure, visual finding, contract mismatch; this section |
+| `docs/05-implementation/repository-state.md`          | docs       | current-state note                                              |
+
+`SiteFooter.tsx`, `PageContainer`, Shared UI, COMPANY-001, Footer content and navigation fixtures, routes, `RootLayout`, Header, Newsletter and the Information Bar are all unchanged. No dependency, lockfile, asset, Playwright config or workflow change.
+
+### Local verification
+
+| Command                       | Result                                       |
+| ----------------------------- | -------------------------------------------- |
+| `npm run typecheck`           | PASS                                         |
+| `npm run lint`                | PASS                                         |
+| `npm run lint:styles`         | PASS                                         |
+| `npm run format:check`        | PASS                                         |
+| `npm run check:comments`      | PASS                                         |
+| `npm test`                    | PASS — **1182 tests in 59 files**, unchanged |
+| `npm run build`               | PASS — 266 modules                           |
+| `npm run validate:build`      | PASS                                         |
+| `npm run check:full`          | PASS                                         |
+| Static: viewport JS in Footer | none                                         |
+| Static: CSS `order` in Footer | none                                         |
+| Static: font-size reductions  | none added                                   |
+
+Unit totals are unchanged because production semantics did not change — only the stylesheet. Bundle moves from total raw 476.47 KB / gzip 143.02 KB to **476.57 KB / 143.04 KB**; main JS is unchanged at **438.29 KB / 134.30 KB**, confirming the change is CSS-only.
+
+Local Playwright was not run; `AGENTS.md` keeps the E2E suite CI-owned.
+
+### Next gate
+
+Green exact-SHA CI with zero failed, zero flaky and no retries, including the new wide compact-grid and 1920px expanded scenarios; then independent audit; then **renewed user visual confirmation** at 1920, 1440, 1279, 1280, 1024, 768 and 320 plus the 404 Footer. **M4-08 must not begin until all three close.**

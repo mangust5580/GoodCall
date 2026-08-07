@@ -54,10 +54,6 @@ function boxBottom(box: Box): number {
   return box.y + box.height;
 }
 
-function boxCenterY(box: Box): number {
-  return box.y + box.height / 2;
-}
-
 function footer(page: Page) {
   return page.getByRole('contentinfo');
 }
@@ -80,6 +76,112 @@ function legalNav(page: Page) {
 
 function contactsHeading(page: Page) {
   return footer(page).getByRole('heading', { level: 2, name: CONTACTS_TITLE });
+}
+
+function brandColumn(page: Page) {
+  return footer(page).getByText(DESCRIPTOR);
+}
+
+function groupColumn(page: Page, title: string) {
+  return groupNav(page, title);
+}
+
+function contactsColumn(page: Page) {
+  return footer(page).locator('dl');
+}
+
+function addressBlock(page: Page) {
+  return footer(page).locator('address');
+}
+
+async function renderedLineCount(locator: Locator, name: string): Promise<number> {
+  const lines = await locator.evaluate((element) => {
+    const style = window.getComputedStyle(element);
+    const lineHeight = parseFloat(style.lineHeight);
+
+    if (!Number.isFinite(lineHeight) || lineHeight <= 0) {
+      return null;
+    }
+
+    return Math.round(element.getBoundingClientRect().height / lineHeight);
+  });
+
+  expect(lines, `${name} must expose a measurable line height`).not.toBeNull();
+
+  if (lines === null) {
+    throw new Error(`${name} line count is not measurable`);
+  }
+
+  return lines;
+}
+
+async function expectSingleLineContact(page: Page, name: string): Promise<void> {
+  const box = await resolveBox(footer(page).getByRole('link', { name }), `${name} link`);
+
+  expect(box.height, `${name} stays on one line`).toBeLessThanOrEqual(MINIMUM_TARGET + 2);
+}
+
+async function expectWideCompactGrid(page: Page): Promise<void> {
+  const brand = await resolveBox(brandColumn(page), 'brand column');
+  const shoppers = await resolveBox(groupColumn(page, GROUPS[0].title), GROUPS[0].title);
+  const company = await resolveBox(groupColumn(page, GROUPS[1].title), GROUPS[1].title);
+  const help = await resolveBox(groupColumn(page, GROUPS[2].title), GROUPS[2].title);
+  const contacts = await resolveBox(contactsColumn(page), 'contacts column');
+
+  expect(shoppers.x, 'the compact grid follows the Brand area').toBeGreaterThan(brand.x);
+
+  expect(
+    Math.abs(shoppers.y - company.y),
+    'Покупателям and Компания share the first compact row'
+  ).toBeLessThanOrEqual(ROW_TOLERANCE);
+  expect(company.x, 'Компания follows Покупателям').toBeGreaterThan(shoppers.x);
+
+  expect(help.y, 'Помощь starts a second compact row').toBeGreaterThan(boxBottom(shoppers) - 1);
+  expect(
+    Math.abs(help.y - contacts.y),
+    'Помощь and Контакты share the second compact row'
+  ).toBeLessThanOrEqual(ROW_TOLERANCE);
+  expect(contacts.x, 'Контакты follows Помощь').toBeGreaterThan(help.x);
+
+  expect(
+    Math.abs(help.x - shoppers.x),
+    'the compact grid keeps a stable first column'
+  ).toBeLessThanOrEqual(ROW_TOLERANCE);
+
+  expect(boxBottom(brand), 'the Brand area spans the compact grid rows').toBeGreaterThan(
+    shoppers.y
+  );
+}
+
+async function expectExpandedFiveColumns(page: Page): Promise<void> {
+  const columns = [
+    await resolveBox(brandColumn(page), 'brand column'),
+    await resolveBox(groupColumn(page, GROUPS[0].title), GROUPS[0].title),
+    await resolveBox(groupColumn(page, GROUPS[1].title), GROUPS[1].title),
+    await resolveBox(groupColumn(page, GROUPS[2].title), GROUPS[2].title),
+    await resolveBox(contactsColumn(page), 'contacts column'),
+  ];
+
+  for (let index = 1; index < columns.length; index += 1) {
+    const previous = columns[index - 1];
+    const current = columns[index];
+
+    if (previous === undefined || current === undefined) {
+      throw new Error('column box missing');
+    }
+
+    expect(current.x, `column ${String(index)} follows the previous column`).toBeGreaterThan(
+      previous.x
+    );
+    expect(
+      current.x,
+      `column ${String(index)} does not overlap the previous column`
+    ).toBeGreaterThanOrEqual(previous.x + previous.width - 1);
+    expect(
+      Math.abs(current.y - (columns[0]?.y ?? 0)) < 200,
+      `column ${String(index)} stays in the expanded band`
+    ).toBe(true);
+  }
 }
 
 function collectRuntimeProblems(page: Page): {
@@ -198,7 +300,7 @@ test.describe('M4-07 canonical Footer', () => {
   });
 
   for (const width of [1279, 1280, 1281]) {
-    test(`${String(width)}px keeps the wide/expanded transition intact`, async ({ page }) => {
+    test(`${String(width)}px resolves the wide/expanded transition`, async ({ page }) => {
       await page.setViewportSize({ width, height: 900 });
       await page.goto('/GoodCall/');
 
@@ -209,18 +311,58 @@ test.describe('M4-07 canonical Footer', () => {
         await expect(disclosure(page, group.title)).toBeHidden();
       }
 
-      const brand = await resolveBox(footerBrand(page), 'brand');
-      const firstGroup = await resolveBox(
-        footer(page).getByRole('heading', { level: 2, name: GROUPS[0].title }),
-        GROUPS[0].title
-      );
-
-      expect(brand.width, 'Brand keeps a meaningful area').toBeGreaterThan(0);
-      expect(firstGroup.x, 'navigation follows Brand').toBeGreaterThan(brand.x);
+      if (width >= 1280) {
+        await expectExpandedFiveColumns(page);
+      } else {
+        await expectWideCompactGrid(page);
+      }
 
       expect(await horizontalOverflow(page)).toBeLessThanOrEqual(1);
     });
   }
+
+  test('expanded 1920px allocates width by content need', async ({ page }) => {
+    await page.setViewportSize({ width: 1920, height: 1080 });
+    await page.goto('/GoodCall/');
+
+    await expectFooterInventory(page);
+    await expectAllNavigationVisible(page);
+    await expectExpandedFiveColumns(page);
+
+    const brand = await resolveBox(brandColumn(page), 'brand column');
+    const company = await resolveBox(groupColumn(page, GROUPS[1].title), GROUPS[1].title);
+    const contacts = await resolveBox(contactsColumn(page), 'contacts column');
+
+    expect(contacts.width, 'Contacts is wider than the short Компания column').toBeGreaterThan(
+      company.width
+    );
+    expect(
+      contacts.width,
+      'Brand does not take width at the expense of Contacts'
+    ).toBeGreaterThanOrEqual(brand.width - 1);
+
+    const addressLines = await renderedLineCount(addressBlock(page), 'head office address');
+    expect(addressLines, 'the head office address stays compact').toBeLessThanOrEqual(3);
+
+    await expectSingleLineContact(page, SUPPORT_PHONE);
+    await expectSingleLineContact(page, SUPPORT_EMAIL);
+
+    for (const group of GROUPS) {
+      const link = groupNav(page, group.title).getByRole('link', {
+        name: group.sample,
+        exact: true,
+      });
+      const lines = await renderedLineCount(link, `${group.sample} label`);
+      expect(lines, `${group.sample} avoids pathological wrapping`).toBeLessThanOrEqual(2);
+    }
+
+    const legalBox = await resolveBox(legalNav(page), 'legal navigation');
+    expect(legalBox.y, 'the utility row stays below the Footer grid').toBeGreaterThan(
+      boxBottom(contacts) - 1
+    );
+
+    expect(await horizontalOverflow(page)).toBeLessThanOrEqual(1);
+  });
 
   for (const width of [1023, 1024, 1025]) {
     test(`${String(width)}px resolves the medium/wide Footer boundary`, async ({ page }) => {
@@ -234,15 +376,12 @@ test.describe('M4-07 canonical Footer', () => {
         await expect(disclosure(page, group.title)).toBeHidden();
       }
 
-      const brand = await resolveBox(footerBrand(page), 'brand');
-      const contacts = await resolveBox(contactsHeading(page), 'Contacts');
-
       if (width >= 1024) {
-        expect(
-          Math.abs(boxCenterY(brand) - boxCenterY(contacts)) < 200,
-          'wide keeps the five blocks on one band'
-        ).toBe(true);
+        await expectWideCompactGrid(page);
       } else {
+        const brand = await resolveBox(brandColumn(page), 'brand column');
+        const contacts = await resolveBox(contactsColumn(page), 'contacts column');
+
         expect(contacts.y, 'medium wraps Contacts below the Brand row').toBeGreaterThan(brand.y);
       }
 

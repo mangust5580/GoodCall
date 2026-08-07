@@ -929,8 +929,40 @@ Playwright reported **41 unique failed tests**:
 - **CI is pending at commit time**, and **user visual confirmation is pending**, including compact disclosure states and the 404 Footer.
 - **M4-08 remains blocked** until M4-07A exact-SHA green CI, independent audit and user visual confirmation all close.
 
+## Milestone State Note — M4-07B Footer Responsive Grid Visual Correction (2026-08-07)
+
+### M4-07A technical closure
+
+M4-07A — commit `4691bbfe85443d0e2a42d1fa86c5c49b0bb46e70`, run **31164683544**, job **92822946093**, attempt 1 — concluded success: Vitest **1182 passed in 59 files** (site-footer 42, footer-navigation 12, footer-runtime-mount 12, company 11, shell icon assets 44), Playwright **215 passed, 0 failed, 0 flaky**, no retries, duration 1.7m, build 266 modules, build validation success. The full job log was independently read. M4-07A is **technically approved**; it corrected only test ownership and assertion defects and left Footer production code untouched.
+
+### M4-07 visual gate failed
+
+User visual review at **1920px** rejected the expanded Footer. There was no page-level horizontal overflow, but the five-column grid distributed width poorly: Brand held a disproportionately large track while Contacts received the same ordinary `1fr` as much shorter blocks, so the long canonical head-office address wrapped into too many lines and the Footer became visually over-stretched vertically.
+
+Quantified cause: `PageContainer width="content"` caps at 80rem, giving a 1216px content box at both 1440px and 1920px. With `minmax(0, 1.6fr) repeat(4, minmax(0, 1fr))` and a 32px column gap, Brand was ≈311px while Contacts was ≈194px — a 61-character address in 194px. **A production layout defect, not a test defect.**
+
+### UI-FTR-001 wide-range mismatch
+
+Separately confirmed: approved **UI-FTR-001** requires _wide_ (64rem–79.999rem) to be an expanded Brand area plus a compact grid, but the M4-07 implementation used five tracks in one band from 64rem upward, and the M4-07 E2E asserted that wrong shape explicitly. **04C was not modified**; the implementation and tests were corrected to it.
+
+### M4-07B corrective state
+
+- Baseline SHA `4691bbfe85443d0e2a42d1fa86c5c49b0bb46e70`; the resulting M4-07B commit SHA is recorded in the untracked stage handoff.
+- **Option A taken** — the existing `PageContainer width="content"` container is kept and only grid tracks and composition changed. `PageContainer` and the Shared UI API are **unchanged**; no Footer-specific container exception was introduced.
+- **Expanded (≥80rem)** keeps five canonical columns, now content-aware: `1.35fr` Brand, `1.1fr` Покупателям, `0.8fr` Компания, `1fr` Помощь, `1.35fr` Контакты. Contacts gains ≈35% width (194 → 262px) and Brand gives up ≈16% (311 → 262px); the track sum is unchanged so the band still fills the container.
+- **Wide (64rem–79.999rem)** now implements the approved contract — `1.2fr` Brand plus two equal columns, with the Brand block spanning both rows, producing `Brand | Покупателям | Компания` over `Brand | Помощь | Контакты`. It is **no longer five blocks in one band**.
+- **Medium and compact are frozen**: the `grid-row: span 2` rule starts at 64rem, so medium keeps two-column wrapping and compact keeps its three independent disclosures.
+- **SCSS-only, 12 lines.** `SiteFooter.tsx` is unchanged — the five canonical blocks are already direct grid children in canonical order, so auto-placement produces the approved layout with no wrapper markup, no duplicate blocks, no CSS `order` and no JavaScript viewport detection.
+- **No semantic or content change**: one `contentinfo` outside route `main`, present on 404 with the Newsletter absent, one `BrandHomeLink`, COMPANY-001 owner and values, phone/email hrefs, route-safe navigation, three legal links, demo payment indicators, runtime copyright year, no social or app-store content, disclosure semantics, `aria-current`, `:focus-visible`, forced colours and 44 × 44 targets. Nothing was deleted, abbreviated or shrunk to fit.
+- **E2E now proves the contract geometrically**: the incorrect "five blocks on one band" wide assertion is replaced by compact-grid row/column geometry at 1024/1025/1279; 1280/1281 assert five expanded columns; and a **new 1920px scenario** asserts Contacts wider than Компания, Contacts not materially narrower than Brand, the address bounded at three rendered lines, phone and email on one line, and no navigation label wrapping to three or more lines. Line counts derive from bounding height over computed line-height, never screenshots.
+- All existing coverage retained: 320px disclosures, navigation, legal links, 404, keyboard, 200%/400% zoom, coarse pointer, forced colours, reduced motion, axe and current-state behaviour.
+- Test totals unchanged at **1182 across 59 files**, since production semantics did not change. Bundle: total raw **476.57 KB** / gzip **143.04 KB**; main JS unchanged at **438.29 KB** / **134.30 KB**, confirming a CSS-only change.
+- Local checks pass, including `npm run check:full`. **Local E2E was not run** — the Playwright suite remains CI-owned.
+- **CI is pending at commit time**, and **renewed user visual confirmation is pending** at 1920, 1440, 1279, 1280, 1024, 768 and 320 plus the 404 Footer.
+- **M4-08 remains blocked** until M4-07B exact-SHA green CI, independent audit and user visual confirmation all close.
+
 ## Next Repository Modifications
 
 The current implementation milestone is **M4**, whose scope must be taken from the approved architecture and UI/component/responsive contracts.
 
-**M4-08 must not begin** until the M4-07 exact-SHA CI, independent audit and user visual confirmation at 1440, 1024, 768 and 320 widths — including the compact disclosure states and the 404 Footer — all close.
+**M4-08 must not begin** until the M4-07B exact-SHA CI, independent audit and renewed user visual confirmation at 1920, 1440, 1279, 1280, 1024, 768 and 320 widths — including the compact disclosure states and the 404 Footer — all close.

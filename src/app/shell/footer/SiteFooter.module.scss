@@ -247,8 +247,12 @@
 
 @media (width >= 64rem) {
   .inner {
-    grid-template-columns: minmax(0, 1.4fr) repeat(4, minmax(0, 1fr));
-    column-gap: var(--gc-spacing-lg);
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 1fr);
+    column-gap: var(--gc-spacing-xl);
+  }
+
+  .brand {
+    grid-row: span 2;
   }
 
   .utility-inner {
@@ -260,8 +264,17 @@
 
 @media (width >= 80rem) {
   .inner {
-    grid-template-columns: minmax(0, 1.6fr) repeat(4, minmax(0, 1fr));
+    grid-template-columns:
+      minmax(0, 1.35fr)
+      minmax(0, 1.1fr)
+      minmax(0, 0.8fr)
+      minmax(0, 1fr)
+      minmax(0, 1.35fr);
     column-gap: var(--gc-spacing-xl);
     padding-block: calc(var(--gc-spacing-xl) * 1.5) var(--gc-spacing-xl);
+  }
+
+  .brand {
+    grid-row: auto;
   }
 }
