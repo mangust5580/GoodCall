@@ -21,7 +21,7 @@ describe('App Smoke Tests', () => {
     render(<RouterProvider router={router} />);
 
     await waitFor(() => {
-      expect(screen.getByText(/GoodCall/i)).toBeDefined();
+      expect(screen.getAllByText(/GoodCall/i).length).toBeGreaterThan(0);
     });
   });
 

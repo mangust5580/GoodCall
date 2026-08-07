@@ -10,6 +10,8 @@ import {
 import styles from './Shell.module.scss';
 import { InformationBar } from '@/app/shell/information-bar';
 import { SiteHeader } from '@/app/shell/site-header';
+import { NewsletterSection } from '@/app/shell/newsletter';
+import { isNewsletterVisible } from '@/app/routing/route-shell-policy';
 
 export function RootLayout(): React.ReactElement {
   const location = useLocation();
@@ -108,6 +110,7 @@ export function RootLayout(): React.ReactElement {
       <SiteHeader />
       <ScrollRestoration getKey={(location) => location.pathname} />
       <Outlet />
+      <NewsletterSection visible={isNewsletterVisible(matches)} />
     </div>
   );
 }

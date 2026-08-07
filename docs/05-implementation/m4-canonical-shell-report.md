@@ -2,24 +2,25 @@
 
 ## Status
 
-| Task                                                                          | Status                                                                        |
-| ----------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
-| M4-01 — Shell destination safety and composition boundary                     | **CLOSED THROUGH M4-01A**                                                     |
-| M4-01A — Catalog family catch-all correction and CI reconciliation            | **APPROVED AND CLOSED**                                                       |
-| M4-02 — Runtime brand/logo integration                                        | **CLOSED THROUGH M4-02A**                                                     |
-| M4-02A — Brand landmark accessibility correction and E2E stabilization        | **APPROVED AND CLOSED**                                                       |
-| M4-03 — Information Bar                                                       | **CLOSED THROUGH M4-03A**                                                     |
-| M4-03A — Information Bar E2E correction and exact active-state reconciliation | **APPROVED AND CLOSED**                                                       |
-| M4-04 — Primary Header core: Catalog entry and Global Search                  | **APPROVED AND CLOSED THROUGH M4-04A AND M4-04B**                             |
-| M4-04A — Compact Header layout correction and E2E geometry stabilization      | **CLOSED THROUGH M4-04B**                                                     |
-| M4-04B — Deterministic keyboard focus origin and CI reconciliation            | **APPROVED AND CLOSED**                                                       |
-| M4-05-ICN — Application-owned shell icon set                                  | **APPROVED AND CLOSED**                                                       |
-| M4-05-ICN-A — Comparison icon semantic correction                             | **CLOSED THROUGH M4-05-ICN-B**                                                |
-| M4-05-ICN-B — Comparison marker legibility correction                         | **APPROVED AND CLOSED**                                                       |
-| M4-05 — Header route actions: Comparison, Favorites, Cart and Account         | **NOT ACCEPTED — EXACT-SHA CI FAILED IN PLAYWRIGHT; CORRECTED BY M4-05A**     |
-| M4-05A — Header action E2E accessible-name assertion correction               | **IMPLEMENTED — AWAITING INDEPENDENT AUDIT, CI AND USER VISUAL CONFIRMATION** |
+| Task                                                                          | Status                                                                                    |
+| ----------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| M4-01 — Shell destination safety and composition boundary                     | **CLOSED THROUGH M4-01A**                                                                 |
+| M4-01A — Catalog family catch-all correction and CI reconciliation            | **APPROVED AND CLOSED**                                                                   |
+| M4-02 — Runtime brand/logo integration                                        | **CLOSED THROUGH M4-02A**                                                                 |
+| M4-02A — Brand landmark accessibility correction and E2E stabilization        | **APPROVED AND CLOSED**                                                                   |
+| M4-03 — Information Bar                                                       | **CLOSED THROUGH M4-03A**                                                                 |
+| M4-03A — Information Bar E2E correction and exact active-state reconciliation | **APPROVED AND CLOSED**                                                                   |
+| M4-04 — Primary Header core: Catalog entry and Global Search                  | **APPROVED AND CLOSED THROUGH M4-04A AND M4-04B**                                         |
+| M4-04A — Compact Header layout correction and E2E geometry stabilization      | **CLOSED THROUGH M4-04B**                                                                 |
+| M4-04B — Deterministic keyboard focus origin and CI reconciliation            | **APPROVED AND CLOSED**                                                                   |
+| M4-05-ICN — Application-owned shell icon set                                  | **APPROVED AND CLOSED**                                                                   |
+| M4-05-ICN-A — Comparison icon semantic correction                             | **CLOSED THROUGH M4-05-ICN-B**                                                            |
+| M4-05-ICN-B — Comparison marker legibility correction                         | **APPROVED AND CLOSED**                                                                   |
+| M4-05 — Header route actions: Comparison, Favorites, Cart and Account         | **APPROVED AND CLOSED THROUGH M4-05A**                                                    |
+| M4-05A — Header action E2E accessible-name assertion correction               | **APPROVED AND CLOSED**                                                                   |
+| M4-06 — Newsletter pre-footer and deterministic local subscription lifecycle  | **IMPLEMENTED — AWAITING INDEPENDENT AUDIT, CI AND USER VISUAL/MANUAL FORM CONFIRMATION** |
 
-M4 is not approved and not closed. The Information Bar, the primary Header core and the Header route actions now exist. Footer and Newsletter remain later stages. The transitional brand banner was replaced by the canonical Header in M4-04.
+M4 is not approved and not closed. The Information Bar, the primary Header core, the Header route actions and the Newsletter pre-footer now exist. The Footer remains a later stage. The transitional brand banner was replaced by the canonical Header in M4-04.
 
 M4-04B closure evidence: commit `d7b02e0169391177b6cd4641d598b8a10bdaf553`, workflow run `31138021965`, job `92741720296`, workflow conclusion `success`, Vitest `880 passed in 48 files`, Playwright `108 passed`, `0 failed`, `0 flaky`, no retry marker, independent technical audit approved and user visual confirmation approved at `1440px`, `768px` and `320px`.
 
@@ -27,7 +28,11 @@ M4-04B is **APPROVED AND CLOSED**. M4-04A is **CLOSED THROUGH M4-04B**. M4-04 is
 
 M4-05-ICN-B closure evidence: commit `3737da32b4e420f18cdb7b71a54424875dcf3820`, workflow run `31145480483`, job `92763895227`, workflow conclusion `success`, Vitest `921 passed in 49 files`, shell icon asset suite `41 passed`, Playwright `108 passed`, `0 failed`, `0 flaky`, build success, independent asset audit approved and user visual confirmation of the complete six-icon contact sheet received. The full job log was independently inspected.
 
-M4-05-ICN-B is **APPROVED AND CLOSED**. M4-05-ICN-A is **CLOSED THROUGH M4-05-ICN-B**. M4-05-ICN is **APPROVED AND CLOSED**. That closed the icon asset prerequisite and unblocked runtime M4-05, which is implemented below and awaits its own audit, CI and user visual confirmation.
+M4-05-ICN-B is **APPROVED AND CLOSED**. M4-05-ICN-A is **CLOSED THROUGH M4-05-ICN-B**. M4-05-ICN is **APPROVED AND CLOSED**. That closed the icon asset prerequisite and unblocked runtime M4-05.
+
+M4-05A closure evidence: commit `e8d92f915797a00326b4115b280328546d66c176`, workflow run `31148635608`, job `92773433563`, workflow conclusion `success`, Vitest `979 passed in 51 files`, shell icon asset suite `44 passed`, Playwright `144 passed`, `0 failed`, `0 flaky`, no retries, Playwright duration `50.2s`, build and build validation success. The full job log was independently inspected, the independent diff audit approved it, and the user confirmed the visual result at `1440px` expanded, `1024px` wide boundary, `768px` medium and `320px` compact — including the one-row expanded and wide Header, the two-row medium Header, the three-row compact Header, visible action labels at 64rem and above, icon-first actions below 64rem, Search before actions, and no overlap, clipping or horizontal overflow.
+
+M4-05A is **APPROVED AND CLOSED**. M4-05 is **APPROVED AND CLOSED THROUGH M4-05A**. That unblocked M4-06, which is implemented below and awaits its own audit, CI and user visual/manual form confirmation.
 
 ## M4-01 — Shell destination safety and composition boundary
 
@@ -1779,3 +1784,158 @@ None. The tracked diff is exactly the expected four files.
 ### Next gate
 
 Green GitHub Actions CI on the exact M4-05A SHA with zero failed and zero flaky Playwright tests, then independent diff audit, then user visual confirmation at expanded, wide, medium and compact widths. **M4-06 must not begin until all three close.**
+
+## M4-06 — Newsletter pre-footer and deterministic local subscription lifecycle
+
+**Status at commit time: IMPLEMENTED — AWAITING INDEPENDENT AUDIT, CI AND USER VISUAL/MANUAL FORM CONFIRMATION**
+
+### Baseline
+
+| Item                                 | Value                                              |
+| ------------------------------------ | -------------------------------------------------- |
+| Branch                               | `main`                                             |
+| Baseline SHA                         | `e8d92f915797a00326b4115b280328546d66c176`         |
+| Baseline commit                      | `fix(test): correct header action name assertions` |
+| Parent SHA                           | `0e6948b421540852127e5c299219cc18d3816792`         |
+| `git rev-parse HEAD` / `origin/main` | both matched the baseline before changes           |
+| `git diff` / `git diff --cached`     | exit 0 — clean                                     |
+
+RTE-001 was re-verified at `1920 × 3840`, `5 438 232` bytes, SHA-256 `cb943e0b5b525645ede341c53fb6bff7eca714a69b62c042db23d62feb7bdd64`. It, CMP-001 and the shell icon contact sheet all remain ignored through `.git/info/exclude` and uncommitted. RTE-001 informed placement after route content, the full-width light pre-footer treatment, the copy/form relationship and relative density only; the obsolete dark-gradient Newsletter treatment was not reproduced.
+
+### Canonical content
+
+| Role           | Exact copy                                                                               |
+| -------------- | ---------------------------------------------------------------------------------------- |
+| Heading        | `Будьте в курсе новинок и акций`                                                         |
+| Description    | `Получайте подборки товаров, новые материалы и информацию об акциях GoodCall.`           |
+| Email label    | `Электронная почта`                                                                      |
+| Action         | `Подписаться`                                                                            |
+| Pending action | `Подписываем…`                                                                           |
+| Consent        | `Нажимая «Подписаться», вы соглашаетесь с демонстрационными условиями обработки данных.` |
+| Demo boundary  | `Реальная отправка писем не выполняется.`                                                |
+| Pending status | `Подписываем адрес электронной почты…`                                                   |
+| Success        | `Вы подписаны на новости и акции GoodCall.`                                              |
+| Empty error    | `Введите адрес электронной почты.`                                                       |
+| Format error   | `Введите корректный адрес электронной почты.`                                            |
+
+The canonical consent note is stored verbatim and the demo boundary is appended to it, so the rendered note reads as one visible line and tests can assert both parts independently. Nothing in the copy implies real marketing consent storage, remote registration, campaign delivery or account preference mutation.
+
+### Route visibility policy
+
+Visibility is owned by a typed route-handle policy, never by pathname inspection.
+
+`src/app/routing/route-shell-policy.ts` declares `RouteShellPolicy`, `RouteShellHandle`, the shared `NEWSLETTER_HIDDEN_SHELL_POLICY` override and one resolver, `isNewsletterVisible(matches)`. The resolver walks matched routes deepest-first, returns on the first explicit decision and defaults to visible, so ordinary shell routes inherit visibility and only an explicit override hides the section. The catch-all route module spreads the shared override into its existing `handle`.
+
+| Route                                         | Newsletter |
+| --------------------------------------------- | ---------- |
+| Home, Category, Product, Cart                 | visible    |
+| Comparison, Favorites, Auth, service carriers | visible    |
+| Catch-all / 404                               | **hidden** |
+
+Query strings and hashes never change the outcome, and no repository base literal appears anywhere in the policy.
+
+### Component and state ownership
+
+`src/app/shell/newsletter/` is application-shell owned, not Shared UI. Its barrel exports only `NewsletterSection` and its props type; the copy constants, the schema and the delay constant stay internal.
+
+`RootLayout` mounts `<NewsletterSection visible={isNewsletterVisible(matches)} />` after `<Outlet />` and outside the route-owned `main#main-content`. The component stays mounted when hidden and simply renders `null`, so subscription state survives navigation to and from the catch-all without any pathname key or remount. A hard reload remounts the tree and resets to `not-subscribed`.
+
+No persistence is used — no `localStorage`, `sessionStorage`, `IndexedDB` or cookie — and there is no network request, MSW handler, TanStack Query mutation, Zustand store or account/session dependency. Bounded static searches over the module confirm each exclusion.
+
+### Form, validation and lifecycle
+
+One native `<form>` named by the section heading, with `noValidate` so owner-controlled messages replace browser-localized popups while native `type="email"`, `required`, `autocomplete="email"` and `inputmode="email"` semantics are preserved.
+
+Zod owns the submission boundary. A single `superRefine` trims the value, then reports the empty message or the format message — never both — so exactly one deterministic issue reaches the field. Entered casing is preserved.
+
+| Transition                      | Behaviour                                                                                                               |
+| ------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| invalid submit                  | one associated field error, focus moves to the email field, value preserved, no status, no state change                 |
+| `not-subscribed` → `submitting` | immediate; form `aria-busy="true"`, submit disabled and relabelled `Подписываем…`, one pending status                   |
+| `submitting` → `subscribed`     | after **400ms**; the same status element becomes the canonical success message; no focus move, no navigation, no scroll |
+| edit after success              | result clears, lifecycle returns to `not-subscribed`, new value kept, submit re-enabled                                 |
+| unchanged subscribed value      | submit stays disabled and the handler returns early                                                                     |
+
+Duplicate submission is blocked twice over: the control is disabled, and a `pendingRef` guard rejects re-entry synchronously. The ref matters — a closure-based check cannot stop several `requestSubmit()` calls dispatched in one task, because the state update has not been applied yet. A unit test asserts `vi.getTimerCount()` is exactly `1` after three synchronous submits, which is what makes that guarantee observable rather than assumed.
+
+The 400ms delay is a named implementation-level demo constant, not a network timing contract. `unsubscribed` is not implemented; it stays owned by a future explicit unsubscribe surface.
+
+### Announcement ownership
+
+Newsletter feedback has exactly one owner: a single `InlineStatus` with `role="status"`, rendered only when there is a message. Pending and success reuse the same element, so the live region persists across the transition and the text change is announced once. Initial render has no Newsletter status, and clearing the result after an edit removes the element without announcing a redundant reset. Validation errors stay field-associated and focus-based. The existing route announcement is a separate channel and is asserted never to contain Newsletter copy.
+
+### Responsive composition
+
+Only the approved ranges are used, expressed as CSS ranges; there is no JavaScript viewport detection, no CSS `order`, no new breakpoint, no fixed height and no sticky behaviour.
+
+| Range                    | Composition                                                              |
+| ------------------------ | ------------------------------------------------------------------------ |
+| Compact `< 48rem`        | sequential: heading, description, field, submit, consent note, status    |
+| Medium `48rem–63.999rem` | same sequential order                                                    |
+| Wide `64rem–79.999rem`   | two columns — copy column then form column; field and submit share a row |
+| Expanded `>= 80rem`      | same two columns with increased block spacing                            |
+
+The copy column precedes the form column in DOM at every range. The section is a full-width light brand-soft surface whose inner content aligns to the existing `PageContainer` gutters. Foundations has no brand-soft surface token, so two **locally scoped** custom properties are declared on the section itself — `--gc-newsletter-surface: #f4f0fd` and `--gc-newsletter-border: #e4dcfb`. No global token was added or rewritten, and reusing `--gc-disabled-surface` was rejected because it carries disabled-state semantics.
+
+### Files changed
+
+| File                                                     | Change                                                        |
+| -------------------------------------------------------- | ------------------------------------------------------------- |
+| `src/app/shell/newsletter/newsletter-content.ts`         | new — canonical copy, demo boundary and the delay constant    |
+| `src/app/shell/newsletter/newsletter-schema.ts`          | new — Zod submission boundary and validation result           |
+| `src/app/shell/newsletter/NewsletterSection.tsx`         | new — section, form and deterministic lifecycle               |
+| `src/app/shell/newsletter/NewsletterSection.module.scss` | new — light surface and responsive composition                |
+| `src/app/shell/newsletter/index.ts`                      | new — the narrow public boundary                              |
+| `src/app/routing/route-shell-policy.ts`                  | new — typed route-handle visibility policy and resolver       |
+| `src/routes/error/not-found/route.tsx`                   | catch-all carries the explicit hide override                  |
+| `src/app/shell/RootLayout.tsx`                           | mounts the Newsletter after the outlet                        |
+| `tests/app/shell/newsletter-content.test.ts`             | new — canonical copy and schema contract                      |
+| `tests/app/shell/newsletter-section.test.tsx`            | new — structure, lifecycle, announcement and boundaries       |
+| `tests/app/shell/newsletter-runtime-mount.test.tsx`      | new — real route tree, visibility policy and state continuity |
+| `tests/smoke.test.tsx`                                   | loose `GoodCall` text query rescoped                          |
+| `tests/e2e/newsletter.spec.ts`                           | new — responsive, lifecycle, visibility, zoom, touch, axe     |
+| `docs/05-implementation/m4-canonical-shell-report.md`    | M4-05A closure reconciliation; this section                   |
+| `docs/05-implementation/repository-state.md`             | current-state note                                            |
+
+No Footer implementation. No Header, Information Bar, brand, Shared UI, route inventory, SVG asset, asset manifest, dependency, lockfile, Playwright config or workflow change.
+
+### Local verification
+
+| Command                  | Result                                                                                     |
+| ------------------------ | ------------------------------------------------------------------------------------------ |
+| Focused Newsletter tests | PASS — **78 tests** across three files                                                     |
+| `npm run typecheck`      | PASS                                                                                       |
+| `npm run lint`           | PASS — 0 errors, 0 warnings                                                                |
+| `npm run lint:styles`    | PASS                                                                                       |
+| `npm run format:check`   | PASS                                                                                       |
+| `npm run check:comments` | PASS — no authored comments                                                                |
+| `npm test`               | PASS — **1057 tests in 54 files**                                                          |
+| `npm run build`          | PASS — 257 modules                                                                         |
+| `npm run validate:build` | PASS                                                                                       |
+| `npm run check:full`     | PASS — includes the bounded dev-bootstrap gate                                             |
+| Static boundary searches | PASS — no persistence, network, store, pathname parsing, Footer, dialog or raw `aria-live` |
+| `git diff --check`       | PASS                                                                                       |
+
+Bundle moves from raw 430.50 KB / gzip 128.07 KB to raw **435.44 KB** / gzip **129.54 KB**.
+
+Intentionally not run: `npm run dev`, `npm run preview`, `npm run test:e2e`, `playwright test`, `vite`, `vite preview`, `npm run review:m3-browser`, background or fixed-port servers, and user browser automation. **No local command executes Playwright.** CI was pending at commit time and user visual/manual form confirmation remains pending.
+
+### Deviations
+
+Three, all documented.
+
+1. **React Hook Form is not used, because it is not in the repository.** The stage prompt states that React Hook Form is the approved submission-form baseline and already exists here; `package.json` lists only `zod` among form-related dependencies, and a repository-wide search finds no `react-hook-form` reference. Since adding a dependency is explicitly prohibited, the form uses controlled React state with Zod as the submission-boundary owner — the same pattern the approved `GlobalSearchForm` already uses. Zod still owns all validation, so the substantive contract is met.
+2. **`tests/smoke.test.tsx` is outside the expected file list.** Its `getByText(/GoodCall/i)` matched exactly one node before this stage; the canonical Newsletter description legitimately contains `GoodCall`, so the query became ambiguous. The assertion was rescoped to `getAllByText(...).length > 0` rather than weakened, and the neighbouring `h1` assertion already pins the heading precisely.
+3. **`src/routes/error/not-found/route.tsx` is outside the expected file list.** The prompt's preferred policy requires the catch-all to carry an explicit typed hide override, and that route module is where its `handle` is declared. Statically overriding `handle` in `application-routes.ts` is not viable because the route is `lazy` and React Router resolves lazy-module properties there. The change is one spread of the shared constant.
+
+### Risks
+
+- **The pending state is only observable for 400ms in E2E.** Playwright's auto-retrying assertions poll immediately after the click, so this is normally stable, but an extreme runner stall could let the success state arrive before the first poll. `page.clock` would remove the race entirely; it was rejected here because freezing `requestAnimationFrame` can hang Playwright's own actionability checks, and that cannot be validated locally under the no-local-E2E policy. The pending transition is additionally proven deterministically by fake-timer unit tests.
+- The section adds a named `region` landmark and the form adds a `form` landmark with the same accessible name. Roles differ, so landmark uniqueness holds, but a future Footer landmark in the same area should be named distinctly.
+- The light surface uses locally scoped literals. If a second component needs the same brand-soft surface, that repetition should be promoted to a Foundations token rather than copied.
+- `userEvent` could not be combined with fake timers in this stack — every interaction hung until the 5s test timeout, with and without `delay: null` and a narrowed `toFake` list. The Newsletter unit tests therefore drive interactions with `fireEvent`, which is synchronous and deterministic. Any future form stage should expect the same constraint.
+- User visual and manual form confirmation is outstanding, including the invalid, pending and subscribed states.
+
+### Next gate
+
+Green GitHub Actions CI on the exact M4-06 SHA with zero failed and zero flaky Playwright tests, then independent diff audit, then user visual and manual form confirmation at expanded, wide, medium and compact widths. **M4-07 must not begin until all three close.**

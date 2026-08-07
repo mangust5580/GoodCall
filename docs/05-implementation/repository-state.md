@@ -779,8 +779,34 @@ The fourteen scenarios were expanded 1440px; 1023px; 1024px; 1025px; 1279px; 128
 
 M4-04 remains **approved and closed** through M4-04A and M4-04B. M4-05-ICN remains **approved and closed**, with M4-05-ICN-A closed through M4-05-ICN-B and M4-05-ICN-B approved and closed. The four action icons remain `runtime-integrated` and Catalog and Search remain `approved-not-integrated`; the asset manifest and icon report were not touched by this stage.
 
+## Milestone State Note — M4-06 Newsletter Pre-Footer (2026-08-07)
+
+### M4-05A and M4-05 closure
+
+M4-05A — commit `e8d92f915797a00326b4115b280328546d66c176`, run **31148635608**, job **92773433563** — concluded **success**: Vitest **979 passed in 51 files**, shell icon asset suite **44 passed**, Playwright **144 passed, 0 failed, 0 flaky**, no retries, Playwright duration 50.2s, build and build validation success. The full job log was independently inspected, the independent diff audit approved it, and the user confirmed the visual result at 1440px expanded, 1024px wide boundary, 768px medium and 320px compact.
+
+M4-05A is **APPROVED AND CLOSED**; M4-05 is **APPROVED AND CLOSED THROUGH M4-05A**. That unblocked M4-06.
+
+### M4-06 implementation state
+
+- Baseline SHA `e8d92f915797a00326b4115b280328546d66c176`; the resulting M4-06 commit SHA cannot be embedded inside its own commit and is recorded in the untracked stage handoff.
+- **A Newsletter pre-footer now renders after the route-owned `main#main-content` and before the future Footer position.** It is application-shell owned under `src/app/shell/newsletter/`, whose barrel exports only `NewsletterSection`; it is not Shared UI and is not inside Footer navigation.
+- **`newsletter-content.ts` owns the exact canonical copy** — heading `Будьте в курсе новинок и акций`, the canonical description, the `Электронная почта` label, the `Подписаться` action, the canonical consent note and the success line `Вы подписаны на новости и акции GoodCall.` The visible consent line appends `Реальная отправка писем не выполняется.`, so the demo boundary is stated on screen.
+- **Visibility is owned by a typed route-handle policy.** `src/app/routing/route-shell-policy.ts` resolves the deepest explicit decision and defaults to visible; the catch-all route module carries the shared hide override. The Newsletter is visible on every registered non-catch-all route — Home, Category, Product, Cart, Comparison, Favorites, Auth and the service carriers — and absent on the catch-all. Query and hash never change the outcome, and no pathname parsing or repository-base literal is used.
+- **State is local to the mounted shell section.** Client-side navigation preserves the subscribed state, navigating to the catch-all hides the section without destroying it, returning restores it in the same SPA mount, and a hard reload resets to `not-subscribed`.
+- **No persistence, backend or account ownership.** No `localStorage`, `sessionStorage`, `IndexedDB` or cookie; no network request, MSW handler, TanStack Query mutation or Zustand store; no account prefill or consent ownership; no unsubscribe UI.
+- **Deterministic demo lifecycle** `not-subscribed → submitting → subscribed` with a named **400ms** delay. Invalid submit shows one associated field error and focuses the email field without changing state; duplicate submission is blocked by both the disabled control and a synchronous ref guard; editing after success returns to `not-subscribed` and allows a new lifecycle.
+- **One status owner.** A single `InlineStatus` with `role="status"` carries both the pending and success messages and is absent on initial render. Validation errors remain field-associated. The route announcement channel is untouched.
+- **Two-column copy and form layout at 64rem and above; strict sequential order below it.** Compact keeps a full-width field, a 44px submit target and no horizontal overflow. The light brand-soft surface uses two locally scoped custom properties because Foundations has no brand-soft token; no global token was added.
+- **The Footer is still absent** — no footer markup, no `contentinfo` landmark.
+- No route inventory, Shared UI API, dependency, lockfile, asset, tooling, Playwright config or workflow change. One route module changed within the approved typed route-policy scope.
+- Test suite: **1057 tests across 54 files**, up from 979 in 51, including **78 focused Newsletter tests**. Bundle: raw **435.44 KB** / gzip **129.54 KB**.
+- Local checks pass, including `npm run check:full`. **Local E2E was not run** — the production-preview lifecycle belongs to CI or a user-owned preview.
+- **CI is pending at commit time**, and **user visual and manual form confirmation is pending**, including the invalid, pending and subscribed states.
+- **M4-07 remains blocked** until M4-06 exact-SHA green CI, independent audit and user visual/manual form confirmation all close.
+
 ## Next Repository Modifications
 
 The current implementation milestone is **M4**, whose scope must be taken from the approved architecture and UI/component/responsive contracts.
 
-**M4-06 must not begin** until the M4-05A exact-SHA CI, independent audit and user visual confirmation at expanded, wide, medium and compact widths all close.
+**M4-07 must not begin** until the M4-06 exact-SHA CI, independent audit and user visual/manual form confirmation at expanded, wide, medium and compact widths all close.
