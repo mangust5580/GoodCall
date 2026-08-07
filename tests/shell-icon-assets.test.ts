@@ -102,6 +102,8 @@ const BANNED_ICON_DEPENDENCIES = [
   'react-icons',
 ];
 const SIZE_CEILING_BYTES = 3000;
+const COMPARISON_RELATION_MARKER =
+  'M10.25 12h3.5m0 0-1.45-1.45M13.75 12l-1.45 1.45M10.25 12l1.45-1.45M10.25 12l1.45 1.45';
 
 function productionPath(assetId: string): string {
   return `src/assets/icons/shell/${assetId}.svg`;
@@ -200,6 +202,28 @@ describe('Shell Icon Asset Contract', () => {
   it('keeps the manifest in canonical order', () => {
     expect(manifest.map((entry) => entry.assetId)).toEqual(EXPECTED_ASSETS);
     expect(manifest.map((entry) => entry.productionPath)).toEqual(EXPECTED_PRODUCTION_PATHS);
+  });
+
+  it('keeps the corrected comparison geometry distinct from the Catalog tile grid', () => {
+    const catalogDocument = parseSvg(readSource(productionPath('catalog')));
+    const comparisonDocument = parseSvg(readSource(productionPath('comparison')));
+    const comparisonRects = Array.from(comparisonDocument.querySelectorAll('rect'));
+    const comparisonPath = comparisonDocument.querySelector('path');
+
+    expect(elementCountFor(catalogDocument, 'rect'), 'Catalog tile count').toBe(4);
+    expect(elementCountFor(catalogDocument, 'path'), 'Catalog relation marker path').toBe(0);
+    expect(comparisonRects.length, 'Comparison product/card entities').toBe(2);
+    expect(
+      comparisonRects.map((rect) => rect.getAttribute('width')),
+      'Comparison card widths'
+    ).toEqual(['5.5', '5.5']);
+    expect(comparisonPath?.getAttribute('d'), 'Comparison relation marker').toBe(
+      COMPARISON_RELATION_MARKER
+    );
+    expect(
+      readSource(productionPath('comparison')).includes('M6.9 9h1.2'),
+      'Comparison does not keep the rejected list-column marks'
+    ).toBe(false);
   });
 
   for (const assetId of EXPECTED_ASSETS) {

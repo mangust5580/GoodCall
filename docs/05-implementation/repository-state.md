@@ -692,9 +692,18 @@ All six use `viewBox="0 0 24 24"`, intrinsic `24 × 24`, a shared `1.9` rounded 
 - Manifest: `docs/05-implementation/m4-shell-icon-asset-manifest.json`.
 - Report: `docs/05-implementation/m4-shell-icon-assets-report.md`.
 - Source-level validation: `tests/shell-icon-assets.test.ts`.
-- Local review artifact: `artifacts/m4-05/review/shell-icon-contact-sheet.png`, `1800 × 1100`, `58 676` bytes, SHA-256 `9f582394ce6737763f82bb9482e640f32809f516f990c3af03488c0dc07aecf7`, ignored and uncommitted.
+- Local review artifact: `artifacts/m4-05/review/shell-icon-contact-sheet.png`, `1900 × 1250`, `113 250` bytes, SHA-256 `a4ae3a297150b22974aae9c53624a55edd1173dfd282d4056aa169095ee154ad`, regenerated from the actual SVG file bytes, ignored and uncommitted.
 
 The manifest status remains `approvalStatus: awaiting-independent-asset-audit-and-user-visual-confirmation` and `integrationStatus: produced-not-integrated`.
+
+### M4-05-ICN-A correction state
+
+- M4-05-ICN exact-SHA CI succeeded for commit `cd971f954649c83415056db56386544bf4b2e274`: workflow run `31142675965`, job `92755640110`, Vitest **920 passed in 49 files**, shell icon asset suite **40 passed**, Playwright **108 passed**, **0 failed**, **0 flaky**, build **success**, workflow conclusion **success**.
+- The technical asset contract was approved for the family, and Catalog, Search, Favorites, Cart and Account remain approved and byte-identical to the M4-05-ICN baseline.
+- `comparison.svg` was corrected through **M4-05-ICN-A** because the prior two rounded panels with internal list marks read ambiguously as server racks, columns, devices or lists and was too close to Catalog at 16px and 20px.
+- The corrected Comparison metaphor is two simplified product/card entities plus one central bidirectional horizontal relation marker. Catalog remains a four-tile category grid, so the corrected Comparison asset is structurally and visually distinct in the regenerated contact sheet.
+- `tests/shell-icon-assets.test.ts` now preserves the prior source asset contract and adds a bounded source-level assertion that Comparison has two product/card rectangles and the explicit central relation marker while Catalog remains four tiles with no relation-marker path.
+- CI is pending at commit time for M4-05-ICN-A. User visual confirmation is pending.
 
 ### State at report time
 
@@ -703,10 +712,10 @@ The manifest status remains `approvalStatus: awaiting-independent-asset-audit-an
 - No route, Shared UI, dependency, lockfile, CSS, tooling or workflow change.
 - No brand asset edit.
 - The six icons are produced but not approved and not integrated.
-- Runtime M4-05 remains blocked pending independent asset audit, exact-SHA CI and user visual confirmation of the contact sheet.
+- Runtime M4-05 remains blocked pending independent asset audit, exact-SHA CI and user visual confirmation of the regenerated contact sheet.
 
 ## Next Repository Modifications
 
 The current implementation milestone is **M4**, whose scope must be taken from the approved architecture and UI/component/responsive contracts.
 
-**M4-05 runtime implementation must not begin** until the M4-05-ICN asset diff audit, exact-SHA CI and user visual confirmation of `artifacts/m4-05/review/shell-icon-contact-sheet.png` all close.
+**M4-05 runtime implementation must not begin** until the M4-05-ICN-A asset diff audit, exact-SHA CI and user visual confirmation of `artifacts/m4-05/review/shell-icon-contact-sheet.png` all close.

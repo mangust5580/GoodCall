@@ -6,6 +6,8 @@ IMPLEMENTED — AWAITING INDEPENDENT ASSET AUDIT, CI AND USER VISUAL CONFIRMATIO
 
 The M4-05-ICN stage produced the application-owned shell icon source set required before M4-05 Header route actions. The assets are not approved by this report and are not runtime-integrated.
 
+M4-05-ICN-A corrects the single blocking visual-semantic defect in `comparison.svg`. The corrected icon keeps the approved family contract, preserves the other five SVG assets byte-for-byte, and remains awaiting independent asset audit, exact-SHA CI and user visual confirmation.
+
 ## Baseline
 
 | Item                             | Value                                        |
@@ -43,7 +45,7 @@ The selected family direction is a clean monochrome outline set with rounded lin
 | ---------- | --------------------------------------- | ----: | ------------------------------------------------------------------ |
 | catalog    | `src/assets/icons/shell/catalog.svg`    |   449 | `d300da2ef73302ca9c56abde611bedf53daad2a03a345ef0ce4fa62e72f4edb2` |
 | search     | `src/assets/icons/shell/search.svg`     |   281 | `9d83689fae2d84e027e9d52ef93787529d1f0851f8882ef2c14eeb70921cedd7` |
-| comparison | `src/assets/icons/shell/comparison.svg` |   401 | `65391f1dd77f587554ff7b709249aa41052a9d559bd986b17030f907b1e16c35` |
+| comparison | `src/assets/icons/shell/comparison.svg` |   435 | `b9ce0fae1f130e4d830805212e8d7005fba072d269b2fbff6ae3a3c907c28006` |
 | favorites  | `src/assets/icons/shell/favorites.svg`  |   376 | `1df513b8e9292e0d4ac73d0e9b0c98340bc8e2306f9b1fe41ba924c8154c7493` |
 | cart       | `src/assets/icons/shell/cart.svg`       |   385 | `a2dfe084f4c9e5484c208278ffc4f1cedbe110d622acaacf99691d7d57e7558a` |
 | account    | `src/assets/icons/shell/account.svg`    |   314 | `e79c601fae31f7ff4b0d7fffb056858bf91a5e0a91177346bcf4c5ac1441d093` |
@@ -54,7 +56,7 @@ Catalog uses four rounded tiles to communicate structured category access withou
 
 Search uses the canonical magnifying-glass metaphor with a circular lens and balanced diagonal handle, without embedding an input field.
 
-Comparison uses two side-by-side product panels with matching internal marks so the icon reads as alternatives being compared rather than refresh, sync, analytics or legal scales.
+Comparison uses two simplified product/card entities with one central bidirectional horizontal relation marker, so the icon reads as two alternatives being compared rather than server racks, list columns, refresh, sync, analytics or legal scales.
 
 Favorites uses a neutral outline heart for saved items and deliberately avoids a filled active-state variant.
 
@@ -80,28 +82,37 @@ The SVG files are semantically decorative by themselves. The consuming React lin
 
 Local ignored review artifact: `artifacts/m4-05/review/shell-icon-contact-sheet.png`.
 
-| Item              | Value                                                                                                                                     |
-| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| Dimensions        | `1800 × 1100`                                                                                                                             |
-| Bytes             | `58 676`                                                                                                                                  |
-| SHA-256           | `9f582394ce6737763f82bb9482e640f32809f516f990c3af03488c0dc07aecf7`                                                                        |
-| Generation method | PowerShell `System.Drawing` render of the same 24px geometry at 16, 20, 24 and 32px with light, brand-surface and construction-guide rows |
+| Item              | Value                                                                                                                               |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| Dimensions        | `1900 × 1250`                                                                                                                       |
+| Bytes             | `113 250`                                                                                                                           |
+| SHA-256           | `a4ae3a297150b22974aae9c53624a55edd1173dfd282d4056aa169095ee154ad`                                                                  |
+| Generation method | Bounded foreground headless Playwright rasterization from the actual six production SVG file bytes loaded from disk, with no server |
 
-The contact sheet is review evidence only. It is not a Header mockup and does not include counters, active-route state or approval claims.
+The regenerated contact sheet is review evidence only. It is not a Header mockup and does not include counters, active-route state or approval claims. It includes the required light row, dark/brand row, 16px, 20px, 24px and 32px sizes, construction/safe-area evidence and a dedicated Catalog-vs-Comparison block at 16px, 20px and 24px.
 
 ## Asset Validation
 
 `tests/shell-icon-assets.test.ts` validates the six source SVG files, the absence of unexpected shell SVGs, root geometry, structural SVG constraints, allowed paint, opacity, forbidden markup, manifest order, manifest byte identity, unapproved statuses, consuming-component accessibility ownership, no runtime source imports and no third-party icon dependency.
 
+M4-05-ICN-A adds a bounded source-level differentiation assertion: Catalog remains the four-tile grid with no path marker, while Comparison must contain exactly two product/card rectangles and the explicit central relation marker. This protects the corrected source structure without claiming browser-independent proof of human semantic recognition.
+
+## M4-05-ICN-A Correction
+
+Baseline: `cd971f954649c83415056db56386544bf4b2e274`, the M4-05-ICN commit `feat(assets): add shell icon set`. The previous exact-SHA CI succeeded in workflow run `31142675965`, job `92755640110`: Vitest `920 passed in 49 files`, shell icon asset suite `40 passed`, Playwright `108 passed`, `0 failed`, `0 flaky`, build `success`, workflow conclusion `success`.
+
+Blocking defect: the previous `comparison.svg` used two vertical rounded rectangles and three short horizontal marks inside each rectangle. At 16px and 20px it could read as server racks, columns, devices or lists, and it was too close to the structured panel semantics of `catalog.svg`.
+
+Correction: only `src/assets/icons/shell/comparison.svg` changed among production icons. The final geometry uses two 5.5px-wide product/card rectangles at opposite sides of the 24px viewBox and one central bidirectional horizontal relation marker. Catalog remains four equal rounded tiles; Comparison now has two larger card silhouettes plus the visible relation marker, making the two assets distinguishable at 16px and 20px in the regenerated contact sheet.
+
+Final corrected asset identity: `435` bytes, SHA-256 `b9ce0fae1f130e4d830805212e8d7005fba072d269b2fbff6ae3a3c907c28006`, element counts `svg=1`, `rect=2`, `path=1`, path count `1`, paint values `#000000` and `none`.
+
+The five approved SVGs remain byte-identical to the M4-05-ICN baseline. Runtime M4-05 has not started, no runtime source imports any shell icon, and the assets remain `produced-not-integrated`.
+
 ## Exact Changed Files
 
 ```
-src/assets/icons/shell/catalog.svg
-src/assets/icons/shell/search.svg
 src/assets/icons/shell/comparison.svg
-src/assets/icons/shell/favorites.svg
-src/assets/icons/shell/cart.svg
-src/assets/icons/shell/account.svg
 tests/shell-icon-assets.test.ts
 docs/05-implementation/m4-shell-icon-asset-manifest.json
 docs/05-implementation/m4-shell-icon-assets-report.md
@@ -115,16 +126,16 @@ No runtime Header, Search, Catalog, route, Shared UI, CSS, dependency, lockfile,
 
 | Command                                          | Result                                                                                                        |
 | ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------- |
-| `npx vitest run tests/shell-icon-assets.test.ts` | PASS — **40 tests**                                                                                           |
+| `npx vitest run tests/shell-icon-assets.test.ts` | PASS — **41 tests**                                                                                           |
 | `npm run typecheck`                              | PASS                                                                                                          |
 | `npm run lint`                                   | PASS                                                                                                          |
 | `npm run lint:styles`                            | PASS                                                                                                          |
 | `npm run format:check`                           | PASS                                                                                                          |
 | `npm run check:comments`                         | PASS — no authored comments                                                                                   |
-| `npm test`                                       | PASS — **920 tests in 49 files**                                                                              |
+| `npm test`                                       | PASS — **921 tests in 49 files**                                                                              |
 | `npm run build`                                  | PASS — 244 modules, bundle unchanged at raw **424.75 KB** / gzip **126.90 KB** because icons are not imported |
 | `npm run validate:build`                         | PASS                                                                                                          |
-| `npm run check:full`                             | PASS — includes bounded `verify:dev-bootstrap`, dynamic port `60064`, cleanup and port release verified       |
+| `npm run check:full`                             | PASS — includes bounded `verify:dev-bootstrap`, dynamic port `58457`, cleanup and port release verified       |
 | `git diff --check`                               | PASS — no whitespace errors                                                                                   |
 | deterministic asset inspection                   | PASS — viewBox, byte sizes, SHA-256, element counts, forbidden markup and allowed paint match the manifest    |
 | ignore checks                                    | PASS — `AUDIT.md`, RTE-001, CMP-001 and contact sheet remain ignored                                          |
@@ -133,7 +144,7 @@ Non-blocking warnings observed during Vitest/check:full: the existing Vite nativ
 
 ## CI Status
 
-Pending at commit time. Exact-SHA CI must pass before this stage can be considered an implementation candidate.
+Pending at commit time for M4-05-ICN-A. Exact-SHA CI must pass before this correction can be considered an implementation candidate.
 
 ## Deviations
 
@@ -141,10 +152,10 @@ None from the asset scope. The repository does not contain tracked copies of the
 
 ## Risks
 
-Comparison relies on a two-panel metaphor and should receive explicit independent visual review at 16px and 20px.
+The corrected comparison icon uses an explicit relation marker, but still requires independent visual review at 16px and 20px to confirm the intended comparison reading.
 
 Runtime M4-05 will still need to prove accessible names, visible label behavior, responsive action layout, current-route state, counters and forced-colors behavior without changing these source SVG semantics.
 
 ## Next Gate
 
-Independent asset diff audit and user visual confirmation of `artifacts/m4-05/review/shell-icon-contact-sheet.png`, plus exact-SHA green CI. Runtime M4-05 must not begin before those approvals.
+Independent asset diff audit and user visual confirmation of the regenerated `artifacts/m4-05/review/shell-icon-contact-sheet.png`, plus exact-SHA green CI. Runtime M4-05 must not begin before those approvals.

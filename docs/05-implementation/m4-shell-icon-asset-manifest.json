@@ -89,8 +89,8 @@
     "viewBox": "0 0 24 24",
     "intrinsicWidth": 24,
     "intrinsicHeight": 24,
-    "fileSizeBytes": 401,
-    "sha256": "65391f1dd77f587554ff7b709249aa41052a9d559bd986b17030f907b1e16c35",
+    "fileSizeBytes": 435,
+    "sha256": "b9ce0fae1f130e4d830805212e8d7005fba072d269b2fbff6ae3a3c907c28006",
     "elementCounts": {
       "svg": 1,
       "rect": 2,
@@ -116,8 +116,10 @@
     ],
     "approvalStatus": "awaiting-independent-asset-audit-and-user-visual-confirmation",
     "integrationStatus": "produced-not-integrated",
-    "knownRisks": ["two-panel metaphor needs independent audit for comparison reading at 16px"],
-    "notes": "Side-by-side product panels with matching internal marks communicate comparing alternatives without refresh, sync, chart or legal-scale semantics."
+    "knownRisks": [
+      "corrected comparison metaphor still requires independent visual confirmation at 16px and 20px"
+    ],
+    "notes": "Two simplified product/card entities plus one central bidirectional marker communicate alternatives with a relationship, differentiating comparison from the Catalog four-tile grid without refresh or sync semantics."
   },
   {
     "assetId": "favorites",

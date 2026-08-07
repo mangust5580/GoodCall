@@ -13,13 +13,14 @@
 | M4-04 — Primary Header core: Catalog entry and Global Search                  | **APPROVED AND CLOSED THROUGH M4-04A AND M4-04B**                                   |
 | M4-04A — Compact Header layout correction and E2E geometry stabilization      | **CLOSED THROUGH M4-04B**                                                           |
 | M4-04B — Deterministic keyboard focus origin and CI reconciliation            | **APPROVED AND CLOSED**                                                             |
-| M4-05-ICN — Application-owned shell icon set                                  | **IMPLEMENTED — AWAITING INDEPENDENT ASSET AUDIT, CI AND USER VISUAL CONFIRMATION** |
+| M4-05-ICN — Application-owned shell icon set                                  | **IMPLEMENTED — CI SUCCESS; COMPARISON CORRECTION REQUIRED**                        |
+| M4-05-ICN-A — Comparison icon semantic correction                             | **IMPLEMENTED — AWAITING INDEPENDENT ASSET AUDIT, CI AND USER VISUAL CONFIRMATION** |
 
-M4 is not approved and not closed. The Information Bar and the primary Header core now exist; the shell icon asset prerequisite has been produced for audit, while Header route actions, Footer and Newsletter remain later stages. The transitional brand banner was replaced by the canonical Header in M4-04.
+M4 is not approved and not closed. The Information Bar and the primary Header core now exist; the shell icon asset prerequisite has been produced for audit, with the Comparison icon corrected through M4-05-ICN-A. Header route actions, Footer and Newsletter remain later stages. The transitional brand banner was replaced by the canonical Header in M4-04.
 
 M4-04B closure evidence: commit `d7b02e0169391177b6cd4641d598b8a10bdaf553`, workflow run `31138021965`, job `92741720296`, workflow conclusion `success`, Vitest `880 passed in 48 files`, Playwright `108 passed`, `0 failed`, `0 flaky`, no retry marker, independent technical audit approved and user visual confirmation approved at `1440px`, `768px` and `320px`.
 
-M4-04B is **APPROVED AND CLOSED**. M4-04A is **CLOSED THROUGH M4-04B**. M4-04 is **APPROVED AND CLOSED THROUGH M4-04A AND M4-04B**. M4-05 is unblocked, and the icon asset prerequisite is active; runtime M4-05 Header action implementation has not started.
+M4-04B is **APPROVED AND CLOSED**. M4-04A is **CLOSED THROUGH M4-04B**. M4-04 is **APPROVED AND CLOSED THROUGH M4-04A AND M4-04B**. M4-05 is unblocked, and the icon asset prerequisite remains active pending M4-05-ICN-A CI, independent asset audit and user visual confirmation; runtime M4-05 Header action implementation has not started.
 
 ## M4-01 — Shell destination safety and composition boundary
 
@@ -1324,7 +1325,7 @@ Six application-owned production SVG assets were added:
 | ---------- | --------------------------------------- | ----: | ------------------------------------------------------------------ |
 | Catalog    | `src/assets/icons/shell/catalog.svg`    |   449 | `d300da2ef73302ca9c56abde611bedf53daad2a03a345ef0ce4fa62e72f4edb2` |
 | Search     | `src/assets/icons/shell/search.svg`     |   281 | `9d83689fae2d84e027e9d52ef93787529d1f0851f8882ef2c14eeb70921cedd7` |
-| Comparison | `src/assets/icons/shell/comparison.svg` |   401 | `65391f1dd77f587554ff7b709249aa41052a9d559bd986b17030f907b1e16c35` |
+| Comparison | `src/assets/icons/shell/comparison.svg` |   435 | `b9ce0fae1f130e4d830805212e8d7005fba072d269b2fbff6ae3a3c907c28006` |
 | Favorites  | `src/assets/icons/shell/favorites.svg`  |   376 | `1df513b8e9292e0d4ac73d0e9b0c98340bc8e2306f9b1fe41ba924c8154c7493` |
 | Cart       | `src/assets/icons/shell/cart.svg`       |   385 | `a2dfe084f4c9e5484c208278ffc4f1cedbe110d622acaacf99691d7d57e7558a` |
 | Account    | `src/assets/icons/shell/account.svg`    |   314 | `e79c601fae31f7ff4b0d7fffb056858bf91a5e0a91177346bcf4c5ac1441d093` |
@@ -1339,7 +1340,7 @@ Catalog uses four rounded tiles for structured category access and avoids hambur
 
 Search uses a circular lens and diagonal handle without an input field or button container.
 
-Comparison uses two side-by-side product panels with matching internal marks so the icon reads as alternatives being compared, not refresh, sync, chart or legal scales.
+Comparison uses two simplified product/card entities with one central bidirectional horizontal relation marker so the icon reads as alternatives being compared, not server racks, list columns, refresh, sync, chart or legal scales.
 
 Favorites uses an inactive outline heart and does not introduce a filled active-state variant.
 
@@ -1363,14 +1364,14 @@ The manifest records six entries in canonical order with final byte sizes, SHA-2
 
 Local ignored review artifact: `artifacts/m4-05/review/shell-icon-contact-sheet.png`.
 
-| Item              | Value                                                                                                                                     |
-| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| Dimensions        | `1800 × 1100`                                                                                                                             |
-| Bytes             | `58 676`                                                                                                                                  |
-| SHA-256           | `9f582394ce6737763f82bb9482e640f32809f516f990c3af03488c0dc07aecf7`                                                                        |
-| Generation method | PowerShell `System.Drawing` render of the same 24px geometry at 16, 20, 24 and 32px with light, brand-surface and construction-guide rows |
+| Item              | Value                                                                                                                               |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| Dimensions        | `1900 × 1250`                                                                                                                       |
+| Bytes             | `113 250`                                                                                                                           |
+| SHA-256           | `a4ae3a297150b22974aae9c53624a55edd1173dfd282d4056aa169095ee154ad`                                                                  |
+| Generation method | Bounded foreground headless Playwright rasterization from the actual six production SVG file bytes loaded from disk, with no server |
 
-The contact sheet is not a full Header mockup and contains no counters, active-route state or approval claim.
+The regenerated contact sheet is not a full Header mockup and contains no counters, active-route state or approval claim. It adds the required Catalog-vs-Comparison review block at 16px, 20px and 24px.
 
 ### Files changed
 
@@ -1394,16 +1395,16 @@ No runtime file changed. No Header action markup, React icon component, runtime 
 
 | Command                                          | Result                                                                                                        |
 | ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------- |
-| `npx vitest run tests/shell-icon-assets.test.ts` | PASS — **40 tests**                                                                                           |
+| `npx vitest run tests/shell-icon-assets.test.ts` | PASS — **41 tests**                                                                                           |
 | `npm run typecheck`                              | PASS                                                                                                          |
 | `npm run lint`                                   | PASS                                                                                                          |
 | `npm run lint:styles`                            | PASS                                                                                                          |
 | `npm run format:check`                           | PASS                                                                                                          |
 | `npm run check:comments`                         | PASS — no authored comments                                                                                   |
-| `npm test`                                       | PASS — **920 tests in 49 files**                                                                              |
+| `npm test`                                       | PASS — **921 tests in 49 files**                                                                              |
 | `npm run build`                                  | PASS — 244 modules, bundle unchanged at raw **424.75 KB** / gzip **126.90 KB** because icons are not imported |
 | `npm run validate:build`                         | PASS                                                                                                          |
-| `npm run check:full`                             | PASS — includes bounded `verify:dev-bootstrap`, dynamic port `60064`, cleanup and port release verified       |
+| `npm run check:full`                             | PASS — includes bounded `verify:dev-bootstrap`, dynamic port `58457`, cleanup and port release verified       |
 | `git diff --check`                               | PASS — no whitespace errors                                                                                   |
 | deterministic asset inspection                   | PASS — viewBox, byte sizes, SHA-256, element counts, forbidden markup and allowed paint match the manifest    |
 | ignore checks                                    | PASS — `AUDIT.md`, RTE-001, CMP-001 and contact sheet remain ignored                                          |
@@ -1424,8 +1425,45 @@ The repository does not contain tracked copies of the named canonical `03`, `04C
 
 ### Risks
 
-The comparison icon's two-panel metaphor needs explicit review at 16px and 20px to confirm it reads as product comparison. Runtime M4-05 still needs to prove accessible names, visible labels, responsive action layout, current-route state, counters and forced-colors behavior.
+The corrected comparison icon's two-card-and-relation metaphor still needs explicit review at 16px and 20px to confirm it reads as product comparison. Runtime M4-05 still needs to prove accessible names, visible labels, responsive action layout, current-route state, counters and forced-colors behavior.
 
 ### Next gate
 
-Independent asset diff audit, exact-SHA green CI and user visual confirmation of `artifacts/m4-05/review/shell-icon-contact-sheet.png`. Runtime M4-05 must not begin before both asset approvals and green CI.
+Independent asset diff audit, exact-SHA green CI and user visual confirmation of the regenerated `artifacts/m4-05/review/shell-icon-contact-sheet.png`. Runtime M4-05 must not begin before both asset approvals and green CI.
+
+## M4-05-ICN-A — Comparison icon semantic correction
+
+**Status at commit time: IMPLEMENTED — AWAITING INDEPENDENT ASSET AUDIT, CI AND USER VISUAL CONFIRMATION**
+
+### Baseline
+
+| Item                                 | Value                                      |
+| ------------------------------------ | ------------------------------------------ |
+| Branch                               | `main`                                     |
+| Baseline SHA                         | `cd971f954649c83415056db56386544bf4b2e274` |
+| Baseline commit                      | `feat(assets): add shell icon set`         |
+| Parent SHA                           | `d7b02e0169391177b6cd4641d598b8a10bdaf553` |
+| `git rev-parse HEAD` / `origin/main` | both matched the baseline before changes   |
+| `git diff` / `git diff --cached`     | exit 0 — clean before tracked changes      |
+
+### Prior icon evidence
+
+M4-05-ICN exact-SHA CI succeeded for commit `cd971f954649c83415056db56386544bf4b2e274`: workflow run `31142675965`, job `92755640110`, workflow conclusion `success`, Vitest `920 passed in 49 files`, shell icon asset suite `40 passed`, Playwright `108 passed`, `0 failed`, `0 flaky`, and build `success`.
+
+The technical asset contract was approved for the family. Catalog, Search, Favorites, Cart and Account were approved. The Comparison asset required semantic correction because the prior two-panel-with-list-marks geometry could read as server racks, devices, columns or lists at 16px and 20px and was too close to Catalog's structured grid semantics.
+
+### Correction
+
+Only `src/assets/icons/shell/comparison.svg` changed among production icons. The final icon preserves `viewBox="0 0 24 24"`, intrinsic `24 × 24`, `stroke-width="1.9"`, round caps and joins, transparent background and paint limited to `#000000` and `none`.
+
+The corrected geometry uses two simplified product/card entities and one central bidirectional horizontal relation marker. Catalog remains a four-tile category grid with no relation-marker path, so the two icons are distinguishable at 16px and 20px: Catalog presents four equal grouped tiles, while Comparison presents two larger alternatives with a visible relationship between them.
+
+Final comparison identity: `435` bytes, SHA-256 `b9ce0fae1f130e4d830805212e8d7005fba072d269b2fbff6ae3a3c907c28006`, element counts `svg=1`, `rect=2`, `path=1`, path count `1`.
+
+The manifest updates only the Comparison entry's file identity, risk and rationale fields. `tests/shell-icon-assets.test.ts` preserves the prior source asset checks and adds a bounded structural assertion for the corrected Comparison-vs-Catalog distinction.
+
+### Review and integration state
+
+The ignored contact sheet was regenerated from the actual six production SVG bytes loaded from disk through a bounded foreground headless Playwright rasterization script, with no server. Final artifact: `artifacts/m4-05/review/shell-icon-contact-sheet.png`, `1900 × 1250`, `113 250` bytes, SHA-256 `a4ae3a297150b22974aae9c53624a55edd1173dfd282d4056aa169095ee154ad`.
+
+No runtime file changed. No Header action markup, React icon component, icon barrel, runtime asset map, route, Shared UI, CSS, dependency, lockfile, tooling or workflow change was made. Runtime M4-05 remains blocked, no shell icon is imported at runtime, and user visual confirmation is pending.
