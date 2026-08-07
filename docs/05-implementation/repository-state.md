@@ -1030,8 +1030,40 @@ Confirmed in every state: the expanded five-column structure is usable, Contacts
 - **M4 overall remains not approved and not closed** while later stages exist.
 - The Footer link set remains an **implementation working subset, not a canonical resolution**; FTR-001 leaves the final set open and `footer-navigation.ts` is the single replacement point. Non-blocking.
 
+## Milestone State Note — M4-08 Shell Integration Hardening (2026-08-07)
+
+### M4-07D closure reconciliation
+
+The M4-07D documentation commit `e92712ae5458b3f4863343fd1f3d00290fd5c7ce` ran its own exact-SHA workflow after push: run **31189777593**, job **92903359135**, attempt 1, success — Vitest **1182 / 59 files**, Playwright **216 passed, 0 failed, 0 flaky**, no retries, 1.7m, build 266 modules, build validation success, bundle unchanged at **476.59 KB raw / 143.04 KB gzip** total and **438.29 KB raw / 134.31 KB gzip** main JS. Recorded here because the M4-07D note was written before that run completed.
+
+### Shell runtime state
+
+The assembled shell — Information Bar, Header core, Header route actions, Global Search, Newsletter, Footer, `RootLayout` and the route lifecycle — is **unchanged by M4-08**. No shell component, stylesheet, breakpoint, route registry entry, route vocabulary, dependency, asset, configuration or workflow was modified.
+
+One route component changed. `src/routes/error/not-found/NotFoundPage.tsx` carried two defects that only appear once the catch-all is composed inside the full shell:
+
+- It focused its own `<h1>` from a mount effect, making it a **second route-focus lifecycle owner** alongside `RootLayout`. That broke two contracts already asserted in `tests/routing/lifecycle.test.tsx` — initial render must not focus the heading, and POP must not force heading focus — on the catch-all route only. The effect and its ref were removed; the heading already carries `data-route-focus` and `tabIndex={-1}`, so `RootLayout` remains the single owner and still focuses it on PUSH pathname navigation.
+- Its recovery `<nav>` had **no accessible name**, leaving one bare "navigation" among the seven named shell navigation landmarks present on the catch-all. Axe cannot detect this — `landmark-unique` compares role plus name, and a single unnamed navigation is still unique — so only a cross-system landmark audit surfaced it. The landmark is now named.
+
+### Hardening evidence added
+
+`tests/e2e/shell-hardening.spec.ts` is new and owns the cross-system matrix; it reuses the existing `withDocumentStartFocus` helper and established conventions rather than introducing a parallel test framework. It proves, across the assembled shell: source-order composition of all five regions with no overlap and no horizontal scroll at 320, 375, 767, 768, 769, 1023, 1024, 1025, 1279, 1280, 1281, 1440 and 1920; that the Information Bar switches to inline at 1024 while the Footer leaves disclosure mode at 768, both correct in the same pass; the full landmark and live-region inventory on a normal route and on the catch-all; one continuous compact keyboard traversal from the skip link to the Footer contacts; PUSH versus POP heading focus on the built app; that a direct catch-all load leaves focus at the document start; four base-safe journeys out of a nested route through the Information Bar, a Header action, a Footer legal link and the Global Search; catch-all Newsletter hiding with the persisted subscription intact and restored on return; whole-shell composition at 200% and 400% zoom; and that no shell region is `fixed` or `sticky` at low height.
+
+Existing stage-local evidence was **reused, not duplicated**. No axe scan was added — the representative matrix across expanded, compact, both disclosure-open states, Newsletter invalid and subscribed, current-route, catch-all and legal carriers is already complete. No coarse-pointer, forced-colors or reduced-motion scan was duplicated.
+
+### Test and delivery state
+
+- Unit totals move from **1182 to 1184 across an unchanged 59 files** — two RTL regressions in `tests/routing/routing.integration.test.tsx` for the production correction, and nothing else.
+- Playwright gains the hardening scenarios; the exact new total is recorded from the exact-SHA run.
+- **Firefox and WebKit did not run.** `playwright.config.ts` defines a single Chromium project and was not modified; no browser package or project was added. Mobile Safari did not run. Coarse pointer is Playwright touch emulation, not a physical device.
+- **No screen-reader execution is claimed.** Automated tests prove semantics only; a manual checklist is prepared for the user gate.
+- Bundle: total **476.55 KB raw / 143.01 KB gzip**, main JS unchanged at the reported precision (**438.29 KB raw / 134.31 KB gzip**). The small reduction is the removed effect, ref and import in the catch-all route chunk.
+- Local checks pass, including `npm run check:full`. **Local E2E was not run** — the Playwright suite remains CI-owned.
+- **CI is pending at commit time**, and **user manual/browser review is pending**.
+- **M4-09 remains blocked** until M4-08 exact-SHA green CI, independent audit and the user manual/browser matrix all close.
+
 ## Next Repository Modifications
 
 The current implementation milestone is **M4**, whose scope must be taken from the approved architecture and UI/component/responsive contracts.
 
-**M4-08 is UNBLOCKED and NOT STARTED.** The M4-07 chain closed on exact-SHA green CI, independent audit and full user visual confirmation across expanded, wide, medium, compact closed, compact open and the 404 Footer. No M4-08 scope, implementation, tests or documentation has been created.
+**M4-09 must not begin** until M4-08 is independently audited, its exact-SHA CI is green with zero failed, zero flaky and no retries, and the required user manual/browser matrix is accepted or its limitations are explicitly reviewed. M4 overall remains open. No M4-09 scope, implementation, tests or documentation has been created.

@@ -2,31 +2,36 @@
 
 ## Status
 
-| Task                                                                          | Status                                            |
-| ----------------------------------------------------------------------------- | ------------------------------------------------- |
-| M4-01 — Shell destination safety and composition boundary                     | **CLOSED THROUGH M4-01A**                         |
-| M4-01A — Catalog family catch-all correction and CI reconciliation            | **APPROVED AND CLOSED**                           |
-| M4-02 — Runtime brand/logo integration                                        | **CLOSED THROUGH M4-02A**                         |
-| M4-02A — Brand landmark accessibility correction and E2E stabilization        | **APPROVED AND CLOSED**                           |
-| M4-03 — Information Bar                                                       | **CLOSED THROUGH M4-03A**                         |
-| M4-03A — Information Bar E2E correction and exact active-state reconciliation | **APPROVED AND CLOSED**                           |
-| M4-04 — Primary Header core: Catalog entry and Global Search                  | **APPROVED AND CLOSED THROUGH M4-04A AND M4-04B** |
-| M4-04A — Compact Header layout correction and E2E geometry stabilization      | **CLOSED THROUGH M4-04B**                         |
-| M4-04B — Deterministic keyboard focus origin and CI reconciliation            | **APPROVED AND CLOSED**                           |
-| M4-05-ICN — Application-owned shell icon set                                  | **APPROVED AND CLOSED**                           |
-| M4-05-ICN-A — Comparison icon semantic correction                             | **CLOSED THROUGH M4-05-ICN-B**                    |
-| M4-05-ICN-B — Comparison marker legibility correction                         | **APPROVED AND CLOSED**                           |
-| M4-05 — Header route actions: Comparison, Favorites, Cart and Account         | **APPROVED AND CLOSED THROUGH M4-05A**            |
-| M4-05A — Header action E2E accessible-name assertion correction               | **APPROVED AND CLOSED**                           |
-| M4-06 — Newsletter pre-footer and deterministic local subscription lifecycle  | **APPROVED AND CLOSED THROUGH M4-06A AND M4-06B** |
-| M4-06A — Newsletter form and session-persistence architecture reconciliation  | **APPROVED AND CLOSED THROUGH M4-06B**            |
-| M4-06B — Newsletter pending-test act cleanup and evidence reconciliation      | **APPROVED AND CLOSED**                           |
-| M4-07 — Canonical Footer                                                      | **APPROVED AND CLOSED THROUGH M4-07A/B/C**        |
-| M4-07A — Footer E2E failure evidence recovery and correction                  | **APPROVED AND CLOSED**                           |
-| M4-07B — Footer responsive grid visual correction                             | **APPROVED AND CLOSED**                           |
-| M4-07C — Footer Brand vertical alignment correction                           | **APPROVED AND CLOSED**                           |
+| Task                                                                          | Status                                                                                    |
+| ----------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| M4-01 — Shell destination safety and composition boundary                     | **CLOSED THROUGH M4-01A**                                                                 |
+| M4-01A — Catalog family catch-all correction and CI reconciliation            | **APPROVED AND CLOSED**                                                                   |
+| M4-02 — Runtime brand/logo integration                                        | **CLOSED THROUGH M4-02A**                                                                 |
+| M4-02A — Brand landmark accessibility correction and E2E stabilization        | **APPROVED AND CLOSED**                                                                   |
+| M4-03 — Information Bar                                                       | **CLOSED THROUGH M4-03A**                                                                 |
+| M4-03A — Information Bar E2E correction and exact active-state reconciliation | **APPROVED AND CLOSED**                                                                   |
+| M4-04 — Primary Header core: Catalog entry and Global Search                  | **APPROVED AND CLOSED THROUGH M4-04A AND M4-04B**                                         |
+| M4-04A — Compact Header layout correction and E2E geometry stabilization      | **CLOSED THROUGH M4-04B**                                                                 |
+| M4-04B — Deterministic keyboard focus origin and CI reconciliation            | **APPROVED AND CLOSED**                                                                   |
+| M4-05-ICN — Application-owned shell icon set                                  | **APPROVED AND CLOSED**                                                                   |
+| M4-05-ICN-A — Comparison icon semantic correction                             | **CLOSED THROUGH M4-05-ICN-B**                                                            |
+| M4-05-ICN-B — Comparison marker legibility correction                         | **APPROVED AND CLOSED**                                                                   |
+| M4-05 — Header route actions: Comparison, Favorites, Cart and Account         | **APPROVED AND CLOSED THROUGH M4-05A**                                                    |
+| M4-05A — Header action E2E accessible-name assertion correction               | **APPROVED AND CLOSED**                                                                   |
+| M4-06 — Newsletter pre-footer and deterministic local subscription lifecycle  | **APPROVED AND CLOSED THROUGH M4-06A AND M4-06B**                                         |
+| M4-06A — Newsletter form and session-persistence architecture reconciliation  | **APPROVED AND CLOSED THROUGH M4-06B**                                                    |
+| M4-06B — Newsletter pending-test act cleanup and evidence reconciliation      | **APPROVED AND CLOSED**                                                                   |
+| M4-07 — Canonical Footer                                                      | **APPROVED AND CLOSED THROUGH M4-07A/B/C**                                                |
+| M4-07A — Footer E2E failure evidence recovery and correction                  | **APPROVED AND CLOSED**                                                                   |
+| M4-07B — Footer responsive grid visual correction                             | **APPROVED AND CLOSED**                                                                   |
+| M4-07C — Footer Brand vertical alignment correction                           | **APPROVED AND CLOSED**                                                                   |
+| M4-08 — Responsive, accessibility and route-integration hardening             | **IMPLEMENTED — AWAITING INDEPENDENT AUDIT, EXACT-SHA CI AND USER MANUAL/BROWSER REVIEW** |
 
-M4 is not approved and not closed. The Information Bar, the primary Header core, the Header route actions, the Newsletter pre-footer and the canonical Footer now exist. The transitional brand banner was replaced by the canonical Header in M4-04. **M4-08 is unblocked and not started.**
+M4 is not approved and not closed. The Information Bar, the primary Header core, the Header route actions, the Newsletter pre-footer and the canonical Footer now exist. The transitional brand banner was replaced by the canonical Header in M4-04. **M4-09 is blocked until M4-08 closes.**
+
+### M4-07D docs-only closure reconciliation
+
+The M4-07D documentation-closure commit `e92712ae5458b3f4863343fd1f3d00290fd5c7ce` — `docs(shell): close canonical footer milestone` — ran its own exact-SHA workflow after push, which the M4-07D section could not record because it was written before the run completed. Reconciled here: run **31189777593**, job **92903359135**, attempt 1, conclusion success; Vitest **1182 passed / 59 files**; Playwright **216 passed, 0 failed, 0 flaky**, no retries, duration 1.7m; build **266 modules** success; build validation success. Bundle unchanged at total **476.59 KB raw / 143.04 KB gzip**, main JS **438.29 KB raw / 134.31 KB gzip** — as expected for a documentation-only commit.
 
 ### M4-07 closure evidence
 
@@ -3105,4 +3110,161 @@ Accurate history: M4-07A was a test-only E2E correction that reached technical a
 
 ### Next gate
 
-**M4-08 is UNBLOCKED and NOT STARTED.** M4 overall remains not approved and not closed while later stages exist.
+M4-08 has since begun. M4 overall remains not approved and not closed while later stages exist.
+
+## M4-08 — Responsive, accessibility and route-integration hardening
+
+**Status at commit time: IMPLEMENTED — AWAITING INDEPENDENT AUDIT, EXACT-SHA CI AND USER MANUAL/BROWSER REVIEW**
+
+Cross-shell hardening stage. Not a feature stage and not a redesign: the assembled shell — Information Bar, Header core, Header route actions, Global Search, Newsletter, Footer, `RootLayout`, route lifecycle and the GitHub Pages base — is treated as one system, and integration gaps are closed without extending approved scope.
+
+### Baseline
+
+| Item                                 | Value                                           |
+| ------------------------------------ | ----------------------------------------------- |
+| Branch                               | `main`                                          |
+| Baseline SHA                         | `e92712ae5458b3f4863343fd1f3d00290fd5c7ce`      |
+| Baseline commit                      | `docs(shell): close canonical footer milestone` |
+| Parent                               | `4f5758f7f2432b33ffcc046c71d432687c91d943`      |
+| `git rev-parse HEAD` / `origin/main` | both matched the baseline before changes        |
+
+### Coverage-gap audit
+
+The stage began with a coverage audit of every shell-relevant spec — `bootstrap`, `route-carriers`, `information-bar`, `brand-home-link`, `site-header`, `header-actions`, `newsletter`, `footer` — before any production edit.
+
+The stage-local evidence is strong and was **reused, not duplicated**: each region already proves its own boundary geometry at 767/768/769, 1023/1024/1025 and 1279/1280/1281, its own 200% and 400% zoom behaviour, its own coarse-pointer, forced-colors and reduced-motion contracts, and its own axe matrix. The representative axe matrix required for the assembled shell — expanded, compact, compact with the Information Bar disclosure open, compact with a Footer disclosure open, Newsletter invalid, Newsletter subscribed, a current-route state, the catch-all and legal carriers — is already covered by those specs, so **no axe scan was added**.
+
+What no existing spec could prove is anything that spans regions, because every spec is scoped to one region:
+
+| Contract area                     | Existing evidence                       | Missing cross-system evidence                        | Production defect | Action           |
+| --------------------------------- | --------------------------------------- | ---------------------------------------------------- | ----------------- | ---------------- |
+| responsive ranges                 | per-region, per-spec                    | all five regions composed together in one pass       | no                | added sweep      |
+| 48/64/80rem boundaries            | per-region                              | regions entering their ranges coherently together    | no                | added sweep      |
+| 320 / 375 / 1920                  | 320 per-region; 1920 Footer only        | 375 unused; 1920 never whole-shell                   | no                | added sweep      |
+| landmark uniqueness               | one `main`/`h1`; per-region counts      | all landmarks and live regions on one route and 404  | **yes**           | fixed + added    |
+| keyboard order                    | three region-local paths                | one continuous skip→Footer traversal                 | no                | added traversal  |
+| POP focus                         | RTL contract on a synthetic page        | real POP/forward on the built app                    | **yes**           | fixed + added    |
+| Pages base / direct navigation    | direct loads, hard refresh, carriers    | leaving a **nested** route through each shell region | no                | added journeys   |
+| Newsletter across the catch-all   | visibility and same-route continuity    | 404 round trip preserving stored state               | no                | added scenario   |
+| zoom, low height                  | per-region                              | whole-shell composition at 200%, 400%, low height    | no                | added scenarios  |
+| axe matrix                        | representative and complete             | none                                                 | no                | reused unchanged |
+| pointer, no-hover, reduced motion | per-region and complete                 | none                                                 | no                | reused unchanged |
+| Home technical verification       | viewport, target and lifecycle coverage | none beyond landmark ownership                       | no                | reused unchanged |
+
+### Production defects found
+
+Two, both in `src/routes/error/not-found/NotFoundPage.tsx`, and both only observable once the route is composed inside the assembled shell.
+
+**Defect 1 — a second route-focus lifecycle owner.**
+
+- _Observed defect:_ `NotFoundPage` focused its own `<h1>` from a mount `useEffect`, unconditionally.
+- _Evidence:_ `tests/routing/lifecycle.test.tsx` establishes two `RootLayout` contracts — _"initial render does not focus heading"_ and _"POP navigation does not force heading focus"_. The catch-all bypassed both: a direct 404 load moved focus to the heading, and every back/forward return to a catch-all remounted the page and re-forced heading focus. No test asserted the route-local focus, so it was not a protected behaviour.
+- _Owning contract:_ route focus lifecycle is owned by `RootLayout`, which already focuses `h1[data-route-focus]` on PUSH pathname navigation. The catch-all heading already carries `data-route-focus` and `tabIndex={-1}`.
+- _Why this file owns the fix:_ the duplicate owner is the route component itself; `RootLayout` is correct and unchanged.
+- _Why a narrower change was insufficient:_ nothing narrower than removing the competing effect can restore single ownership — guarding it would keep two owners.
+
+**Defect 2 — an unnamed navigation landmark.**
+
+- _Observed defect:_ the catch-all rendered `<nav>` with no accessible name.
+- _Evidence:_ on the catch-all the shell contributes seven named navigation landmarks — Сервисная навигация, Основная навигация, Пользовательская навигация, the three Footer group navigations and Правовая информация. The route's recovery `<nav>` was the eighth and the only unnamed one, so landmark navigation exposed a bare "navigation" among eight. Axe does not flag it: `landmark-unique` compares role plus name, and a single unnamed navigation is still unique — which is exactly why only a cross-system landmark audit could find it.
+- _Owning contract:_ shell navigation landmarks carry distinct programmatic names where several exist.
+- _Why this file owns the fix:_ the unnamed landmark is authored in this component.
+- _Why a narrower change was insufficient:_ an accessible name is the minimum correction; there is nothing smaller.
+
+### Production corrections
+
+```diff
+-import React, { useEffect } from 'react';
++import React from 'react';
+ import { useLocation, Link } from 'react-router-dom';
+
++export const NOT_FOUND_NAV_LABEL = 'Page not found navigation';
++
+ export function NotFoundPage(): React.ReactElement {
+   const location = useLocation();
+-  const headingRef = React.useRef<HTMLHeadingElement>(null);
+-
+-  useEffect(() => {
+-    if (headingRef.current) {
+-      headingRef.current.focus();
+-    }
+-  }, []);
+-      <h1 ref={headingRef} tabIndex={-1} data-route-focus>
++      <h1 tabIndex={-1} data-route-focus>
+-      <nav>
++      <nav aria-label={NOT_FOUND_NAV_LABEL}>
+```
+
+Nothing else in `src/` changed. No SCSS, no breakpoint, no shell component, no route registry entry, no route vocabulary, no `RootLayout`, no dependency, no asset, no configuration and no workflow.
+
+### Hardening matrix added
+
+`tests/e2e/shell-hardening.spec.ts` is new, because no existing spec owns "the whole shell as one system" and hosting a cross-region matrix inside a region-scoped spec would misplace ownership. It reuses the existing `withDocumentStartFocus` support helper and the established locator, diagnostics and geometry conventions.
+
+| Scenario                                               | Proves                                                                                                                                                                                                                                                 |
+| ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| source-order composition across 13 viewports           | Information Bar → Header → route `main` → Newsletter → Footer never overlap, at 320, 375, 767, 768, 769, 1023, 1024, 1025, 1279, 1280, 1281, 1440 and 1920, with no page-level horizontal scroll                                                       |
+| range coherence in the same pass                       | the Information Bar switches to inline at 1024 while the Footer leaves disclosure mode at 768 — two different approved breakpoints, both correct simultaneously                                                                                        |
+| landmark inventory on a normal route and the catch-all | one banner, one contentinfo, one `main#main-content`, one `h1`, one route announcement, one live region; Newsletter present or absent by policy; Newsletter and Footer outside `main`; every navigation landmark named and all names distinct          |
+| compact cross-shell keyboard traversal                 | one continuous real-Tab path: skip link → Information Bar disclosure → brand → Catalog → Search field → Search submit → four actions → route content → Newsletter email → Newsletter submit → Footer brand → three Footer disclosures → Contacts phone |
+| PUSH versus POP focus on the built app                 | pathname navigation focuses the new heading; back and forward do not                                                                                                                                                                                   |
+| catch-all focus and recovery landmark                  | a direct catch-all load leaves focus at the document start so the first Tab still reaches the skip link, and the recovery navigation is named                                                                                                          |
+| four base-safe journeys out of a nested route          | leaving `/catalog/laptops` through the Information Bar, a Header action, a Footer legal link and the Global Search each resolves under `/GoodCall/` with no duplicated base segment                                                                    |
+| catch-all Newsletter state                             | the catch-all hides the Newsletter, keeps the Footer, leaves the persisted subscription byte-identical, and returning through the Footer brand restores the subscribed state                                                                           |
+| 200% and 400% zoom, whole shell                        | all five regions stay composed and operable, disclosures still open, no horizontal scroll                                                                                                                                                              |
+| low height                                             | no shell region is `fixed` or `sticky`; Newsletter and Footer contact content remain scrollable into view                                                                                                                                              |
+
+Diagnostics — page errors, console errors and failed requests — are collected across the responsive sweep and every base-safe journey. No new allowed diagnostic was introduced and nothing is filtered.
+
+### Unit and RTL
+
+Two RTL regressions were added to `tests/routing/routing.integration.test.tsx`, the file that already owns catch-all rendering: one asserting the named recovery landmark and the absence of any unnamed navigation landmark, one asserting the catch-all leaves heading focus to the shell lifecycle owner. Unit totals move from **1182 to 1184 across an unchanged 59 files** — the two new deterministic invariants created by the production correction, and nothing else. No unit test was added for CSS viewport behaviour.
+
+### Browser-engine and assistive-technology scope
+
+`playwright.config.ts` defines a **single Chromium project** and was not modified. Firefox and WebKit are therefore **not part of current repository conventions and did not run**; no browser package, project or dependency was added to make the wording fit. Mobile Safari did not run. Coarse-pointer behaviour is exercised through Playwright's touch-emulating context, which is emulation and not a physical device.
+
+Automated tests prove semantics; they are **not a screen reader**. No screen-reader execution is claimed. The manual checklist below is prepared for the user gate.
+
+### Files changed
+
+| File                                                  | Kind       | Why                                                         |
+| ----------------------------------------------------- | ---------- | ----------------------------------------------------------- |
+| `src/routes/error/not-found/NotFoundPage.tsx`         | production | duplicate focus lifecycle owner removed; recovery nav named |
+| `tests/e2e/shell-hardening.spec.ts`                   | test (new) | cross-system hardening matrix                               |
+| `tests/routing/routing.integration.test.tsx`          | test       | two regressions for the production correction               |
+| `docs/05-implementation/m4-canonical-shell-report.md` | docs       | M4-07D CI reconciliation; this section                      |
+| `docs/05-implementation/repository-state.md`          | docs       | current-state note                                          |
+
+### Local verification
+
+| Command / check                             | Result                                   |
+| ------------------------------------------- | ---------------------------------------- |
+| `npm test`                                  | PASS — **1184 tests in 59 files**        |
+| `npm run typecheck`                         | PASS                                     |
+| `npm run lint`                              | PASS                                     |
+| `npm run lint:styles`                       | PASS                                     |
+| `npm run format:check`                      | PASS                                     |
+| `npm run check:comments`                    | PASS                                     |
+| `npm run build`                             | PASS — 266 modules                       |
+| `npm run validate:build`                    | PASS                                     |
+| `npm run check:full`                        | PASS                                     |
+| Static: dependency or lockfile change       | none                                     |
+| Static: new breakpoint                      | none — no SCSS changed                   |
+| Static: authored `/GoodCall/` in `src/`     | none                                     |
+| Static: new viewport JavaScript             | none — the correction removes JavaScript |
+| Static: skip, fixme, `.only`, `force: true` | none                                     |
+| Static: retry or timeout increase           | none — `playwright.config.ts` untouched  |
+| `git diff --check`                          | clean                                    |
+
+Bundle moves from total **476.59 KB raw / 143.04 KB gzip** to **476.55 KB / 143.01 KB**; main JS is unchanged at the reported precision (**438.29 KB raw / 134.31 KB gzip**). The small reduction is the removed effect, ref and import in the catch-all route chunk.
+
+Intentionally not run locally, per `AGENTS.md`: `npm run dev`, `npm run preview`, `npm run test:e2e`, direct Playwright and any persistent server. CI owns E2E, so the new hardening matrix is proved by the exact-SHA run.
+
+### Manual browser review matrix to prepare
+
+Viewports: 320, 375, the 767/768 boundary, the 1023/1024 boundary, the 1279/1280 boundary, 1920, and a low-height desktop. States: Information Bar compact disclosure, Header compact action and Search composition, Newsletter invalid, Newsletter subscribed, Footer compact disclosure, and the catch-all. Modes: keyboard-only, 200% zoom, 400% reflow, and — where the reviewer's environment allows — coarse pointer, forced colors and reduced motion. Manual accessibility: skip link, route heading focus after pathname navigation, back and forward behaviour, Search keyboard submit, Newsletter invalid focus, the programmatic names and announcements around Header, Search and Newsletter, and Footer disclosure focus. **Only modes the reviewer physically tests may be claimed.**
+
+### Next gate
+
+Green exact-SHA CI with zero failed, zero flaky and no retries, including every new hardening scenario and all previously passing scenarios; then independent diff and log audit; then user manual and browser review against the matrix above. **M4-09 must not begin until all three close.**

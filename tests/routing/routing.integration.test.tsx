@@ -7,7 +7,7 @@ import { HomePage } from '@/routes/home/HomePage';
 import { CategoryListingPage } from '@/routes/catalog/category-listing/CategoryListingPage';
 import { ProductDetailsPage } from '@/routes/catalog/product-details/ProductDetailsPage';
 import { CartPage } from '@/routes/commerce/cart/CartPage';
-import { NotFoundPage } from '@/routes/error/not-found/NotFoundPage';
+import { NotFoundPage, NOT_FOUND_NAV_LABEL } from '@/routes/error/not-found/NotFoundPage';
 
 describe('Routing Integration', () => {
   describe('Home route', () => {
@@ -119,6 +119,63 @@ describe('Routing Integration', () => {
         expect(mains).toHaveLength(1);
         expect(headings).toHaveLength(1);
       });
+    });
+
+    it('names its recovery navigation landmark', async () => {
+      const router = createMemoryRouter(
+        [
+          {
+            element: <RootLayout />,
+            errorElement: <RootErrorBoundary />,
+            children: [
+              { index: true, element: <HomePage /> },
+              { path: '*', element: <NotFoundPage /> },
+            ],
+          },
+        ],
+        { initialEntries: ['/unknown-path'] }
+      );
+
+      render(<RouterProvider router={router} />);
+
+      await waitFor(() => {
+        expect(screen.getByRole('heading', { name: /Page not found/i })).toBeInTheDocument();
+      });
+
+      const recovery = screen.getByRole('navigation', { name: NOT_FOUND_NAV_LABEL });
+      expect(recovery).toBeInTheDocument();
+      expect(recovery).toContainElement(screen.getByRole('link', { name: 'Back to Home' }));
+
+      const unnamed = screen
+        .getAllByRole('navigation')
+        .filter((landmark) => (landmark.getAttribute('aria-label') ?? '').trim().length === 0)
+        .filter((landmark) => landmark.getAttribute('aria-labelledby') === null);
+      expect(unnamed).toHaveLength(0);
+    });
+
+    it('leaves route heading focus to the shell lifecycle owner', async () => {
+      const router = createMemoryRouter(
+        [
+          {
+            element: <RootLayout />,
+            errorElement: <RootErrorBoundary />,
+            children: [
+              { index: true, element: <HomePage /> },
+              { path: '*', element: <NotFoundPage /> },
+            ],
+          },
+        ],
+        { initialEntries: ['/unknown-path'] }
+      );
+
+      render(<RouterProvider router={router} />);
+
+      await waitFor(() => {
+        expect(screen.getByRole('heading', { name: /Page not found/i })).toBeInTheDocument();
+      });
+
+      const heading = screen.getByRole('heading', { level: 1, name: /Page not found/i });
+      expect(document.activeElement).not.toBe(heading);
     });
   });
 
