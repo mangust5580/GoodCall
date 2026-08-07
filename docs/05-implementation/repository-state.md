@@ -624,8 +624,37 @@ M4-04 was not accepted on that SHA and user visual confirmation was not performe
 - **CI is pending at commit time**, and **user visual confirmation against RTE-001 and CMP-001 is pending**.
 - **M4-05 remains blocked** until M4-04A exact-SHA green CI, independent audit and user visual confirmation all close.
 
+## Milestone State Note — M4-04B Deterministic Keyboard Focus Origin (2026-08-07)
+
+### M4-04A exact-SHA CI — green workflow, not acceptable
+
+CI for the M4-04A commit `c82f54adb4438a3068ff5093570d99e50cdd6f90` — run **31136136192**, job **92735794125** — concluded **success** at workflow level, with every step green including `E2E tests`. The run was nonetheless **not acceptable**: Vitest passed **880 in 48 files**, but Playwright reported **108 total, 107 passed, 0 failed after retries, 1 flaky**, in a suite lasting roughly 41.0s. No failure artifact was uploaded, because the uploader is gated on `if: failure()` and the E2E step exited successfully.
+
+The workflow was green only because Playwright's retry recovered the failing test. Playwright exits 0 when a test fails and then passes on retry, so a green workflow does not establish a zero flaky count, and the stage gate requires zero.
+
+**Flaky scenario:** `tests/e2e/site-header.spec.ts` → `M4-04 primary Header core` → `compact keyboard order reaches Header controls after the Information Bar`. On its first attempt, after the sentinel was installed and the first `Tab` was pressed, the expected skip link `a[href="#main-content"]` was not focused; the retry passed.
+
+**Root cause:** the M4-04A sentinel used `tabIndex = -1`, which makes an element programmatically focusable but keeps it **outside sequential Tab order**. Becoming `document.activeElement` — the property the helper actually asserted — is weaker than being a valid sequential-navigation origin, so the following `Tab` was not guaranteed to advance to the next element in document order.
+
+The compact runtime correction and the geometry evidence were unaffected. M4-04A is **not accepted** and M4-04 is **not closed through it**.
+
+### M4-04B corrective implementation state
+
+- Baseline SHA `c82f54adb4438a3068ff5093570d99e50cdd6f90`; the resulting M4-04B commit SHA cannot be embedded inside its own commit and is recorded in the untracked stage handoff.
+- **The sentinel now uses `tabIndex = 0`**, so it genuinely participates in sequential focus order and `Tab` deterministically advances to the next tabbable element in document order. It is inserted immediately before `#root`, verified through `nextElementSibling`.
+- The sentinel is visually non-disruptive and layout-neutral — `position: fixed`, 1px × 1px, `opacity: 0`, `pointer-events: none`, no text — focused with `preventScroll: true`, with the scroll position asserted unchanged.
+- Focus stability is verified before the traversal: `toBeFocused()`, then a bounded rendering turn of two nested `requestAnimationFrame` callbacks, then `toBeFocused()` again. No `waitForTimeout` and no arbitrary sleep.
+- Cleanup removes any previous sentinel before installing a new one, runs in `finally`, tolerates a closed page, and asserts removal only when the traversal succeeded, so cleanup can never mask a traversal failure.
+- **The helper remains test-only and centralized.** All five document-start traversals — the Header compact and wide keyboard tests, the Information Bar compact keyboard and forced-colors tests, and the brand shell traversal — share it, keep their approved sequences and keep pressing real `Tab` keys. No assertion was weakened and no traversal became a DOM-order-only check.
+- **Runtime Header, Information Bar, brand and focus lifecycle are unchanged.** No runtime file changed at all; no spec file needed changing either, because the helper's public API is unchanged.
+- No route, Shared UI, Foundations, asset, dependency, lockfile, tooling, Playwright config or workflow change. No timeout or retry change.
+- Test suite unchanged: **880 Vitest tests across 48 files**, 108 Playwright scenarios. Bundle unchanged at raw **424.75 KB** / gzip **126.90 KB** — the change ships nothing.
+- Local checks pass, including `npm run check:full`. **Local E2E was not run** — the production-preview lifecycle belongs to CI or a user-owned preview.
+- **CI is pending at commit time**, and **user visual confirmation against RTE-001 and CMP-001 is pending**.
+- **M4-05 remains blocked** until M4-04B exact-SHA CI reports 108 passed / 0 failed / 0 flaky, the independent audit approves, and the user confirms the visual result.
+
 ## Next Repository Modifications
 
 The current implementation milestone is **M4**, whose scope must be taken from the approved architecture and UI/component/responsive contracts.
 
-**M4-05 must not begin** until the M4-04A exact-SHA CI, independent audit and user visual confirmation all close.
+**M4-05 must not begin** until the M4-04B exact-SHA CI, independent audit and user visual confirmation all close.

@@ -10,9 +10,13 @@
 | M4-02A — Brand landmark accessibility correction and E2E stabilization        | **APPROVED AND CLOSED**                                                       |
 | M4-03 — Information Bar                                                       | **CLOSED THROUGH M4-03A**                                                     |
 | M4-03A — Information Bar E2E correction and exact active-state reconciliation | **APPROVED AND CLOSED**                                                       |
-| M4-04 — Primary Header core: Catalog entry and Global Search                  | **IMPLEMENTED — AWAITING INDEPENDENT AUDIT, CI AND USER VISUAL CONFIRMATION** |
+| M4-04 — Primary Header core: Catalog entry and Global Search                  | **IMPLEMENTED — AWAITING M4-04B CLOSURE AND USER VISUAL CONFIRMATION**        |
+| M4-04A — Compact Header layout correction and E2E geometry stabilization      | **NOT ACCEPTED — EXACT-SHA CI CONTAINED 1 FLAKY TEST; CORRECTED BY M4-04B**   |
+| M4-04B — Deterministic keyboard focus origin and CI reconciliation            | **IMPLEMENTED — AWAITING INDEPENDENT AUDIT, CI AND USER VISUAL CONFIRMATION** |
 
 M4 is not approved and not closed. The Information Bar and the primary Header core now exist; Header route actions, the shell icon set, Footer and Newsletter all remain later stages. The transitional brand banner was replaced by the canonical Header in M4-04.
+
+**M4-04 is not closed through M4-04A.** M4-04A's compact runtime correction and geometry evidence are technically valid, but its exact-SHA run contained one flaky Playwright test, which does not satisfy the stage gate. M4-04B corrects that single defect.
 
 ## M4-01 — Shell destination safety and composition boundary
 
@@ -867,7 +871,7 @@ Closed. CI passed for `54d9eb95…` with zero failed and zero flaky tests, the i
 
 **Status at commit time: IMPLEMENTED — AWAITING INDEPENDENT AUDIT, CI AND USER VISUAL CONFIRMATION**
 
-**Terminal status: NOT ACCEPTED — exact-SHA CI failed. Corrected by M4-04A.**
+**Terminal status: NOT ACCEPTED — exact-SHA CI failed. Corrective chain: M4-04A, then M4-04B.**
 
 ### Baseline
 
@@ -1044,11 +1048,13 @@ M4-04 was **not accepted** on that SHA, user visual confirmation was **not perfo
 
 ### Next gate
 
-M4-04 is closed through **M4-04A** below. Green GitHub Actions CI on the exact M4-04A SHA with zero failed and zero flaky Playwright tests, then independent diff audit, then user visual confirmation against RTE-001 and CMP-001. **M4-05 must not begin until all three close.**
+M4-04 is **not** closed. Its corrective chain runs M4-04A → **M4-04B**, and the stage closes only on green GitHub Actions CI for the exact M4-04B SHA with zero failed and zero flaky Playwright tests, then independent diff audit, then user visual confirmation against RTE-001 and CMP-001. **M4-05 must not begin until all three close.**
 
 ## M4-04A — Compact Header layout correction and E2E geometry stabilization
 
 **Status at commit time: IMPLEMENTED — AWAITING INDEPENDENT AUDIT, CI AND USER VISUAL CONFIRMATION**
+
+**Terminal status: NOT ACCEPTED — the exact-SHA workflow was green, but the Playwright run contained one flaky test. Corrected by M4-04B.**
 
 ### Baseline
 
@@ -1155,6 +1161,130 @@ Two, both bounded.
 - User visual confirmation against RTE-001 and CMP-001 is still outstanding, and the compact lockup is now visibly smaller than it was in the raster.
 - The wide Header still ends after Search. The composition will shift when M4-05 appends four actions, and the `search.x >= catalogRight` assertion will need revisiting then.
 
+### Exact-SHA CI result
+
+The workflow concluded **success**, but the run was **not acceptable**: Playwright recorded one flaky test, and the stage gate requires zero.
+
+| Item                | Value                                                                                |
+| ------------------- | ------------------------------------------------------------------------------------ |
+| Commit              | `c82f54adb4438a3068ff5093570d99e50cdd6f90`                                           |
+| Workflow run        | 31136136192                                                                          |
+| Job                 | 92735794125                                                                          |
+| Workflow conclusion | success                                                                              |
+| Vitest              | 880 passed in 48 files                                                               |
+| Playwright          | **108 total, 107 passed, 0 failed after retries, 1 flaky**                           |
+| Suite duration      | approximately 41.0s                                                                  |
+| Failure artifact    | none — the uploader is gated on `if: failure()` and the E2E step exited successfully |
+
+Every step concluded success, including `E2E tests`. The workflow was green only because Playwright's retry recovered the failing test; a green workflow does not by itself prove a zero flaky count, because Playwright exits 0 when a test fails and then passes on retry.
+
+**Flaky scenario:** `tests/e2e/site-header.spec.ts` → `M4-04 primary Header core` → `compact keyboard order reaches Header controls after the Information Bar`. On its first attempt, after the focus sentinel was installed and the first `Tab` was pressed, the expected skip link `a[href="#main-content"]` was not focused — the assertion received an inactive element. The retry passed.
+
+**Root cause.** The M4-04A sentinel was created with `tabIndex = -1`. That makes an element programmatically focusable but keeps it **out of sequential keyboard navigation**, so the next `Tab` was not guaranteed to advance from the sentinel to the next element in document order; Chromium was free to resolve a different sequential-navigation starting point. The helper proved the sentinel became `document.activeElement`, which is a weaker property than being a valid Tab origin.
+
+The compact runtime correction and the geometry evidence were unaffected and remain valid. The runtime focus order was, and is, correct.
+
+M4-04A was **not accepted**, user visual confirmation was **not performed**, and M4-05 **remained blocked**.
+
 ### Next gate
 
-Green GitHub Actions CI on the exact M4-04A SHA with zero failed and zero flaky Playwright tests, then independent diff audit, then user visual confirmation against RTE-001 and CMP-001. **M4-05 must not begin until all three close.**
+M4-04A is superseded by **M4-04B** below. **M4-05 must not begin until M4-04B closes.**
+
+## M4-04B — Deterministic keyboard focus origin and CI reconciliation
+
+**Status at commit time: IMPLEMENTED — AWAITING INDEPENDENT AUDIT, CI AND USER VISUAL CONFIRMATION**
+
+### Baseline
+
+| Item                                 | Value                                          |
+| ------------------------------------ | ---------------------------------------------- |
+| Branch                               | `main`                                         |
+| Baseline SHA                         | `c82f54adb4438a3068ff5093570d99e50cdd6f90`     |
+| Baseline commit                      | `fix(shell): stabilize header layout evidence` |
+| Parent SHA                           | `9cc65787d6cd41b513931fdebbb682c1eb16f9e3`     |
+| `git rev-parse HEAD` / `origin/main` | both matched the baseline before changes       |
+| `git diff` / `git diff --cached`     | exit 0 — clean                                 |
+
+RTE-001 and CMP-001 were re-verified against their recorded dimensions, byte counts and SHA-256 hashes; all six values match, and both remain ignored through `.git/info/exclude` and uncommitted.
+
+### Corrective scope
+
+One defect: the test-only focus sentinel was not a valid sequential-focus anchor. The correction is confined to the shared E2E helper. **No runtime file changed**, and every accepted M4-04A contract is preserved — compact 120px logo restored to 180px at 48rem, the non-wrapping compact identity row, Brand and Catalog on the first compact row, Search on the full-width second row, the complete Search-form geometry assertions, the visible Search label, Catalog and Search behaviour, the application focus lifecycle and the shell keyboard order.
+
+### Sequential focus-anchor contract
+
+`tests/e2e/support/focus-origin.ts` keeps its path and its public function `withDocumentStartFocus(page, traversal)`. The sentinel now:
+
+- is a neutral `div` inserted **immediately before** the application root `#root`, verified through `nextElementSibling`;
+- uses **`tabIndex = 0`**, so it genuinely participates in sequential focus order and `Tab` deterministically advances to the next tabbable element in document order;
+- is visually non-disruptive and layout-neutral — `position: fixed`, 1px × 1px, `opacity: 0`, `pointer-events: none`, no text content;
+- is focused with `focus({ preventScroll: true })`, and the helper asserts the scroll position is unchanged;
+- is asserted mounted, immediately preceding `#root`, `tabIndex` `0`, and focused.
+
+`tabIndex = -1`, `document.body.focus()`, `display: none`, `visibility: hidden`, the `hidden` attribute, `inert`, `aria-hidden` on a focusable sentinel, disabled controls, production components and runtime test hooks are all excluded.
+
+### Focus-stability verification
+
+Before the traversal callback runs, the helper asserts focus with Playwright's auto-waiting `toBeFocused()`, lets the browser complete a bounded rendering turn — two nested `requestAnimationFrame` callbacks awaited through `page.evaluate` — and then asserts `toBeFocused()` again. No `waitForTimeout`, no arbitrary sleep, no timeout or retry change.
+
+### Cleanup
+
+Any previous sentinel is removed before a new one is installed. Removal runs in `finally`, returns early when the page is closed, removes the exact element by id and verifies it is gone. The post-cleanup assertion is applied only when the traversal itself succeeded, so a cleanup assertion can never mask the original traversal failure. No test-only focusable element survives, and focus is never handed to a production control.
+
+### Affected traversals
+
+All five document-start traversals share the single helper and keep their approved sequences and real `Tab` presses:
+
+| File                                | Test                                                                       |
+| ----------------------------------- | -------------------------------------------------------------------------- |
+| `tests/e2e/site-header.spec.ts`     | `compact keyboard order reaches Header controls after the Information Bar` |
+| `tests/e2e/site-header.spec.ts`     | `wide keyboard order passes the inline service links first`                |
+| `tests/e2e/information-bar.spec.ts` | `compact keyboard order reaches the disclosure before the brand link`      |
+| `tests/e2e/information-bar.spec.ts` | `forced colors keeps focus and current state perceivable`                  |
+| `tests/e2e/brand-home-link.spec.ts` | `skip link remains first and the brand link follows the shell controls`    |
+
+Compact order remains sentinel → skip link → Information Bar disclosure → brand → Catalog → Search field → Search submit. Wide order remains sentinel → skip link → five service links → brand → Catalog → Search field → Search submit. No assertion was weakened and no traversal was converted to a DOM-order-only check.
+
+### Files changed
+
+| File                                                  | Change                                                  |
+| ----------------------------------------------------- | ------------------------------------------------------- |
+| `tests/e2e/support/focus-origin.ts`                   | sequential-focus anchor, stability check, safer cleanup |
+| `docs/05-implementation/m4-canonical-shell-report.md` | status table, M4-04A CI reconciliation; this section    |
+| `docs/05-implementation/repository-state.md`          | current-state note                                      |
+
+No runtime file changed. No spec file changed — the helper's public API is unchanged, so no import or call site needed updating. No route, Shared UI, Foundations, asset, dependency, lockfile, Playwright config or workflow change.
+
+### Local verification
+
+| Command                  | Result                                         |
+| ------------------------ | ---------------------------------------------- |
+| `npm run typecheck`      | PASS                                           |
+| `npm run lint`           | PASS — 0 errors, 0 warnings                    |
+| `npm run lint:styles`    | PASS                                           |
+| `npm run format:check`   | PASS                                           |
+| `npm run check:comments` | PASS — no authored comments                    |
+| `npm test`               | PASS — **880 tests in 48 files**, unchanged    |
+| `npm run build`          | PASS — 244 modules                             |
+| `npm run validate:build` | PASS                                           |
+| `npm run check:full`     | PASS — includes the bounded dev-bootstrap gate |
+| `git diff --check`       | PASS                                           |
+
+Bundle unchanged at raw **424.75 KB** / gzip **126.90 KB** — the change is test-only and ships nothing.
+
+Intentionally not run: `npm run dev`, `npm run preview`, `npm run test:e2e`, `playwright test`, `vite`, `vite preview`, `npm run review:m3-browser`, background or fixed-port servers, and user browser automation. CI was pending at commit time and user visual confirmation remains pending.
+
+### Deviations
+
+None. The tracked diff is exactly the expected minimal set: the shared helper and the two documentation files.
+
+### Risks
+
+- The correction cannot be proven locally. `AGENTS.md` forbids running the Playwright suite locally, so the fix rests on the sequential-focus contract — a `tabIndex = 0` element is a valid Tab origin, whereas a `tabIndex = -1` element is focusable but outside sequential navigation — and on exact-SHA CI as the only admissible evidence.
+- The bounded rendering turn relies on `requestAnimationFrame` firing. Playwright pages are foregrounded, so this holds in CI; a page that never paints would stall until the unchanged test timeout rather than fail fast.
+- The sentinel joins the Tab order while mounted. It sits before `#root` and is removed after each traversal, so it cannot affect the asserted sequences, but any future test that tabs backwards would reach it.
+- User visual confirmation against RTE-001 and CMP-001 is still outstanding for the whole M4-04 chain.
+
+### Next gate
+
+Green GitHub Actions CI on the exact M4-04B SHA with **108 passed, 0 failed and 0 flaky** Playwright tests and 880 Vitest tests in 48 files, then independent diff audit, then user visual confirmation against RTE-001 and CMP-001. **M4-05 must not begin until all three close.**
