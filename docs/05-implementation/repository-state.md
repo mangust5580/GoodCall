@@ -793,8 +793,8 @@ M4-05A is **APPROVED AND CLOSED**; M4-05 is **APPROVED AND CLOSED THROUGH M4-05A
 - **A Newsletter pre-footer now renders after the route-owned `main#main-content` and before the future Footer position.** It is application-shell owned under `src/app/shell/newsletter/`, whose barrel exports only `NewsletterSection`; it is not Shared UI and is not inside Footer navigation.
 - **`newsletter-content.ts` owns the exact canonical copy** — heading `Будьте в курсе новинок и акций`, the canonical description, the `Электронная почта` label, the `Подписаться` action, the canonical consent note and the success line `Вы подписаны на новости и акции GoodCall.` The visible consent line appends `Реальная отправка писем не выполняется.`, so the demo boundary is stated on screen.
 - **Visibility is owned by a typed route-handle policy.** `src/app/routing/route-shell-policy.ts` resolves the deepest explicit decision and defaults to visible; the catch-all route module carries the shared hide override. The Newsletter is visible on every registered non-catch-all route — Home, Category, Product, Cart, Comparison, Favorites, Auth and the service carriers — and absent on the catch-all. Query and hash never change the outcome, and no pathname parsing or repository-base literal is used.
-- **State is local to the mounted shell section.** Client-side navigation preserves the subscribed state, navigating to the catch-all hides the section without destroying it, returning restores it in the same SPA mount, and a hard reload resets to `not-subscribed`.
-- **No persistence, backend or account ownership.** No `localStorage`, `sessionStorage`, `IndexedDB` or cookie; no network request, MSW handler, TanStack Query mutation or Zustand store; no account prefill or consent ownership; no unsubscribe UI.
+- **State is local to the mounted shell section.** Client-side navigation preserves the subscribed state, navigating to the catch-all hides the section without destroying it, and returning restores it in the same SPA mount. ~~A hard reload resets to `not-subscribed`.~~ **Superseded by M4-06A** — hard reload now restores the subscription from versioned session storage.
+- **No backend or account ownership.** No network request, MSW handler, TanStack Query mutation or Zustand store; no account prefill or consent ownership; no unsubscribe UI. ~~No `sessionStorage`.~~ **Superseded by M4-06A** — versioned `sessionStorage` is required by the approved consent-ownership row; `localStorage`, `IndexedDB` and cookies remain prohibited.
 - **Deterministic demo lifecycle** `not-subscribed → submitting → subscribed` with a named **400ms** delay. Invalid submit shows one associated field error and focuses the email field without changing state; duplicate submission is blocked by both the disabled control and a synchronous ref guard; editing after success returns to `not-subscribed` and allows a new lifecycle.
 - **One status owner.** A single `InlineStatus` with `role="status"` carries both the pending and success messages and is absent on initial render. Validation errors remain field-associated. The route announcement channel is untouched.
 - **Two-column copy and form layout at 64rem and above; strict sequential order below it.** Compact keeps a full-width field, a 44px submit target and no horizontal overflow. The light brand-soft surface uses two locally scoped custom properties because Foundations has no brand-soft token; no global token was added.
@@ -805,8 +805,48 @@ M4-05A is **APPROVED AND CLOSED**; M4-05 is **APPROVED AND CLOSED THROUGH M4-05A
 - **CI is pending at commit time**, and **user visual and manual form confirmation is pending**, including the invalid, pending and subscribed states.
 - **M4-07 remains blocked** until M4-06 exact-SHA green CI, independent audit and user visual/manual form confirmation all close.
 
+## Milestone State Note — M4-06A Newsletter Form and Session-Persistence Reconciliation (2026-08-07)
+
+### M4-06 exact-SHA CI and independent audit
+
+CI for the M4-06 commit `6e82fa863a5e67cecba6802d7ffbc0d82a7d6691` — run **31150969842**, job **92780333313**, run attempt 1 — concluded **success**. The full job log was independently inspected; the earlier claim that Playwright totals and flaky status were unreadable is **withdrawn**.
+
+Exact results: Vitest **1057 passed in 54 files**; focused Newsletter tests **78**; shell icon asset suite **44 passed**; Playwright **177 passed, 0 failed, 0 flaky**, no retries, duration approximately 1.3m; build and build validation success.
+
+**The independent audit returned CHANGES REQUIRED** and user visual/manual form confirmation was not performed. Three architecture-contract violations:
+
+1. the submission form used controlled React state instead of the required React Hook Form baseline (STATE-FORM-001);
+2. Newsletter consent was memory-only and reset on reload instead of using versioned session storage (Newsletter consent ownership row);
+3. after a field error, the change handler erased the error instead of revalidating (STATE-FORM-003).
+
+The visual/layout implementation, route-shell visibility policy, canonical content, single status owner, 400 ms deterministic lifecycle and no-backend boundary were not rejected. The log also carried one Newsletter-owned `act(...)` warning in the pending-lifecycle test.
+
+M4-06 is **not accepted**; it is reconciled by M4-06A.
+
+### M4-06A corrective implementation state
+
+- Baseline SHA `6e82fa863a5e67cecba6802d7ffbc0d82a7d6691`; the resulting M4-06A commit SHA is recorded in the untracked stage handoff.
+- **`react-hook-form` is now a direct runtime dependency** — requested `^7.84.0`, resolved **7.84.0**, added to `dependencies` with exactly one new lockfile entry. `@hookform/resolvers` was **not** added; a one-file application-owned resolver bridges RHF to the existing Zod schema.
+- **The Newsletter form is owned by React Hook Form** with `mode: 'onSubmit'` and `reValidateMode: 'onChange'`. The Shared UI `TextField` is registered directly — no `Controller`, no Shared UI API change. Invalid submit focuses the field through RHF `setFocus`; success calls `reset()` so the normalized address becomes both the visible value and the clean baseline.
+- **Zod remains the single validation truth.** The redundant manual validator was removed; no regex or message is duplicated outside the schema and content modules.
+- **Validation timing now matches STATE-FORM-003** — nothing before the first submit, then revalidation on change and on blur while the field is in error. An invalid changed value updates the message rather than being silently cleared.
+- **Newsletter consent uses versioned session storage** under the key `goodcall.newsletter`, schema `version: 1`, persisting `state: 'subscribed'` and the normalized email only, and only after the successful transition. Pending, validation, touched/dirty, focus and identity metadata are never persisted.
+- **Hard reload within the same tab/session restores the subscribed state and normalized email.** A cleared session starts at the initial state.
+- **Invalid or corrupt persisted payloads reset only the Newsletter owner** — malformed JSON, wrong shape, unsupported version and invalid stored email each remove only `goodcall.newsletter` and fall back to `not-subscribed` without throwing during boot. Unrelated keys are untouched.
+- **Storage failures degrade safely.** Read, write, remove and the `sessionStorage` property access itself are wrapped; the current mount stays fully usable. No new user-facing storage-error copy was invented, because OQ-B-EVD-11 leaves that wording open.
+- **No cross-tab synchronization** — no `storage` listener, `BroadcastChannel`, shared worker, polling or mirroring. No `localStorage`, `IndexedDB` or cookie.
+- **No backend, network, MSW, TanStack Query, Zustand or account ownership**, and no unsubscribe UI.
+- **Restored success is rendered statically; only a new in-session success is announced** through `role="status"`. Pending always announces, and validation errors stay field-associated.
+- Editing a restored or newly subscribed email clears the result and removes the persisted key immediately; a second success overwrites the stored email.
+- **Unchanged:** canonical copy, demo-boundary wording, 400 ms lifecycle, synchronous duplicate-submit guard, one status slot, placement after route `main`, absent Footer, typed route-shell visibility policy and catch-all override, responsive composition and `NewsletterSection.module.scss`.
+- Test suite: **1105 tests across 55 files**, up from 1057 in 54, including **126 focused Newsletter tests** across four files (23 content/schema, 47 section, 30 runtime mount, 26 session storage). Bundle: raw **464.79 KB** / gzip **131.93 KB**.
+- Focused Newsletter test output contains **no `NewsletterSection … not wrapped in act(...)` warning**.
+- Local checks pass, including `npm run check:full`. **Local E2E was not run.**
+- **CI is pending at commit time**, and **user visual/manual form confirmation is pending**, now including the reload-restored subscribed state.
+- **M4-07 remains blocked** until M4-06A exact-SHA green CI, independent audit and user visual/manual form confirmation all close.
+
 ## Next Repository Modifications
 
 The current implementation milestone is **M4**, whose scope must be taken from the approved architecture and UI/component/responsive contracts.
 
-**M4-07 must not begin** until the M4-06 exact-SHA CI, independent audit and user visual/manual form confirmation at expanded, wide, medium and compact widths all close.
+**M4-07 must not begin** until the M4-06A exact-SHA CI, independent audit and user visual/manual form confirmation at expanded, wide, medium and compact widths — including the reload-restored subscribed state — all close.

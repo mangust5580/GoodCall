@@ -110,6 +110,21 @@ async function horizontalOverflow(page: Page): Promise<number> {
   );
 }
 
+const NEWSLETTER_STORAGE_KEY = 'goodcall.newsletter';
+
+async function readNewsletterStorage(page: Page): Promise<unknown> {
+  return page.evaluate((key) => {
+    const raw = window.sessionStorage.getItem(key);
+    return raw === null ? null : (JSON.parse(raw) as unknown);
+  }, NEWSLETTER_STORAGE_KEY);
+}
+
+async function clearNewsletterStorage(page: Page): Promise<void> {
+  await page.evaluate((key) => {
+    window.sessionStorage.removeItem(key);
+  }, NEWSLETTER_STORAGE_KEY);
+}
+
 async function subscribe(page: Page, value: string): Promise<void> {
   await emailField(page).fill(value);
   await submitButton(page).click();
@@ -340,7 +355,8 @@ test.describe('M4-06 Newsletter pre-footer', () => {
     await page.goto('/GoodCall/help');
     await expect(page.locator('h1')).toHaveText('Помощь');
     await expect(newsletter(page)).toHaveCount(1);
-    await expect(newsletterStatus(page)).toHaveCount(0);
+    await expect(newsletterStatus(page)).toHaveText(SUCCESS_STATUS);
+    await expect(emailField(page)).toHaveValue(VALID_EMAIL);
   });
 
   test('client navigation between visible routes preserves the subscribed state', async ({
@@ -372,18 +388,120 @@ test.describe('M4-06 Newsletter pre-footer', () => {
     await expect(page.getByRole('banner')).toHaveCount(1);
   });
 
-  test('a reload resets the subscription state', async ({ page }) => {
+  test('a reload restores the subscription within the same browser session', async ({ page }) => {
+    const dataRequests = collectDataRequests(page);
     await page.setViewportSize({ width: 1280, height: 900 });
     await page.goto('/GoodCall/');
+    await clearNewsletterStorage(page);
+    await page.reload();
 
-    await subscribe(page, VALID_EMAIL);
+    await emailField(page).fill(`   ${VALID_EMAIL}   `);
+    await submitButton(page).click();
+    await expect(newsletterStatus(page)).toHaveText(SUCCESS_STATUS);
+
+    expect(await readNewsletterStorage(page)).toEqual({
+      version: 1,
+      state: 'subscribed',
+      email: VALID_EMAIL,
+    });
 
     await page.reload();
 
     await expect(newsletter(page)).toHaveCount(1);
+    await expect(newsletterStatus(page)).toHaveText(SUCCESS_STATUS);
+    await expect(emailField(page)).toHaveValue(VALID_EMAIL);
+    await expect(submitButton(page)).toBeDisabled();
+    await expect(newsletterStatus(page)).not.toHaveText(PENDING_STATUS);
+    await expect(emailField(page)).not.toBeFocused();
+    expect(dataRequests, 'no data request is issued').toHaveLength(0);
+  });
+
+  test('editing a subscription removes the persisted consent', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await page.goto('/GoodCall/');
+    await clearNewsletterStorage(page);
+    await page.reload();
+
+    await subscribe(page, VALID_EMAIL);
+    expect(await readNewsletterStorage(page)).not.toBeNull();
+
+    await emailField(page).fill(SECOND_EMAIL);
+
+    await expect(newsletterStatus(page)).toHaveCount(0);
+    expect(await readNewsletterStorage(page)).toBeNull();
+
+    await page.reload();
+
     await expect(newsletterStatus(page)).toHaveCount(0);
     await expect(emailField(page)).toHaveValue('');
     await expect(submitButton(page)).toBeEnabled();
+  });
+
+  for (const scenario of [
+    { name: 'malformed JSON', raw: 'not-json{' },
+    {
+      name: 'unsupported version',
+      raw: JSON.stringify({ version: 2, state: 'subscribed', email: VALID_EMAIL }),
+    },
+    {
+      name: 'invalid email',
+      raw: JSON.stringify({ version: 1, state: 'subscribed', email: 'broken' }),
+    },
+  ]) {
+    test(`boots safely with ${scenario.name} persisted`, async ({ page }) => {
+      const problems = collectRuntimeProblems(page);
+      await page.setViewportSize({ width: 1280, height: 900 });
+
+      await page.addInitScript(
+        ([key, raw]) => {
+          window.sessionStorage.setItem(key as string, raw as string);
+          window.sessionStorage.setItem('goodcall.unrelated', 'keep-me');
+        },
+        [NEWSLETTER_STORAGE_KEY, scenario.raw]
+      );
+
+      await page.goto('/GoodCall/');
+
+      await expect(newsletter(page)).toHaveCount(1);
+      await expect(newsletterStatus(page)).toHaveCount(0);
+      await expect(emailField(page)).toHaveValue('');
+      expect(await readNewsletterStorage(page)).toBeNull();
+
+      const unrelated = await page.evaluate(() =>
+        window.sessionStorage.getItem('goodcall.unrelated')
+      );
+      expect(unrelated).toBe('keep-me');
+
+      expect(problems.pageErrors).toHaveLength(0);
+      expect(problems.consoleErrors).toHaveLength(0);
+    });
+  }
+
+  test('post-error revalidation follows the Zod boundary on change and blur', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await page.goto('/GoodCall/');
+    await clearNewsletterStorage(page);
+    await page.reload();
+
+    await emailField(page).fill('broken');
+    await submitButton(page).click();
+    await expect(newsletter(page).getByText(INVALID_ERROR)).toBeVisible();
+
+    await emailField(page).fill('still-broken');
+    await expect(newsletter(page).getByText(INVALID_ERROR)).toBeVisible();
+    await expect(emailField(page)).toHaveAttribute('aria-invalid', 'true');
+
+    await emailField(page).blur();
+    await expect(newsletter(page).getByText(INVALID_ERROR)).toBeVisible();
+
+    await emailField(page).fill(VALID_EMAIL);
+    await expect(newsletter(page).getByText(INVALID_ERROR)).toHaveCount(0);
+    await expect(emailField(page)).not.toHaveAttribute('aria-invalid', 'true');
+
+    await expect(newsletter(page).getByText(EMAIL_LABEL, { exact: true })).toBeVisible();
+
+    await submitButton(page).click();
+    await expect(newsletterStatus(page)).toHaveText(SUCCESS_STATUS);
   });
 
   test('keyboard order reaches the email field before the submit control', async ({ page }) => {

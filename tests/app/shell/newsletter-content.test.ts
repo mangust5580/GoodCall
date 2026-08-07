@@ -19,8 +19,30 @@ import {
 } from '@/app/shell/newsletter/newsletter-content';
 import {
   newsletterFormSchema,
-  validateNewsletterEmail,
+  newsletterResolver,
+  type NewsletterFormValues,
 } from '@/app/shell/newsletter/newsletter-schema';
+
+interface ResolvedNewsletter {
+  ok: boolean;
+  email?: string | undefined;
+  error?: string | undefined;
+}
+
+async function resolveEmail(value: string): Promise<ResolvedNewsletter> {
+  const result = await newsletterResolver({ email: value } as NewsletterFormValues, undefined, {
+    shouldUseNativeValidation: false,
+    fields: {},
+  });
+
+  const message = (result.errors as { email?: { message?: string } }).email?.message;
+
+  if (message === undefined) {
+    return { ok: true, email: (result.values as Partial<NewsletterFormValues>).email };
+  }
+
+  return { ok: false, error: message };
+}
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
 const newsletterDir = path.join(repoRoot, 'src', 'app', 'shell', 'newsletter');
@@ -90,49 +112,49 @@ describe('Newsletter content', () => {
 });
 
 describe('Newsletter schema', () => {
-  it('rejects an empty value with the canonical message', () => {
-    const result = validateNewsletterEmail('');
+  it('rejects an empty value with the canonical message', async () => {
+    const result = await resolveEmail('');
 
     expect(result.ok).toBe(false);
-    expect(result.ok ? undefined : result.error).toBe(NEWSLETTER_EMPTY_ERROR);
+    expect(result.error).toBe(NEWSLETTER_EMPTY_ERROR);
   });
 
-  it('rejects a whitespace-only value as empty', () => {
-    const result = validateNewsletterEmail('   ');
+  it('rejects a whitespace-only value as empty', async () => {
+    const result = await resolveEmail('   ');
 
     expect(result.ok).toBe(false);
-    expect(result.ok ? undefined : result.error).toBe(NEWSLETTER_EMPTY_ERROR);
+    expect(result.error).toBe(NEWSLETTER_EMPTY_ERROR);
   });
 
   it.each(['not-an-email', 'user@', '@example.com', 'user@example', 'user example.com'])(
     'rejects %s with the format message',
-    (value) => {
-      const result = validateNewsletterEmail(value);
+    async (value) => {
+      const result = await resolveEmail(value);
 
       expect(result.ok).toBe(false);
-      expect(result.ok ? undefined : result.error).toBe(NEWSLETTER_INVALID_ERROR);
+      expect(result.error).toBe(NEWSLETTER_INVALID_ERROR);
     }
   );
 
-  it('accepts a valid address', () => {
-    const result = validateNewsletterEmail('reader@goodcall.test');
+  it('accepts a valid address', async () => {
+    const result = await resolveEmail('reader@goodcall.test');
 
     expect(result.ok).toBe(true);
-    expect(result.ok ? result.email : undefined).toBe('reader@goodcall.test');
+    expect(result.email).toBe('reader@goodcall.test');
   });
 
-  it('trims surrounding whitespace', () => {
-    const result = validateNewsletterEmail('   reader@goodcall.test   ');
+  it('trims surrounding whitespace', async () => {
+    const result = await resolveEmail('   reader@goodcall.test   ');
 
     expect(result.ok).toBe(true);
-    expect(result.ok ? result.email : undefined).toBe('reader@goodcall.test');
+    expect(result.email).toBe('reader@goodcall.test');
   });
 
-  it('preserves the entered casing', () => {
-    const result = validateNewsletterEmail('Reader.Name@GoodCall.test');
+  it('preserves the entered casing', async () => {
+    const result = await resolveEmail('Reader.Name@GoodCall.test');
 
     expect(result.ok).toBe(true);
-    expect(result.ok ? result.email : undefined).toBe('Reader.Name@GoodCall.test');
+    expect(result.email).toBe('Reader.Name@GoodCall.test');
   });
 
   it('reports exactly one issue per invalid submission', () => {
@@ -140,5 +162,13 @@ describe('Newsletter schema', () => {
 
     expect(parsed.success).toBe(false);
     expect(parsed.success ? [] : parsed.error.issues).toHaveLength(1);
+  });
+
+  it('sources every resolver message from the Zod schema alone', () => {
+    const source = fs.readFileSync(path.join(newsletterDir, 'newsletter-schema.ts'), 'utf-8');
+    const literalMessages = source.match(/'[^']*[а-яА-Я][^']*'/g) ?? [];
+
+    expect(literalMessages, 'no duplicated validation copy outside the content module').toEqual([]);
+    expect((source.match(/EMAIL_PATTERN/g) ?? []).length, 'one email pattern').toBe(2);
   });
 });

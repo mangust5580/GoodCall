@@ -18,7 +18,8 @@
 | M4-05-ICN-B — Comparison marker legibility correction                         | **APPROVED AND CLOSED**                                                                   |
 | M4-05 — Header route actions: Comparison, Favorites, Cart and Account         | **APPROVED AND CLOSED THROUGH M4-05A**                                                    |
 | M4-05A — Header action E2E accessible-name assertion correction               | **APPROVED AND CLOSED**                                                                   |
-| M4-06 — Newsletter pre-footer and deterministic local subscription lifecycle  | **IMPLEMENTED — AWAITING INDEPENDENT AUDIT, CI AND USER VISUAL/MANUAL FORM CONFIRMATION** |
+| M4-06 — Newsletter pre-footer and deterministic local subscription lifecycle  | **CHANGES REQUIRED — ARCHITECTURE RECONCILIATION IMPLEMENTED IN M4-06A**                  |
+| M4-06A — Newsletter form and session-persistence architecture reconciliation  | **IMPLEMENTED — AWAITING INDEPENDENT AUDIT, CI AND USER VISUAL/MANUAL FORM CONFIRMATION** |
 
 M4 is not approved and not closed. The Information Bar, the primary Header core, the Header route actions and the Newsletter pre-footer now exist. The Footer remains a later stage. The transitional brand banner was replaced by the canonical Header in M4-04.
 
@@ -1838,9 +1839,13 @@ Query strings and hashes never change the outcome, and no repository base litera
 
 `src/app/shell/newsletter/` is application-shell owned, not Shared UI. Its barrel exports only `NewsletterSection` and its props type; the copy constants, the schema and the delay constant stay internal.
 
-`RootLayout` mounts `<NewsletterSection visible={isNewsletterVisible(matches)} />` after `<Outlet />` and outside the route-owned `main#main-content`. The component stays mounted when hidden and simply renders `null`, so subscription state survives navigation to and from the catch-all without any pathname key or remount. A hard reload remounts the tree and resets to `not-subscribed`.
+`RootLayout` mounts `<NewsletterSection visible={isNewsletterVisible(matches)} />` after `<Outlet />` and outside the route-owned `main#main-content`. The component stays mounted when hidden and simply renders `null`, so subscription state survives navigation to and from the catch-all without any pathname key or remount.
 
-No persistence is used — no `localStorage`, `sessionStorage`, `IndexedDB` or cookie — and there is no network request, MSW handler, TanStack Query mutation, Zustand store or account/session dependency. Bounded static searches over the module confirm each exclusion.
+**Superseded by M4-06A:** this section originally reset to `not-subscribed` on hard reload. The approved 04B state-ownership matrix requires versioned session persistence for Newsletter consent, so M4-06A restores the subscribed state within the same browser tab/session.
+
+There is no network request, MSW handler, TanStack Query mutation, Zustand store or account/session dependency. Bounded static searches over the module confirm each exclusion.
+
+**Superseded by M4-06A:** this section originally excluded `sessionStorage` as well. Versioned session storage is **required** by the approved Newsletter consent ownership row and is implemented in M4-06A; `localStorage`, `IndexedDB` and cookies remain prohibited.
 
 ### Form, validation and lifecycle
 
@@ -1924,7 +1929,7 @@ Intentionally not run: `npm run dev`, `npm run preview`, `npm run test:e2e`, `pl
 
 Three, all documented.
 
-1. **React Hook Form is not used, because it is not in the repository.** The stage prompt states that React Hook Form is the approved submission-form baseline and already exists here; `package.json` lists only `zod` among form-related dependencies, and a repository-wide search finds no `react-hook-form` reference. Since adding a dependency is explicitly prohibited, the form uses controlled React state with Zod as the submission-boundary owner — the same pattern the approved `GlobalSearchForm` already uses. Zod still owns all validation, so the substantive contract is met.
+1. **React Hook Form was not used, because it was not installed and the stage forbade adding a dependency.** ~~The form used controlled React state with Zod as the submission-boundary owner.~~ **Rejected by independent audit and corrected in M4-06A:** STATE-FORM-001 makes React Hook Form the required submission-form baseline, including Newsletter. M4-06A installs `react-hook-form` as a direct runtime dependency and migrates the form to it, keeping Zod as the single validation truth through one application-owned resolver.
 2. **`tests/smoke.test.tsx` is outside the expected file list.** Its `getByText(/GoodCall/i)` matched exactly one node before this stage; the canonical Newsletter description legitimately contains `GoodCall`, so the query became ambiguous. The assertion was rescoped to `getAllByText(...).length > 0` rather than weakened, and the neighbouring `h1` assertion already pins the heading precisely.
 3. **`src/routes/error/not-found/route.tsx` is outside the expected file list.** The prompt's preferred policy requires the catch-all to carry an explicit typed hide override, and that route module is where its `handle` is declared. Statically overriding `handle` in `application-routes.ts` is not viable because the route is `lazy` and React Router resolves lazy-module properties there. The change is one spread of the shared constant.
 
@@ -1939,3 +1944,180 @@ Three, all documented.
 ### Next gate
 
 Green GitHub Actions CI on the exact M4-06 SHA with zero failed and zero flaky Playwright tests, then independent diff audit, then user visual and manual form confirmation at expanded, wide, medium and compact widths. **M4-07 must not begin until all three close.**
+
+### M4-06 exact-SHA CI result and independent audit
+
+The workflow concluded **success**, and the full job log was independently inspected. The earlier statement in this report that Playwright totals and flaky status could not be read is **obsolete and withdrawn** — the exact counts are recorded here.
+
+| Item                     | Value                                      |
+| ------------------------ | ------------------------------------------ |
+| Commit                   | `6e82fa863a5e67cecba6802d7ffbc0d82a7d6691` |
+| Workflow run             | 31150969842                                |
+| Job                      | 92780333313                                |
+| Run attempt              | 1                                          |
+| Vitest                   | **1057 passed in 54 files**                |
+| Focused Newsletter tests | **78** across three files                  |
+| Shell icon asset suite   | **44 passed**                              |
+| Playwright               | **177 passed, 0 failed, 0 flaky**          |
+| Retries                  | none                                       |
+| Playwright duration      | approximately 1.3m                         |
+| Build / build validation | success                                    |
+| Workflow conclusion      | success                                    |
+
+**The independent audit result was CHANGES REQUIRED**, and user visual/manual form confirmation was not performed. Three architecture-contract violations were found:
+
+1. the submission form used controlled React state instead of the approved React Hook Form baseline (STATE-FORM-001);
+2. Newsletter consent was memory-only and reset on reload instead of using versioned session storage (Newsletter consent ownership row);
+3. after a field error, `handleChange()` erased the error instead of revalidating the field (STATE-FORM-003).
+
+The visual and layout implementation, the route-shell visibility policy, the canonical content, the single status owner, the 400 ms deterministic demo lifecycle and the no-backend boundary were **not** rejected.
+
+The CI log additionally contained one Newsletter-owned warning — `An update to NewsletterSection inside a test was not wrapped in act(...)` in `valid submission lifecycle > enters pending immediately with one owned status`.
+
+M4-06 is therefore **not accepted**; it is reconciled by M4-06A below.
+
+## M4-06A — Newsletter form and session-persistence architecture reconciliation
+
+**Status at commit time: IMPLEMENTED — AWAITING INDEPENDENT AUDIT, CI AND USER VISUAL/MANUAL FORM CONFIRMATION**
+
+### Baseline
+
+| Item                                 | Value                                      |
+| ------------------------------------ | ------------------------------------------ |
+| Branch                               | `main`                                     |
+| Baseline SHA                         | `6e82fa863a5e67cecba6802d7ffbc0d82a7d6691` |
+| Baseline commit                      | `feat(shell): add newsletter pre-footer`   |
+| Parent SHA                           | `e8d92f915797a00326b4115b280328546d66c176` |
+| `git rev-parse HEAD` / `origin/main` | both matched the baseline before changes   |
+| `git diff` / `git diff --cached`     | exit 0 — clean                             |
+
+### Authority resolution
+
+M4-06 recorded a deviation stating that React Hook Form "is not in the repository" and that adding a dependency was prohibited. The approved 04B contract is authoritative: STATE-FORM-001 requires React Hook Form for submission forms including Newsletter, and the Newsletter consent ownership row requires versioned session persistence. This corrective stage explicitly authorises the dependency change needed to satisfy that contract. Both M4-06 deviations in this area are withdrawn.
+
+### Dependency reconciliation
+
+| Item                   | Value                                            |
+| ---------------------- | ------------------------------------------------ |
+| Package                | `react-hook-form`                                |
+| Placement              | `dependencies` — imported by application runtime |
+| Requested range        | `^7.84.0`                                        |
+| Resolved version       | `7.84.0`                                         |
+| Lockfile entries added | exactly one — `node_modules/react-hook-form`     |
+| `@hookform/resolvers`  | **not added**                                    |
+
+`npm install react-hook-form` also alphabetised both dependency blocks in `package.json`; no existing version specifier changed. No lockfile integrity or resolution metadata was hand-edited. A one-file application-owned resolver backed directly by the existing Zod schema replaces the need for a resolver package.
+
+### React Hook Form ownership
+
+`NewsletterSection` remains the application-shell owner and now uses `useForm<NewsletterFormValues>` with `mode: 'onSubmit'`, `reValidateMode: 'onChange'` and the Zod-backed resolver. The manual `email` and `error` state is gone; RHF owns the form value and `formState.errors`. The existing Shared UI `TextField` is registered directly through `register('email')` — its `name`, `onChange`, `onBlur` and `ref` are forwarded, so no `Controller` and no Shared UI API change were needed.
+
+Invalid submit focuses the field through RHF's own `setFocus('email')`. After the 400 ms success transition, `reset({ email })` makes the normalized address both the visible field value and the new clean baseline, satisfying STATE-FORM-004 instead of leaving the submitted and displayed values out of sync.
+
+### Zod validation and revalidation
+
+`newsletterResolver` is the only bridge between RHF and Zod: it parses `{ email }` through `newsletterFormSchema`, returns the normalized output on success and maps the single Zod issue to the `email` field error on failure. No regex or message is duplicated outside the schema and the content module; a test asserts the schema file contains no literal Cyrillic message and exactly one email pattern reference. The now-redundant `validateNewsletterEmail()` helper was removed rather than left as a second validation path.
+
+| Event                   | Behaviour                                                                                  |
+| ----------------------- | ------------------------------------------------------------------------------------------ |
+| before first submit     | no eager validation — typing and blurring produce no error                                 |
+| first invalid submit    | associated error, focus moves to the field                                                 |
+| change while in error   | revalidates through Zod; another invalid value updates the message rather than clearing it |
+| blur while in error     | revalidates through the same Zod boundary via `trigger('email')`                           |
+| change to a valid value | error clears through validation, without a second submit                                   |
+
+`reValidateMode: 'onChange'` covers the change event; blur is composed narrowly and only fires `trigger` when the field is already in an error state.
+
+### Versioned session persistence
+
+`src/app/shell/newsletter/newsletter-session-storage.ts` owns persistence, inside the Newsletter boundary.
+
+| Item             | Value                                                     |
+| ---------------- | --------------------------------------------------------- |
+| Key              | `goodcall.newsletter`                                     |
+| Version          | `1`                                                       |
+| Persisted fields | `version`, `state: 'subscribed'`, normalized `email`      |
+| Validation       | the same Zod email schema validates the persisted address |
+
+Only durable consent is persisted. `submitting`, validation state, touched/dirty metadata, focus state, announcement state and any account identity are never written. The write happens **only** after the successful transition, never during pending.
+
+Reads recover safely: a missing key yields the initial state; malformed JSON, a wrong shape, an unsupported version or an invalid stored email each remove **only** the Newsletter key and fall back to `not-subscribed`. Boot never throws for a malformed payload, and unrelated `sessionStorage` keys are untouched.
+
+Editing a restored or newly subscribed email clears the result and removes the persisted key immediately, so stored consent can never reference an address different from the currently owned successful value. A second success overwrites the stored email.
+
+### Storage failure and corruption recovery
+
+Every read, write and remove is wrapped, including the `window.sessionStorage` property access itself, which can throw in restrictive privacy modes. A failure degrades silently: the current mount keeps its full in-memory lifecycle and the user can still subscribe. **No new user-facing storage-error copy was invented**, because OQ-B-EVD-11 leaves that wording open; this degraded behaviour is recorded here as implementation evidence for that open question. Unrelated runtime errors are not swallowed.
+
+No `localStorage`, `IndexedDB` or cookie use. No `storage` listener, `BroadcastChannel`, shared worker, polling or mirroring — there is no approved cross-tab baseline for Newsletter consent.
+
+### Reload semantics
+
+Client-side navigation preserves state; the catch-all hides the section without destroying it; returning restores the same mounted state; and a **hard reload within the same browser tab/session now restores the subscribed state and normalized email** from session storage. This replaces the M4-06 reset-on-reload expectation. A new browser session — cleared session storage — starts at the initial state.
+
+### Announcement ownership
+
+The single status owner is preserved, with one refinement. A **new in-session** success sets `role="status"` so it is announced; a **restored** success on page load renders the same canonical text **without** `role`, so hydration does not produce announcement noise for something the user did earlier. Pending always announces. The distinction is exposed as `data-newsletter-announced` and asserted in tests. Validation errors remain field-associated, and the route announcement channel stays separate.
+
+### Preserved visual and route contracts
+
+Unchanged: canonical copy, the visible demo-boundary wording, the 400 ms delay, the single pre-footer instance, placement after route `main`, the absence of a Footer, the typed route-shell visibility policy and its catch-all override, one status slot, no dialog or toast, no network request, no Account ownership or prefill, no unsubscribe UI, no new route, no Header or Information Bar change, and the full responsive composition. `NewsletterSection.module.scss` was **not** modified. Duplicate-submit protection keeps the synchronous `pendingRef` guard, because RHF's async submit state does not close the same-task `requestSubmit()` race.
+
+### Files changed
+
+| File                                                     | Change                                                              |
+| -------------------------------------------------------- | ------------------------------------------------------------------- |
+| `package.json`                                           | `react-hook-form` added; npm alphabetised both blocks               |
+| `package-lock.json`                                      | one resolved entry for `react-hook-form@7.84.0`                     |
+| `src/app/shell/newsletter/newsletter-schema.ts`          | Zod-backed RHF resolver; obsolete helper removed                    |
+| `src/app/shell/newsletter/newsletter-session-storage.ts` | new — versioned session consent owner                               |
+| `src/app/shell/newsletter/NewsletterSection.tsx`         | RHF migration, restoration, persistence, announcement split         |
+| `tests/app/shell/newsletter-content.test.ts`             | resolver-based schema coverage                                      |
+| `tests/app/shell/newsletter-session-storage.test.ts`     | new — key, version, round-trip, corruption, degradation             |
+| `tests/app/shell/newsletter-section.test.tsx`            | RHF, revalidation, persistence, restoration, act-correct            |
+| `tests/app/shell/newsletter-runtime-mount.test.tsx`      | session-restore versus cleared-session contract                     |
+| `tests/e2e/newsletter.spec.ts`                           | reload restore, edit clears consent, corrupt payloads, revalidation |
+| `docs/05-implementation/m4-canonical-shell-report.md`    | M4-06 reconciliation; this section                                  |
+| `docs/05-implementation/repository-state.md`             | current-state note                                                  |
+
+`RootLayout.tsx`, `route-shell-policy.ts`, the catch-all route, `newsletter-content.ts`, `index.ts`, `NewsletterSection.module.scss`, Header, Information Bar, Shared UI, assets, Playwright config and workflows are all unchanged.
+
+### Local verification
+
+| Command                            | Result                                                                                                              |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `npm install react-hook-form`      | PASS — `7.84.0`, one lockfile entry                                                                                 |
+| `npm ls react-hook-form --depth=0` | PASS — `react-hook-form@7.84.0`                                                                                     |
+| Focused Newsletter Vitest files    | PASS — **126 tests** across four files                                                                              |
+| Newsletter act-warning scan        | PASS — no `NewsletterSection … act(...)` warning                                                                    |
+| `npm run typecheck`                | PASS                                                                                                                |
+| `npm run lint`                     | PASS — 0 errors, 0 warnings                                                                                         |
+| `npm run lint:styles`              | PASS                                                                                                                |
+| `npm run format:check`             | PASS                                                                                                                |
+| `npm run check:comments`           | PASS                                                                                                                |
+| `npm test`                         | PASS — **1105 tests in 55 files**                                                                                   |
+| `npm run build`                    | PASS — 259 modules                                                                                                  |
+| `npm run validate:build`           | PASS                                                                                                                |
+| `npm run check:full`               | PASS — includes the bounded dev-bootstrap gate                                                                      |
+| Static architecture searches       | PASS — no localStorage/IndexedDB/cookie/cross-tab/network/store/account, RHF imported, `@hookform/resolvers` absent |
+| `git diff --check`                 | PASS                                                                                                                |
+
+Bundle moves from raw 435.44 KB / gzip 129.54 KB to raw **464.79 KB** / gzip **131.93 KB**; the increase is `react-hook-form`.
+
+Intentionally not run: `npm run dev`, `npm run preview`, `npm run test:e2e`, `playwright test`, `vite`, `vite preview`, `npm run review:m3-browser`, background or fixed-port servers, and user browser automation. CI was pending at commit time and user visual/manual form confirmation remains pending.
+
+### Deviations
+
+One. The canonical `03-*` and `04*` contract documents are **not tracked in this repository** — only `docs/05-implementation/` exists, and this has been true throughout M4. The normative clauses were therefore taken from the corrective stage prompt, which quotes them verbatim, rather than read from a tracked source. This is an evidence limitation, not a conflict: nothing in the repository contradicts the quoted contracts.
+
+### Risks
+
+- Restored success is deliberately not announced. If a future audit decides restoration should announce, the `data-newsletter-announced` split is the single place to change.
+- Session persistence makes reload-dependent tests order-sensitive if a future spec subscribes and then hard-navigates; Playwright's per-test context isolation currently prevents leakage, and the one affected M4-06 test was updated rather than removed.
+- `react-hook-form` adds roughly 29 KB raw to the bundle. It is now the approved baseline for every later form stage, so the cost amortises.
+- The 400 ms pending window remains brief for manual observation and for E2E pending assertions.
+- User visual and manual form confirmation is outstanding, now including the reload-restored subscribed state.
+
+### Next gate
+
+Green GitHub Actions CI on the exact M4-06A SHA with zero failed, zero flaky, no retries and no Newsletter-owned `act(...)` warning, then independent diff audit, then user visual and manual form confirmation. **M4-07 must not begin until all three close.**

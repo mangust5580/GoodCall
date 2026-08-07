@@ -14,6 +14,7 @@ import {
   NEWSLETTER_SUBMIT_PENDING_LABEL,
   NEWSLETTER_SUCCESS_STATUS,
 } from '@/app/shell/newsletter/newsletter-content';
+import { NEWSLETTER_STORAGE_KEY } from '@/app/shell/newsletter/newsletter-session-storage';
 
 const VALID_EMAIL = 'reader@goodcall.test';
 const SECOND_EMAIL = 'second@goodcall.test';
@@ -44,34 +45,66 @@ function newsletterStatuses(): HTMLElement[] {
   return Array.from(document.querySelectorAll<HTMLElement>('[data-newsletter-status]'));
 }
 
-function typeEmail(value: string): void {
-  fireEvent.change(emailField(), { target: { value } });
+function storedConsent(): unknown {
+  const raw = window.sessionStorage.getItem(NEWSLETTER_STORAGE_KEY);
+  return raw === null ? null : JSON.parse(raw);
 }
 
-function submit(): void {
-  fireEvent.click(submitButton());
+function seedConsent(raw: string): void {
+  window.sessionStorage.setItem(NEWSLETTER_STORAGE_KEY, raw);
 }
 
-function completePending(): void {
-  act(() => {
+function seedValidConsent(email: string): void {
+  seedConsent(JSON.stringify({ version: 1, state: 'subscribed', email }));
+}
+
+async function typeEmail(value: string): Promise<void> {
+  await act(async () => {
+    fireEvent.change(emailField(), { target: { value } });
+  });
+}
+
+async function blurEmail(): Promise<void> {
+  await act(async () => {
+    fireEvent.blur(emailField());
+  });
+}
+
+async function submit(): Promise<void> {
+  await act(async () => {
+    fireEvent.click(submitButton());
+  });
+}
+
+async function submitForm(): Promise<void> {
+  await act(async () => {
+    fireEvent.submit(newsletterForm());
+  });
+}
+
+async function completePending(): Promise<void> {
+  await act(async () => {
     vi.advanceTimersByTime(NEWSLETTER_SUBMIT_DELAY_MS);
   });
 }
 
-function subscribe(value: string): void {
-  typeEmail(value);
-  submit();
-  completePending();
+async function subscribe(value: string): Promise<void> {
+  await typeEmail(value);
+  await submit();
+  await completePending();
 }
 
 describe('NewsletterSection', () => {
   beforeEach(() => {
+    window.sessionStorage.clear();
     vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
   });
 
   afterEach(() => {
     vi.runOnlyPendingTimers();
     vi.useRealTimers();
+    window.sessionStorage.clear();
+    vi.restoreAllMocks();
   });
 
   describe('structure and canonical content', () => {
@@ -157,13 +190,23 @@ describe('NewsletterSection', () => {
       expect(submitButton()).toBeEnabled();
       expect(submitButton()).toHaveTextContent(NEWSLETTER_SUBMIT_LABEL);
     });
+
+    it('performs no eager validation before the first submit', async () => {
+      render(<NewsletterSection />);
+
+      await typeEmail('broken');
+      await blurEmail();
+
+      expect(screen.queryByText(NEWSLETTER_INVALID_ERROR)).not.toBeInTheDocument();
+      expect(emailField().getAttribute('aria-invalid')).toBeNull();
+    });
   });
 
   describe('invalid submission', () => {
-    it('reports the empty error, associates it and focuses the field', () => {
+    it('reports the empty error, associates it and focuses the field', async () => {
       render(<NewsletterSection />);
 
-      submit();
+      await submit();
 
       const field = emailField();
       const error = screen.getByText(NEWSLETTER_EMPTY_ERROR);
@@ -174,11 +217,11 @@ describe('NewsletterSection', () => {
       expect(newsletterStatuses()).toHaveLength(0);
     });
 
-    it('reports the format error and preserves the entered value', () => {
+    it('reports the format error and preserves the entered value', async () => {
       render(<NewsletterSection />);
 
-      typeEmail('broken');
-      submit();
+      await typeEmail('broken');
+      await submit();
 
       expect(screen.getByText(NEWSLETTER_INVALID_ERROR)).toBeInTheDocument();
       expect(emailField().value).toBe('broken');
@@ -186,44 +229,85 @@ describe('NewsletterSection', () => {
       expect(newsletterStatuses()).toHaveLength(0);
     });
 
-    it('rejects a whitespace-only value as empty', () => {
+    it('rejects a whitespace-only value as empty', async () => {
       render(<NewsletterSection />);
 
-      typeEmail('   ');
-      submit();
+      await typeEmail('   ');
+      await submit();
 
       expect(screen.getByText(NEWSLETTER_EMPTY_ERROR)).toBeInTheDocument();
     });
 
-    it('does not enter the pending lifecycle', () => {
+    it('does not enter the pending lifecycle', async () => {
       render(<NewsletterSection />);
 
-      submit();
-      completePending();
+      await submit();
+      await completePending();
 
       expect(newsletterForm().getAttribute('aria-busy')).toBeNull();
       expect(newsletterStatuses()).toHaveLength(0);
+      expect(storedConsent()).toBeNull();
     });
+  });
 
-    it('clears the error when the field is edited', () => {
+  describe('post-error revalidation', () => {
+    it('revalidates on change and keeps a deterministic error for another invalid value', async () => {
       render(<NewsletterSection />);
 
-      submit();
+      await submit();
       expect(screen.getByText(NEWSLETTER_EMPTY_ERROR)).toBeInTheDocument();
 
-      typeEmail('r');
+      await typeEmail('broken');
 
       expect(screen.queryByText(NEWSLETTER_EMPTY_ERROR)).not.toBeInTheDocument();
+      expect(screen.getByText(NEWSLETTER_INVALID_ERROR)).toBeInTheDocument();
+      expect(emailField().getAttribute('aria-invalid')).toBe('true');
+    });
+
+    it('clears the error on change once the value becomes valid', async () => {
+      render(<NewsletterSection />);
+
+      await typeEmail('broken');
+      await submit();
+      expect(screen.getByText(NEWSLETTER_INVALID_ERROR)).toBeInTheDocument();
+
+      await typeEmail(VALID_EMAIL);
+
+      expect(screen.queryByText(NEWSLETTER_INVALID_ERROR)).not.toBeInTheDocument();
       expect(emailField().getAttribute('aria-invalid')).toBeNull();
+      expect(submitButton()).toBeEnabled();
+    });
+
+    it('revalidates on blur while the field is in an error state', async () => {
+      render(<NewsletterSection />);
+
+      await submit();
+      expect(screen.getByText(NEWSLETTER_EMPTY_ERROR)).toBeInTheDocument();
+
+      await blurEmail();
+
+      expect(screen.getByText(NEWSLETTER_EMPTY_ERROR)).toBeInTheDocument();
+      expect(emailField().getAttribute('aria-invalid')).toBe('true');
+    });
+
+    it('accepts the revalidated value without requiring a second failed submit', async () => {
+      render(<NewsletterSection />);
+
+      await submit();
+      await typeEmail(VALID_EMAIL);
+      await submit();
+      await completePending();
+
+      expect(newsletterStatuses()[0]).toHaveTextContent(NEWSLETTER_SUCCESS_STATUS);
     });
   });
 
   describe('valid submission lifecycle', () => {
-    it('enters pending immediately with one owned status', () => {
+    it('enters pending immediately with one owned announced status', async () => {
       render(<NewsletterSection />);
 
-      typeEmail(VALID_EMAIL);
-      submit();
+      await typeEmail(VALID_EMAIL);
+      await submit();
 
       expect(newsletterForm().getAttribute('aria-busy')).toBe('true');
       expect(submitButton()).toBeDisabled();
@@ -235,14 +319,23 @@ describe('NewsletterSection', () => {
       expect(statuses[0]).toHaveTextContent(NEWSLETTER_PENDING_STATUS);
     });
 
-    it('resolves to the canonical success message in the same status owner', () => {
+    it('does not persist consent during the pending phase', async () => {
       render(<NewsletterSection />);
 
-      typeEmail(VALID_EMAIL);
-      submit();
+      await typeEmail(VALID_EMAIL);
+      await submit();
+
+      expect(storedConsent()).toBeNull();
+    });
+
+    it('resolves to the canonical success message in the same status owner', async () => {
+      render(<NewsletterSection />);
+
+      await typeEmail(VALID_EMAIL);
+      await submit();
 
       const pendingStatus = newsletterStatuses()[0];
-      completePending();
+      await completePending();
 
       const statuses = newsletterStatuses();
       expect(statuses).toHaveLength(1);
@@ -252,48 +345,64 @@ describe('NewsletterSection', () => {
       expect(newsletterForm().getAttribute('aria-busy')).toBeNull();
     });
 
-    it('trims the submitted value', () => {
+    it('persists the versioned envelope only after success', async () => {
       render(<NewsletterSection />);
 
-      subscribe(`  ${VALID_EMAIL}  `);
+      await subscribe(VALID_EMAIL);
 
-      expect(newsletterStatuses()[0]).toHaveTextContent(NEWSLETTER_SUCCESS_STATUS);
+      expect(storedConsent()).toEqual({
+        version: 1,
+        state: 'subscribed',
+        email: VALID_EMAIL,
+      });
     });
 
-    it('keeps the submitted value visible and does not move focus', () => {
+    it('normalizes the submitted value into the visible field and persisted payload', async () => {
+      render(<NewsletterSection />);
+
+      await subscribe(`   ${VALID_EMAIL}   `);
+
+      expect(emailField().value).toBe(VALID_EMAIL);
+      expect(storedConsent()).toEqual({
+        version: 1,
+        state: 'subscribed',
+        email: VALID_EMAIL,
+      });
+    });
+
+    it('keeps focus stable across the success transition', async () => {
       render(<NewsletterSection />);
 
       const field = emailField();
       field.focus();
-      typeEmail(VALID_EMAIL);
-      fireEvent.submit(newsletterForm());
-      completePending();
+      await typeEmail(VALID_EMAIL);
+      await submitForm();
+      await completePending();
 
-      expect(emailField().value).toBe(VALID_EMAIL);
       expect(document.activeElement).toBe(field);
     });
 
-    it('blocks resubmission of the unchanged subscribed value', () => {
+    it('blocks resubmission of the unchanged subscribed value', async () => {
       render(<NewsletterSection />);
 
-      subscribe(VALID_EMAIL);
+      await subscribe(VALID_EMAIL);
 
       expect(submitButton()).toBeDisabled();
 
-      fireEvent.submit(newsletterForm());
-      completePending();
+      await submitForm();
+      await completePending();
 
       expect(newsletterStatuses()).toHaveLength(1);
       expect(newsletterStatuses()[0]).toHaveTextContent(NEWSLETTER_SUCCESS_STATUS);
     });
 
-    it('schedules only one completion for synchronous duplicate submits', () => {
+    it('schedules only one completion for synchronous duplicate submits', async () => {
       render(<NewsletterSection />);
 
-      typeEmail(VALID_EMAIL);
+      await typeEmail(VALID_EMAIL);
 
       const form = newsletterForm();
-      act(() => {
+      await act(async () => {
         form.requestSubmit();
         form.requestSubmit();
         form.requestSubmit();
@@ -303,73 +412,147 @@ describe('NewsletterSection', () => {
       expect(newsletterStatuses()).toHaveLength(1);
       expect(newsletterStatuses()[0]).toHaveTextContent(NEWSLETTER_PENDING_STATUS);
 
-      completePending();
-
-      expect(newsletterStatuses()).toHaveLength(1);
-      expect(newsletterStatuses()[0]).toHaveTextContent(NEWSLETTER_SUCCESS_STATUS);
-
-      completePending();
-
-      expect(newsletterStatuses()).toHaveLength(1);
-      expect(newsletterStatuses()[0]).toHaveTextContent(NEWSLETTER_SUCCESS_STATUS);
-    });
-
-    it('schedules only one completion for rapid duplicate activation', () => {
-      render(<NewsletterSection />);
-
-      typeEmail(VALID_EMAIL);
-      submit();
-      fireEvent.submit(newsletterForm());
-      fireEvent.submit(newsletterForm());
-
-      expect(vi.getTimerCount(), 'exactly one completion is scheduled').toBe(1);
-      expect(newsletterStatuses()).toHaveLength(1);
-      expect(newsletterStatuses()[0]).toHaveTextContent(NEWSLETTER_PENDING_STATUS);
-
-      completePending();
-
-      expect(newsletterStatuses()).toHaveLength(1);
-      expect(newsletterStatuses()[0]).toHaveTextContent(NEWSLETTER_SUCCESS_STATUS);
-
-      completePending();
+      await completePending();
 
       expect(newsletterStatuses()).toHaveLength(1);
       expect(newsletterStatuses()[0]).toHaveTextContent(NEWSLETTER_SUCCESS_STATUS);
     });
   });
 
-  describe('edit-driven re-entry', () => {
-    it('clears the result and re-enables submit when the email changes', () => {
+  describe('restored subscription', () => {
+    it('restores the subscribed state and normalized email from session storage', () => {
+      seedValidConsent(VALID_EMAIL);
+
       render(<NewsletterSection />);
 
-      subscribe(VALID_EMAIL);
-      typeEmail(SECOND_EMAIL);
-
-      expect(newsletterStatuses()).toHaveLength(0);
-      expect(submitButton()).toBeEnabled();
-      expect(emailField().value).toBe(SECOND_EMAIL);
+      expect(emailField().value).toBe(VALID_EMAIL);
+      expect(newsletterStatuses()).toHaveLength(1);
+      expect(newsletterStatuses()[0]).toHaveTextContent(NEWSLETTER_SUCCESS_STATUS);
+      expect(submitButton()).toBeDisabled();
     });
 
-    it('completes a second deterministic lifecycle', () => {
+    it('replays no pending phase', async () => {
+      seedValidConsent(VALID_EMAIL);
+
       render(<NewsletterSection />);
 
-      subscribe(VALID_EMAIL);
-      typeEmail(SECOND_EMAIL);
-      submit();
+      expect(newsletterForm().getAttribute('aria-busy')).toBeNull();
+      expect(newsletterStatuses()[0]).not.toHaveTextContent(NEWSLETTER_PENDING_STATUS);
+      expect(newsletterStatuses()[0]).toHaveTextContent(NEWSLETTER_SUCCESS_STATUS);
 
-      expect(newsletterStatuses()[0]).toHaveTextContent(NEWSLETTER_PENDING_STATUS);
+      await completePending();
 
-      completePending();
-
+      expect(newsletterForm().getAttribute('aria-busy')).toBeNull();
       expect(newsletterStatuses()).toHaveLength(1);
       expect(newsletterStatuses()[0]).toHaveTextContent(NEWSLETTER_SUCCESS_STATUS);
     });
 
-    it('does not announce a reset message when the result clears', () => {
+    it('does not steal focus on restoration', () => {
+      seedValidConsent(VALID_EMAIL);
+
       render(<NewsletterSection />);
 
-      subscribe(VALID_EMAIL);
-      typeEmail(`${VALID_EMAIL}x`);
+      expect(document.activeElement).toBe(document.body);
+      expect(emailField()).not.toHaveFocus();
+    });
+
+    it('renders the restored success statically rather than as a live announcement', () => {
+      seedValidConsent(VALID_EMAIL);
+
+      render(<NewsletterSection />);
+
+      const status = newsletterStatuses()[0];
+
+      expect(status?.getAttribute('role')).toBeNull();
+      expect(status?.getAttribute('data-newsletter-announced')).toBe('false');
+      expect(document.querySelectorAll('[role="status"]')).toHaveLength(0);
+      expect(document.querySelectorAll('[aria-live]')).toHaveLength(0);
+    });
+
+    it('announces a new in-session success even after restoration', async () => {
+      seedValidConsent(VALID_EMAIL);
+
+      render(<NewsletterSection />);
+
+      await subscribe(SECOND_EMAIL);
+
+      const status = newsletterStatuses()[0];
+      expect(status?.getAttribute('role')).toBe('status');
+      expect(status?.getAttribute('data-newsletter-announced')).toBe('true');
+    });
+
+    it.each([
+      ['malformed JSON', 'not-json{'],
+      [
+        'unsupported version',
+        JSON.stringify({ version: 2, state: 'subscribed', email: VALID_EMAIL }),
+      ],
+      ['invalid email', JSON.stringify({ version: 1, state: 'subscribed', email: 'broken' })],
+    ])('falls back to the initial state for %s and clears the key', (_label, raw) => {
+      seedConsent(raw);
+
+      expect(() => render(<NewsletterSection />)).not.toThrow();
+
+      expect(emailField().value).toBe('');
+      expect(newsletterStatuses()).toHaveLength(0);
+      expect(window.sessionStorage.getItem(NEWSLETTER_STORAGE_KEY)).toBeNull();
+    });
+  });
+
+  describe('edit-driven re-entry', () => {
+    it('clears the result, removes persisted consent and re-enables submit', async () => {
+      render(<NewsletterSection />);
+
+      await subscribe(VALID_EMAIL);
+      expect(storedConsent()).not.toBeNull();
+
+      await typeEmail(SECOND_EMAIL);
+
+      expect(newsletterStatuses()).toHaveLength(0);
+      expect(submitButton()).toBeEnabled();
+      expect(emailField().value).toBe(SECOND_EMAIL);
+      expect(storedConsent()).toBeNull();
+    });
+
+    it('does not persist the edited draft before a new success', async () => {
+      render(<NewsletterSection />);
+
+      await subscribe(VALID_EMAIL);
+      await typeEmail('partial@');
+
+      expect(storedConsent()).toBeNull();
+    });
+
+    it('replaces the persisted email on a second successful subscription', async () => {
+      render(<NewsletterSection />);
+
+      await subscribe(VALID_EMAIL);
+      await subscribe(SECOND_EMAIL);
+
+      expect(newsletterStatuses()[0]).toHaveTextContent(NEWSLETTER_SUCCESS_STATUS);
+      expect(storedConsent()).toEqual({
+        version: 1,
+        state: 'subscribed',
+        email: SECOND_EMAIL,
+      });
+    });
+
+    it('removes restored consent when the restored email is edited', async () => {
+      seedValidConsent(VALID_EMAIL);
+
+      render(<NewsletterSection />);
+
+      await typeEmail(SECOND_EMAIL);
+
+      expect(newsletterStatuses()).toHaveLength(0);
+      expect(window.sessionStorage.getItem(NEWSLETTER_STORAGE_KEY)).toBeNull();
+    });
+
+    it('does not announce a reset message when the result clears', async () => {
+      render(<NewsletterSection />);
+
+      await subscribe(VALID_EMAIL);
+      await typeEmail(`${VALID_EMAIL}x`);
 
       expect(document.querySelectorAll('[role="status"]')).toHaveLength(0);
       expect(document.querySelectorAll('[aria-live]')).toHaveLength(0);
@@ -377,11 +560,11 @@ describe('NewsletterSection', () => {
   });
 
   describe('boundaries', () => {
-    it('clears a pending timer safely on unmount', () => {
+    it('clears a pending timer safely on unmount', async () => {
       const { unmount } = render(<NewsletterSection />);
 
-      typeEmail(VALID_EMAIL);
-      submit();
+      await typeEmail(VALID_EMAIL);
+      await submit();
 
       expect(() => {
         unmount();
@@ -389,10 +572,10 @@ describe('NewsletterSection', () => {
       }).not.toThrow();
     });
 
-    it('keeps its state while route policy hides it', () => {
+    it('keeps its state while route policy hides it', async () => {
       const { rerender } = render(<NewsletterSection visible />);
 
-      subscribe(VALID_EMAIL);
+      await subscribe(VALID_EMAIL);
       expect(newsletterStatuses()[0]).toHaveTextContent(NEWSLETTER_SUCCESS_STATUS);
 
       rerender(<NewsletterSection visible={false} />);
@@ -405,26 +588,50 @@ describe('NewsletterSection', () => {
       expect(newsletterStatuses()[0]).toHaveTextContent(NEWSLETTER_SUCCESS_STATUS);
     });
 
-    it('uses no browser persistence and issues no network request', () => {
-      const setItemSpy = vi.spyOn(Storage.prototype, 'setItem');
+    it('keeps the in-memory lifecycle usable when storage writes fail', async () => {
+      vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+        throw new Error('quota');
+      });
+
+      render(<NewsletterSection />);
+
+      await subscribe(VALID_EMAIL);
+
+      expect(newsletterStatuses()).toHaveLength(1);
+      expect(newsletterStatuses()[0]).toHaveTextContent(NEWSLETTER_SUCCESS_STATUS);
+      expect(emailField().value).toBe(VALID_EMAIL);
+    });
+
+    it('mounts safely when storage reads fail', () => {
+      vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
+        throw new Error('denied');
+      });
+
+      expect(() => render(<NewsletterSection />)).not.toThrow();
+      expect(emailField().value).toBe('');
+      expect(newsletterStatuses()).toHaveLength(0);
+    });
+
+    it('uses no local persistence and issues no network request', async () => {
+      const localSetItem = vi.spyOn(Storage.prototype, 'setItem');
       const fetchSpy = vi.fn();
       vi.stubGlobal('fetch', fetchSpy);
 
       render(<NewsletterSection />);
-      subscribe(VALID_EMAIL);
+      await subscribe(VALID_EMAIL);
 
-      expect(setItemSpy).not.toHaveBeenCalled();
       expect(fetchSpy).not.toHaveBeenCalled();
       expect(document.cookie).toBe('');
+      expect(localSetItem).toHaveBeenCalled();
+      expect(window.localStorage.length).toBe(0);
 
-      setItemSpy.mockRestore();
       vi.unstubAllGlobals();
     });
 
-    it('renders no dialog, toast or duplicate live region', () => {
+    it('renders no dialog, toast or duplicate live region', async () => {
       const { container } = render(<NewsletterSection />);
 
-      subscribe(VALID_EMAIL);
+      await subscribe(VALID_EMAIL);
 
       expect(container.querySelectorAll('dialog')).toHaveLength(0);
       expect(container.querySelectorAll('[role="dialog"]')).toHaveLength(0);
@@ -444,10 +651,10 @@ describe('NewsletterSection', () => {
       expect(focusables.indexOf(submitButton())).toBe(1);
     });
 
-    it('keeps the status out of the focus order', () => {
+    it('keeps the status out of the focus order', async () => {
       render(<NewsletterSection />);
 
-      subscribe(VALID_EMAIL);
+      await subscribe(VALID_EMAIL);
 
       expect(newsletterStatuses()[0]?.getAttribute('tabindex')).toBeNull();
     });

@@ -1,4 +1,5 @@
 import React from 'react';
+import { useForm } from 'react-hook-form';
 import styles from './NewsletterSection.module.scss';
 import { Button, InlineStatus, PageContainer, TextField } from '@/shared/ui';
 import {
@@ -12,7 +13,12 @@ import {
   NEWSLETTER_SUBMIT_PENDING_LABEL,
   NEWSLETTER_SUCCESS_STATUS,
 } from './newsletter-content';
-import { validateNewsletterEmail } from './newsletter-schema';
+import { newsletterResolver, type NewsletterFormValues } from './newsletter-schema';
+import {
+  clearNewsletterConsent,
+  readNewsletterConsent,
+  writeNewsletterConsent,
+} from './newsletter-session-storage';
 
 export type NewsletterLifecycle = 'not-subscribed' | 'submitting' | 'subscribed';
 
@@ -24,14 +30,29 @@ export function NewsletterSection({
   visible = true,
 }: NewsletterSectionProps): React.ReactElement | null {
   const headingId = React.useId();
-  const inputRef = React.useRef<HTMLInputElement>(null);
   const timerRef = React.useRef<number | null>(null);
   const pendingRef = React.useRef(false);
 
-  const [email, setEmail] = React.useState('');
-  const [error, setError] = React.useState<string | undefined>(undefined);
-  const [lifecycle, setLifecycle] = React.useState<NewsletterLifecycle>('not-subscribed');
-  const [subscribedEmail, setSubscribedEmail] = React.useState<string | null>(null);
+  const [restoredConsent] = React.useState(() => readNewsletterConsent());
+
+  const [lifecycle, setLifecycle] = React.useState<NewsletterLifecycle>(
+    restoredConsent === null ? 'not-subscribed' : 'subscribed'
+  );
+  const [subscribedEmail, setSubscribedEmail] = React.useState<string | null>(
+    restoredConsent === null ? null : restoredConsent.email
+  );
+  const [announceSuccess, setAnnounceSuccess] = React.useState(false);
+
+  const { register, handleSubmit, formState, setFocus, reset, watch, trigger } =
+    useForm<NewsletterFormValues>({
+      mode: 'onSubmit',
+      reValidateMode: 'onChange',
+      resolver: newsletterResolver,
+      defaultValues: { email: restoredConsent === null ? '' : restoredConsent.email },
+    });
+
+  const emailError = formState.errors.email?.message;
+  const emailField = register('email');
 
   React.useEffect(() => {
     return () => {
@@ -44,53 +65,61 @@ export function NewsletterSection({
     };
   }, []);
 
+  const currentEmail = watch('email') ?? '';
   const isPending = lifecycle === 'submitting';
   const isSubscribed = lifecycle === 'subscribed';
   const isUnchangedSubscription =
-    isSubscribed && subscribedEmail !== null && email.trim() === subscribedEmail;
+    isSubscribed && subscribedEmail !== null && currentEmail.trim() === subscribedEmail;
   const isSubmitBlocked = isPending || isUnchangedSubscription;
 
-  function handleSubmit(event: React.FormEvent<HTMLFormElement>): void {
-    event.preventDefault();
+  function completeSubscription(email: string): void {
+    timerRef.current = null;
+    pendingRef.current = false;
+    reset({ email });
+    setSubscribedEmail(email);
+    setAnnounceSuccess(true);
+    setLifecycle('subscribed');
+    writeNewsletterConsent(email);
+  }
 
+  function handleValidSubmit(values: NewsletterFormValues): void {
     if (pendingRef.current) {
       return;
     }
 
-    const validation = validateNewsletterEmail(email);
-
-    if (!validation.ok) {
-      setError(validation.error);
-      inputRef.current?.focus();
-      return;
-    }
-
-    if (isSubscribed && subscribedEmail === validation.email) {
+    if (isSubscribed && subscribedEmail === values.email) {
       return;
     }
 
     pendingRef.current = true;
-    setError(undefined);
+    setAnnounceSuccess(false);
     setLifecycle('submitting');
 
     timerRef.current = window.setTimeout(() => {
-      timerRef.current = null;
-      pendingRef.current = false;
-      setSubscribedEmail(validation.email);
-      setLifecycle('subscribed');
+      completeSubscription(values.email);
     }, NEWSLETTER_SUBMIT_DELAY_MS);
   }
 
-  function handleChange(event: React.ChangeEvent<HTMLInputElement>): void {
-    setEmail(event.target.value);
+  function handleInvalidSubmit(): void {
+    setFocus('email');
+  }
 
-    if (error !== undefined) {
-      setError(undefined);
-    }
+  function handleEmailChange(event: React.ChangeEvent<HTMLInputElement>): void {
+    void emailField.onChange(event);
 
     if (lifecycle === 'subscribed') {
       setLifecycle('not-subscribed');
       setSubscribedEmail(null);
+      setAnnounceSuccess(false);
+      clearNewsletterConsent();
+    }
+  }
+
+  function handleEmailBlur(event: React.FocusEvent<HTMLInputElement>): void {
+    void emailField.onBlur(event);
+
+    if (emailError !== undefined) {
+      void trigger('email');
     }
   }
 
@@ -117,22 +146,24 @@ export function NewsletterSection({
           className={styles['form']}
           aria-labelledby={headingId}
           aria-busy={isPending || undefined}
-          onSubmit={handleSubmit}
+          onSubmit={(event) => {
+            void handleSubmit(handleValidSubmit, handleInvalidSubmit)(event);
+          }}
           noValidate
         >
           <div className={styles['controls']}>
             <TextField
-              ref={inputRef}
-              name="email"
+              ref={emailField.ref}
+              name={emailField.name}
+              onChange={handleEmailChange}
+              onBlur={handleEmailBlur}
               type="email"
               label={NEWSLETTER_EMAIL_LABEL}
-              value={email}
-              onChange={handleChange}
               autoComplete="email"
               inputMode="email"
               required
               className={styles['field']}
-              {...(error === undefined ? {} : { error })}
+              {...(emailError === undefined ? {} : { error: emailError })}
             />
             <Button
               type="submit"
@@ -147,9 +178,10 @@ export function NewsletterSection({
           {statusMessage === undefined ? null : (
             <InlineStatus
               tone={isPending ? 'pending' : 'success'}
-              role="status"
               className={styles['status']}
               data-newsletter-status
+              data-newsletter-announced={isPending || announceSuccess ? 'true' : 'false'}
+              {...(isPending || announceSuccess ? { role: 'status' as const } : {})}
             >
               {statusMessage}
             </InlineStatus>

@@ -1,5 +1,6 @@
-import { describe, it, expect } from 'vitest';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { render, screen, waitFor, fireEvent, act } from '@testing-library/react';
+import { NEWSLETTER_STORAGE_KEY } from '@/app/shell/newsletter/newsletter-session-storage';
 import { createMemoryRouter, RouterProvider } from 'react-router-dom';
 import { createApplicationRoutes } from '@/app/composition/application-routes';
 import {
@@ -30,8 +31,12 @@ async function waitForHeading(): Promise<HTMLElement> {
 }
 
 async function subscribeOnHome(): Promise<void> {
-  fireEvent.change(emailField(), { target: { value: VALID_EMAIL } });
-  fireEvent.click(screen.getByRole('button', { name: 'Подписаться' }));
+  await act(async () => {
+    fireEvent.change(emailField(), { target: { value: VALID_EMAIL } });
+  });
+  await act(async () => {
+    fireEvent.click(screen.getByRole('button', { name: 'Подписаться' }));
+  });
 
   await screen.findByText(NEWSLETTER_SUCCESS_STATUS, undefined, { timeout: TRANSITION_TIMEOUT });
 }
@@ -48,6 +53,14 @@ const NEWSLETTER_VISIBLE_ROUTES: ReadonlyArray<readonly [string, string]> = [
 ];
 
 describe('Newsletter runtime mount', () => {
+  beforeEach(() => {
+    window.sessionStorage.clear();
+  });
+
+  afterEach(() => {
+    window.sessionStorage.clear();
+  });
+
   describe('root composition', () => {
     it('places the Header, then route main, then the Newsletter section', async () => {
       renderApplicationAt('/');
@@ -184,23 +197,60 @@ describe('Newsletter runtime mount', () => {
       expect(emailField().value).toBe(VALID_EMAIL);
     });
 
-    it('resets to the initial state on a fresh mount', async () => {
+    it('restores the subscription on a fresh mount that keeps the browser session', async () => {
       const router = renderApplicationAt('/');
       await waitForHeading();
       await subscribeOnHome();
 
       expect(screen.getByText(NEWSLETTER_SUCCESS_STATUS)).toBeInTheDocument();
+      expect(window.sessionStorage.getItem(NEWSLETTER_STORAGE_KEY)).not.toBeNull();
 
       router.dispose();
-      screen.getByRole('banner').remove();
       document.body.innerHTML = '';
+
+      renderApplicationAt('/');
+      await waitForHeading();
+
+      expect(screen.getByText(NEWSLETTER_SUCCESS_STATUS)).toBeInTheDocument();
+      expect(emailField().value).toBe(VALID_EMAIL);
+    });
+
+    it('starts initial on a fresh mount after the browser session is cleared', async () => {
+      const router = renderApplicationAt('/');
+      await waitForHeading();
+      await subscribeOnHome();
+
+      router.dispose();
+      document.body.innerHTML = '';
+      window.sessionStorage.clear();
 
       renderApplicationAt('/');
       await waitForHeading();
 
       expect(screen.queryByText(NEWSLETTER_SUCCESS_STATUS)).not.toBeInTheDocument();
       expect(emailField().value).toBe('');
-      expect(document.querySelectorAll('[role="status"]')).toHaveLength(1);
+    });
+
+    it.each([
+      ['malformed JSON', 'not-json{'],
+      [
+        'unsupported version',
+        JSON.stringify({ version: 2, state: 'subscribed', email: VALID_EMAIL }),
+      ],
+      ['invalid email', JSON.stringify({ version: 1, state: 'subscribed', email: 'broken' })],
+    ])('boots safely with %s persisted and clears only its own key', async (_label, raw) => {
+      window.sessionStorage.setItem('goodcall.unrelated', 'keep-me');
+      window.sessionStorage.setItem(NEWSLETTER_STORAGE_KEY, raw);
+
+      renderApplicationAt('/');
+      await waitForHeading();
+
+      expect(newsletterSections()).toHaveLength(1);
+      expect(emailField().value).toBe('');
+      expect(screen.queryByText(NEWSLETTER_SUCCESS_STATUS)).not.toBeInTheDocument();
+      expect(window.sessionStorage.getItem(NEWSLETTER_STORAGE_KEY)).toBeNull();
+      expect(window.sessionStorage.getItem('goodcall.unrelated')).toBe('keep-me');
+      expect(document.querySelectorAll('main#main-content')).toHaveLength(1);
     });
   });
 

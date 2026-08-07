@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import type { Resolver } from 'react-hook-form';
 import { NEWSLETTER_EMPTY_ERROR, NEWSLETTER_INVALID_ERROR } from './newsletter-content';
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
@@ -23,26 +24,22 @@ export const newsletterFormSchema = z.object({
 
 export type NewsletterFormValues = z.infer<typeof newsletterFormSchema>;
 
-export interface NewsletterValidationSuccess {
-  ok: true;
-  email: string;
-}
-
-export interface NewsletterValidationFailure {
-  ok: false;
-  error: string;
-}
-
-export type NewsletterValidationResult = NewsletterValidationSuccess | NewsletterValidationFailure;
-
-export function validateNewsletterEmail(value: string): NewsletterValidationResult {
-  const result = newsletterFormSchema.safeParse({ email: value });
+export const newsletterResolver: Resolver<NewsletterFormValues> = (values) => {
+  const result = newsletterFormSchema.safeParse(values);
 
   if (result.success) {
-    return { ok: true, email: result.data.email };
+    return { values: result.data, errors: {} };
   }
 
-  const message = result.error.issues[0]?.message;
+  const message = result.error.issues[0]?.message ?? NEWSLETTER_INVALID_ERROR;
 
-  return { ok: false, error: message ?? NEWSLETTER_INVALID_ERROR };
-}
+  return {
+    values: {},
+    errors: {
+      email: {
+        type: 'validation',
+        message,
+      },
+    },
+  };
+};
