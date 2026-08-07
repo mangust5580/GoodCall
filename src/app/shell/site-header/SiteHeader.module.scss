@@ -14,14 +14,23 @@
 .identity {
   display: flex;
   flex: 1 1 auto;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
   gap: var(--gc-spacing-sm) var(--gc-spacing-md);
   min-inline-size: 0;
 }
 
+.brand-link {
+  flex: 0 0 auto;
+}
+
+.identity .brand-link [data-brand-asset] {
+  inline-size: 120px;
+}
+
 .primary-nav {
   display: flex;
+  flex: 0 0 auto;
   align-items: center;
 }
 
@@ -75,7 +84,10 @@
 @media (width >= 48rem) {
   .identity {
     flex: 0 0 auto;
-    flex-wrap: nowrap;
+  }
+
+  .identity .brand-link [data-brand-asset] {
+    inline-size: 180px;
   }
 
   .search-slot {

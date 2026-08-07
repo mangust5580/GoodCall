@@ -1,5 +1,6 @@
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect, type Locator, type Page } from '@playwright/test';
 import { AxeBuilder } from '@axe-core/playwright';
+import { withDocumentStartFocus } from './support/focus-origin';
 
 const PRIMARY_NAV_LABEL = 'Основная навигация';
 const SEARCH_LANDMARK_LABEL = 'Поиск по каталогу';
@@ -11,6 +12,82 @@ const DISCLOSURE_LABEL = 'Информация и помощь';
 const SEARCH_EMPTY_ERROR = 'Введите поисковый запрос.';
 const MINIMUM_TARGET = 44;
 const MINIMUM_LOGO_WIDTH = 120;
+const ROW_TOLERANCE = 2;
+const FULL_WIDTH_TOLERANCE = 1;
+
+interface Box {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+async function resolveBox(locator: Locator, name: string): Promise<Box> {
+  const box = await locator.boundingBox();
+
+  expect(box, `${name} must expose a bounding box`).not.toBeNull();
+
+  if (box === null) {
+    throw new Error(`${name} has no bounding box`);
+  }
+
+  return box;
+}
+
+function boxTop(box: Box): number {
+  return box.y;
+}
+
+function boxBottom(box: Box): number {
+  return box.y + box.height;
+}
+
+function boxCenterY(box: Box): number {
+  return box.y + box.height / 2;
+}
+
+function boxRight(box: Box): number {
+  return box.x + box.width;
+}
+
+function verticalOverlap(first: Box, second: Box): number {
+  return Math.min(boxBottom(first), boxBottom(second)) - Math.max(boxTop(first), boxTop(second));
+}
+
+async function headerContentWidth(page: Page): Promise<number> {
+  const width = await searchLandmark(page).evaluate((element) => {
+    const parent = element.parentElement;
+
+    if (parent === null) {
+      return null;
+    }
+
+    const style = window.getComputedStyle(parent);
+    return parent.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
+  });
+
+  expect(width, 'Header content width must be measurable').not.toBeNull();
+
+  if (width === null) {
+    throw new Error('Header content width is not measurable');
+  }
+
+  return width;
+}
+
+async function expectIdentityRow(page: Page): Promise<{ brand: Box; catalog: Box; search: Box }> {
+  const brand = await resolveBox(brandLink(page), 'brand link');
+  const catalog = await resolveBox(catalogLink(page), 'Catalog link');
+  const search = await resolveBox(searchLandmark(page), 'Search form');
+
+  expect(
+    Math.abs(boxCenterY(brand) - boxCenterY(catalog)),
+    'brand and Catalog share the identity row'
+  ).toBeLessThanOrEqual(ROW_TOLERANCE);
+  expect(boxRight(brand), 'brand precedes Catalog horizontally').toBeLessThanOrEqual(catalog.x);
+
+  return { brand, catalog, search };
+}
 
 const SERVICE_LINK_LABELS = [
   'Доставка и оплата',
@@ -76,16 +153,6 @@ async function horizontalOverflow(page: Page): Promise<number> {
   );
 }
 
-async function resetFocusOrigin(page: Page): Promise<void> {
-  await page.evaluate(() => {
-    const active = document.activeElement;
-    if (active instanceof HTMLElement && active !== document.body) {
-      active.blur();
-    }
-    document.body.focus();
-  });
-}
-
 test.describe('M4-04 primary Header core', () => {
   test('expanded 1440px composes the Header core in one row', async ({ page }) => {
     const problems = collectRuntimeProblems(page);
@@ -100,19 +167,24 @@ test.describe('M4-04 primary Header core', () => {
     await expect(searchSubmit(page)).toBeVisible();
 
     const serviceNav = page.getByRole('navigation', { name: SERVICE_NAV_LABEL });
-    const serviceBox = await serviceNav.boundingBox();
-    const headerBox = await banner(page).boundingBox();
-    expect((serviceBox?.y ?? 0) + (serviceBox?.height ?? 0)).toBeLessThanOrEqual(
-      (headerBox?.y ?? 0) + 1
+    const serviceBox = await resolveBox(serviceNav, 'service navigation');
+    const headerBox = await resolveBox(banner(page), 'banner');
+    expect(boxBottom(serviceBox)).toBeLessThanOrEqual(boxTop(headerBox) + 1);
+
+    const { brand, catalog, search } = await expectIdentityRow(page);
+
+    expect(
+      verticalOverlap(search, brand),
+      'Search form shares the Header row with the brand link'
+    ).toBeGreaterThan(0);
+    expect(
+      verticalOverlap(search, catalog),
+      'Search form shares the Header row with Catalog'
+    ).toBeGreaterThan(0);
+    expect(search.x, 'Search form follows Catalog horizontally').toBeGreaterThanOrEqual(
+      boxRight(catalog)
     );
-
-    const brandBox = await brandLink(page).boundingBox();
-    const catalogBox = await catalogLink(page).boundingBox();
-    const fieldBox = await searchField(page).boundingBox();
-
-    expect(brandBox?.y ?? 0).toBeCloseTo(catalogBox?.y ?? 0, -1);
-    expect(catalogBox?.y ?? 0).toBeCloseTo(fieldBox?.y ?? 0, -1);
-    expect(fieldBox?.width ?? 0).toBeGreaterThan(catalogBox?.width ?? 0);
+    expect(search.width, 'Search form dominates Catalog').toBeGreaterThan(catalog.width);
 
     await expect(page.getByRole('link', { name: 'Сравнение' })).toHaveCount(0);
     await expect(page.getByRole('link', { name: 'Корзина' })).toHaveCount(0);
@@ -128,16 +200,28 @@ test.describe('M4-04 primary Header core', () => {
       await page.setViewportSize({ width, height: 900 });
       await page.goto('/GoodCall/');
 
+      await expect(brandLink(page)).toBeVisible();
       await expect(catalogLink(page)).toBeVisible();
+      await expect(searchLandmark(page)).toBeVisible();
       await expect(searchField(page)).toBeVisible();
       await expect(searchSubmit(page)).toBeVisible();
 
-      const logoBox = await page.locator('[data-brand-asset]').boundingBox();
-      expect(logoBox?.width ?? 0).toBeGreaterThanOrEqual(MINIMUM_LOGO_WIDTH);
+      const logoBox = await resolveBox(page.locator('[data-brand-asset]'), 'brand asset');
+      expect(logoBox.width).toBeGreaterThanOrEqual(MINIMUM_LOGO_WIDTH);
 
-      const brandBox = await brandLink(page).boundingBox();
-      const fieldBox = await searchField(page).boundingBox();
-      expect(brandBox?.y ?? 0).toBeCloseTo(fieldBox?.y ?? 0, -1);
+      const { brand, catalog, search } = await expectIdentityRow(page);
+
+      expect(
+        verticalOverlap(search, brand),
+        'Search form shares the Header row with the brand link'
+      ).toBeGreaterThan(0);
+      expect(
+        verticalOverlap(search, catalog),
+        'Search form shares the Header row with Catalog'
+      ).toBeGreaterThan(0);
+      expect(search.x, 'Search form follows the identity controls').toBeGreaterThanOrEqual(
+        boxRight(catalog)
+      );
 
       expect(await horizontalOverflow(page)).toBeLessThanOrEqual(1);
     });
@@ -170,34 +254,44 @@ test.describe('M4-04 primary Header core', () => {
     });
   }
 
-  test('compact 320px stacks identity and a full-width Search', async ({ page }) => {
+  test('compact 320px keeps identity in one row above a full-width Search', async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 640 });
     await page.goto('/GoodCall/');
 
-    const brandBox = await brandLink(page).boundingBox();
-    const catalogBox = await catalogLink(page).boundingBox();
-    const fieldBox = await searchField(page).boundingBox();
-    const submitBox = await searchSubmit(page).boundingBox();
-    const logoBox = await page.locator('[data-brand-asset]').boundingBox();
+    const { brand, catalog, search } = await expectIdentityRow(page);
+    const fieldBox = await resolveBox(searchField(page), 'Search field');
+    const submitBox = await resolveBox(searchSubmit(page), 'Search submit');
+    const logoBox = await resolveBox(page.locator('[data-brand-asset]'), 'brand asset');
 
-    expect(brandBox?.y ?? 0).toBeCloseTo(catalogBox?.y ?? 0, -1);
-    expect(fieldBox?.y ?? 0).toBeGreaterThan((brandBox?.y ?? 0) + 1);
+    expect(
+      catalog.x - boxRight(brand),
+      'Catalog begins after the brand link'
+    ).toBeGreaterThanOrEqual(0);
+    expect(boxTop(search), 'Search form starts below the brand link').toBeGreaterThan(
+      boxBottom(brand)
+    );
+    expect(boxTop(search), 'Search form starts below Catalog').toBeGreaterThan(boxBottom(catalog));
+
+    const contentWidth = await headerContentWidth(page);
+    expect(search.width, 'Search form fills the compact Header row').toBeGreaterThanOrEqual(
+      contentWidth - FULL_WIDTH_TOLERANCE
+    );
 
     await expect(page.getByText(SEARCH_LANDMARK_LABEL).first()).toBeVisible();
     await expect(searchField(page)).toBeVisible();
     await expect(searchSubmit(page)).toBeVisible();
 
-    expect(logoBox?.width ?? 0).toBeGreaterThanOrEqual(MINIMUM_LOGO_WIDTH);
-    const ratio = (logoBox?.width ?? 0) / (logoBox?.height ?? 1);
+    expect(logoBox.width).toBeGreaterThanOrEqual(MINIMUM_LOGO_WIDTH);
+    const ratio = logoBox.width / logoBox.height;
     expect(ratio).toBeGreaterThan(7);
     expect(ratio).toBeLessThan(9);
 
-    expect(brandBox?.height ?? 0).toBeGreaterThanOrEqual(MINIMUM_TARGET);
-    expect(catalogBox?.height ?? 0).toBeGreaterThanOrEqual(MINIMUM_TARGET);
-    expect(catalogBox?.width ?? 0).toBeGreaterThanOrEqual(MINIMUM_TARGET);
-    expect(fieldBox?.height ?? 0).toBeGreaterThanOrEqual(MINIMUM_TARGET);
-    expect(submitBox?.height ?? 0).toBeGreaterThanOrEqual(MINIMUM_TARGET);
-    expect(submitBox?.width ?? 0).toBeGreaterThanOrEqual(MINIMUM_TARGET);
+    expect(brand.height).toBeGreaterThanOrEqual(MINIMUM_TARGET);
+    expect(catalog.height).toBeGreaterThanOrEqual(MINIMUM_TARGET);
+    expect(catalog.width).toBeGreaterThanOrEqual(MINIMUM_TARGET);
+    expect(fieldBox.height).toBeGreaterThanOrEqual(MINIMUM_TARGET);
+    expect(submitBox.height).toBeGreaterThanOrEqual(MINIMUM_TARGET);
+    expect(submitBox.width).toBeGreaterThanOrEqual(MINIMUM_TARGET);
 
     expect(await horizontalOverflow(page)).toBeLessThanOrEqual(1);
   });
@@ -207,52 +301,54 @@ test.describe('M4-04 primary Header core', () => {
   }) => {
     await page.setViewportSize({ width: 320, height: 640 });
     await page.goto('/GoodCall/');
-    await resetFocusOrigin(page);
 
-    await page.keyboard.press('Tab');
-    await expect(page.locator('a[href="#main-content"]')).toBeFocused();
+    await withDocumentStartFocus(page, async () => {
+      await page.keyboard.press('Tab');
+      await expect(page.locator('a[href="#main-content"]')).toBeFocused();
 
-    await page.keyboard.press('Tab');
-    await expect(page.getByRole('button', { name: DISCLOSURE_LABEL, exact: true })).toBeFocused();
+      await page.keyboard.press('Tab');
+      await expect(page.getByRole('button', { name: DISCLOSURE_LABEL, exact: true })).toBeFocused();
 
-    await page.keyboard.press('Tab');
-    await expect(brandLink(page)).toBeFocused();
+      await page.keyboard.press('Tab');
+      await expect(brandLink(page)).toBeFocused();
 
-    await page.keyboard.press('Tab');
-    await expect(catalogLink(page)).toBeFocused();
+      await page.keyboard.press('Tab');
+      await expect(catalogLink(page)).toBeFocused();
 
-    await page.keyboard.press('Tab');
-    await expect(searchField(page)).toBeFocused();
+      await page.keyboard.press('Tab');
+      await expect(searchField(page)).toBeFocused();
 
-    await page.keyboard.press('Tab');
-    await expect(searchSubmit(page)).toBeFocused();
+      await page.keyboard.press('Tab');
+      await expect(searchSubmit(page)).toBeFocused();
+    });
   });
 
   test('wide keyboard order passes the inline service links first', async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
     await page.goto('/GoodCall/');
-    await resetFocusOrigin(page);
 
-    await page.keyboard.press('Tab');
-    await expect(page.locator('a[href="#main-content"]')).toBeFocused();
-
-    const serviceNav = page.getByRole('navigation', { name: SERVICE_NAV_LABEL });
-    for (const label of SERVICE_LINK_LABELS) {
+    await withDocumentStartFocus(page, async () => {
       await page.keyboard.press('Tab');
-      await expect(serviceNav.getByRole('link', { name: label, exact: true })).toBeFocused();
-    }
+      await expect(page.locator('a[href="#main-content"]')).toBeFocused();
 
-    await page.keyboard.press('Tab');
-    await expect(brandLink(page)).toBeFocused();
+      const serviceNav = page.getByRole('navigation', { name: SERVICE_NAV_LABEL });
+      for (const label of SERVICE_LINK_LABELS) {
+        await page.keyboard.press('Tab');
+        await expect(serviceNav.getByRole('link', { name: label, exact: true })).toBeFocused();
+      }
 
-    await page.keyboard.press('Tab');
-    await expect(catalogLink(page)).toBeFocused();
+      await page.keyboard.press('Tab');
+      await expect(brandLink(page)).toBeFocused();
 
-    await page.keyboard.press('Tab');
-    await expect(searchField(page)).toBeFocused();
+      await page.keyboard.press('Tab');
+      await expect(catalogLink(page)).toBeFocused();
 
-    await page.keyboard.press('Tab');
-    await expect(searchSubmit(page)).toBeFocused();
+      await page.keyboard.press('Tab');
+      await expect(searchField(page)).toBeFocused();
+
+      await page.keyboard.press('Tab');
+      await expect(searchSubmit(page)).toBeFocused();
+    });
   });
 
   test('Catalog navigates to the representative category', async ({ page }) => {
@@ -370,12 +466,12 @@ test.describe('M4-04 primary Header core', () => {
     await page.setViewportSize({ width: 320, height: 256 });
     await page.goto('/GoodCall/');
 
-    const brandBox = await brandLink(page).boundingBox();
-    const fieldBox = await searchField(page).boundingBox();
+    const brandBox = await resolveBox(brandLink(page), 'brand link');
+    const searchBox = await resolveBox(searchLandmark(page), 'Search form');
 
     await expect(searchField(page)).toBeVisible();
     await expect(searchSubmit(page)).toBeVisible();
-    expect(fieldBox?.y ?? 0).toBeGreaterThan((brandBox?.y ?? 0) + 1);
+    expect(boxTop(searchBox)).toBeGreaterThan(boxBottom(brandBox));
     expect(await horizontalOverflow(page)).toBeLessThanOrEqual(1);
   });
 
@@ -445,7 +541,6 @@ test.describe('M4-04 primary Header core', () => {
     expect(catalogTreatment.borderWidth).toBeGreaterThan(0);
     expect(catalogTreatment.textDecoration).toContain('underline');
 
-    await resetFocusOrigin(page);
     await catalogLink(page).focus();
     const catalogFocus = await catalogLink(page).evaluate((element) => {
       const style = window.getComputedStyle(element);

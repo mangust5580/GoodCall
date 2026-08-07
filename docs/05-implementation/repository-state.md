@@ -595,8 +595,37 @@ docs/05-implementation/m4-canonical-shell-report.md   M4-03A closure and the M4-
 - **CI is pending at commit time**, and **user visual confirmation against RTE-001 and CMP-001 is pending**.
 - **M4-05 is blocked** until M4-04 exact-SHA green CI, independent audit and user visual confirmation all close.
 
+## Milestone State Note — M4-04A Compact Header Layout Correction (2026-08-07)
+
+### M4-04 exact-SHA red CI
+
+CI for the M4-04 commit `9cc65787d6cd41b513931fdebbb682c1eb16f9e3` — run **31088410761**, job **92573279593** — concluded **failure** at the `E2E tests` step. Vitest passed (869 in 48 files); Playwright reported **108 total, 99 passed, 8 failed, 1 flaky**. The `playwright-report` artifact is ID **8962434188**, 1 484 191 bytes, archive SHA-256 `a4e210bcf0c832eb833e20ac8e5e91959c3d7c498a49a35bc2da9839678cd08d`.
+
+The eight blocking failures split into two classes, and there was a third, separate flake:
+
+- **seven test-premise failures** — the expanded 1440px scenario and the 1023/1024/1025/1279/1280/1281px scenarios compared the top coordinate of the raw Search **input** with the top of Brand or Catalog. The 14px difference is the persistently visible Search label above the input; the Header row aligns the complete Search form block. All seven reproduced through both retries;
+- **one compact runtime defect** — at 320px the Header composed **three** rows (Brand 61px, Catalog 113px, then Search) instead of the canonical two, because `.identity` permitted wrapping while the horizontal logo rendered at its default 180px;
+- **one flaky focus-origin scenario** — the Information Bar compact keyboard test failed on its initial attempt and passed on retry, because `document.body.focus()` does not reliably reset Chromium's sequential focus-navigation starting point.
+
+M4-04 was not accepted on that SHA and user visual confirmation was not performed.
+
+### M4-04A corrective implementation state
+
+- Baseline SHA `9cc65787d6cd41b513931fdebbb682c1eb16f9e3`; the resulting M4-04A commit SHA cannot be embedded inside its own commit and is recorded in the untracked stage handoff.
+- **The compact first row now holds Brand and Catalog together.** `.identity` is `flex-wrap: nowrap`, and `SiteHeader` passes a Header-owned `brand-link` class to the existing `BrandHomeLink` through its existing `className` prop.
+- **The compact horizontal logo renders at 120px and is restored to 180px at 48rem**, scoped entirely from `SiteHeader.module.scss`. `BrandHomeLink`, its stylesheet, its public API, its default sizing for other consumers and the brand SVGs are unchanged; the primary horizontal lockup is retained and never falls below 120px.
+- **Search remains the full-width second row below 48rem** and shares one Header row at and above it. The visible Search label was neither hidden nor moved.
+- **Complete Search-form geometry replaces raw input-top alignment** in the wide and expanded E2E evidence, with explicit non-null bounding-box checks instead of `?? 0` fallbacks. The 767/768/769px scenarios are retained and the viewport matrix was not widened.
+- **A shared test-only focus sentinel replaces `document.body.focus()`** for the affected traversals: `tests/e2e/support/focus-origin.ts` mounts a `tabIndex = -1` sentinel before the application root, verifies it became the active element, keeps it mounted through the Tab sequence and removes it in `finally`. Migrated: the Information Bar compact keyboard and forced-colors traversals, the Header compact and wide keyboard traversals, and the brand document-start traversal. Runtime focus order is unchanged.
+- Bounded serverless evidence in `tests/app/shell/site-header.test.tsx` guards the Header-owned brand class, compact 120px ownership, the non-wrapping identity row and the 48rem restoration, without a CSS parser and without claiming jsdom performs layout.
+- No Search, route, registry, carrier, Information Bar runtime, Shared UI, Foundations, dependency, lockfile, asset, tooling, Playwright config or workflow change. No Header redesign and no M4-05 action.
+- Test suite: **880 tests across 48 files**, up from 869. Bundle: raw **424.75 KB** / gzip **126.90 KB**.
+- Local checks pass, including `npm run check:full`. **Local E2E was not run** — the production-preview lifecycle belongs to CI or a user-owned preview.
+- **CI is pending at commit time**, and **user visual confirmation against RTE-001 and CMP-001 is pending**.
+- **M4-05 remains blocked** until M4-04A exact-SHA green CI, independent audit and user visual confirmation all close.
+
 ## Next Repository Modifications
 
 The current implementation milestone is **M4**, whose scope must be taken from the approved architecture and UI/component/responsive contracts.
 
-**M4-05 must not begin** until the M4-04 exact-SHA CI, independent audit and user visual confirmation all close.
+**M4-05 must not begin** until the M4-04A exact-SHA CI, independent audit and user visual confirmation all close.

@@ -7,11 +7,13 @@ import { GlobalSearchForm } from './GlobalSearchForm';
 import { CATALOG_LABEL, PRIMARY_NAV_LABEL, catalogPath } from './header-core-config';
 
 export function SiteHeader(): React.ReactElement {
+  const brandLinkClassName = styles['brand-link'] ?? '';
+
   return (
     <header className={styles['site-header']}>
       <PageContainer className={styles['inner']}>
         <div className={styles['identity']}>
-          <BrandHomeLink />
+          <BrandHomeLink className={brandLinkClassName} />
           <nav aria-label={PRIMARY_NAV_LABEL} className={styles['primary-nav']}>
             <NavLink
               to={catalogPath}

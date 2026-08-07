@@ -867,6 +867,8 @@ Closed. CI passed for `54d9eb95…` with zero failed and zero flaky tests, the i
 
 **Status at commit time: IMPLEMENTED — AWAITING INDEPENDENT AUDIT, CI AND USER VISUAL CONFIRMATION**
 
+**Terminal status: NOT ACCEPTED — exact-SHA CI failed. Corrected by M4-04A.**
+
 ### Baseline
 
 | Item                                 | Value                                            |
@@ -1012,6 +1014,147 @@ One. `tests/app/shell/brand-runtime-mount.test.tsx` is outside the expected file
 - The 44px target contract keeps the Header taller than the raster's proportions, as it already does for the Information Bar.
 - `scripts/review-m3-browser.mjs` still asserts no image asset and a specific tab order, both long obsolete. It is milestone-review tooling for a closed milestone, is not a CI gate, and was deliberately left unchanged.
 
+### Exact-SHA CI result
+
+The GitHub Actions run for the M4-04 commit concluded **failure**. The full job log was retrieved; exact Playwright counts and scenario names were available and are recorded here.
+
+| Item         | Value                                      |
+| ------------ | ------------------------------------------ |
+| Commit       | `9cc65787d6cd41b513931fdebbb682c1eb16f9e3` |
+| Workflow run | 31088410761                                |
+| Job          | 92573279593                                |
+| Conclusion   | failure                                    |
+| Failing step | `E2E tests`                                |
+| Vitest       | 869 passed in 48 files                     |
+| Playwright   | 108 total, 99 passed, 8 failed, 1 flaky    |
+
+Every step before `E2E tests` — dev bootstrap, typecheck, lint, stylelint, format, comment check, unit tests, build, validate build — concluded success. All eight blocking failures reproduced on the initial attempt **and both retries**, so none of them was a timing artefact. The one flaky test failed on its initial attempt and passed on retry.
+
+| Artifact            | ID         | Size            | Archive SHA-256                                                    |
+| ------------------- | ---------- | --------------- | ------------------------------------------------------------------ |
+| `playwright-report` | 8962434188 | 1 484 191 bytes | `a4e210bcf0c832eb833e20ac8e5e91959c3d7c498a49a35bc2da9839678cd08d` |
+
+**Three failure classes, not one:**
+
+1. **Seven invalid wide/expanded geometry assertions — test defects.** `expanded 1440px composes the Header core in one row` plus `1023px`, `1024px`, `1025px`, `1279px`, `1280px` and `1281px keeps the Header core usable without overflow` each compared the **top coordinate of the raw Search input** with the top of Brand or Catalog. Observed deterministically: identity top ≈ 75px, Search input top ≈ 89px, difference 14px — exactly the height of the persistently visible Search label above the input. The Header row aligns the **complete Search form block**, not the input element, so the one-row runtime composition was never disproved. The premise was wrong, not the runtime.
+2. **One real compact runtime defect.** `compact 320px stacks identity and a full-width Search` measured Brand top 61px against Catalog top 113px — a 52px difference proving a **three-row** composition (Brand, then Catalog, then Search) instead of the canonical two rows. `.identity` permitted wrapping and the horizontal logo rendered at its default 180px, so logo + gap + Catalog exceeded the 288px compact content width.
+3. **One flaky document-start focus origin.** `compact keyboard order reaches the disclosure before the brand link` in `tests/e2e/information-bar.spec.ts` blurred the active element and called `document.body.focus()`, which does not reliably reset Chromium's sequential focus-navigation starting point. The same premise had been copied into the new Header keyboard tests.
+
+M4-04 was **not accepted** on that SHA, user visual confirmation was **not performed**, and M4-05 **remained blocked**.
+
 ### Next gate
 
-Green GitHub Actions CI on the exact M4-04 SHA with zero failed and zero flaky Playwright tests, then independent diff audit, then user visual confirmation against RTE-001 and CMP-001. **M4-05 must not begin until all three close.**
+M4-04 is closed through **M4-04A** below. Green GitHub Actions CI on the exact M4-04A SHA with zero failed and zero flaky Playwright tests, then independent diff audit, then user visual confirmation against RTE-001 and CMP-001. **M4-05 must not begin until all three close.**
+
+## M4-04A — Compact Header layout correction and E2E geometry stabilization
+
+**Status at commit time: IMPLEMENTED — AWAITING INDEPENDENT AUDIT, CI AND USER VISUAL CONFIRMATION**
+
+### Baseline
+
+| Item                                 | Value                                      |
+| ------------------------------------ | ------------------------------------------ |
+| Branch                               | `main`                                     |
+| Baseline SHA                         | `9cc65787d6cd41b513931fdebbb682c1eb16f9e3` |
+| Baseline commit                      | `feat(shell): add header core`             |
+| Parent SHA                           | `54d9eb954fda1b582db49c1d3df217d8ea6723ca` |
+| `git rev-parse HEAD` / `origin/main` | both matched the baseline before changes   |
+| `git diff` / `git diff --cached`     | exit 0 — clean                             |
+
+RTE-001 and CMP-001 were re-verified against their recorded dimensions, byte counts and SHA-256 hashes; all six values match. Both remain ignored through `.git/info/exclude` and uncommitted, confirmed by `git check-ignore -v`.
+
+### Corrective scope
+
+M4-04A fixes the confirmed defects and nothing else. The Header core is not redesigned: the component boundary, the single banner, the single brand Home link, `Основная навигация`, the `Поиск по каталогу` landmark, the `Brand → Catalog → Search` DOM and focus order, the `/catalog/laptops` destination with exact `end` matching, the visible Search label, Search validation and URL synchronisation, non-sticky behaviour, the 48rem compact breakpoint, one DOM copy of every control and the absence of JavaScript viewport detection are all unchanged. No M4-05 action was added.
+
+### Compact identity-row contract
+
+The defect was layout ownership, not the brand component. `BrandHomeLink` keeps its public API, its default sizing for every other consumer, its horizontal primary lockup and its SVG bytes; `BrandHomeLink.module.scss` is untouched.
+
+`SiteHeader` now passes a Header-owned `brand-link` class through the existing `className` prop and scopes the compact visual width in its own module:
+
+| Range      | Rendered horizontal logo width | Identity row                                  |
+| ---------- | ------------------------------ | --------------------------------------------- |
+| `< 48rem`  | **120px**                      | Brand and Catalog on one non-wrapping row     |
+| `>= 48rem` | **180px** (restored default)   | Identity and the complete Search form one row |
+
+`.identity` is `flex-wrap: nowrap` at every width; `.brand-link` and `.primary-nav` are `flex: 0 0 auto`, so neither the lockup nor the Catalog target shrinks below its content or below 44px. At 320px the PageContainer content width is 288px and the identity row needs roughly 120px + a 16px gap + the Catalog control, which fits with margin — the same row needed roughly 296px at 180px, which is what forced the wrap. Search keeps `flex: 1 1 100%` below 48rem, so it remains the full-width second row, and `flex: 1 1 20rem` above it. No absolute positioning, no CSS `order`, no reduced PageContainer padding, no symbol lockup, no abbreviated `Каталог`, no new breakpoint.
+
+### Geometry evidence correction
+
+The wide and expanded scenarios now measure the **complete Search form** through `searchLandmark(page).boundingBox()` instead of the raw input, and the Search label was neither hidden nor moved to satisfy them.
+
+Focused helpers — `resolveBox`, `boxTop`, `boxBottom`, `boxCenterY`, `boxRight`, `verticalOverlap` — replace the previous `?? 0` fallbacks. `resolveBox` asserts the bounding box is non-null and throws otherwise, so a missing box can no longer masquerade as the coordinate `0`.
+
+- **Expanded 1440px:** Brand and Catalog vertical centres agree within a 2px tolerance; the Search form's vertical interval overlaps both identity controls; the Search form's left edge is at or beyond Catalog's right edge; the Search form is wider than Catalog; the Information Bar still ends at or above the banner; no overflow; no M4-05 actions.
+- **1023 / 1024 / 1025 / 1279 / 1280 / 1281px:** Brand, Catalog, the Search form, its field and its submit are visible; the logo is at least 120px; the complete Search form shares the Header row with the identity controls and follows them horizontally; no overflow.
+- **Compact 320px:** Brand and Catalog centres agree within tolerance, Brand precedes Catalog with a non-negative gap, the Search form starts strictly below the bottom of both identity controls, the Search form fills the measured Header content width within 1px, the visible label, field and submit remain visible, the logo is at least 120px at the correct aspect ratio, every primary target is at least 44px, and there is no horizontal overflow. A three-row identity composition now fails the test.
+
+The 767 / 768 / 769px DOM-order scenarios are retained unchanged. The viewport matrix was not widened; a 319px scenario was deliberately **not** added, because it sits below the approved supported minimum.
+
+### Deterministic keyboard focus origin
+
+`document.body.focus()` is not a reliable document-start anchor for Chromium sequential focus navigation. One shared, test-only helper replaces it: `tests/e2e/support/focus-origin.ts`, exporting `withDocumentStartFocus(page, traversal)`.
+
+It mounts a temporary sentinel `div` **before the application root**, gives it `tabIndex = -1` so it never enters the normal Tab order, focuses it, and asserts that it is mounted, precedes the root, kept `tabIndex` `-1` and became `document.activeElement`. The sentinel stays mounted for the whole traversal and is removed in `finally`. It is test-only; no production focus sentinel, test hook or `data-testid` was added, and no runtime `tabIndex` changed.
+
+Migrated traversals: the Information Bar compact keyboard order test and its forced-colors keyboard scenario, the Header compact and wide keyboard-order tests, and the brand `skip link remains first` traversal in `tests/e2e/brand-home-link.spec.ts`, which carried the identical premise. The Header forced-colors scenario does not traverse from document start — it inspects a focus indicator — so it simply dropped the obsolete reset. No target control is focused directly to simulate keyboard order, no sleeps were added and Playwright retries and timeouts are unchanged.
+
+Runtime focus order is unchanged: compact `skip → disclosure → brand → Catalog → field → submit`; wide `skip → five service links → brand → Catalog → field → submit`; the open Information Bar still passes its five links before the brand link.
+
+### Serverless regression evidence
+
+Because local Playwright execution is prohibited, `tests/app/shell/site-header.test.tsx` adds bounded non-browser evidence: `BrandHomeLink` receives the Header-owned `brand-link` class alongside its own classes and keeps the horizontal lockup, and a style-contract group reads the `SiteHeader.module.scss` source to prove compact 120px ownership, the 48rem restoration to 180px, that no declared brand width falls below 120px, the non-wrapping identity row, the non-shrinking brand and Catalog, the full-width compact Search row, the 44px Catalog target, and the absence of absolute positioning or CSS `order`. No CSS parser dependency was added, and these assertions do not claim jsdom performs layout — browser geometry remains owned by the E2E suite.
+
+### Files changed
+
+| File                                                  | Change                                                       |
+| ----------------------------------------------------- | ------------------------------------------------------------ |
+| `src/app/shell/site-header/SiteHeader.tsx`            | Header-owned `brand-link` class passed to `BrandHomeLink`    |
+| `src/app/shell/site-header/SiteHeader.module.scss`    | non-wrapping identity row, compact 120px logo, 48rem restore |
+| `tests/app/shell/site-header.test.tsx`                | brand class ownership and compact style-contract evidence    |
+| `tests/e2e/support/focus-origin.ts`                   | new — shared document-start focus sentinel                   |
+| `tests/e2e/site-header.spec.ts`                       | complete Search-form geometry, migrated keyboard traversals  |
+| `tests/e2e/information-bar.spec.ts`                   | migrated keyboard and forced-colors traversals               |
+| `tests/e2e/brand-home-link.spec.ts`                   | migrated document-start traversal                            |
+| `docs/05-implementation/m4-canonical-shell-report.md` | M4-04 CI reconciliation; this section                        |
+| `docs/05-implementation/repository-state.md`          | current-state note                                           |
+
+No change to `GlobalSearchForm`, `header-core-config.ts`, `RootLayout`, the Information Bar, `BrandHomeLink`, brand SVGs, routes, Shared UI, Foundations, dependencies, the lockfile, the Playwright config, workflows or `.gitignore`.
+
+### Local verification
+
+| Command                  | Result                                         |
+| ------------------------ | ---------------------------------------------- |
+| `npm run typecheck`      | PASS                                           |
+| `npm run lint`           | PASS — 0 errors, 0 warnings                    |
+| `npm run lint:styles`    | PASS                                           |
+| `npm run format:check`   | PASS                                           |
+| `npm run check:comments` | PASS — no authored comments                    |
+| `npm test`               | PASS — **880 tests in 48 files**               |
+| `npm run build`          | PASS — 244 modules                             |
+| `npm run validate:build` | PASS                                           |
+| `npm run check:full`     | PASS — includes the bounded dev-bootstrap gate |
+| `git diff --check`       | PASS                                           |
+
+Bundle moves from raw 424.50 KB / gzip 126.86 KB to raw **424.75 KB** / gzip **126.90 KB**.
+
+Intentionally not run: `npm run dev`, `npm run preview`, `npm run test:e2e`, `playwright test`, `vite`, `vite preview`, `npm run review:m3-browser`, background or fixed-port servers, and user browser automation. CI was pending at commit time and user visual confirmation remains pending.
+
+### Deviations
+
+Two, both bounded.
+
+1. `tests/e2e/brand-home-link.spec.ts` is listed in the prompt as conditional. It does carry the same `document.body.focus()` document-start premise, so its one traversal test was migrated; nothing else in that file changed.
+2. `styles['brand-link']` types as `string | undefined`, and `BrandHomeLinkProps.className` is `string` under `exactOptionalPropertyTypes`. Rather than widen the `BrandHomeLink` API, `SiteHeader` resolves the class locally before passing it; `BrandHomeLink` already discards empty class values.
+
+### Risks
+
+- The compact identity row now depends on `120px + 16px + Catalog` fitting the 288px content width at 320px. The measured margin is comfortable, and a regression would surface as a horizontal-overflow failure rather than silently, but the Catalog label's rendered width is font-dependent.
+- The compact logo width is enforced from `SiteHeader.module.scss` through a selector deliberately more specific than the `BrandHomeLink` default. Restructuring the brand markup would break that override; the style-contract tests guard the Header side, not the brand side.
+- User visual confirmation against RTE-001 and CMP-001 is still outstanding, and the compact lockup is now visibly smaller than it was in the raster.
+- The wide Header still ends after Search. The composition will shift when M4-05 appends four actions, and the `search.x >= catalogRight` assertion will need revisiting then.
+
+### Next gate
+
+Green GitHub Actions CI on the exact M4-04A SHA with zero failed and zero flaky Playwright tests, then independent diff audit, then user visual confirmation against RTE-001 and CMP-001. **M4-05 must not begin until all three close.**

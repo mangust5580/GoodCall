@@ -1,4 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
+import { withDocumentStartFocus } from './support/focus-origin';
 
 const BRAND_LINK_LABEL = 'GoodCall — на главную';
 const MINIMUM_HORIZONTAL_WIDTH = 120;
@@ -118,34 +119,20 @@ test.describe('M4-02 runtime brand link', () => {
     await expect(disclosure).toHaveAttribute('aria-expanded', 'false');
     await expect(brandLink).toHaveCount(1);
 
-    const focusOrigin = await page.evaluate(() => {
-      const active = document.activeElement;
+    await withDocumentStartFocus(page, async () => {
+      await expect(skipLink).not.toBeFocused();
+      await expect(disclosure).not.toBeFocused();
+      await expect(brandLink).not.toBeFocused();
 
-      if (active instanceof HTMLElement && active !== document.body) {
-        active.blur();
-      }
+      await page.keyboard.press('Tab');
+      await expect(skipLink).toBeFocused();
 
-      document.body.focus();
+      await page.keyboard.press('Tab');
+      await expect(disclosure).toBeFocused();
 
-      const reset = document.activeElement;
-      return {
-        isSkipLink:
-          reset instanceof HTMLAnchorElement && reset.getAttribute('href') === '#main-content',
-        isInteractive: reset instanceof HTMLElement && reset !== document.body,
-      };
+      await page.keyboard.press('Tab');
+      await expect(brandLink).toBeFocused();
     });
-
-    expect(focusOrigin.isSkipLink).toBe(false);
-    expect(focusOrigin.isInteractive).toBe(false);
-
-    await page.keyboard.press('Tab');
-    await expect(skipLink).toBeFocused();
-
-    await page.keyboard.press('Tab');
-    await expect(disclosure).toBeFocused();
-
-    await page.keyboard.press('Tab');
-    await expect(brandLink).toBeFocused();
   });
 
   test('compact viewport keeps the target size without page overflow', async ({ page }) => {

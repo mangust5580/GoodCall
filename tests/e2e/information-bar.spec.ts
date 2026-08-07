@@ -1,5 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
 import { AxeBuilder } from '@axe-core/playwright';
+import { withDocumentStartFocus } from './support/focus-origin';
 
 const NAV_LABEL = 'Сервисная навигация';
 const DISCLOSURE_LABEL = 'Информация и помощь';
@@ -98,33 +99,27 @@ test.describe('M4-03 Information Bar', () => {
     await page.setViewportSize({ width: 320, height: 640 });
     await page.goto('/GoodCall/');
 
-    await page.evaluate(() => {
-      const active = document.activeElement;
-      if (active instanceof HTMLElement && active !== document.body) {
-        active.blur();
-      }
-      document.body.focus();
-    });
-
-    await page.keyboard.press('Tab');
-    await expect(page.locator('a[href="#main-content"]')).toBeFocused();
-
-    await page.keyboard.press('Tab');
-    await expect(disclosure(page)).toBeFocused();
-
-    await page.keyboard.press('Enter');
-    await expect(disclosure(page)).toHaveAttribute('aria-expanded', 'true');
-    await expect(disclosure(page)).toBeFocused();
-
-    for (const link of CANONICAL_LINKS) {
+    await withDocumentStartFocus(page, async () => {
       await page.keyboard.press('Tab');
-      await expect(
-        serviceNav(page).getByRole('link', { name: link.label, exact: true })
-      ).toBeFocused();
-    }
+      await expect(page.locator('a[href="#main-content"]')).toBeFocused();
 
-    await page.keyboard.press('Tab');
-    await expect(page.getByRole('link', { name: BRAND_LINK_LABEL, exact: true })).toBeFocused();
+      await page.keyboard.press('Tab');
+      await expect(disclosure(page)).toBeFocused();
+
+      await page.keyboard.press('Enter');
+      await expect(disclosure(page)).toHaveAttribute('aria-expanded', 'true');
+      await expect(disclosure(page)).toBeFocused();
+
+      for (const link of CANONICAL_LINKS) {
+        await page.keyboard.press('Tab');
+        await expect(
+          serviceNav(page).getByRole('link', { name: link.label, exact: true })
+        ).toBeFocused();
+      }
+
+      await page.keyboard.press('Tab');
+      await expect(page.getByRole('link', { name: BRAND_LINK_LABEL, exact: true })).toBeFocused();
+    });
   });
 
   test('opened compact disclosure shows five links in canonical order at usable size', async ({
@@ -323,41 +318,36 @@ test.describe('M4-03 Information Bar', () => {
     await page.setViewportSize({ width: 320, height: 640 });
     await page.goto('/GoodCall/help');
 
-    await page.evaluate(() => {
-      const active = document.activeElement;
-      if (active instanceof HTMLElement && active !== document.body) {
-        active.blur();
-      }
-      document.body.focus();
-    });
-
-    await page.keyboard.press('Tab');
-    await expect(page.locator('a[href="#main-content"]')).toBeFocused();
-
-    await page.keyboard.press('Tab');
-    await expect(disclosure(page)).toBeFocused();
-
-    await page.keyboard.press('Enter');
-    await expect(disclosure(page)).toHaveAttribute('aria-expanded', 'true');
-    await expect(disclosure(page)).toBeFocused();
-
-    const buttonIndicator = await disclosure(page).evaluate((element) => {
-      const style = window.getComputedStyle(element);
-      return { style: style.outlineStyle, width: parseFloat(style.outlineWidth) };
-    });
-    expect(buttonIndicator.style).not.toBe('none');
-    expect(buttonIndicator.width).toBeGreaterThan(0);
-
-    const helpIndex = CANONICAL_LINKS.findIndex((link) => link.label === 'Помощь');
-    expect(helpIndex).toBeGreaterThanOrEqual(0);
-
-    for (let step = 0; step <= helpIndex; step += 1) {
-      await page.keyboard.press('Tab');
-    }
-
     const current = serviceNav(page).getByRole('link', { name: 'Помощь', exact: true });
-    await expect(current).toBeFocused();
-    await expect(current).toHaveAttribute('aria-current', 'page');
+
+    await withDocumentStartFocus(page, async () => {
+      await page.keyboard.press('Tab');
+      await expect(page.locator('a[href="#main-content"]')).toBeFocused();
+
+      await page.keyboard.press('Tab');
+      await expect(disclosure(page)).toBeFocused();
+
+      await page.keyboard.press('Enter');
+      await expect(disclosure(page)).toHaveAttribute('aria-expanded', 'true');
+      await expect(disclosure(page)).toBeFocused();
+
+      const buttonIndicator = await disclosure(page).evaluate((element) => {
+        const style = window.getComputedStyle(element);
+        return { style: style.outlineStyle, width: parseFloat(style.outlineWidth) };
+      });
+      expect(buttonIndicator.style).not.toBe('none');
+      expect(buttonIndicator.width).toBeGreaterThan(0);
+
+      const helpIndex = CANONICAL_LINKS.findIndex((link) => link.label === 'Помощь');
+      expect(helpIndex).toBeGreaterThanOrEqual(0);
+
+      for (let step = 0; step <= helpIndex; step += 1) {
+        await page.keyboard.press('Tab');
+      }
+
+      await expect(current).toBeFocused();
+      await expect(current).toHaveAttribute('aria-current', 'page');
+    });
 
     const currentTreatment = await current.evaluate((element) => {
       const style = window.getComputedStyle(element);

@@ -1,8 +1,34 @@
 import { describe, it, expect } from 'vitest';
 import { render, screen, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { SiteHeader } from '@/app/shell/site-header';
 import { BRAND_HOME_LINK_LABEL } from '@/app/shell/brand';
+
+const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
+const headerStylesheet = fs.readFileSync(
+  path.join(repoRoot, 'src', 'app', 'shell', 'site-header', 'SiteHeader.module.scss'),
+  'utf-8'
+);
+
+const COMPACT_RESTORE_QUERY = '@media (width >= 48rem)';
+const restoreIndex = headerStylesheet.indexOf(COMPACT_RESTORE_QUERY);
+const compactStylesheet = restoreIndex < 0 ? '' : headerStylesheet.slice(0, restoreIndex);
+const restoredStylesheet = restoreIndex < 0 ? '' : headerStylesheet.slice(restoreIndex);
+
+function ruleBlock(source: string, selector: string): string {
+  const opening = `${selector} {`;
+  const start = source.indexOf(opening);
+
+  if (start < 0) {
+    return '';
+  }
+
+  const end = source.indexOf('}', start);
+  return end < 0 ? source.slice(start) : source.slice(start, end);
+}
 
 function renderHeader(initialEntry = '/') {
   return render(
@@ -70,6 +96,80 @@ describe('SiteHeader', () => {
 
       expect(container.querySelector('[data-brand-asset]')).not.toBeNull();
       expect(container.querySelector('img')).toHaveAttribute('alt', '');
+    });
+
+    it('passes a Header-owned class to the brand link', () => {
+      renderHeader();
+
+      const brand = screen.getByRole('link', { name: BRAND_HOME_LINK_LABEL });
+
+      expect(brand.className).toContain('brand-link');
+      expect(brand.className).toContain('brand-home-link');
+      expect(brand.className).toContain('horizontal');
+    });
+
+    it('keeps the horizontal lockup rather than the symbol lockup', () => {
+      renderHeader();
+
+      const brand = screen.getByRole('link', { name: BRAND_HOME_LINK_LABEL });
+
+      expect(brand.className).not.toContain('symbol');
+    });
+  });
+
+  describe('compact identity style contract', () => {
+    it('locates the 48rem restoration range', () => {
+      expect(restoreIndex).toBeGreaterThanOrEqual(0);
+    });
+
+    it('owns the compact brand width from the Header stylesheet', () => {
+      expect(compactStylesheet).toMatch(
+        /\.identity\s+\.brand-link\s+\[data-brand-asset\]\s*\{[^}]*inline-size:\s*120px/
+      );
+    });
+
+    it('restores the wider brand width at 48rem', () => {
+      expect(restoredStylesheet).toMatch(
+        /\.identity\s+\.brand-link\s+\[data-brand-asset\]\s*\{[^}]*inline-size:\s*180px/
+      );
+    });
+
+    it('never declares a brand width below the approved minimum', () => {
+      const widths = Array.from(headerStylesheet.matchAll(/(?<![-\w])inline-size:\s*(\d+)px/g)).map(
+        (match) => Number(match[1])
+      );
+
+      expect(widths.length).toBeGreaterThan(0);
+      for (const width of widths) {
+        expect(width).toBeGreaterThanOrEqual(120);
+      }
+    });
+
+    it('keeps the compact identity row from wrapping', () => {
+      expect(ruleBlock(compactStylesheet, '.identity')).toContain('flex-wrap: nowrap');
+      expect(ruleBlock(compactStylesheet, '.identity')).not.toContain('flex-wrap: wrap');
+    });
+
+    it('keeps the brand link and Catalog from shrinking below their content', () => {
+      expect(ruleBlock(compactStylesheet, '.brand-link')).toContain('flex: 0 0 auto');
+      expect(ruleBlock(compactStylesheet, '.primary-nav')).toContain('flex: 0 0 auto');
+    });
+
+    it('keeps Search on the second compact row and shares one row at 48rem', () => {
+      expect(ruleBlock(compactStylesheet, '.search-slot')).toContain('flex: 1 1 100%');
+      expect(restoredStylesheet).toContain('flex: 1 1 20rem');
+    });
+
+    it('composes the correction without absolute positioning or visual reordering', () => {
+      expect(headerStylesheet).not.toMatch(/position:\s*absolute/);
+      expect(headerStylesheet).not.toMatch(/^\s*order:/m);
+    });
+
+    it('keeps the Catalog target at or above 44px', () => {
+      const catalogRule = ruleBlock(headerStylesheet, '.catalog');
+
+      expect(catalogRule).toContain('min-inline-size: 44px');
+      expect(catalogRule).toContain('min-block-size: 44px');
     });
   });
 
