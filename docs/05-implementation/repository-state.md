@@ -622,7 +622,7 @@ M4-04 was not accepted on that SHA and user visual confirmation was not performe
 - Test suite: **880 tests across 48 files**, up from 869. Bundle: raw **424.75 KB** / gzip **126.90 KB**.
 - Local checks pass, including `npm run check:full`. **Local E2E was not run** — the production-preview lifecycle belongs to CI or a user-owned preview.
 - **CI is pending at commit time**, and **user visual confirmation against RTE-001 and CMP-001 is pending**.
-- **M4-05 remains blocked** until M4-04A exact-SHA green CI, independent audit and user visual confirmation all close.
+- This M4-04A gate statement is superseded by M4-04B. M4-05 is now unblocked by the approved M4-04B closure, while runtime M4-05 remains pending the M4-05-ICN asset gate.
 
 ## Milestone State Note — M4-04B Deterministic Keyboard Focus Origin (2026-08-07)
 
@@ -651,10 +651,62 @@ The compact runtime correction and the geometry evidence were unaffected. M4-04A
 - Test suite unchanged: **880 Vitest tests across 48 files**, 108 Playwright scenarios. Bundle unchanged at raw **424.75 KB** / gzip **126.90 KB** — the change ships nothing.
 - Local checks pass, including `npm run check:full`. **Local E2E was not run** — the production-preview lifecycle belongs to CI or a user-owned preview.
 - **CI is pending at commit time**, and **user visual confirmation against RTE-001 and CMP-001 is pending**.
-- **M4-05 remains blocked** until M4-04B exact-SHA CI reports 108 passed / 0 failed / 0 flaky, the independent audit approves, and the user confirms the visual result.
+- M4-04B is **APPROVED AND CLOSED**: commit `d7b02e0169391177b6cd4641d598b8a10bdaf553`, GitHub Actions run **31138021965**, job **92741720296**, conclusion **success** — Vitest **880 passed in 48 files**, Playwright **108 passed, 0 failed, 0 flaky**, no retry marker. The independent technical audit approved it, and the user confirmed the visual result at **1440px**, **768px** and **320px**.
+- M4-04A is **CLOSED THROUGH M4-04B**.
+- M4-04 is **APPROVED AND CLOSED THROUGH M4-04A AND M4-04B**.
+- M4-05 is unblocked, but runtime implementation has not started. The M4-05-ICN shell icon asset prerequisite is the current asset-only stage.
+
+## Milestone State Note — M4-05-ICN Application-Owned Shell Icon Set (2026-08-07)
+
+### Stage identity
+
+- Stage: **M4-05-ICN — Application-owned shell icon set**.
+- Baseline SHA: `d7b02e0169391177b6cd4641d598b8a10bdaf553` (M4-04B closure commit).
+- The resulting M4-05-ICN commit SHA cannot be embedded inside its own commit and is recorded in the untracked stage handoff.
+
+### Added in M4-05-ICN
+
+```
+src/assets/icons/shell/
+  catalog.svg                      Catalog/category access source icon
+  search.svg                       Search source icon
+  comparison.svg                   Product comparison source icon
+  favorites.svg                    Favorites/saved-items source icon
+  cart.svg                         Cart source icon
+  account.svg                      Guest Account/Auth source icon
+docs/05-implementation/
+  m4-shell-icon-asset-manifest.json
+  m4-shell-icon-assets-report.md
+tests/
+  shell-icon-assets.test.ts
+```
+
+### Current icon inventory
+
+Six application-owned shell SVG assets now exist under `src/assets/icons/shell/`: `catalog`, `search`, `comparison`, `favorites`, `cart` and `account`.
+
+All six use `viewBox="0 0 24 24"`, intrinsic `24 × 24`, a shared `1.9` rounded outline stroke, transparent background and paint limited to `#000000` and `none`. They are monochrome mask-compatible sources; consuming components own color, labels, accessible names, route semantics, current-route state, counters and forced-colors behavior.
+
+### Asset governance
+
+- Manifest: `docs/05-implementation/m4-shell-icon-asset-manifest.json`.
+- Report: `docs/05-implementation/m4-shell-icon-assets-report.md`.
+- Source-level validation: `tests/shell-icon-assets.test.ts`.
+- Local review artifact: `artifacts/m4-05/review/shell-icon-contact-sheet.png`, `1800 × 1100`, `58 676` bytes, SHA-256 `9f582394ce6737763f82bb9482e640f32809f516f990c3af03488c0dc07aecf7`, ignored and uncommitted.
+
+The manifest status remains `approvalStatus: awaiting-independent-asset-audit-and-user-visual-confirmation` and `integrationStatus: produced-not-integrated`.
+
+### State at report time
+
+- No Header action runtime markup exists yet.
+- No runtime source imports the shell icons.
+- No route, Shared UI, dependency, lockfile, CSS, tooling or workflow change.
+- No brand asset edit.
+- The six icons are produced but not approved and not integrated.
+- Runtime M4-05 remains blocked pending independent asset audit, exact-SHA CI and user visual confirmation of the contact sheet.
 
 ## Next Repository Modifications
 
 The current implementation milestone is **M4**, whose scope must be taken from the approved architecture and UI/component/responsive contracts.
 
-**M4-05 must not begin** until the M4-04B exact-SHA CI, independent audit and user visual confirmation all close.
+**M4-05 runtime implementation must not begin** until the M4-05-ICN asset diff audit, exact-SHA CI and user visual confirmation of `artifacts/m4-05/review/shell-icon-contact-sheet.png` all close.

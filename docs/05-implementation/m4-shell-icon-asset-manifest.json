@@ -1,0 +1,242 @@
+[
+  {
+    "assetId": "catalog",
+    "canonicalName": "catalog.svg",
+    "semanticRole": "catalog/category entry for structured product access",
+    "owner": "application",
+    "format": "SVG",
+    "viewBox": "0 0 24 24",
+    "intrinsicWidth": 24,
+    "intrinsicHeight": 24,
+    "fileSizeBytes": 449,
+    "sha256": "d300da2ef73302ca9c56abde611bedf53daad2a03a345ef0ce4fa62e72f4edb2",
+    "elementCounts": {
+      "svg": 1,
+      "rect": 4
+    },
+    "pathCount": 0,
+    "fillStrategy": "fixed-monochrome-stroke",
+    "fixedColors": ["#000000"],
+    "strokeWidth": "1.9",
+    "strokeLinecap": "round",
+    "strokeLinejoin": "round",
+    "transparentBackground": true,
+    "fontDependency": false,
+    "rasterEmbedding": false,
+    "externalReferences": false,
+    "accessibilityOwnership": "consuming component owns semantics",
+    "intendedRuntimeUse": "M4-05 Header Catalog route action asset source",
+    "minimumReviewSize": "16px",
+    "productionPath": "src/assets/icons/shell/catalog.svg",
+    "sourceEvidence": [
+      "RTE-001 full-resolution inspection of Header action hierarchy and wide Header density",
+      "CMP-001 full-resolution Header and Navigation crop x=282 y=218 width=1546 height=260"
+    ],
+    "approvalStatus": "awaiting-independent-asset-audit-and-user-visual-confirmation",
+    "integrationStatus": "produced-not-integrated",
+    "knownRisks": [
+      "grid metaphor requires visual confirmation against the final Header action label treatment"
+    ],
+    "notes": "Four rounded tiles distinguish catalog/category access from product cards and the main navigation hamburger."
+  },
+  {
+    "assetId": "search",
+    "canonicalName": "search.svg",
+    "semanticRole": "catalog search action",
+    "owner": "application",
+    "format": "SVG",
+    "viewBox": "0 0 24 24",
+    "intrinsicWidth": 24,
+    "intrinsicHeight": 24,
+    "fileSizeBytes": 281,
+    "sha256": "9d83689fae2d84e027e9d52ef93787529d1f0851f8882ef2c14eeb70921cedd7",
+    "elementCounts": {
+      "svg": 1,
+      "circle": 1,
+      "path": 1
+    },
+    "pathCount": 1,
+    "fillStrategy": "fixed-monochrome-stroke",
+    "fixedColors": ["#000000"],
+    "strokeWidth": "1.9",
+    "strokeLinecap": "round",
+    "strokeLinejoin": "round",
+    "transparentBackground": true,
+    "fontDependency": false,
+    "rasterEmbedding": false,
+    "externalReferences": false,
+    "accessibilityOwnership": "consuming component owns semantics",
+    "intendedRuntimeUse": "M4-05 Header Search route action asset source",
+    "minimumReviewSize": "16px",
+    "productionPath": "src/assets/icons/shell/search.svg",
+    "sourceEvidence": [
+      "RTE-001 full-resolution inspection of Search affordance placement and Header density",
+      "CMP-001 full-resolution Header and Navigation crop x=282 y=218 width=1546 height=260"
+    ],
+    "approvalStatus": "awaiting-independent-asset-audit-and-user-visual-confirmation",
+    "integrationStatus": "produced-not-integrated",
+    "knownRisks": [
+      "runtime Search action must avoid duplicate semantics with the existing search form"
+    ],
+    "notes": "Round lens and diagonal handle follow the Header search evidence without embedding an input field or button container."
+  },
+  {
+    "assetId": "comparison",
+    "canonicalName": "comparison.svg",
+    "semanticRole": "product comparison between alternatives",
+    "owner": "application",
+    "format": "SVG",
+    "viewBox": "0 0 24 24",
+    "intrinsicWidth": 24,
+    "intrinsicHeight": 24,
+    "fileSizeBytes": 401,
+    "sha256": "65391f1dd77f587554ff7b709249aa41052a9d559bd986b17030f907b1e16c35",
+    "elementCounts": {
+      "svg": 1,
+      "rect": 2,
+      "path": 1
+    },
+    "pathCount": 1,
+    "fillStrategy": "fixed-monochrome-stroke",
+    "fixedColors": ["#000000"],
+    "strokeWidth": "1.9",
+    "strokeLinecap": "round",
+    "strokeLinejoin": "round",
+    "transparentBackground": true,
+    "fontDependency": false,
+    "rasterEmbedding": false,
+    "externalReferences": false,
+    "accessibilityOwnership": "consuming component owns semantics",
+    "intendedRuntimeUse": "M4-05 Header Comparison route action asset source",
+    "minimumReviewSize": "16px",
+    "productionPath": "src/assets/icons/shell/comparison.svg",
+    "sourceEvidence": [
+      "RTE-001 full-resolution inspection of Header action order and compact icon weight",
+      "CMP-001 full-resolution Header and Navigation crop x=282 y=218 width=1546 height=260"
+    ],
+    "approvalStatus": "awaiting-independent-asset-audit-and-user-visual-confirmation",
+    "integrationStatus": "produced-not-integrated",
+    "knownRisks": ["two-panel metaphor needs independent audit for comparison reading at 16px"],
+    "notes": "Side-by-side product panels with matching internal marks communicate comparing alternatives without refresh, sync, chart or legal-scale semantics."
+  },
+  {
+    "assetId": "favorites",
+    "canonicalName": "favorites.svg",
+    "semanticRole": "favorites and saved items",
+    "owner": "application",
+    "format": "SVG",
+    "viewBox": "0 0 24 24",
+    "intrinsicWidth": 24,
+    "intrinsicHeight": 24,
+    "fileSizeBytes": 376,
+    "sha256": "1df513b8e9292e0d4ac73d0e9b0c98340bc8e2306f9b1fe41ba924c8154c7493",
+    "elementCounts": {
+      "svg": 1,
+      "path": 1
+    },
+    "pathCount": 1,
+    "fillStrategy": "fixed-monochrome-stroke",
+    "fixedColors": ["#000000"],
+    "strokeWidth": "1.9",
+    "strokeLinecap": "round",
+    "strokeLinejoin": "round",
+    "transparentBackground": true,
+    "fontDependency": false,
+    "rasterEmbedding": false,
+    "externalReferences": false,
+    "accessibilityOwnership": "consuming component owns semantics",
+    "intendedRuntimeUse": "M4-05 Header Favorites route action asset source",
+    "minimumReviewSize": "16px",
+    "productionPath": "src/assets/icons/shell/favorites.svg",
+    "sourceEvidence": [
+      "RTE-001 full-resolution inspection of Favorites Header action and inactive outline state",
+      "CMP-001 full-resolution Header and Navigation crop x=282 y=218 width=1546 height=260"
+    ],
+    "approvalStatus": "awaiting-independent-asset-audit-and-user-visual-confirmation",
+    "integrationStatus": "produced-not-integrated",
+    "knownRisks": [
+      "active saved-state fill is deferred and must not reuse this inactive asset as state evidence"
+    ],
+    "notes": "Single outline heart provides the inactive saved-items baseline and avoids star, badge and filled active-state variants."
+  },
+  {
+    "assetId": "cart",
+    "canonicalName": "cart.svg",
+    "semanticRole": "shopping cart route entry",
+    "owner": "application",
+    "format": "SVG",
+    "viewBox": "0 0 24 24",
+    "intrinsicWidth": 24,
+    "intrinsicHeight": 24,
+    "fileSizeBytes": 385,
+    "sha256": "a2dfe084f4c9e5484c208278ffc4f1cedbe110d622acaacf99691d7d57e7558a",
+    "elementCounts": {
+      "svg": 1,
+      "path": 1,
+      "circle": 2
+    },
+    "pathCount": 1,
+    "fillStrategy": "fixed-monochrome-stroke",
+    "fixedColors": ["#000000"],
+    "strokeWidth": "1.9",
+    "strokeLinecap": "round",
+    "strokeLinejoin": "round",
+    "transparentBackground": true,
+    "fontDependency": false,
+    "rasterEmbedding": false,
+    "externalReferences": false,
+    "accessibilityOwnership": "consuming component owns semantics",
+    "intendedRuntimeUse": "M4-05 Header Cart route action asset source",
+    "minimumReviewSize": "16px",
+    "productionPath": "src/assets/icons/shell/cart.svg",
+    "sourceEvidence": [
+      "RTE-001 full-resolution inspection of Cart Header action without copying cart total or counters",
+      "CMP-001 full-resolution Header and Navigation crop x=282 y=218 width=1546 height=260"
+    ],
+    "approvalStatus": "awaiting-independent-asset-audit-and-user-visual-confirmation",
+    "integrationStatus": "produced-not-integrated",
+    "knownRisks": [
+      "future counter badge placement must be component-owned and not baked into the SVG"
+    ],
+    "notes": "Open cart body and two wheels preserve Cart recognition without price text, total, count, dot or badge geometry."
+  },
+  {
+    "assetId": "account",
+    "canonicalName": "account.svg",
+    "semanticRole": "guest account and authentication entry",
+    "owner": "application",
+    "format": "SVG",
+    "viewBox": "0 0 24 24",
+    "intrinsicWidth": 24,
+    "intrinsicHeight": 24,
+    "fileSizeBytes": 314,
+    "sha256": "e79c601fae31f7ff4b0d7fffb056858bf91a5e0a91177346bcf4c5ac1441d093",
+    "elementCounts": {
+      "svg": 1,
+      "circle": 1,
+      "path": 1
+    },
+    "pathCount": 1,
+    "fillStrategy": "fixed-monochrome-stroke",
+    "fixedColors": ["#000000"],
+    "strokeWidth": "1.9",
+    "strokeLinecap": "round",
+    "strokeLinejoin": "round",
+    "transparentBackground": true,
+    "fontDependency": false,
+    "rasterEmbedding": false,
+    "externalReferences": false,
+    "accessibilityOwnership": "consuming component owns semantics",
+    "intendedRuntimeUse": "M4-05 Header Account/Auth route action asset source",
+    "minimumReviewSize": "16px",
+    "productionPath": "src/assets/icons/shell/account.svg",
+    "sourceEvidence": [
+      "RTE-001 full-resolution inspection of guest Account Header action hierarchy",
+      "CMP-001 full-resolution Header and Navigation crop x=282 y=218 width=1546 height=260"
+    ],
+    "approvalStatus": "awaiting-independent-asset-audit-and-user-visual-confirmation",
+    "integrationStatus": "produced-not-integrated",
+    "knownRisks": ["future authenticated avatar state needs a separate runtime decision"],
+    "notes": "Neutral head-and-shoulders outline supports the later visible label Войти without initials, avatar, status dot or chevron."
+  }
+]

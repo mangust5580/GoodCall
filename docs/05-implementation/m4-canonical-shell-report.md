@@ -2,21 +2,24 @@
 
 ## Status
 
-| Task                                                                          | Status                                                                        |
-| ----------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
-| M4-01 — Shell destination safety and composition boundary                     | **CLOSED THROUGH M4-01A**                                                     |
-| M4-01A — Catalog family catch-all correction and CI reconciliation            | **APPROVED AND CLOSED**                                                       |
-| M4-02 — Runtime brand/logo integration                                        | **CLOSED THROUGH M4-02A**                                                     |
-| M4-02A — Brand landmark accessibility correction and E2E stabilization        | **APPROVED AND CLOSED**                                                       |
-| M4-03 — Information Bar                                                       | **CLOSED THROUGH M4-03A**                                                     |
-| M4-03A — Information Bar E2E correction and exact active-state reconciliation | **APPROVED AND CLOSED**                                                       |
-| M4-04 — Primary Header core: Catalog entry and Global Search                  | **IMPLEMENTED — AWAITING M4-04B CLOSURE AND USER VISUAL CONFIRMATION**        |
-| M4-04A — Compact Header layout correction and E2E geometry stabilization      | **NOT ACCEPTED — EXACT-SHA CI CONTAINED 1 FLAKY TEST; CORRECTED BY M4-04B**   |
-| M4-04B — Deterministic keyboard focus origin and CI reconciliation            | **IMPLEMENTED — AWAITING INDEPENDENT AUDIT, CI AND USER VISUAL CONFIRMATION** |
+| Task                                                                          | Status                                                                              |
+| ----------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| M4-01 — Shell destination safety and composition boundary                     | **CLOSED THROUGH M4-01A**                                                           |
+| M4-01A — Catalog family catch-all correction and CI reconciliation            | **APPROVED AND CLOSED**                                                             |
+| M4-02 — Runtime brand/logo integration                                        | **CLOSED THROUGH M4-02A**                                                           |
+| M4-02A — Brand landmark accessibility correction and E2E stabilization        | **APPROVED AND CLOSED**                                                             |
+| M4-03 — Information Bar                                                       | **CLOSED THROUGH M4-03A**                                                           |
+| M4-03A — Information Bar E2E correction and exact active-state reconciliation | **APPROVED AND CLOSED**                                                             |
+| M4-04 — Primary Header core: Catalog entry and Global Search                  | **APPROVED AND CLOSED THROUGH M4-04A AND M4-04B**                                   |
+| M4-04A — Compact Header layout correction and E2E geometry stabilization      | **CLOSED THROUGH M4-04B**                                                           |
+| M4-04B — Deterministic keyboard focus origin and CI reconciliation            | **APPROVED AND CLOSED**                                                             |
+| M4-05-ICN — Application-owned shell icon set                                  | **IMPLEMENTED — AWAITING INDEPENDENT ASSET AUDIT, CI AND USER VISUAL CONFIRMATION** |
 
-M4 is not approved and not closed. The Information Bar and the primary Header core now exist; Header route actions, the shell icon set, Footer and Newsletter all remain later stages. The transitional brand banner was replaced by the canonical Header in M4-04.
+M4 is not approved and not closed. The Information Bar and the primary Header core now exist; the shell icon asset prerequisite has been produced for audit, while Header route actions, Footer and Newsletter remain later stages. The transitional brand banner was replaced by the canonical Header in M4-04.
 
-**M4-04 is not closed through M4-04A.** M4-04A's compact runtime correction and geometry evidence are technically valid, but its exact-SHA run contained one flaky Playwright test, which does not satisfy the stage gate. M4-04B corrects that single defect.
+M4-04B closure evidence: commit `d7b02e0169391177b6cd4641d598b8a10bdaf553`, workflow run `31138021965`, job `92741720296`, workflow conclusion `success`, Vitest `880 passed in 48 files`, Playwright `108 passed`, `0 failed`, `0 flaky`, no retry marker, independent technical audit approved and user visual confirmation approved at `1440px`, `768px` and `320px`.
+
+M4-04B is **APPROVED AND CLOSED**. M4-04A is **CLOSED THROUGH M4-04B**. M4-04 is **APPROVED AND CLOSED THROUGH M4-04A AND M4-04B**. M4-05 is unblocked, and the icon asset prerequisite is active; runtime M4-05 Header action implementation has not started.
 
 ## M4-01 — Shell destination safety and composition boundary
 
@@ -1285,6 +1288,144 @@ None. The tracked diff is exactly the expected minimal set: the shared helper an
 - The sentinel joins the Tab order while mounted. It sits before `#root` and is removed after each traversal, so it cannot affect the asserted sequences, but any future test that tabs backwards would reach it.
 - User visual confirmation against RTE-001 and CMP-001 is still outstanding for the whole M4-04 chain.
 
+### Closure
+
+M4-04B is approved and closed. Exact-SHA CI passed for `d7b02e0169391177b6cd4641d598b8a10bdaf553`: workflow run `31138021965`, job `92741720296`, conclusion `success`, Vitest `880 passed in 48 files`, Playwright `108 passed`, `0 failed`, `0 flaky`, no retry marker. The independent technical audit approved the stage, and user visual confirmation was approved at `1440px`, `768px` and `320px`.
+
+M4-04A is closed through M4-04B. M4-04 is approved and closed through M4-04A and M4-04B. M4-05 is unblocked.
+
+## M4-05-ICN — Application-owned shell icon set
+
+**Status at commit time: IMPLEMENTED — AWAITING INDEPENDENT ASSET AUDIT, CI AND USER VISUAL CONFIRMATION**
+
+### Baseline
+
+| Item                                 | Value                                        |
+| ------------------------------------ | -------------------------------------------- |
+| Branch                               | `main`                                       |
+| Baseline SHA                         | `d7b02e0169391177b6cd4641d598b8a10bdaf553`   |
+| Baseline commit                      | `fix(test): stabilize shell focus traversal` |
+| `git rev-parse HEAD` / `origin/main` | both matched the baseline before changes     |
+| `git diff` / `git diff --cached`     | exit 0 — clean before tracked changes        |
+
+### Visual-source evidence
+
+RTE-001: `artifacts/m4-03/references/RTE-001.png`, `1920 × 3840`, `5 438 232` bytes, SHA-256 `cb943e0b5b525645ede341c53fb6bff7eca714a69b62c042db23d62feb7bdd64`. It was used for Header action hierarchy, action roles, icon-to-label relationship, optical weight and wide Header density.
+
+CMP-001: `artifacts/m4-04/references/CMP-001.png`, `1920 × 3412`, `4 354 263` bytes, SHA-256 `127c41f4604135c8e6a89ae6614d5702a3b55a69bfb26ebfea4e4c15a5dfe772`. Inspection used the full-resolution Header and Navigation crop `x=282`, `y=218`, `width=1546`, `height=260`, covering the information bar, main Header action row and category navigation row.
+
+Both sources remain ignored and uncommitted.
+
+### Output inventory
+
+Six application-owned production SVG assets were added:
+
+| Asset      | Path                                    | Bytes | SHA-256                                                            |
+| ---------- | --------------------------------------- | ----: | ------------------------------------------------------------------ |
+| Catalog    | `src/assets/icons/shell/catalog.svg`    |   449 | `d300da2ef73302ca9c56abde611bedf53daad2a03a345ef0ce4fa62e72f4edb2` |
+| Search     | `src/assets/icons/shell/search.svg`     |   281 | `9d83689fae2d84e027e9d52ef93787529d1f0851f8882ef2c14eeb70921cedd7` |
+| Comparison | `src/assets/icons/shell/comparison.svg` |   401 | `65391f1dd77f587554ff7b709249aa41052a9d559bd986b17030f907b1e16c35` |
+| Favorites  | `src/assets/icons/shell/favorites.svg`  |   376 | `1df513b8e9292e0d4ac73d0e9b0c98340bc8e2306f9b1fe41ba924c8154c7493` |
+| Cart       | `src/assets/icons/shell/cart.svg`       |   385 | `a2dfe084f4c9e5484c208278ffc4f1cedbe110d622acaacf99691d7d57e7558a` |
+| Account    | `src/assets/icons/shell/account.svg`    |   314 | `e79c601fae31f7ff4b0d7fffb056858bf91a5e0a91177346bcf4c5ac1441d093` |
+
+### Family direction
+
+The selected family direction is a clean monochrome outline set with `viewBox="0 0 24 24"`, intrinsic `24 × 24`, `stroke-width="1.9"`, rounded caps and joins, transparent backgrounds, no filled containers, no gradients, no shadows and no brand-purple pixels. Paint is limited to `#000000` and `none`, making the source files mask-compatible while keeping contextual colour, hover, current-route and forced-colors behavior in the future consuming component.
+
+### Per-icon semantic rationale
+
+Catalog uses four rounded tiles for structured category access and avoids hamburger, bag, product-card and text semantics.
+
+Search uses a circular lens and diagonal handle without an input field or button container.
+
+Comparison uses two side-by-side product panels with matching internal marks so the icon reads as alternatives being compared, not refresh, sync, chart or legal scales.
+
+Favorites uses an inactive outline heart and does not introduce a filled active-state variant.
+
+Cart uses an open cart body and two wheels without total, item count, badge or notification dot.
+
+Account uses a neutral outline person/profile mark for the guest account/auth entry and the later visible label `Войти`, with no avatar, initials, status dot or chevron.
+
+### Technical constraints
+
+The production SVGs are standalone UTF-8 files under 3 KB, with no `<title>`, `<desc>`, text, image, script, style, foreign object, external reference, data URI, font dependency, filter, gradient, pattern, animation, opacity below 1, editor namespace, hidden layer, accessible name or authored comment. They are project-specific reconstructions based on semantic roles and raster evidence; no third-party icon library or downloaded SVG was used.
+
+### Manifest and tests
+
+Manifest: `docs/05-implementation/m4-shell-icon-asset-manifest.json`.
+
+Source-level test: `tests/shell-icon-assets.test.ts`.
+
+The manifest records six entries in canonical order with final byte sizes, SHA-256 hashes, element counts, stroke/fill strategy, source evidence, `approvalStatus: "awaiting-independent-asset-audit-and-user-visual-confirmation"` and `integrationStatus: "produced-not-integrated"`.
+
+### Review contact sheet evidence
+
+Local ignored review artifact: `artifacts/m4-05/review/shell-icon-contact-sheet.png`.
+
+| Item              | Value                                                                                                                                     |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| Dimensions        | `1800 × 1100`                                                                                                                             |
+| Bytes             | `58 676`                                                                                                                                  |
+| SHA-256           | `9f582394ce6737763f82bb9482e640f32809f516f990c3af03488c0dc07aecf7`                                                                        |
+| Generation method | PowerShell `System.Drawing` render of the same 24px geometry at 16, 20, 24 and 32px with light, brand-surface and construction-guide rows |
+
+The contact sheet is not a full Header mockup and contains no counters, active-route state or approval claim.
+
+### Files changed
+
+| File                                                       | Change                                    |
+| ---------------------------------------------------------- | ----------------------------------------- |
+| `src/assets/icons/shell/catalog.svg`                       | new Catalog source SVG                    |
+| `src/assets/icons/shell/search.svg`                        | new Search source SVG                     |
+| `src/assets/icons/shell/comparison.svg`                    | new Comparison source SVG                 |
+| `src/assets/icons/shell/favorites.svg`                     | new Favorites source SVG                  |
+| `src/assets/icons/shell/cart.svg`                          | new Cart source SVG                       |
+| `src/assets/icons/shell/account.svg`                       | new Account source SVG                    |
+| `tests/shell-icon-assets.test.ts`                          | new source-level asset contract test      |
+| `docs/05-implementation/m4-shell-icon-asset-manifest.json` | new deterministic asset manifest          |
+| `docs/05-implementation/m4-shell-icon-assets-report.md`    | new asset report                          |
+| `docs/05-implementation/m4-canonical-shell-report.md`      | M4-04 closure and M4-05-ICN documentation |
+| `docs/05-implementation/repository-state.md`               | M4-04 closure and current state note      |
+
+No runtime file changed. No Header action markup, React icon component, runtime asset map, CSS, route, Shared UI, dependency, lockfile, tooling or workflow change was made.
+
+### Local verification
+
+| Command                                          | Result                                                                                                        |
+| ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------- |
+| `npx vitest run tests/shell-icon-assets.test.ts` | PASS — **40 tests**                                                                                           |
+| `npm run typecheck`                              | PASS                                                                                                          |
+| `npm run lint`                                   | PASS                                                                                                          |
+| `npm run lint:styles`                            | PASS                                                                                                          |
+| `npm run format:check`                           | PASS                                                                                                          |
+| `npm run check:comments`                         | PASS — no authored comments                                                                                   |
+| `npm test`                                       | PASS — **920 tests in 49 files**                                                                              |
+| `npm run build`                                  | PASS — 244 modules, bundle unchanged at raw **424.75 KB** / gzip **126.90 KB** because icons are not imported |
+| `npm run validate:build`                         | PASS                                                                                                          |
+| `npm run check:full`                             | PASS — includes bounded `verify:dev-bootstrap`, dynamic port `60064`, cleanup and port release verified       |
+| `git diff --check`                               | PASS — no whitespace errors                                                                                   |
+| deterministic asset inspection                   | PASS — viewBox, byte sizes, SHA-256, element counts, forbidden markup and allowed paint match the manifest    |
+| ignore checks                                    | PASS — `AUDIT.md`, RTE-001, CMP-001 and contact sheet remain ignored                                          |
+
+Non-blocking warnings observed during Vitest/check:full: the existing Vite native config-loader warning for `__dirname` in `vitest.config.ts`, jsdom `Window.scrollTo()` notices, and Vite's existing `HydrateFallback` console warning during the bounded bootstrap check.
+
+### Commands intentionally not run
+
+`npm run dev`, `npm run preview`, `npm run test:e2e`, direct Playwright, persistent local servers, fixed-port servers, browser automation against the user's browser and `npm run review:m3-browser` were not run.
+
+### CI status
+
+Pending at commit time. Exact-SHA CI is required before this asset stage can be considered an implementation candidate.
+
+### Deviations
+
+The repository does not contain tracked copies of the named canonical `03`, `04C` or `06` planning documents, so tracked reconciliation was limited to this M4 report and `repository-state.md`.
+
+### Risks
+
+The comparison icon's two-panel metaphor needs explicit review at 16px and 20px to confirm it reads as product comparison. Runtime M4-05 still needs to prove accessible names, visible labels, responsive action layout, current-route state, counters and forced-colors behavior.
+
 ### Next gate
 
-Green GitHub Actions CI on the exact M4-04B SHA with **108 passed, 0 failed and 0 flaky** Playwright tests and 880 Vitest tests in 48 files, then independent diff audit, then user visual confirmation against RTE-001 and CMP-001. **M4-05 must not begin until all three close.**
+Independent asset diff audit, exact-SHA green CI and user visual confirmation of `artifacts/m4-05/review/shell-icon-contact-sheet.png`. Runtime M4-05 must not begin before both asset approvals and green CI.
