@@ -14,6 +14,8 @@ const MINIMUM_TARGET = 44;
 const MINIMUM_LOGO_WIDTH = 120;
 const ROW_TOLERANCE = 2;
 const FULL_WIDTH_TOLERANCE = 1;
+const USER_NAV_LABEL = 'Пользовательская навигация';
+const ACTION_LABELS = ['Сравнение', 'Избранное', 'Корзина', 'Войти'];
 
 interface Box {
   x: number;
@@ -186,8 +188,12 @@ test.describe('M4-04 primary Header core', () => {
     );
     expect(search.width, 'Search form dominates Catalog').toBeGreaterThan(catalog.width);
 
-    await expect(page.getByRole('link', { name: 'Сравнение' })).toHaveCount(0);
-    await expect(page.getByRole('link', { name: 'Корзина' })).toHaveCount(0);
+    const userNav = page.getByRole('navigation', { name: USER_NAV_LABEL });
+    await expect(userNav).toHaveCount(1);
+    await expect(userNav.getByRole('link')).toHaveAccessibleName(ACTION_LABELS);
+    expect(search.x, 'Search precedes the user actions').toBeLessThan(
+      (await resolveBox(userNav.getByRole('link').first(), 'first action')).x
+    );
 
     expect(await horizontalOverflow(page)).toBeLessThanOrEqual(1);
     expect(problems.pageErrors).toHaveLength(0);
@@ -245,10 +251,13 @@ test.describe('M4-04 primary Header core', () => {
         );
       });
 
-      expect(order[0]).toBe('brand');
-      expect(order[1]).toBe(CATALOG_LABEL);
-      expect(order[2]).toBe('field');
-      expect(order[3]).toBe(SEARCH_SUBMIT_LABEL);
+      expect(order).toEqual([
+        'brand',
+        CATALOG_LABEL,
+        'field',
+        SEARCH_SUBMIT_LABEL,
+        ...ACTION_LABELS,
+      ]);
 
       expect(await horizontalOverflow(page)).toBeLessThanOrEqual(1);
     });
@@ -320,6 +329,12 @@ test.describe('M4-04 primary Header core', () => {
 
       await page.keyboard.press('Tab');
       await expect(searchSubmit(page)).toBeFocused();
+
+      const userNav = page.getByRole('navigation', { name: USER_NAV_LABEL });
+      for (const label of ACTION_LABELS) {
+        await page.keyboard.press('Tab');
+        await expect(userNav.getByRole('link', { name: label, exact: true })).toBeFocused();
+      }
     });
   });
 
@@ -348,6 +363,12 @@ test.describe('M4-04 primary Header core', () => {
 
       await page.keyboard.press('Tab');
       await expect(searchSubmit(page)).toBeFocused();
+
+      const userNav = page.getByRole('navigation', { name: USER_NAV_LABEL });
+      for (const label of ACTION_LABELS) {
+        await page.keyboard.press('Tab');
+        await expect(userNav.getByRole('link', { name: label, exact: true })).toBeFocused();
+      }
     });
   });
 

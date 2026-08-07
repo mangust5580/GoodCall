@@ -28,6 +28,9 @@ function searchField(): HTMLInputElement {
   return screen.getByRole('searchbox', { name: 'Поиск по каталогу' });
 }
 
+const USER_NAV_LABEL = 'Пользовательская навигация';
+const ACTION_LABELS = ['Сравнение', 'Избранное', 'Корзина', 'Войти'];
+
 const MOUNTED_ROUTES: ReadonlyArray<readonly [string, string, string]> = [
   ['/', 'GoodCall Shared UI verification', 'GoodCall'],
   ['/search', 'Поиск', 'Поиск — GoodCall'],
@@ -136,7 +139,89 @@ describe('Site Header runtime mount', () => {
     expect(catalogIndex).toBe(brandIndex + 1);
     expect(fieldIndex).toBe(catalogIndex + 1);
     expect(submitIndex).toBe(fieldIndex + 1);
+
+    const userNav = screen.getByRole('navigation', { name: USER_NAV_LABEL });
+    const actionIndexes = ACTION_LABELS.map((label) =>
+      focusables.indexOf(within(userNav).getByRole('link', { name: label }))
+    );
+
+    expect(actionIndexes).toEqual([
+      submitIndex + 1,
+      submitIndex + 2,
+      submitIndex + 3,
+      submitIndex + 4,
+    ]);
   });
+
+  it.each([
+    ['/comparison', 'Сравнение', 'Сравнение товаров'],
+    ['/favorites', 'Избранное', 'Избранное'],
+    ['/cart', 'Корзина', 'Cart'],
+    ['/auth', 'Войти', 'Вход и регистрация'],
+  ])('navigates from Home to %s and focuses its heading', async (route, label, heading) => {
+    const router = renderApplicationAt('/');
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { level: 1 })).toBeInTheDocument();
+    });
+
+    await router.navigate(route);
+
+    await waitFor(() => {
+      const routeHeading = screen.getByRole('heading', { level: 1 });
+      expect(routeHeading).toHaveTextContent(heading);
+      expect(document.activeElement).toBe(routeHeading);
+    });
+
+    expect(router.state.location.pathname).toBe(route);
+    expect(document.querySelectorAll('main#main-content')).toHaveLength(1);
+    expect(document.querySelectorAll('h1')).toHaveLength(1);
+    expect(screen.getAllByRole('banner')).toHaveLength(1);
+
+    const userNav = screen.getByRole('navigation', { name: USER_NAV_LABEL });
+    expect(within(userNav).getByRole('link', { name: label })).toHaveAttribute(
+      'aria-current',
+      'page'
+    );
+    expect(
+      within(userNav)
+        .getAllByRole('link')
+        .filter((link) => link.hasAttribute('aria-current'))
+    ).toHaveLength(1);
+  });
+
+  it.each(['/comparison', '/favorites', '/cart', '/auth'])(
+    'composes %s directly for a hard refresh',
+    async (route) => {
+      renderApplicationAt(route);
+
+      await waitFor(() => {
+        expect(screen.getByRole('heading', { level: 1 })).toBeInTheDocument();
+      });
+
+      expect(screen.getAllByRole('banner')).toHaveLength(1);
+      expect(screen.getAllByRole('navigation', { name: USER_NAV_LABEL })).toHaveLength(1);
+      expect(document.querySelectorAll('main#main-content')).toHaveLength(1);
+    }
+  );
+
+  it.each(['/', '/catalog/laptops', '/search', '/help'])(
+    'marks no user action current at %s',
+    async (route) => {
+      renderApplicationAt(route);
+
+      await waitFor(() => {
+        expect(screen.getByRole('heading', { level: 1 })).toBeInTheDocument();
+      });
+
+      const userNav = screen.getByRole('navigation', { name: USER_NAV_LABEL });
+      expect(
+        within(userNav)
+          .getAllByRole('link')
+          .filter((link) => link.hasAttribute('aria-current'))
+      ).toHaveLength(0);
+    }
+  );
 
   it('navigates to the representative category and focuses its heading', async () => {
     const router = renderApplicationAt('/');

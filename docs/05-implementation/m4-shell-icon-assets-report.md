@@ -2,11 +2,51 @@
 
 ## Status
 
-IMPLEMENTED — AWAITING INDEPENDENT ASSET AUDIT, CI AND USER VISUAL CONFIRMATION
+**APPROVED AND CLOSED — FOUR ASSETS RUNTIME-INTEGRATED IN M4-05**
 
-The M4-05-ICN stage produced the application-owned shell icon source set required before M4-05 Header route actions. The assets are not approved by this report and are not runtime-integrated.
+| Stage       | Status                         |
+| ----------- | ------------------------------ |
+| M4-05-ICN   | **APPROVED AND CLOSED**        |
+| M4-05-ICN-A | **CLOSED THROUGH M4-05-ICN-B** |
+| M4-05-ICN-B | **APPROVED AND CLOSED**        |
 
-M4-05-ICN-A corrected the product/entity structure and passed exact-SHA CI, but its center-converging marker remained visually insufficient. M4-05-ICN-B replaces that marker with separated directional rows while preserving the approved family contract and the other five SVG assets byte-for-byte.
+The M4-05-ICN stage produced the application-owned shell icon source set required before M4-05 Header route actions. M4-05-ICN-A corrected the product/entity structure and passed exact-SHA CI, but its center-converging marker remained visually insufficient. M4-05-ICN-B replaced that marker with separated directional rows while preserving the approved family contract and the other five SVG assets byte-for-byte.
+
+### Closure evidence
+
+| Item                     | Value                                       |
+| ------------------------ | ------------------------------------------- |
+| M4-05-ICN-B commit       | `3737da32b4e420f18cdb7b71a54424875dcf3820`  |
+| Workflow run             | 31145480483                                 |
+| Job                      | 92763895227                                 |
+| Vitest                   | 921 passed in 49 files                      |
+| Shell icon asset suite   | 41 passed                                   |
+| Playwright               | 108 passed, 0 failed, 0 flaky               |
+| Build                    | success                                     |
+| Workflow conclusion      | success                                     |
+| Independent asset audit  | **approved**                                |
+| User visual confirmation | **approved** for the complete contact sheet |
+
+The full job log was independently inspected.
+
+### Runtime integration state
+
+M4-05 integrates four of the six assets into the canonical Header user navigation. **No SVG byte changed** during integration.
+
+| Asset      | Approval | Integration               |
+| ---------- | -------- | ------------------------- |
+| catalog    | approved | `approved-not-integrated` |
+| search     | approved | `approved-not-integrated` |
+| comparison | approved | `runtime-integrated`      |
+| favorites  | approved | `runtime-integrated`      |
+| cart       | approved | `runtime-integrated`      |
+| account    | approved | `runtime-integrated`      |
+
+Catalog and Search remain approved but deliberately not integrated: the M4-04 Catalog control keeps its text label and the Search form keeps its visible label and text submit, so neither was retrofitted with an icon.
+
+The four integrated assets are consumed only through `src/app/shell/site-header/header-actions-config.ts`, which imports them as Vite asset URLs. Vite inlines each file as a `data:image/svg+xml` URI because all six are far below the inline threshold; the runtime applies them through a CSS mask on a decorative `aria-hidden` span at a 20px box, so colour follows `currentColor`. No SVG path geometry is copied into TSX, and the asset tests assert this directly.
+
+Runtime integration CI for the M4-05 commit was pending at that commit's time; see the M4-05 section of `m4-canonical-shell-report.md`.
 
 ## Baseline
 

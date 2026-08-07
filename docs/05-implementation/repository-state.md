@@ -1,4 +1,4 @@
-# Repository State
+﻿# Repository State
 
 ## Created Files Summary
 
@@ -721,8 +721,35 @@ The manifest status remains `approvalStatus: awaiting-independent-asset-audit-an
 - The six icons are produced but not approved and not integrated.
 - Runtime M4-05 remains blocked pending independent asset audit, exact-SHA CI and user visual confirmation of the regenerated contact sheet.
 
+## Milestone State Note — M4-05 Header Route Actions (2026-08-07)
+
+### Icon prerequisite closure
+
+M4-05-ICN-B — commit `3737da32b4e420f18cdb7b71a54424875dcf3820`, run **31145480483**, job **92763895227** — concluded **success**: Vitest **921 passed in 49 files**, shell icon asset suite **41 passed**, Playwright **108 passed, 0 failed, 0 flaky**, build success. The full job log was independently inspected. The independent asset audit approved the set and the user confirmed the complete six-icon contact sheet.
+
+M4-05-ICN-B is **APPROVED AND CLOSED**; M4-05-ICN-A is **CLOSED THROUGH M4-05-ICN-B**; M4-05-ICN is **APPROVED AND CLOSED**. That unblocked runtime M4-05.
+
+### M4-05 implementation state
+
+- Baseline SHA `3737da32b4e420f18cdb7b71a54424875dcf3820`; the resulting M4-05 commit SHA cannot be embedded inside its own commit and is recorded in the untracked stage handoff.
+- **Four Header route actions** were added as navigation-only `NavLink` entries resolved from the existing route registry: `Сравнение` → `/comparison`, `Избранное` → `/favorites`, `Корзина` → `/cart`, `Войти` → `/auth`. No route was added, renamed or altered.
+- **Guest `Войти` baseline.** The Account action is the guest authentication entry only — no avatar, profile name, initials, dropdown, chevron, logout or session state.
+- **One user navigation landmark** named `Пользовательская навигация`, alongside the Information Bar's `Сервисная навигация`, the Header's `Основная навигация` and the `Поиск по каталогу` search landmark. The actions were not merged into the Information Bar.
+- **Four runtime-integrated assets.** `comparison.svg`, `favorites.svg`, `cart.svg` and `account.svg` are `runtime-integrated`; `catalog.svg` and `search.svg` remain `approved-not-integrated`, because the Catalog control keeps its text label and Search keeps its visible label and text submit. All six SVG files are byte-identical to their approved identities.
+- Icons are imported as Vite asset URLs only inside `src/app/shell/site-header/header-actions-config.ts` and rendered through a CSS mask on a decorative `aria-hidden` span at a **20px** box, with `background-color: currentcolor` and a `canvastext` fallback under forced colours. No SVG path geometry is inlined into TSX and no icon package was added.
+- **Labels are visible at wide and expanded (≥ 64rem)** and visually hidden at medium and compact, where the actions are icon-first. The exact programmatic names are constant at every range, supplied by `aria-label` on the link.
+- **Compact (< 48rem) uses a three-row Header** — identity/Catalog, full-width Search, then a four-equal-column action row. Medium uses two rows; wide and expanded use one row. Every action target is at least 44 × 44 CSS px.
+- **No counters, badges, notification dots, cart total or domain state.** No count prop or global count owner exists; counters are omitted while no approved runtime owner provides a value.
+- Exact `NavLink` `end` matching drives `aria-current="page"`; query and hash preserve it, and longer or unrelated paths do not inherit it. The current action is indicated by a border and weight rather than colour alone.
+- The **Header remains non-sticky**, the public `@/app/shell/site-header` barrel still exports only `SiteHeader`, and route heading focus, title, scroll and announcement ownership remain with the existing M1 lifecycle.
+- No route, registry, carrier, Shared UI, Foundations, dependency, lockfile, asset, tooling, Playwright config or workflow change.
+- Test suite: **979 tests across 51 files**, up from 921 in 49. Bundle: raw **430.50 KB** / gzip **128.07 KB**.
+- Local checks pass, including `npm run check:full`. **Local E2E was not run** — the production-preview lifecycle belongs to CI or a user-owned preview.
+- **CI is pending at commit time**, and **user visual confirmation at expanded, wide, medium and compact widths is pending**.
+- **M4-06 remains blocked** until M4-05 exact-SHA green CI, independent audit and user visual confirmation all close.
+
 ## Next Repository Modifications
 
 The current implementation milestone is **M4**, whose scope must be taken from the approved architecture and UI/component/responsive contracts.
 
-**M4-05 runtime implementation must not begin** until the M4-05-ICN-B asset diff audit, exact-SHA CI and user visual confirmation of `artifacts/m4-05/review/shell-icon-contact-sheet.png` all close.
+**M4-06 must not begin** until the M4-05 exact-SHA CI, independent audit and user visual confirmation at expanded, wide, medium and compact widths all close.

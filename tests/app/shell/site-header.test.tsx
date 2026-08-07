@@ -50,6 +50,13 @@ function catalogLink(): HTMLElement {
   return screen.getByRole('link', { name: 'Каталог' });
 }
 
+const USER_NAV_LABEL = 'Пользовательская навигация';
+const ACTION_LABELS = ['Сравнение', 'Избранное', 'Корзина', 'Войти'];
+
+function userNav(): HTMLElement {
+  return screen.getByRole('navigation', { name: USER_NAV_LABEL });
+}
+
 describe('SiteHeader', () => {
   describe('landmarks', () => {
     it('renders one semantic banner', () => {
@@ -219,19 +226,21 @@ describe('SiteHeader', () => {
   });
 
   describe('canonical order', () => {
-    it('places brand, then Catalog, then Search in DOM order', () => {
+    it('places brand, then Catalog, then Search, then the actions in DOM order', () => {
       const { container } = renderHeader();
 
       const brand = screen.getByRole('link', { name: BRAND_HOME_LINK_LABEL });
       const catalog = catalogLink();
       const search = screen.getByRole('search', { name: 'Поиск по каталогу' });
+      const userNav = screen.getByRole('navigation', { name: USER_NAV_LABEL });
 
-      const order = Array.from(container.querySelectorAll('a, form'));
+      const order = Array.from(container.querySelectorAll('a, form, nav'));
       expect(order.indexOf(brand)).toBeLessThan(order.indexOf(catalog));
       expect(order.indexOf(catalog)).toBeLessThan(order.indexOf(search));
+      expect(order.indexOf(search)).toBeLessThan(order.indexOf(userNav));
     });
 
-    it('places brand, Catalog, Search field and submit in focus order', () => {
+    it('places brand, Catalog, Search and the four actions in focus order', () => {
       const { container } = renderHeader();
 
       const focusables = Array.from(
@@ -251,31 +260,72 @@ describe('SiteHeader', () => {
       expect(catalogIndex).toBe(1);
       expect(fieldIndex).toBe(2);
       expect(submitIndex).toBe(3);
+
+      const actionIndexes = ACTION_LABELS.map((label) =>
+        focusables.indexOf(within(userNav()).getByRole('link', { name: label }))
+      );
+
+      expect(actionIndexes).toEqual([4, 5, 6, 7]);
     });
   });
 
-  describe('deferred M4-05 actions', () => {
-    it.each(['Сравнение', 'Избранное', 'Корзина', 'Войти', 'Аккаунт'])(
-      'does not render the %s action',
-      (label) => {
-        renderHeader();
+  describe('M4-05 user actions', () => {
+    it('renders one user navigation landmark', () => {
+      renderHeader();
 
-        expect(screen.queryByRole('link', { name: label })).not.toBeInTheDocument();
-        expect(screen.queryByRole('button', { name: label })).not.toBeInTheDocument();
-      }
-    );
+      expect(screen.getAllByRole('navigation', { name: USER_NAV_LABEL })).toHaveLength(1);
+      expect(banner().contains(userNav())).toBe(true);
+    });
 
-    it('renders no empty placeholder control', () => {
+    it.each(ACTION_LABELS)('renders exactly one %s link', (label) => {
+      renderHeader();
+
+      expect(within(userNav()).getAllByRole('link', { name: label })).toHaveLength(1);
+    });
+
+    it('renders no action as a button', () => {
+      renderHeader();
+
+      expect(within(userNav()).queryAllByRole('button')).toHaveLength(0);
+    });
+
+    it('renders every Header control with an accessible name', () => {
       const { container } = renderHeader();
 
       const interactive = Array.from(container.querySelectorAll<HTMLElement>('a[href], button'));
 
-      expect(interactive).toHaveLength(3);
+      expect(interactive).toHaveLength(7);
       for (const element of interactive) {
         const hasName =
           (element.textContent ?? '').trim().length > 0 || element.hasAttribute('aria-label');
         expect(hasName, `${element.tagName} has an accessible name`).toBe(true);
       }
+    });
+
+    it('does not retrofit the Catalog or Search controls with an icon', () => {
+      const { container } = renderHeader();
+
+      const catalog = catalogLink();
+      const search = screen.getByRole('search', { name: 'Поиск по каталогу' });
+
+      expect(catalog.querySelector('[data-shell-icon]')).toBeNull();
+      expect(search.querySelector('[data-shell-icon]')).toBeNull();
+      expect(container.querySelectorAll('[data-shell-icon]')).toHaveLength(4);
+    });
+
+    it('renders no counter, badge or account avatar', () => {
+      const { container } = renderHeader();
+
+      expect(within(userNav()).getByRole('link', { name: 'Войти' })).toBeInTheDocument();
+      expect(userNav().textContent).toBe(ACTION_LABELS.join(''));
+      expect(container.querySelector('[class*="counter"]')).toBeNull();
+      expect(container.querySelector('[class*="badge"]')).toBeNull();
+    });
+
+    it('adds no live region alongside the actions', () => {
+      const { container } = renderHeader();
+
+      expect(container.querySelectorAll('[aria-live]')).toHaveLength(0);
     });
   });
 });

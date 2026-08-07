@@ -2,26 +2,31 @@
 
 ## Status
 
-| Task                                                                          | Status                                                                              |
-| ----------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
-| M4-01 — Shell destination safety and composition boundary                     | **CLOSED THROUGH M4-01A**                                                           |
-| M4-01A — Catalog family catch-all correction and CI reconciliation            | **APPROVED AND CLOSED**                                                             |
-| M4-02 — Runtime brand/logo integration                                        | **CLOSED THROUGH M4-02A**                                                           |
-| M4-02A — Brand landmark accessibility correction and E2E stabilization        | **APPROVED AND CLOSED**                                                             |
-| M4-03 — Information Bar                                                       | **CLOSED THROUGH M4-03A**                                                           |
-| M4-03A — Information Bar E2E correction and exact active-state reconciliation | **APPROVED AND CLOSED**                                                             |
-| M4-04 — Primary Header core: Catalog entry and Global Search                  | **APPROVED AND CLOSED THROUGH M4-04A AND M4-04B**                                   |
-| M4-04A — Compact Header layout correction and E2E geometry stabilization      | **CLOSED THROUGH M4-04B**                                                           |
-| M4-04B — Deterministic keyboard focus origin and CI reconciliation            | **APPROVED AND CLOSED**                                                             |
-| M4-05-ICN — Application-owned shell icon set                                  | **IMPLEMENTED — CI SUCCESS; COMPARISON CORRECTION REQUIRED**                        |
-| M4-05-ICN-A — Comparison icon semantic correction                             | **IMPLEMENTED — CI SUCCESS; VISUAL GATE FAILED**                                    |
-| M4-05-ICN-B — Comparison marker legibility correction                         | **IMPLEMENTED — AWAITING INDEPENDENT ASSET AUDIT, CI AND USER VISUAL CONFIRMATION** |
+| Task                                                                          | Status                                                                        |
+| ----------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| M4-01 — Shell destination safety and composition boundary                     | **CLOSED THROUGH M4-01A**                                                     |
+| M4-01A — Catalog family catch-all correction and CI reconciliation            | **APPROVED AND CLOSED**                                                       |
+| M4-02 — Runtime brand/logo integration                                        | **CLOSED THROUGH M4-02A**                                                     |
+| M4-02A — Brand landmark accessibility correction and E2E stabilization        | **APPROVED AND CLOSED**                                                       |
+| M4-03 — Information Bar                                                       | **CLOSED THROUGH M4-03A**                                                     |
+| M4-03A — Information Bar E2E correction and exact active-state reconciliation | **APPROVED AND CLOSED**                                                       |
+| M4-04 — Primary Header core: Catalog entry and Global Search                  | **APPROVED AND CLOSED THROUGH M4-04A AND M4-04B**                             |
+| M4-04A — Compact Header layout correction and E2E geometry stabilization      | **CLOSED THROUGH M4-04B**                                                     |
+| M4-04B — Deterministic keyboard focus origin and CI reconciliation            | **APPROVED AND CLOSED**                                                       |
+| M4-05-ICN — Application-owned shell icon set                                  | **APPROVED AND CLOSED**                                                       |
+| M4-05-ICN-A — Comparison icon semantic correction                             | **CLOSED THROUGH M4-05-ICN-B**                                                |
+| M4-05-ICN-B — Comparison marker legibility correction                         | **APPROVED AND CLOSED**                                                       |
+| M4-05 — Header route actions: Comparison, Favorites, Cart and Account         | **IMPLEMENTED — AWAITING INDEPENDENT AUDIT, CI AND USER VISUAL CONFIRMATION** |
 
-M4 is not approved and not closed. The Information Bar and the primary Header core now exist; the shell icon asset prerequisite has been produced for audit, with the Comparison marker corrected through M4-05-ICN-B. Header route actions, Footer and Newsletter remain later stages. The transitional brand banner was replaced by the canonical Header in M4-04.
+M4 is not approved and not closed. The Information Bar, the primary Header core and the Header route actions now exist. Footer and Newsletter remain later stages. The transitional brand banner was replaced by the canonical Header in M4-04.
 
 M4-04B closure evidence: commit `d7b02e0169391177b6cd4641d598b8a10bdaf553`, workflow run `31138021965`, job `92741720296`, workflow conclusion `success`, Vitest `880 passed in 48 files`, Playwright `108 passed`, `0 failed`, `0 flaky`, no retry marker, independent technical audit approved and user visual confirmation approved at `1440px`, `768px` and `320px`.
 
-M4-04B is **APPROVED AND CLOSED**. M4-04A is **CLOSED THROUGH M4-04B**. M4-04 is **APPROVED AND CLOSED THROUGH M4-04A AND M4-04B**. M4-05 is unblocked, and the icon asset prerequisite remains active pending M4-05-ICN-B CI, independent asset audit and user visual confirmation; runtime M4-05 Header action implementation has not started.
+M4-04B is **APPROVED AND CLOSED**. M4-04A is **CLOSED THROUGH M4-04B**. M4-04 is **APPROVED AND CLOSED THROUGH M4-04A AND M4-04B**.
+
+M4-05-ICN-B closure evidence: commit `3737da32b4e420f18cdb7b71a54424875dcf3820`, workflow run `31145480483`, job `92763895227`, workflow conclusion `success`, Vitest `921 passed in 49 files`, shell icon asset suite `41 passed`, Playwright `108 passed`, `0 failed`, `0 flaky`, build success, independent asset audit approved and user visual confirmation of the complete six-icon contact sheet received. The full job log was independently inspected.
+
+M4-05-ICN-B is **APPROVED AND CLOSED**. M4-05-ICN-A is **CLOSED THROUGH M4-05-ICN-B**. M4-05-ICN is **APPROVED AND CLOSED**. That closed the icon asset prerequisite and unblocked runtime M4-05, which is implemented below and awaits its own audit, CI and user visual confirmation.
 
 ## M4-01 — Shell destination safety and composition boundary
 
@@ -1501,3 +1506,150 @@ Final comparison identity: `451` bytes, SHA-256 `960541877f591f97d795f689c226fcf
 The ignored contact sheet was regenerated from the actual six production SVG bytes loaded from disk through a bounded foreground headless Playwright rasterization script, with no server. Final artifact: `artifacts/m4-05/review/shell-icon-contact-sheet.png`, `2200 × 1500`, `142 827` bytes, SHA-256 `1c01b1d35849ebc798e5874d93c1331c65d23dcf8648d1989f1f1210b57d68ef`.
 
 No runtime file changed. No Header action markup, React icon component, icon barrel, runtime asset map, route, Shared UI, CSS, dependency, lockfile, tooling or workflow change was made. Runtime M4-05 remains blocked, no shell icon is imported at runtime, and user visual confirmation is pending.
+
+## M4-05 — Header route actions: Comparison, Favorites, Cart and Account
+
+**Status at commit time: IMPLEMENTED — AWAITING INDEPENDENT AUDIT, CI AND USER VISUAL CONFIRMATION**
+
+### Baseline
+
+| Item                                 | Value                                      |
+| ------------------------------------ | ------------------------------------------ |
+| Branch                               | `main`                                     |
+| Baseline SHA                         | `3737da32b4e420f18cdb7b71a54424875dcf3820` |
+| Baseline commit                      | `fix(assets): improve comparison marker`   |
+| Parent SHA                           | `69c0eca78e91cd66acad7f031d756454bd90dea5` |
+| `git rev-parse HEAD` / `origin/main` | both matched the baseline before changes   |
+| `git diff` / `git diff --cached`     | exit 0 — clean                             |
+
+RTE-001, CMP-001 and the approved contact sheet were re-verified against their recorded dimensions, byte counts and SHA-256 hashes; all nine values match, and all three remain ignored through `.git/info/exclude` and uncommitted. All six production SVG hashes were recomputed before and after implementation and are unchanged.
+
+### Action inventory and route mapping
+
+Four navigation-only actions, resolved from the existing route registry. No route was added, renamed or altered.
+
+| Order | id           | Visible label and accessible name | Route key    | Destination   | Icon             |
+| ----- | ------------ | --------------------------------- | ------------ | ------------- | ---------------- |
+| 1     | `comparison` | `Сравнение`                       | `comparison` | `/comparison` | `comparison.svg` |
+| 2     | `favorites`  | `Избранное`                       | `favorites`  | `/favorites`  | `favorites.svg`  |
+| 3     | `cart`       | `Корзина`                         | `cart`       | `/cart`       | `cart.svg`       |
+| 4     | `account`    | `Войти`                           | `auth`       | `/auth`       | `account.svg`    |
+
+`header-actions-config.ts` rejects a missing route, a catch-all destination, a dynamic path, a non-app-relative path, the repository literal `GoodCall`, and any duplicate id, label, route key or destination. No second route table exists and no destination is hardcoded.
+
+### Guest Account baseline
+
+The Account action is the guest entry only: visible label and accessible name `Войти`, destination `/auth`. There is no authenticated avatar, profile name, initials, account dropdown, chevron, logout, session detection or auth state anywhere in the Header.
+
+### No counters
+
+M4-05 renders no comparison, favorites or cart count, no notification dot, no badge, no empty counter slot, no zero placeholder and no cart total. The approved planning rule applies: counters are omitted when no approved runtime owner provides a value. No speculative count prop or global count owner was added, and the component tests assert the absence directly.
+
+### Component boundary
+
+`src/app/shell/site-header/index.ts` still exports only `SiteHeader`. `HeaderActions`, the action descriptors, the labels and the icon URLs are all internal.
+
+| File                        | Responsibility                                                            |
+| --------------------------- | ------------------------------------------------------------------------- |
+| `header-actions-config.ts`  | typed immutable descriptor list, registry resolution, route-safety guards |
+| `HeaderActions.tsx`         | user navigation landmark, four `NavLink` actions, decorative icon spans   |
+| `HeaderActions.module.scss` | action layout, icon box, label visibility, current-route treatment        |
+
+`header-core-config.ts` was deliberately **not** touched. A shared route resolver was considered and rejected: the Header core resolves a dynamic category route through `generatePath` while the actions resolve four static routes, the overlap is roughly fifteen lines, and refactoring would have destabilised an approved M4-04 file and its source-contract test for no behavioural gain.
+
+### Icon consumption
+
+The four approved SVGs are imported as Vite asset URLs and rendered through a CSS mask on an application-owned decorative span:
+
+- imported URL assigned to the typed custom property `--gc-header-action-icon`;
+- `mask-image`, `mask-repeat: no-repeat`, `mask-position: center`, `mask-size: contain` — vendor prefixes are added by the existing autoprefixer step, matching the `BrandHomeLink` precedent;
+- `background-color: currentcolor`, so colour is owned by the link;
+- `background-color: canvastext` under `forced-colors: active`, so the icons survive forced colours;
+- `aria-hidden="true"` on every icon span;
+- runtime icon box exactly **20px × 20px**, the size the user confirmed on the contact sheet.
+
+Because all six assets are far below Vite's inline threshold, each import resolves to a `data:image/svg+xml` URI rather than an emitted file. No SVG source is inlined into TSX, no path data is copied, and no `<object>`, icon font, Unicode glyph, emoji or icon package is used. Catalog and Search icons are imported nowhere.
+
+### Landmarks and accessibility
+
+The runtime now exposes exactly one banner, one `Сервисная навигация`, one `Основная навигация`, one `Поиск по каталогу` search landmark and one `Пользовательская навигация` user navigation. The user actions were not merged into the Information Bar.
+
+Each action carries its exact programmatic name through `aria-label` on the link. The visible label span is `aria-hidden` so the name has a single source, and its text is identical to the `aria-label`, satisfying label-in-name. No tooltip is used for naming, no `title` attribute is set, and no ARIA menu, menubar, menuitem or toolbar semantics were introduced. `IconButton` is not used — it is button-only and would misstate navigation.
+
+Current-route state uses exact `NavLink` `end` matching, so `aria-current="page"` appears only on the exact destination. `/comparison?source=header` and `/favorites#saved` stay current; `/comparison-extra`, `/cart/checkout`, `/catalog/laptops`, `/search`, service routes and Home mark nothing current. The current action is signalled by a visible border plus increased weight, not colour alone, and forced colours upgrade it to a 3px double border.
+
+### Responsive composition
+
+Only the four approved ranges are used, expressed as CSS ranges. There is no JavaScript viewport detection, no CSS `order`, no duplicated responsive DOM and no new breakpoint.
+
+| Range                    | Composition                                                         | Actions                                                    |
+| ------------------------ | ------------------------------------------------------------------- | ---------------------------------------------------------- |
+| Compact `< 48rem`        | three rows: identity/Catalog, full-width Search, full-width actions | four equal grid columns, icon-only, labels `display: none` |
+| Medium `48rem–63.999rem` | two rows: identity + Search, then actions                           | flex row aligned to the inline end, icon-only              |
+| Wide `64rem–79.999rem`   | one row: identity, Search, actions                                  | icon above label, all four labels visible                  |
+| Expanded `>= 80rem`      | one row, wider action spacing                                       | labels visible, Search absorbs the extra width             |
+
+Search keeps its visible label, field and submit at every range and is never replaced by `search.svg`. The compact logo stays 120px and the medium-and-above logo stays 180px. Every action target is at least 44 × 44 CSS px at every range.
+
+### Focus and DOM order
+
+DOM and focus order is `BrandHomeLink` → `Catalog` → Search field → Search submit → `Сравнение` → `Избранное` → `Корзина` → `Войти`, produced by DOM sequence rather than CSS. The full page order remains skip link → Information Bar disclosure (or five service links when inline) → Header controls → route content. Route heading focus, document title, scroll restoration and route announcements remain owned by the existing M1 lifecycle; no live region was added.
+
+### Files changed
+
+| File                                                       | Change                                                      |
+| ---------------------------------------------------------- | ----------------------------------------------------------- |
+| `src/app/shell/site-header/header-actions-config.ts`       | new — typed action descriptors and registry resolution      |
+| `src/app/shell/site-header/HeaderActions.tsx`              | new — user navigation landmark and four route actions       |
+| `src/app/shell/site-header/HeaderActions.module.scss`      | new — action layout, icon mask, responsive label visibility |
+| `src/app/shell/site-header/SiteHeader.tsx`                 | renders `HeaderActions` after the Search form               |
+| `src/app/shell/site-header/SiteHeader.module.scss`         | action slot placement across the approved ranges            |
+| `tests/app/shell/header-actions-config.test.ts`            | new — configuration, route safety and asset selection       |
+| `tests/app/shell/header-actions.test.tsx`                  | new — landmark, semantics, icons and current-route state    |
+| `tests/app/shell/site-header.test.tsx`                     | canonical order and action integration                      |
+| `tests/app/shell/site-header-runtime-mount.test.tsx`       | real route-tree navigation, focus and current state         |
+| `tests/app/shell/brand-runtime-mount.test.tsx`             | banner navigation count rescoped for the user navigation    |
+| `tests/shell-icon-assets.test.ts`                          | approval and integration reconciliation                     |
+| `tests/e2e/header-actions.spec.ts`                         | new — responsive, navigation, keyboard, zoom, touch, axe    |
+| `tests/e2e/site-header.spec.ts`                            | canonical order extended with the four actions              |
+| `docs/05-implementation/m4-shell-icon-asset-manifest.json` | approval and integration statuses                           |
+| `docs/05-implementation/m4-shell-icon-assets-report.md`    | icon-stage closure and integration state                    |
+| `docs/05-implementation/m4-canonical-shell-report.md`      | icon-stage closure; this section                            |
+| `docs/05-implementation/repository-state.md`               | current-state note                                          |
+
+No production SVG byte changed. No route, registry, carrier, loader, Shared UI, Foundations, asset, dependency, lockfile, Playwright config or workflow change.
+
+### Local verification
+
+| Command                  | Result                                         |
+| ------------------------ | ---------------------------------------------- |
+| `npm run typecheck`      | PASS                                           |
+| `npm run lint`           | PASS — 0 errors, 0 warnings                    |
+| `npm run lint:styles`    | PASS                                           |
+| `npm run format:check`   | PASS                                           |
+| `npm run check:comments` | PASS — no authored comments                    |
+| `npm test`               | PASS — **979 tests in 51 files**               |
+| `npm run build`          | PASS — 251 modules                             |
+| `npm run validate:build` | PASS                                           |
+| `npm run check:full`     | PASS — includes the bounded dev-bootstrap gate |
+| `git diff --check`       | PASS                                           |
+
+Bundle moves from raw 424.75 KB / gzip 126.90 KB to raw **430.50 KB** / gzip **128.07 KB**; the increase is the four inlined icon data URIs plus the action stylesheet.
+
+Intentionally not run: `npm run dev`, `npm run preview`, `npm run test:e2e`, `playwright test`, `vite`, `vite preview`, `npm run review:m3-browser`, background or fixed-port servers, and user browser automation. CI was pending at commit time and user visual confirmation remains pending.
+
+### Deviations
+
+One. `tests/app/shell/brand-runtime-mount.test.tsx` is outside the expected file list. Its M4-02A assertion required the banner to contain exactly one navigation landmark, which the canonical Header legitimately invalidates now that the user navigation lives inside the banner. The assertion was rescoped rather than weakened: the brand link must still sit outside any navigation landmark, and the banner must now contain exactly two navigations, named `Основная навигация` and `Пользовательская навигация`. This is the same file and the same class of rescoping already recorded as a deviation in M4-04.
+
+### Risks
+
+- The wide one-row composition is tightest at exactly 1024px, where identity, Search and four labelled actions share the row. Search keeps `flex: 1 1 20rem` with `min-inline-size: 0`, so pressure resolves by shrinking Search rather than overflowing, and the boundary widths are asserted in E2E.
+- Action labels are Russian and their rendered width is font-dependent. A significantly wider font could compress Search further at the wide boundary before the expanded range relieves it.
+- The icons resolve to inlined data URIs because they sit below Vite's inline threshold. Raising an icon above that threshold later would switch it to an emitted file and change the custom-property value; the tests accept either form deliberately.
+- Counters are absent by decision, not by oversight. When a domain stage introduces counts, the action links will need a component-owned counter boundary, and the current no-digit assertions will need revisiting.
+- User visual confirmation of the integrated Header at expanded, wide, medium and compact widths is outstanding.
+
+### Next gate
+
+Green GitHub Actions CI on the exact M4-05 SHA with zero failed and zero flaky Playwright tests, then independent diff audit, then user visual confirmation at expanded, wide, medium and compact widths. **M4-06 must not begin until all three close.**

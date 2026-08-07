@@ -32,8 +32,8 @@
       "RTE-001 full-resolution inspection of Header action hierarchy and wide Header density",
       "CMP-001 full-resolution Header and Navigation crop x=282 y=218 width=1546 height=260"
     ],
-    "approvalStatus": "awaiting-independent-asset-audit-and-user-visual-confirmation",
-    "integrationStatus": "produced-not-integrated",
+    "approvalStatus": "approved",
+    "integrationStatus": "approved-not-integrated",
     "knownRisks": [
       "grid metaphor requires visual confirmation against the final Header action label treatment"
     ],
@@ -73,10 +73,10 @@
       "RTE-001 full-resolution inspection of Search affordance placement and Header density",
       "CMP-001 full-resolution Header and Navigation crop x=282 y=218 width=1546 height=260"
     ],
-    "approvalStatus": "awaiting-independent-asset-audit-and-user-visual-confirmation",
-    "integrationStatus": "produced-not-integrated",
+    "approvalStatus": "approved",
+    "integrationStatus": "approved-not-integrated",
     "knownRisks": [
-      "runtime Search action must avoid duplicate semantics with the existing search form"
+      "M4-05 resolved the duplicate-semantics risk by keeping the visible Search form as the only search affordance; any future Search icon action must re-open this decision"
     ],
     "notes": "Round lens and diagonal handle follow the Header search evidence without embedding an input field or button container."
   },
@@ -114,10 +114,10 @@
       "RTE-001 full-resolution inspection of Header action order and compact icon weight",
       "CMP-001 full-resolution Header and Navigation crop x=282 y=218 width=1546 height=260"
     ],
-    "approvalStatus": "awaiting-independent-asset-audit-and-user-visual-confirmation",
-    "integrationStatus": "produced-not-integrated",
+    "approvalStatus": "approved",
+    "integrationStatus": "runtime-integrated",
     "knownRisks": [
-      "separated directional-row marker requires independent visual confirmation at 16px and 20px"
+      "user visual confirmation of the contact sheet resolved the 16px and 20px marker legibility risk; the M4-05 runtime renders this asset at the confirmed 20px size"
     ],
     "notes": "Two simplified product/card entities plus separated opposing directional rows communicate comparison without center-converging arrowheads, circular refresh or sync semantics."
   },
@@ -154,8 +154,8 @@
       "RTE-001 full-resolution inspection of Favorites Header action and inactive outline state",
       "CMP-001 full-resolution Header and Navigation crop x=282 y=218 width=1546 height=260"
     ],
-    "approvalStatus": "awaiting-independent-asset-audit-and-user-visual-confirmation",
-    "integrationStatus": "produced-not-integrated",
+    "approvalStatus": "approved",
+    "integrationStatus": "runtime-integrated",
     "knownRisks": [
       "active saved-state fill is deferred and must not reuse this inactive asset as state evidence"
     ],
@@ -195,8 +195,8 @@
       "RTE-001 full-resolution inspection of Cart Header action without copying cart total or counters",
       "CMP-001 full-resolution Header and Navigation crop x=282 y=218 width=1546 height=260"
     ],
-    "approvalStatus": "awaiting-independent-asset-audit-and-user-visual-confirmation",
-    "integrationStatus": "produced-not-integrated",
+    "approvalStatus": "approved",
+    "integrationStatus": "runtime-integrated",
     "knownRisks": [
       "future counter badge placement must be component-owned and not baked into the SVG"
     ],
@@ -236,8 +236,8 @@
       "RTE-001 full-resolution inspection of guest Account Header action hierarchy",
       "CMP-001 full-resolution Header and Navigation crop x=282 y=218 width=1546 height=260"
     ],
-    "approvalStatus": "awaiting-independent-asset-audit-and-user-visual-confirmation",
-    "integrationStatus": "produced-not-integrated",
+    "approvalStatus": "approved",
+    "integrationStatus": "runtime-integrated",
     "knownRisks": ["future authenticated avatar state needs a separate runtime decision"],
     "notes": "Neutral head-and-shoulders outline supports the later visible label Войти without initials, avatar, status dot or chevron."
   }

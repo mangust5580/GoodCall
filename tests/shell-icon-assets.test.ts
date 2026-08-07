@@ -52,8 +52,24 @@ const EXPECTED_ASSETS = ['catalog', 'search', 'comparison', 'favorites', 'cart',
 const EXPECTED_PRODUCTION_PATHS = EXPECTED_ASSETS.map(
   (assetId) => `src/assets/icons/shell/${assetId}.svg`
 );
-const EXPECTED_STATUS = 'awaiting-independent-asset-audit-and-user-visual-confirmation';
-const EXPECTED_INTEGRATION_STATUS = 'produced-not-integrated';
+const EXPECTED_STATUS = 'approved';
+const RUNTIME_INTEGRATED_ASSETS = ['comparison', 'favorites', 'cart', 'account'];
+const NOT_INTEGRATED_ASSETS = ['catalog', 'search'];
+const EXPECTED_INTEGRATION_STATUS: Record<string, string> = {
+  catalog: 'approved-not-integrated',
+  search: 'approved-not-integrated',
+  comparison: 'runtime-integrated',
+  favorites: 'runtime-integrated',
+  cart: 'runtime-integrated',
+  account: 'runtime-integrated',
+};
+const ACTION_CONFIG_PATH = path.join(
+  'src',
+  'app',
+  'shell',
+  'site-header',
+  'header-actions-config.ts'
+);
 const SVG_NAMESPACE = 'xmlns="http://www.w3.org/2000/svg"';
 const ALLOWED_ELEMENTS = new Set(['svg', 'g', 'path', 'circle', 'rect', 'line', 'polyline']);
 const FORBIDDEN_ELEMENTS = [
@@ -358,24 +374,81 @@ describe('Shell Icon Asset Contract', () => {
         );
         expect(entry.approvalStatus, `${assetPath} approval status`).toBe(EXPECTED_STATUS);
         expect(entry.integrationStatus, `${assetPath} integration status`).toBe(
-          EXPECTED_INTEGRATION_STATUS
+          EXPECTED_INTEGRATION_STATUS[assetId]
         );
       });
     });
   }
 
-  it('keeps shell icons out of runtime source until an integration stage owns them', () => {
+  it('confines every shell icon import to the Header action configuration', () => {
     for (const filePath of runtimeSourceFiles()) {
       const source = fs.readFileSync(filePath, 'utf-8');
       const relativePath = path.relative(repoRoot, filePath);
+
+      if (relativePath === ACTION_CONFIG_PATH) {
+        continue;
+      }
 
       expect(
         source.includes('assets/icons/shell'),
         `${relativePath} imports shell icon folder`
       ).toBe(false);
+    }
+  });
 
-      for (const assetPath of EXPECTED_PRODUCTION_PATHS) {
-        expect(source.includes(assetPath), `${relativePath} imports ${assetPath}`).toBe(false);
+  it('imports exactly the four runtime-integrated action icons', () => {
+    const source = fs.readFileSync(path.join(repoRoot, ACTION_CONFIG_PATH), 'utf-8');
+
+    for (const assetId of RUNTIME_INTEGRATED_ASSETS) {
+      expect(
+        source.includes(`@/assets/icons/shell/${assetId}.svg`),
+        `action config imports ${assetId}.svg`
+      ).toBe(true);
+    }
+
+    for (const assetId of NOT_INTEGRATED_ASSETS) {
+      expect(
+        source.includes(`icons/shell/${assetId}.svg`),
+        `action config must not import ${assetId}.svg`
+      ).toBe(false);
+    }
+
+    expect(
+      Array.from(source.matchAll(/assets\/icons\/shell\/[a-z]+\.svg/g)).length,
+      'shell icon import count'
+    ).toBe(RUNTIME_INTEGRATED_ASSETS.length);
+  });
+
+  it('keeps Catalog and Search icons out of every runtime source file', () => {
+    for (const filePath of runtimeSourceFiles()) {
+      const source = fs.readFileSync(filePath, 'utf-8');
+      const relativePath = path.relative(repoRoot, filePath);
+
+      for (const assetId of NOT_INTEGRATED_ASSETS) {
+        expect(
+          source.includes(`icons/shell/${assetId}.svg`),
+          `${relativePath} imports ${assetId}.svg`
+        ).toBe(false);
+      }
+    }
+  });
+
+  it('copies no shell icon path geometry into runtime source', () => {
+    const geometrySamples = EXPECTED_ASSETS.flatMap((assetId) => {
+      const document = parseSvg(readSource(productionPath(assetId)));
+      return Array.from(document.querySelectorAll('path'), (marker) => marker.getAttribute('d'));
+    }).filter((value): value is string => typeof value === 'string' && value.length > 0);
+
+    expect(geometrySamples.length).toBeGreaterThan(0);
+
+    for (const filePath of runtimeSourceFiles()) {
+      const source = fs.readFileSync(filePath, 'utf-8');
+      const relativePath = path.relative(repoRoot, filePath);
+
+      for (const geometry of geometrySamples) {
+        expect(source.includes(geometry), `${relativePath} inlines shell icon geometry`).toBe(
+          false
+        );
       }
     }
   });

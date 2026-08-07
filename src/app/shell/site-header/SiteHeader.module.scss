@@ -81,6 +81,11 @@
   min-inline-size: 0;
 }
 
+.actions-slot {
+  flex: 1 1 100%;
+  min-inline-size: 0;
+}
+
 @media (width >= 48rem) {
   .identity {
     flex: 0 0 auto;
@@ -92,5 +97,11 @@
 
   .search-slot {
     flex: 1 1 20rem;
+  }
+}
+
+@media (width >= 64rem) {
+  .actions-slot {
+    flex: 0 0 auto;
   }
 }
