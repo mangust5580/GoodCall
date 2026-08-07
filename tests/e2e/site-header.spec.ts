@@ -77,6 +77,17 @@ async function headerContentWidth(page: Page): Promise<number> {
   return width;
 }
 
+async function expectOrderedAccessibleNames(
+  links: Locator,
+  names: readonly string[]
+): Promise<void> {
+  await expect(links).toHaveCount(names.length);
+
+  for (const [index, name] of names.entries()) {
+    await expect(links.nth(index)).toHaveAccessibleName(name);
+  }
+}
+
 async function expectIdentityRow(page: Page): Promise<{ brand: Box; catalog: Box; search: Box }> {
   const brand = await resolveBox(brandLink(page), 'brand link');
   const catalog = await resolveBox(catalogLink(page), 'Catalog link');
@@ -190,7 +201,7 @@ test.describe('M4-04 primary Header core', () => {
 
     const userNav = page.getByRole('navigation', { name: USER_NAV_LABEL });
     await expect(userNav).toHaveCount(1);
-    await expect(userNav.getByRole('link')).toHaveAccessibleName(ACTION_LABELS);
+    await expectOrderedAccessibleNames(userNav.getByRole('link'), ACTION_LABELS);
     expect(search.x, 'Search precedes the user actions').toBeLessThan(
       (await resolveBox(userNav.getByRole('link').first(), 'first action')).x
     );

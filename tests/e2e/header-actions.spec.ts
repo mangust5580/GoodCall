@@ -139,10 +139,20 @@ async function horizontalOverflow(page: Page): Promise<number> {
   );
 }
 
+async function expectOrderedAccessibleNames(
+  links: Locator,
+  names: readonly string[]
+): Promise<void> {
+  await expect(links).toHaveCount(names.length);
+
+  for (const [index, name] of names.entries()) {
+    await expect(links.nth(index)).toHaveAccessibleName(name);
+  }
+}
+
 async function expectActionInventory(page: Page): Promise<void> {
   await expect(userNav(page)).toHaveCount(1);
-  await expect(userNav(page).getByRole('link')).toHaveCount(4);
-  await expect(userNav(page).getByRole('link')).toHaveAccessibleName(ACTION_LABELS);
+  await expectOrderedAccessibleNames(userNav(page).getByRole('link'), ACTION_LABELS);
 
   for (const action of ACTIONS) {
     await expect(actionLink(page, action.label)).toBeVisible();

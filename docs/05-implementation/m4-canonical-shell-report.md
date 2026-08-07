@@ -16,7 +16,8 @@
 | M4-05-ICN — Application-owned shell icon set                                  | **APPROVED AND CLOSED**                                                       |
 | M4-05-ICN-A — Comparison icon semantic correction                             | **CLOSED THROUGH M4-05-ICN-B**                                                |
 | M4-05-ICN-B — Comparison marker legibility correction                         | **APPROVED AND CLOSED**                                                       |
-| M4-05 — Header route actions: Comparison, Favorites, Cart and Account         | **IMPLEMENTED — AWAITING INDEPENDENT AUDIT, CI AND USER VISUAL CONFIRMATION** |
+| M4-05 — Header route actions: Comparison, Favorites, Cart and Account         | **NOT ACCEPTED — EXACT-SHA CI FAILED IN PLAYWRIGHT; CORRECTED BY M4-05A**     |
+| M4-05A — Header action E2E accessible-name assertion correction               | **IMPLEMENTED — AWAITING INDEPENDENT AUDIT, CI AND USER VISUAL CONFIRMATION** |
 
 M4 is not approved and not closed. The Information Bar, the primary Header core and the Header route actions now exist. Footer and Newsletter remain later stages. The transitional brand banner was replaced by the canonical Header in M4-04.
 
@@ -1650,6 +1651,131 @@ One. `tests/app/shell/brand-runtime-mount.test.tsx` is outside the expected file
 - Counters are absent by decision, not by oversight. When a domain stage introduces counts, the action links will need a component-owned counter boundary, and the current no-digit assertions will need revisiting.
 - User visual confirmation of the integrated Header at expanded, wide, medium and compact widths is outstanding.
 
+### Exact-SHA CI result
+
+The GitHub Actions run for the M4-05 commit concluded **failure**, in the Playwright step only. The full job log was independently inspected; exact counts and scenario names are recorded here.
+
+| Item                   | Value                                         |
+| ---------------------- | --------------------------------------------- |
+| Commit                 | `0e6948b421540852127e5c299219cc18d3816792`    |
+| Workflow run           | 31147582955                                   |
+| Job                    | 92770165065                                   |
+| Run attempt            | 1                                             |
+| Conclusion             | failure                                       |
+| Failing step           | `E2E tests`                                   |
+| Vitest                 | 979 passed in 51 files                        |
+| Shell icon asset suite | 44 passed                                     |
+| Playwright             | **144 total, 130 passed, 14 failed, 0 flaky** |
+
+Install, Playwright browser setup, dev bootstrap, TypeCheck, ESLint, Stylelint, format check, comment check, Vitest, build, build validation and the test-result upload all passed. All fourteen failures reproduced on both retries, so none was a timing artefact.
+
+| Artifact            | ID         | Size            | Digest                                                                    |
+| ------------------- | ---------- | --------------- | ------------------------------------------------------------------------- |
+| `playwright-report` | 8982103604 | 1 676 903 bytes | `sha256:f4b2adc8e46c5340acf85e3f0c1f6439ba4d52ce06e192120b5cde44297f7e8f` |
+
+**Root cause — a test defect, not a runtime defect.** Playwright's matcher contract is `toHaveAccessibleName(name: string | RegExp, options?)`; it does not accept an array. Two M4-05 E2E locations passed `ACTION_LABELS`, which is `string[]`:
+
+- `tests/e2e/header-actions.spec.ts` — inside the shared `expectActionInventory()` helper, which runs at the start of most new responsive scenarios;
+- `tests/e2e/site-header.spec.ts` — the M4-04 expanded Header regression scenario.
+
+Because the matcher failed early, the downstream assertions in those scenarios never executed — responsive geometry, visible-label state, Search dominance, compact equal-width action columns, horizontal overflow and part of the zoom evidence. **No runtime Header defect was established.**
+
+The fourteen failed scenarios were: expanded 1440px; 1023px; 1024px; 1025px; 1279px; 1280px; 1281px; 767px; 768px; 769px; compact 320px; 200% zoom; 400% zoom; and one M4-04 expanded Header regression scenario.
+
+M4-05 was **not accepted** on that SHA, user visual confirmation was **not performed**, and M4-06 **remained blocked**.
+
 ### Next gate
 
-Green GitHub Actions CI on the exact M4-05 SHA with zero failed and zero flaky Playwright tests, then independent diff audit, then user visual confirmation at expanded, wide, medium and compact widths. **M4-06 must not begin until all three close.**
+M4-05 is corrected by **M4-05A** below. Green GitHub Actions CI on the exact M4-05A SHA with zero failed and zero flaky Playwright tests, then independent diff audit, then user visual confirmation at expanded, wide, medium and compact widths. **M4-06 must not begin until all three close.**
+
+## M4-05A — Header action E2E accessible-name assertion correction
+
+**Status at commit time: IMPLEMENTED — AWAITING INDEPENDENT AUDIT, CI AND USER VISUAL CONFIRMATION**
+
+### Baseline
+
+| Item                                 | Value                                      |
+| ------------------------------------ | ------------------------------------------ |
+| Branch                               | `main`                                     |
+| Baseline SHA                         | `0e6948b421540852127e5c299219cc18d3816792` |
+| Baseline commit                      | `feat(shell): add header route actions`    |
+| Parent SHA                           | `3737da32b4e420f18cdb7b71a54424875dcf3820` |
+| `git rev-parse HEAD` / `origin/main` | both matched the baseline before changes   |
+| `git diff` / `git diff --cached`     | exit 0 — clean                             |
+
+RTE-001, CMP-001 and the approved contact sheet were re-verified against their recorded dimensions, byte counts and SHA-256 hashes; all nine values match, and all three remain ignored through `.git/info/exclude` and uncommitted.
+
+### Scope
+
+Test-only. Exactly two invalid matcher calls are replaced. No runtime file, stylesheet, route, SVG asset, asset manifest, dependency, Playwright configuration or workflow changed, and no assertion was removed, skipped, softened or converted to a soft assertion.
+
+### Corrected assertion strategy
+
+Each affected navigation locator now proves link count, canonical order and exact accessible name together, through one small ordered-name helper per file:
+
+```ts
+async function expectOrderedAccessibleNames(
+  links: Locator,
+  names: readonly string[]
+): Promise<void> {
+  await expect(links).toHaveCount(names.length);
+
+  for (const [index, name] of names.entries()) {
+    await expect(links.nth(index)).toHaveAccessibleName(name);
+  }
+}
+```
+
+`tests/e2e/header-actions.spec.ts` calls it from the existing shared `expectActionInventory()` helper, so the loop is not duplicated across scenarios. `tests/e2e/site-header.spec.ts` uses a narrow local copy rather than introducing a broad shared E2E utility for two assertions. This is a deliberately ordered, indexed comparison — not an unordered set comparison — so `Сравнение → Избранное → Корзина → Войти` remains asserted exactly.
+
+A bounded static search confirms no call passes an array: every remaining `toHaveAccessibleName` invocation in `tests/e2e/` receives a single string.
+
+### Runtime freeze
+
+Every accepted M4-05 contract is untouched: four route links; order Comparison → Favorites → Cart → Account; the `Пользовательская навигация` landmark; exact `NavLink` `end` matching; 20px mask icons; the guest `Войти` label; no counters; compact three-row, medium two-row and wide/expanded one-row layouts; labels visible at 64rem and above; icon-first actions below 64rem; Search before actions; and M1 route lifecycle ownership.
+
+### Files changed
+
+| File                                                  | Change                                              |
+| ----------------------------------------------------- | --------------------------------------------------- |
+| `tests/e2e/header-actions.spec.ts`                    | ordered-name helper replaces the array matcher call |
+| `tests/e2e/site-header.spec.ts`                       | ordered-name helper replaces the array matcher call |
+| `docs/05-implementation/m4-canonical-shell-report.md` | M4-05 red-CI reconciliation; this section           |
+| `docs/05-implementation/repository-state.md`          | current-state note                                  |
+
+### Local verification
+
+| Command                  | Result                                         |
+| ------------------------ | ---------------------------------------------- |
+| `npm run typecheck`      | PASS                                           |
+| `npm run lint`           | PASS — 0 errors, 0 warnings                    |
+| `npm run lint:styles`    | PASS                                           |
+| `npm run format:check`   | PASS                                           |
+| `npm run check:comments` | PASS — no authored comments                    |
+| `npm test`               | PASS — **979 tests in 51 files**, unchanged    |
+| Shell icon asset suite   | PASS — **44 tests**, unchanged                 |
+| `npm run build`          | PASS — 251 modules                             |
+| `npm run validate:build` | PASS                                           |
+| `npm run check:full`     | PASS — includes the bounded dev-bootstrap gate |
+| Static matcher search    | PASS — no array-based call remains             |
+| `git diff --check`       | PASS                                           |
+
+Bundle unchanged at raw **430.50 KB** / gzip **128.07 KB** — the change is test-only and ships nothing.
+
+**No local command executes Playwright.** `AGENTS.md` forbids running the E2E suite locally, so the corrected assertions are validated only by exact-SHA CI.
+
+Intentionally not run: `npm run dev`, `npm run preview`, `npm run test:e2e`, `playwright test`, `vite`, `vite preview`, `npm run review:m3-browser`, background or fixed-port servers, and user browser automation. CI was pending at commit time and user visual confirmation remains pending.
+
+### Deviations
+
+None. The tracked diff is exactly the expected four files.
+
+### Risks
+
+- **The fourteen scenarios' downstream assertions have still never executed.** They failed at the matcher before reaching responsive geometry, label visibility, Search dominance, compact equal-width columns, overflow and part of the zoom evidence. Those assertions are being exercised for the first time by this stage's CI run, so further defects may surface there.
+- The E2E specs remain outside local TypeScript and ESLint coverage — `tsconfig.json` excludes `tests/e2e` and `eslint.config.js` ignores it — so a type error in a spec is invisible locally while the suite cannot be run locally. That structural gap produced this defect and is recorded as a future risk; closing it is outside M4-05A scope.
+- User visual confirmation of the integrated Header is outstanding for the whole M4-05 chain.
+
+### Next gate
+
+Green GitHub Actions CI on the exact M4-05A SHA with zero failed and zero flaky Playwright tests, then independent diff audit, then user visual confirmation at expanded, wide, medium and compact widths. **M4-06 must not begin until all three close.**

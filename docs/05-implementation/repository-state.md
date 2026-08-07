@@ -748,8 +748,39 @@ M4-05-ICN-B is **APPROVED AND CLOSED**; M4-05-ICN-A is **CLOSED THROUGH M4-05-IC
 - **CI is pending at commit time**, and **user visual confirmation at expanded, wide, medium and compact widths is pending**.
 - **M4-06 remains blocked** until M4-05 exact-SHA green CI, independent audit and user visual confirmation all close.
 
+## Milestone State Note — M4-05A Header Action E2E Assertion Correction (2026-08-07)
+
+### M4-05 exact-SHA red CI
+
+CI for the M4-05 commit `0e6948b421540852127e5c299219cc18d3816792` — run **31147582955**, job **92770165065**, run attempt 1 — concluded **failure**, in the `E2E tests` step only. Install and Playwright browser setup, dev bootstrap, TypeCheck, ESLint, Stylelint, format check, comment check, Vitest, build, build validation and the test-result upload all passed.
+
+Exact results: Vitest **979 passed in 51 files**; shell icon asset suite **44 passed**; Playwright **144 total, 130 passed, 14 failed, 0 flaky**. All fourteen failures reproduced on both retries. Failure artifact `playwright-report`, ID **8982103604**, 1 676 903 bytes, digest `sha256:f4b2adc8e46c5340acf85e3f0c1f6439ba4d52ce06e192120b5cde44297f7e8f`. The full job log was independently inspected.
+
+**All fourteen failures share one cause, and it is a test defect.** Playwright's matcher contract is `toHaveAccessibleName(name: string | RegExp, options?)` — it does not accept an array. Two M4-05 E2E locations passed `ACTION_LABELS`, which is `string[]`: the shared `expectActionInventory()` helper in `tests/e2e/header-actions.spec.ts`, and the M4-04 expanded Header regression scenario in `tests/e2e/site-header.spec.ts`. Because the matcher failed early, the downstream assertions in those scenarios never executed — responsive geometry, visible-label state, Search dominance, compact equal-width action columns, horizontal overflow and part of the zoom evidence.
+
+The fourteen scenarios were expanded 1440px; 1023px; 1024px; 1025px; 1279px; 1280px; 1281px; 767px; 768px; 769px; compact 320px; 200% zoom; 400% zoom; and one M4-04 expanded Header regression scenario.
+
+**No runtime Header defect was established.** The M4-05 runtime implementation remains committed but **unaccepted**; user visual confirmation has not occurred.
+
+### M4-05A corrective implementation state
+
+- Baseline SHA `0e6948b421540852127e5c299219cc18d3816792`; the resulting M4-05A commit SHA cannot be embedded inside its own commit and is recorded in the untracked stage handoff.
+- **Test-only correction.** Exactly two invalid matcher calls were replaced by an ordered-name helper that asserts link count, canonical order and each exact accessible name by index. The comparison is deliberately ordered and indexed, not an unordered set comparison.
+- `tests/e2e/header-actions.spec.ts` calls the helper from the existing shared `expectActionInventory()`, so the loop is not duplicated across scenarios; `tests/e2e/site-header.spec.ts` uses a narrow local copy rather than a broad shared E2E utility for two assertions.
+- **No assertion was removed, skipped, softened or converted to a soft assertion.** Action and icon visibility, responsive geometry, Search dominance, label visibility, compact equal-width columns, overflow, keyboard order, route navigation, current-route state, zoom, coarse pointer, forced colours, axe scans and page/console/request error checks all remain exactly as committed in M4-05.
+- **Runtime Header, routes, SVG assets and the asset manifest are unchanged.** No runtime file, stylesheet, route, registry, Shared UI, Foundations, dependency, lockfile, Playwright configuration or workflow change. No retry or timeout increase.
+- Every accepted M4-05 contract remains frozen: four route links; order Comparison → Favorites → Cart → Account; `Пользовательская навигация`; exact `NavLink` `end`; 20px mask icons; guest `Войти`; no counters; compact three-row, medium two-row and wide/expanded one-row layouts; labels visible at 64rem and above; icon-first below 64rem; Search before actions; M1 route lifecycle ownership.
+- Test suite unchanged: **979 Vitest tests across 51 files**, shell icon asset suite **44**. Bundle unchanged at raw **430.50 KB** / gzip **128.07 KB**.
+- Local checks pass, including `npm run check:full`. **No local command executes Playwright** — the E2E suite belongs to CI or a user-owned preview.
+- **CI is pending at commit time**, and **user visual confirmation at expanded, wide, medium and compact widths is pending**.
+- **M4-06 remains blocked** until M4-05A exact-SHA green CI, independent audit and user visual confirmation all close.
+
+### Preserved closure state
+
+M4-04 remains **approved and closed** through M4-04A and M4-04B. M4-05-ICN remains **approved and closed**, with M4-05-ICN-A closed through M4-05-ICN-B and M4-05-ICN-B approved and closed. The four action icons remain `runtime-integrated` and Catalog and Search remain `approved-not-integrated`; the asset manifest and icon report were not touched by this stage.
+
 ## Next Repository Modifications
 
 The current implementation milestone is **M4**, whose scope must be taken from the approved architecture and UI/component/responsive contracts.
 
-**M4-06 must not begin** until the M4-05 exact-SHA CI, independent audit and user visual confirmation at expanded, wide, medium and compact widths all close.
+**M4-06 must not begin** until the M4-05A exact-SHA CI, independent audit and user visual confirmation at expanded, wide, medium and compact widths all close.
