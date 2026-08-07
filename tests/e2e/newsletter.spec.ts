@@ -379,7 +379,10 @@ test.describe('M4-06 Newsletter pre-footer', () => {
     await expect(page.locator('h1')).toHaveText('Category');
     await expect(newsletter(page)).toHaveCount(1);
 
-    await page.getByRole('link', { name: 'GoodCall — на главную', exact: true }).click();
+    await page
+      .getByRole('banner')
+      .getByRole('link', { name: 'GoodCall — на главную', exact: true })
+      .click();
     await expect(newsletterStatus(page)).toHaveText(SUCCESS_STATUS);
   });
 

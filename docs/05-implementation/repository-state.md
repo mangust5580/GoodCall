@@ -902,6 +902,33 @@ M4-06B is **APPROVED AND CLOSED**; M4-06A is **APPROVED AND CLOSED THROUGH M4-06
 - **CI is pending at commit time**, and **user visual confirmation is pending**, including compact disclosure states and the 404 Footer.
 - **M4-08 remains blocked** until M4-07 exact-SHA green CI, independent audit and user visual confirmation all close.
 
+## Milestone State Note — M4-07A Footer E2E Correction (2026-08-07)
+
+### M4-07 initial CI was red
+
+The first exact-SHA CI for the M4-07 implementation commit `bddf291785bdc0d85619dbbf819e0e601ae0af75` — run **31160218804**, job **92808625837**, attempt 1 — concluded **failure** at the `E2E tests` step. Every other step passed, including TypeCheck, ESLint, Stylelint, format, comment check, **Unit tests**, **Build** and build validation. The `playwright-report` artifact is ID **8986898769**.
+
+Playwright reported **41 unique failed tests**:
+
+- **39** — pre-existing M4-02 to M4-06 specs resolving the brand link globally. After M4-07 the page canonically has two `BrandHomeLink` instances with the name `GoodCall — на главную` (Header inside `banner`, Footer inside `contentinfo`), so global selectors resolved to two elements and failed strict mode. **E2E test ownership/scope defect.**
+- **1** — `footer.spec.ts` `767px resolves the compact/medium Footer boundary`: a `getByRole(...).toHaveCount(1)` DOM-uniqueness assertion returned `0` because the collapsed disclosure correctly removes the link from the accessibility tree. **E2E test defect.**
+- **1** — `footer.spec.ts` `forced colors keeps Footer controls and current state perceivable`: `locator.focus()` after a preceding `click()` does not establish `:focus-visible`, which is what the Footer stylesheet uses. **E2E test defect.**
+
+**No Footer runtime, SCSS or accessibility defect was identified.**
+
+### M4-07A corrective state
+
+- Baseline SHA `bddf291785bdc0d85619dbbf819e0e601ae0af75`; the resulting M4-07A commit SHA is recorded in the untracked stage handoff.
+- **Test-only correction.** No production file, stylesheet, route, route registry, Shared UI API, dependency, package-manager file, Vite/Playwright/Vitest/ESLint/Stylelint config, workflow or asset changed.
+- **Brand assertions are now scoped to the shell owner each test actually verifies** — `banner` for Header-owned assertions across `brand-home-link`, `site-header`, `header-actions`, `information-bar` and `newsletter` specs; `footer.spec.ts` already scoped its own to `contentinfo`. The Footer `BrandHomeLink` was not removed and its accessible name was not changed.
+- **The compact DOM-uniqueness assertion now uses a CSS locator** that includes hidden elements, proving one DOM instance per destination while the separate hidden-state accessibility assertion is retained. The disclosure is not opened to satisfy the count.
+- **The forced-colors focus check now uses real keyboard interaction** — focus, `Enter` to open, `Tab` to the link — so `:focus-visible` is genuinely established. Forced-colors emulation and every substantive assertion are retained.
+- **No assertion was weakened, skipped or bypassed**; no retry, timeout or `force: true` change.
+- Test suite unchanged in size: **1182 tests across 59 files**, Footer-focused **77**. Bundle unchanged: total raw **476.47 KB** / gzip **143.02 KB**; main JS raw **438.29 KB** / gzip **134.30 KB**.
+- Local checks pass, including `npm run check:full`. **Local E2E was not run** — the Playwright suite remains CI-owned.
+- **CI is pending at commit time**, and **user visual confirmation is pending**, including compact disclosure states and the 404 Footer.
+- **M4-08 remains blocked** until M4-07A exact-SHA green CI, independent audit and user visual confirmation all close.
+
 ## Next Repository Modifications
 
 The current implementation milestone is **M4**, whose scope must be taken from the approved architecture and UI/component/responsive contracts.

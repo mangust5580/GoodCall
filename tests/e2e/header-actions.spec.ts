@@ -94,7 +94,7 @@ function catalogLink(page: Page) {
 }
 
 function brandLink(page: Page) {
-  return page.getByRole('link', { name: BRAND_LINK_LABEL, exact: true });
+  return banner(page).getByRole('link', { name: BRAND_LINK_LABEL, exact: true });
 }
 
 function searchLandmark(page: Page) {

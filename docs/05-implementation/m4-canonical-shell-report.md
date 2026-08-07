@@ -2,26 +2,27 @@
 
 ## Status
 
-| Task                                                                          | Status                                                                        |
-| ----------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
-| M4-01 — Shell destination safety and composition boundary                     | **CLOSED THROUGH M4-01A**                                                     |
-| M4-01A — Catalog family catch-all correction and CI reconciliation            | **APPROVED AND CLOSED**                                                       |
-| M4-02 — Runtime brand/logo integration                                        | **CLOSED THROUGH M4-02A**                                                     |
-| M4-02A — Brand landmark accessibility correction and E2E stabilization        | **APPROVED AND CLOSED**                                                       |
-| M4-03 — Information Bar                                                       | **CLOSED THROUGH M4-03A**                                                     |
-| M4-03A — Information Bar E2E correction and exact active-state reconciliation | **APPROVED AND CLOSED**                                                       |
-| M4-04 — Primary Header core: Catalog entry and Global Search                  | **APPROVED AND CLOSED THROUGH M4-04A AND M4-04B**                             |
-| M4-04A — Compact Header layout correction and E2E geometry stabilization      | **CLOSED THROUGH M4-04B**                                                     |
-| M4-04B — Deterministic keyboard focus origin and CI reconciliation            | **APPROVED AND CLOSED**                                                       |
-| M4-05-ICN — Application-owned shell icon set                                  | **APPROVED AND CLOSED**                                                       |
-| M4-05-ICN-A — Comparison icon semantic correction                             | **CLOSED THROUGH M4-05-ICN-B**                                                |
-| M4-05-ICN-B — Comparison marker legibility correction                         | **APPROVED AND CLOSED**                                                       |
-| M4-05 — Header route actions: Comparison, Favorites, Cart and Account         | **APPROVED AND CLOSED THROUGH M4-05A**                                        |
-| M4-05A — Header action E2E accessible-name assertion correction               | **APPROVED AND CLOSED**                                                       |
-| M4-06 — Newsletter pre-footer and deterministic local subscription lifecycle  | **APPROVED AND CLOSED THROUGH M4-06A AND M4-06B**                             |
-| M4-06A — Newsletter form and session-persistence architecture reconciliation  | **APPROVED AND CLOSED THROUGH M4-06B**                                        |
-| M4-06B — Newsletter pending-test act cleanup and evidence reconciliation      | **APPROVED AND CLOSED**                                                       |
-| M4-07 — Canonical Footer                                                      | **IMPLEMENTED — AWAITING INDEPENDENT AUDIT, CI AND USER VISUAL CONFIRMATION** |
+| Task                                                                          | Status                                                                                   |
+| ----------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| M4-01 — Shell destination safety and composition boundary                     | **CLOSED THROUGH M4-01A**                                                                |
+| M4-01A — Catalog family catch-all correction and CI reconciliation            | **APPROVED AND CLOSED**                                                                  |
+| M4-02 — Runtime brand/logo integration                                        | **CLOSED THROUGH M4-02A**                                                                |
+| M4-02A — Brand landmark accessibility correction and E2E stabilization        | **APPROVED AND CLOSED**                                                                  |
+| M4-03 — Information Bar                                                       | **CLOSED THROUGH M4-03A**                                                                |
+| M4-03A — Information Bar E2E correction and exact active-state reconciliation | **APPROVED AND CLOSED**                                                                  |
+| M4-04 — Primary Header core: Catalog entry and Global Search                  | **APPROVED AND CLOSED THROUGH M4-04A AND M4-04B**                                        |
+| M4-04A — Compact Header layout correction and E2E geometry stabilization      | **CLOSED THROUGH M4-04B**                                                                |
+| M4-04B — Deterministic keyboard focus origin and CI reconciliation            | **APPROVED AND CLOSED**                                                                  |
+| M4-05-ICN — Application-owned shell icon set                                  | **APPROVED AND CLOSED**                                                                  |
+| M4-05-ICN-A — Comparison icon semantic correction                             | **CLOSED THROUGH M4-05-ICN-B**                                                           |
+| M4-05-ICN-B — Comparison marker legibility correction                         | **APPROVED AND CLOSED**                                                                  |
+| M4-05 — Header route actions: Comparison, Favorites, Cart and Account         | **APPROVED AND CLOSED THROUGH M4-05A**                                                   |
+| M4-05A — Header action E2E accessible-name assertion correction               | **APPROVED AND CLOSED**                                                                  |
+| M4-06 — Newsletter pre-footer and deterministic local subscription lifecycle  | **APPROVED AND CLOSED THROUGH M4-06A AND M4-06B**                                        |
+| M4-06A — Newsletter form and session-persistence architecture reconciliation  | **APPROVED AND CLOSED THROUGH M4-06B**                                                   |
+| M4-06B — Newsletter pending-test act cleanup and evidence reconciliation      | **APPROVED AND CLOSED**                                                                  |
+| M4-07 — Canonical Footer                                                      | **IMPLEMENTED THROUGH M4-07A — AWAITING INDEPENDENT AUDIT AND USER VISUAL CONFIRMATION** |
+| M4-07A — Footer E2E failure evidence recovery and correction                  | **IMPLEMENTED — AWAITING INDEPENDENT AUDIT, CI AND USER VISUAL CONFIRMATION**            |
 
 M4 is not approved and not closed. The Information Bar, the primary Header core, the Header route actions, the Newsletter pre-footer and the canonical Footer now exist. The transitional brand banner was replaced by the canonical Header in M4-04.
 
@@ -2504,3 +2505,95 @@ Two.
 ### Next gate
 
 Green GitHub Actions CI on the exact M4-07 SHA with zero failed, zero flaky and no retries, then independent diff audit, then user visual confirmation at 1440, 1024, 768 and 320 widths including compact disclosure states and the 404 Footer. **M4-08 must not begin until all three close.**
+
+### M4-07 initial exact-SHA CI — failed
+
+Recorded as historical fact. The first CI for the M4-07 implementation SHA was **red**.
+
+| Item         | Value                                               |
+| ------------ | --------------------------------------------------- |
+| Checked SHA  | `bddf291785bdc0d85619dbbf819e0e601ae0af75`          |
+| Workflow run | 31160218804                                         |
+| Job          | 92808625837                                         |
+| Run attempt  | 1                                                   |
+| Conclusion   | **failure**                                         |
+| Failing step | **`E2E tests`**                                     |
+| Artifact     | `playwright-report`, ID 8986898769, 4 951 879 bytes |
+
+Everything else in the run passed: TypeCheck, ESLint, Stylelint, format check, authored-comment check, **Unit tests**, **Build** and build validation. Local evidence for the same SHA was Vitest **1182 tests in 59 files**, Footer-focused **77**, build and validation green.
+
+**Playwright: 41 unique failed tests**, in three groups.
+
+| #   | Failures | Scenario group                                                                         | Classification                  |
+| --- | -------- | -------------------------------------------------------------------------------------- | ------------------------------- |
+| 1   | **39**   | Pre-existing M4-02 to M4-06 specs resolving the brand link globally                    | E2E test ownership/scope defect |
+| 2   | **1**    | `footer.spec.ts` → `767px resolves the compact/medium Footer boundary`                 | E2E test defect                 |
+| 3   | **1**    | `footer.spec.ts` → `forced colors keeps Footer controls and current state perceivable` | E2E test defect                 |
+
+**No Footer runtime, SCSS or accessibility defect was found.** All three causes are test-side, and the correction in M4-07A is test-only.
+
+**Group 1 — duplicate `BrandHomeLink` selector scope.** After M4-07 the page canonically contains two brand links with the accessible name `GoodCall — на главную`: the Header instance inside `banner` and the Footer instance inside `contentinfo`. Older specs used global selectors — `page.getByRole('link', { name: 'GoodCall — на главную', exact: true })` and `page.locator('[data-brand-asset]')` — which now resolve to two elements and fail Playwright strict mode. The Footer instance is correct and stays; the selectors were wrong to be global.
+
+**Group 2 — hidden-link DOM count.** At 767px the compact disclosure is correctly collapsed. The assertion used `getByRole(...).toHaveCount(1)` to prove _one DOM instance_, but `getByRole` excludes inaccessible descendants, so the count was `0` while the runtime was correct. Expected `1`, received `0` at `tests/e2e/footer.spec.ts:254`.
+
+**Group 3 — forced-colors focus.** The test called `locator.focus()` after a preceding `locator.click()`. The click sets Chromium's interaction modality to pointer, so the later programmatic focus does not match `:focus-visible`, which is what `SiteFooter.module.scss` uses for the focus ring — hence `outlineStyle` was `none`. Repository inspection confirmed the mechanism: `brand-home-link.spec.ts` uses the same `.focus()` + outline pattern and passes, because it performs no pointer interaction first. The production focus styling is correct and unchanged.
+
+## M4-07A — Footer E2E failure evidence recovery and correction
+
+**Status at commit time: IMPLEMENTED — AWAITING INDEPENDENT AUDIT, CI AND USER VISUAL CONFIRMATION**
+
+### Scope
+
+Test-only. **No production file, stylesheet, route, dependency, configuration or workflow changed**, and no accessibility, geometry, keyboard or axe assertion was weakened, skipped or bypassed. No retry, timeout or `force: true` was introduced.
+
+### Corrections
+
+**Brand selector ownership (39 failures).** Every brand assertion is now scoped to the shell owner it actually tests:
+
+| Spec                      | Correction                                                                                                                                                         |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `brand-home-link.spec.ts` | new `headerBrandLink()` and `headerBrandAsset()` helpers scoped to `banner`; the ownership test renamed to `Home exposes exactly one Header-owned brand Home link` |
+| `site-header.spec.ts`     | `brandLink()` and both `[data-brand-asset]` lookups scoped to `banner`                                                                                             |
+| `header-actions.spec.ts`  | `brandLink()` scoped to `banner`                                                                                                                                   |
+| `information-bar.spec.ts` | the keyboard-traversal brand assertion scoped to `banner`                                                                                                          |
+| `newsletter.spec.ts`      | the brand Home navigation click scoped to `banner`                                                                                                                 |
+
+The Footer `BrandHomeLink` was **not** removed and its accessible name was **not** changed for global uniqueness. Two links sharing one name and one destination is the correct same-destination pattern; the ownership now lives in the selectors, where it belongs. `footer.spec.ts` already scopes its own brand assertions to `contentinfo`.
+
+**Hidden-link DOM count (1 failure).** The DOM-uniqueness assertion now uses a CSS locator, `groupNav(...).locator('a[href="/GoodCall<path>"]')`, which includes hidden elements and therefore proves the actual contract — one DOM instance per destination. The separate accessibility assertion that the collapsed link is hidden is retained unchanged, and the disclosure is **not** opened to make the count pass.
+
+**Forced-colors focus (1 failure).** The disclosure is now opened by real keyboard interaction — focus the control, press `Enter` — and focus moves to the link by pressing `Tab`, so `:focus-visible` is genuinely established. Forced-colors emulation stays enabled and every substantive assertion is retained: disclosure boundary, `aria-current`, non-colour-only current treatment, and a visible focus indicator.
+
+### Files changed
+
+| File                                                  | Kind | Relation to root cause                       |
+| ----------------------------------------------------- | ---- | -------------------------------------------- |
+| `tests/e2e/brand-home-link.spec.ts`                   | test | group 1 — banner-scoped brand helpers        |
+| `tests/e2e/site-header.spec.ts`                       | test | group 1 — banner-scoped brand link and asset |
+| `tests/e2e/header-actions.spec.ts`                    | test | group 1 — banner-scoped brand link           |
+| `tests/e2e/information-bar.spec.ts`                   | test | group 1 — banner-scoped brand assertion      |
+| `tests/e2e/newsletter.spec.ts`                        | test | group 1 — banner-scoped brand navigation     |
+| `tests/e2e/footer.spec.ts`                            | test | groups 2 and 3                               |
+| `docs/05-implementation/m4-canonical-shell-report.md` | docs | red-CI record; this section                  |
+| `docs/05-implementation/repository-state.md`          | docs | current-state note                           |
+
+### Local verification
+
+| Command                                  | Result                                       |
+| ---------------------------------------- | -------------------------------------------- |
+| `npm run typecheck`                      | PASS                                         |
+| `npm run lint`                           | PASS                                         |
+| `npm run lint:styles`                    | PASS                                         |
+| `npm run format:check`                   | PASS                                         |
+| `npm run check:comments`                 | PASS                                         |
+| `npm test`                               | PASS — **1182 tests in 59 files**, unchanged |
+| `npm run build`                          | PASS — 266 modules                           |
+| `npm run validate:build`                 | PASS                                         |
+| `npm run check:full`                     | PASS                                         |
+| Static: global brand selectors remaining | PASS — none                                  |
+
+Local E2E was not run; `AGENTS.md` keeps the Playwright suite CI-owned. Bundle unchanged from M4-07 — total raw **476.47 KB** / gzip **143.02 KB**, main JS raw **438.29 KB** / gzip **134.30 KB** — as expected for a test-only correction.
+
+### Next gate
+
+Green exact-SHA CI with zero failed, zero flaky and no retries, with all 41 previously failing scenarios reaching and passing their substantive assertions; then independent audit; then user visual confirmation at 1440, 1024, 768 and 320 including the compact disclosure states and the 404 Footer. **M4-08 must not begin until all three close.**

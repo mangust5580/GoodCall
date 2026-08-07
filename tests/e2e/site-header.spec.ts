@@ -133,7 +133,7 @@ function searchSubmit(page: Page) {
 }
 
 function brandLink(page: Page) {
-  return page.getByRole('link', { name: BRAND_LINK_LABEL, exact: true });
+  return banner(page).getByRole('link', { name: BRAND_LINK_LABEL, exact: true });
 }
 
 function collectRuntimeProblems(page: Page): {
@@ -223,7 +223,7 @@ test.describe('M4-04 primary Header core', () => {
       await expect(searchField(page)).toBeVisible();
       await expect(searchSubmit(page)).toBeVisible();
 
-      const logoBox = await resolveBox(page.locator('[data-brand-asset]'), 'brand asset');
+      const logoBox = await resolveBox(banner(page).locator('[data-brand-asset]'), 'brand asset');
       expect(logoBox.width).toBeGreaterThanOrEqual(MINIMUM_LOGO_WIDTH);
 
       const { brand, catalog, search } = await expectIdentityRow(page);
@@ -281,7 +281,7 @@ test.describe('M4-04 primary Header core', () => {
     const { brand, catalog, search } = await expectIdentityRow(page);
     const fieldBox = await resolveBox(searchField(page), 'Search field');
     const submitBox = await resolveBox(searchSubmit(page), 'Search submit');
-    const logoBox = await resolveBox(page.locator('[data-brand-asset]'), 'brand asset');
+    const logoBox = await resolveBox(banner(page).locator('[data-brand-asset]'), 'brand asset');
 
     expect(
       catalog.x - boxRight(brand),

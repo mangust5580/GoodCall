@@ -118,7 +118,9 @@ test.describe('M4-03 Information Bar', () => {
       }
 
       await page.keyboard.press('Tab');
-      await expect(page.getByRole('link', { name: BRAND_LINK_LABEL, exact: true })).toBeFocused();
+      await expect(
+        page.getByRole('banner').getByRole('link', { name: BRAND_LINK_LABEL, exact: true })
+      ).toBeFocused();
     });
   });
 

@@ -273,7 +273,7 @@ test.describe('M4-07 canonical Footer', () => {
 
       for (const group of GROUPS) {
         await expect(
-          groupNav(page, group.title).getByRole('link', { name: group.sample, exact: true })
+          groupNav(page, group.title).locator(`a[href="/GoodCall${group.path}"]`)
         ).toHaveCount(1);
       }
 
@@ -535,7 +535,9 @@ test.describe('M4-07 canonical Footer', () => {
       expect(boundary.width).toBeGreaterThan(0);
     }
 
-    await disclosure(page, GROUPS[1].title).click();
+    await disclosure(page, GROUPS[1].title).focus();
+    await page.keyboard.press('Enter');
+    await expect(disclosure(page, GROUPS[1].title)).toHaveAttribute('aria-expanded', 'true');
 
     const current = groupNav(page, GROUPS[1].title).getByRole('link', {
       name: GROUPS[1].sample,
@@ -549,7 +551,9 @@ test.describe('M4-07 canonical Footer', () => {
     });
     expect(treatment.decoration.includes('underline') || treatment.weight >= 600).toBe(true);
 
-    await current.focus();
+    await page.keyboard.press('Tab');
+    await expect(current).toBeFocused();
+
     const focusIndicator = await current.evaluate((element) => {
       const style = window.getComputedStyle(element);
       return { style: style.outlineStyle, width: parseFloat(style.outlineWidth) };

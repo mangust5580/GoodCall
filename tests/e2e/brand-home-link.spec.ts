@@ -2,6 +2,14 @@ import { test, expect, type Page } from '@playwright/test';
 import { withDocumentStartFocus } from './support/focus-origin';
 
 const BRAND_LINK_LABEL = 'GoodCall — на главную';
+
+function headerBrandLink(page: Page) {
+  return page.getByRole('banner').getByRole('link', { name: BRAND_LINK_LABEL, exact: true });
+}
+
+function headerBrandAsset(page: Page) {
+  return page.getByRole('banner').locator('[data-brand-asset]');
+}
 const MINIMUM_HORIZONTAL_WIDTH = 120;
 const MINIMUM_TARGET_SIZE = 44;
 
@@ -32,12 +40,12 @@ function collectRuntimeProblems(page: Page): {
 }
 
 test.describe('M4-02 runtime brand link', () => {
-  test('Home exposes exactly one named brand Home link', async ({ page }) => {
+  test('Home exposes exactly one Header-owned brand Home link', async ({ page }) => {
     const problems = collectRuntimeProblems(page);
 
     await page.goto('/GoodCall/');
 
-    const brandLink = page.getByRole('link', { name: BRAND_LINK_LABEL, exact: true });
+    const brandLink = headerBrandLink(page);
 
     await expect(brandLink).toHaveCount(1);
     await expect(brandLink).toBeVisible();
@@ -53,7 +61,7 @@ test.describe('M4-02 runtime brand link', () => {
   test('brand visual resource renders at or above the approved minimum width', async ({ page }) => {
     await page.goto('/GoodCall/');
 
-    const visual = page.locator('[data-brand-asset]');
+    const visual = headerBrandAsset(page);
     await expect(visual).toHaveCount(1);
     await expect(visual).toBeVisible();
 
@@ -73,7 +81,7 @@ test.describe('M4-02 runtime brand link', () => {
   test('brand link is not cropped or stretched', async ({ page }) => {
     await page.goto('/GoodCall/');
 
-    const visual = page.locator('[data-brand-asset]');
+    const visual = headerBrandAsset(page);
     const box = await visual.boundingBox();
     const ratio = (box?.width ?? 0) / (box?.height ?? 1);
 
@@ -92,7 +100,7 @@ test.describe('M4-02 runtime brand link', () => {
     await page.goto('/GoodCall/search');
     await expect(page.locator('h1')).toHaveText('Поиск');
 
-    const brandLink = page.getByRole('link', { name: BRAND_LINK_LABEL, exact: true });
+    const brandLink = headerBrandLink(page);
     await expect(brandLink).toHaveCount(1);
     await brandLink.click();
 
@@ -112,7 +120,7 @@ test.describe('M4-02 runtime brand link', () => {
 
     const skipLink = page.locator('a[href="#main-content"]');
     const disclosure = page.getByRole('button', { name: 'Информация и помощь', exact: true });
-    const brandLink = page.getByRole('link', { name: BRAND_LINK_LABEL, exact: true });
+    const brandLink = headerBrandLink(page);
 
     await expect(skipLink).toHaveCount(1);
     await expect(disclosure).toBeVisible();
@@ -144,11 +152,11 @@ test.describe('M4-02 runtime brand link', () => {
     );
     expect(overflow).toBeLessThanOrEqual(1);
 
-    const box = await page.getByRole('link', { name: BRAND_LINK_LABEL, exact: true }).boundingBox();
+    const box = await headerBrandLink(page).boundingBox();
     expect(box?.height ?? 0).toBeGreaterThanOrEqual(MINIMUM_TARGET_SIZE);
     expect(box?.width ?? 0).toBeGreaterThanOrEqual(MINIMUM_TARGET_SIZE);
 
-    const visualBox = await page.locator('[data-brand-asset]').boundingBox();
+    const visualBox = await headerBrandAsset(page).boundingBox();
     expect(visualBox?.width ?? 0).toBeGreaterThanOrEqual(MINIMUM_HORIZONTAL_WIDTH);
   });
 
@@ -161,7 +169,7 @@ test.describe('M4-02 runtime brand link', () => {
     );
     expect(overflow).toBeLessThanOrEqual(1);
 
-    const box = await page.locator('[data-brand-asset]').boundingBox();
+    const box = await headerBrandAsset(page).boundingBox();
     expect(box?.width ?? 0).toBeGreaterThanOrEqual(MINIMUM_HORIZONTAL_WIDTH);
     expect(box?.width ?? 0).toBeLessThanOrEqual(1440);
   });
@@ -170,7 +178,7 @@ test.describe('M4-02 runtime brand link', () => {
     await page.emulateMedia({ forcedColors: 'active' });
     await page.goto('/GoodCall/');
 
-    const brandLink = page.getByRole('link', { name: BRAND_LINK_LABEL, exact: true });
+    const brandLink = headerBrandLink(page);
     await brandLink.focus();
     await expect(brandLink).toBeFocused();
 
