@@ -11,10 +11,27 @@ Operational handoff. This is not a history log.
 
 ## Current milestone
 
-Repository bootstrap — complete.
+Repository bootstrap — complete and published.
 
 No design-backed milestone has received visual PASS yet. Foundations has not
 started.
+
+## Publish status
+
+- Active branch: `main`, pushed to `origin`.
+- **GitHub CI: active and green.** `.github/workflows/ci.yml` runs install →
+  typecheck → lint → lint:styles → format:check → build on push and pull request
+  to `main`.
+- **GitHub Pages deployment: active and green.** Pages is configured with
+  `build_type: workflow`, publishing from `.github/workflows/deploy.yml`.
+- Published site: <https://mangust5580.github.io/GoodCall/>
+
+## Audit output
+
+Audits are not routine. When one is explicitly requested, the auditor overwrites
+repository-root `AUDIT.md` with the complete result. That file is gitignored and
+local-only, so audit history never accumulates in Git. See the Audits section of
+`AGENTS.md`.
 
 ## Implemented layers
 
@@ -105,8 +122,6 @@ CI runs install → typecheck → lint → lint:styles → format:check → buil
 - No `public/` directory exists. Add one only when a genuine stable public asset
   is needed.
 - No favicon is declared yet.
-- GitHub Pages must have its source set to "GitHub Actions" in repository
-  settings before the deploy workflow can publish.
 
 ## Active open questions
 
