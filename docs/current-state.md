@@ -11,15 +11,19 @@ Operational handoff. This is not a history log.
 
 ## Current milestone
 
-**Foundations — open.** The first design-backed slice, **Foundations / Colors**,
-is implemented.
+**Foundations — complete.**
 
-Foundations cannot close on colour alone. Typography, spacing, radii,
-elevation, layout and responsive tokens remain deferred pending further raster
-evidence, and the milestone stays open until the user gives a visual PASS.
+**User visual PASS received for Foundations / Colors on 2026-08-19.** The
+approval came from the user; no agent self-certified it.
 
-Visual status: **awaiting user visual PASS for Foundations / Colors.** No
-design-backed milestone has received visual PASS yet.
+Closure is bounded to the evidence `Foundations.png` actually contains. That
+raster is a colour scheme sheet, so the accepted design-backed scope is the
+colour system: primitive, alpha and semantic/role colour tokens, gradients,
+colour-only state and focus roles, global semantic colour application, and the
+temporary Foundations reference surface.
+
+Categories the raster never specified are listed under Deferred Foundations
+evidence. None were invented, and none block this closure.
 
 ## Publish status
 
@@ -155,19 +159,19 @@ functional suppression directives.
 
 ## Current visual status
 
-The Foundations / Colors reference surface mirrors the raster's five sections so
-the colour system can be compared side by side. It is reached at
+**Foundations / Colors — visually accepted by the user on 2026-08-19.**
+
+The Foundations reference surface mirrors the raster's five sections so the
+colour system can be compared side by side. It is reached at
 `?reference=foundations`.
 
-A gradient correction has been applied: the Footer gradient now runs
-left-to-right, matching the visible raster specimen, which is horizontal despite
-the poster's 180 degree annotation. Its stops are unchanged. The other five
-gradients were measured against their specimens and left as they were, since
-none showed a material mismatch.
+The Footer gradient runs left-to-right, matching the visible raster specimen,
+which is horizontal despite the poster's 180 degree annotation. Its stops are
+unchanged. The other five gradients were measured against their specimens and
+left as they were, since none showed a material mismatch.
 
 Typography and geometry deliberately do not match the raster: it documents no
 font family, type scale, spacing or radius scale, so those were not invented.
-Awaiting user visual PASS.
 
 ## Current routes
 
@@ -201,6 +205,25 @@ npm run format:check  # prettier --check .
 
 CI runs install → typecheck → lint → lint:styles → format:check → build.
 
+## Deferred Foundations evidence
+
+`Foundations.png` does not specify these categories, so they are outside the
+accepted Foundations closure. Nothing was invented to fill the gaps. Each is
+deferred until a real raster or a real downstream consumer supplies evidence, and
+none of them blocks the closed milestone.
+
+- Typography scale and font assets — no family, weights or type scale evidenced;
+  the system font stack stands in.
+- Spacing scale.
+- Radius scale.
+- Shadow / elevation scale.
+- Layout primitives.
+- Named breakpoints and responsive token decisions — `$breakpoints` stays empty
+  and `fluid()` has no consumer.
+- Overlay and Backdrop opacity, and what distinguishes the two roles.
+- Raster scale factor (1x / 1.5x / 2x), still unconfirmed; it blocks geometry
+  work but never affected colour.
+
 ## Known deferred work
 
 - ESLint is pinned to the 9.x line. ESLint 10 is current, but
@@ -212,12 +235,6 @@ CI runs install → typecheck → lint → lint:styles → format:check → buil
 - No `public/` directory exists. Add one only when a genuine stable public asset
   is needed.
 - No favicon is declared yet.
-- Overlay and Backdrop opacity, and what distinguishes the two roles.
-- Typography: no font family, weights or type scale are evidenced, and no font
-  assets exist. The system font stack stands in.
-- Spacing, radius and elevation scales: not evidenced by the colour raster.
-- Layout primitives and named breakpoints: still no evidence, so `$breakpoints`
-  stays empty and `fluid()` currently has no consumer.
 
 ## Active open questions
 
@@ -225,12 +242,12 @@ None.
 
 ## Next approved step
 
-**ChatGPT / user visual review of Foundations / Colors**, against
-`E:\Work\Frontend\Pictures\GoodCall-references\Foundations.png`.
+**Components visual intake**, using
+`E:\Work\Frontend\Pictures\GoodCall-references\Components.png`.
 
-Foundations stays open after that review. The remaining slices need design
-evidence that `Foundations.png` does not contain, since it is a colour scheme
-sheet only.
+That task is visual intake and scope reconciliation only. Components
+implementation does not begin until the intake has been reviewed and a separate
+bounded implementation task is issued.
 
 ## Normative repository docs
 

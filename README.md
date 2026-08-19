@@ -62,8 +62,9 @@ that evidence, and is then checked visually before the next milestone begins.
 Order: Foundations → Components → Global Shell → Home → Catalog → Product Details
 → Cart → Checkout → Order Confirmation → remaining route families.
 
-Design tokens and Sass helpers are created in Foundations, from raster evidence.
-They do not exist yet.
+Design tokens are created in Foundations, from raster evidence. Foundations is
+complete for the colour system it was given evidence for; typography, spacing,
+radii and elevation are still deferred. See `docs/current-state.md`.
 
 ### px-first authoring
 
