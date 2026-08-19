@@ -23,3 +23,12 @@
     @content;
   }
 }
+
+// Emit a Sass map as CSS custom properties under a namespace prefix.
+// Generic on purpose: it knows nothing about colours, and stays the only
+// mechanism that turns token maps into runtime custom properties.
+@mixin emit-vars($prefix, $tokens) {
+  @each $name, $value in $tokens {
+    --#{$prefix}-#{$name}: #{$value};
+  }
+}

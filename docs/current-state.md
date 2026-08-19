@@ -11,10 +11,15 @@ Operational handoff. This is not a history log.
 
 ## Current milestone
 
-Repository bootstrap — complete and published.
+**Foundations — open.** The first design-backed slice, **Foundations / Colors**,
+is implemented.
 
-No design-backed milestone has received visual PASS yet. Foundations has not
-started.
+Foundations cannot close on colour alone. Typography, spacing, radii,
+elevation, layout and responsive tokens remain deferred pending further raster
+evidence, and the milestone stays open until the user gives a visual PASS.
+
+Visual status: **awaiting user visual PASS for Foundations / Colors.** No
+design-backed milestone has received visual PASS yet.
 
 ## Publish status
 
@@ -41,12 +46,39 @@ Independent audits themselves remain optional. See the AUDIT.md section of
 
 - React + TypeScript + Vite SPA baseline.
 - Entry point: `src/main.tsx`.
-- Application ownership: `src/app/` (currently a single minimal `App` component).
-- Global styling entry: `src/styles/global.scss`.
-- Generic SCSS helpers: `src/styles/helpers/` (fluid scalars, media mixins).
+- Application ownership: `src/app/`.
+- Global styling entry: `src/styles/global.scss` — applies page surface, primary
+  text and link roles.
+- Foundations colour tokens: `src/styles/foundations/` (`_colors.scss`,
+  `_gradients.scss`, `_index.scss`).
+- Generic SCSS helpers: `src/styles/helpers/` (fluid scalars, media mixins,
+  `emit-vars`).
+- Foundations colour reference surface: `src/app/FoundationsColorReference.tsx`
+  with its own reference-only styles.
 
-Nothing else exists yet. There is no design system, no component library, no
-router, no data layer, and no feature architecture.
+There is no component library, no router, no data layer, and no feature
+architecture. The reference surface is a development comparison page, not
+product UI, and its specimens are deliberately not reusable components.
+
+### Colour tokens
+
+86 CSS custom properties are emitted on `:root` from Sass maps, which are the
+single source of truth:
+
+- 33 primitives — base, status, Brand Purple 50-900, Accent Violet 100-700,
+  Neutral Gray 50-900 (`--color-*`)
+- 15 alpha steps — white, black, purple (`--alpha-*`)
+- 32 semantic roles — text, surface, border, state, overlay, backdrop
+  (`--role-*`)
+- 6 gradients (`--gradient-*`)
+
+Eight semantic roles carry literal values because the raster specifies colours
+absent from every primitive ramp: Card Soft, Brand Soft, Hero, Border Soft,
+Success Soft, Warning Soft, Danger Soft, Info Soft. They are intentionally not
+aliases and no fake primitive steps were added for them.
+
+Overlay and Backdrop define a base colour only. The raster states no opacity and
+no difference between them, so composition is deferred.
 
 ## Active tooling
 
@@ -98,9 +130,13 @@ that same value.
 
 ## Current visual status
 
-Intentionally minimal. `App` renders a heading and one line of text purely to
-prove the toolchain end to end. It is not a design target and has received no
-visual review.
+`App` renders the Foundations / Colors reference surface, which mirrors the
+raster's five sections so the colour system can be compared side by side. A
+headless-Chrome screenshot was captured and compared against the raster.
+
+Typography and geometry deliberately do not match the raster: it documents no
+font family, type scale, spacing or radius scale, so those were not invented.
+Awaiting user visual PASS.
 
 ## Current routes
 
@@ -145,6 +181,12 @@ CI runs install → typecheck → lint → lint:styles → format:check → buil
 - No `public/` directory exists. Add one only when a genuine stable public asset
   is needed.
 - No favicon is declared yet.
+- Overlay and Backdrop opacity, and what distinguishes the two roles.
+- Typography: no font family, weights or type scale are evidenced, and no font
+  assets exist. The system font stack stands in.
+- Spacing, radius and elevation scales: not evidenced by the colour raster.
+- Layout primitives and named breakpoints: still no evidence, so `$breakpoints`
+  stays empty and `fluid()` currently has no consumer.
 
 ## Active open questions
 
@@ -152,10 +194,12 @@ None.
 
 ## Next approved step
 
-**Foundations.** It is raster-driven and will use
-`E:\Work\Frontend\Pictures\GoodCall-references\Foundations.png`, supplied with a
-separate bounded task. Design tokens and Sass helpers are created there, from
-raster evidence — not before.
+**ChatGPT / user visual review of Foundations / Colors**, against
+`E:\Work\Frontend\Pictures\GoodCall-references\Foundations.png`.
+
+Foundations stays open after that review. The remaining slices need design
+evidence that `Foundations.png` does not contain, since it is a colour scheme
+sheet only.
 
 ## Normative repository docs
 

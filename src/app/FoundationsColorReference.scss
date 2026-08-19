@@ -1,0 +1,306 @@
+// Foundations / Colors reference surface styling.
+// Reference-only. The geometry here (paddings, gaps, radii, font sizes) exists
+// solely to lay this comparison page out. The raster documents no spacing,
+// radius or type scale, so none of these values are design tokens and none of
+// them may be promoted into Foundations. Colours, by contrast, come only from
+// the token custom properties.
+
+.reference {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 32px 24px 64px;
+  background-color: var(--role-surface-page);
+
+  &__head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+    padding-bottom: 24px;
+  }
+
+  &__brand {
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    color: var(--role-text-primary);
+  }
+
+  &__caption {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--role-text-primary);
+  }
+}
+
+.section {
+  margin-bottom: 24px;
+  padding: 24px;
+  background-color: var(--role-surface-card);
+  border: 1px solid var(--role-border-soft);
+  border-radius: 16px;
+
+  &__head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding-bottom: 20px;
+  }
+
+  &__index {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    background-color: var(--color-brand-purple-500);
+    color: var(--role-text-inverse);
+    border-radius: 50%;
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  &__title {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--role-text-primary);
+  }
+}
+
+.group {
+  padding-bottom: 20px;
+
+  &:last-child {
+    padding-bottom: 0;
+  }
+
+  &__title {
+    margin: 0 0 12px;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--role-text-secondary);
+  }
+
+  &__items {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  &__note {
+    max-width: 900px;
+    margin: 12px 0 0;
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--role-text-muted);
+  }
+}
+
+.swatch {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  // Sized so a full 10-step ramp sits on one row, matching the raster's layout.
+  width: 112px;
+
+  &__chip {
+    display: block;
+    height: 64px;
+    border: 1px solid var(--role-border-soft);
+    border-radius: 10px;
+    overflow: hidden;
+
+    // Alpha tokens are only readable over a contrast pattern, mirroring the
+    // checkerboard the raster uses for its alpha swatches.
+    &--alpha {
+      background-color: var(--color-base-white);
+      background-image:
+        linear-gradient(45deg, var(--color-neutral-gray-200) 25%, transparent 25%),
+        linear-gradient(-45deg, var(--color-neutral-gray-200) 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, var(--color-neutral-gray-200) 75%),
+        linear-gradient(-45deg, transparent 75%, var(--color-neutral-gray-200) 75%);
+      background-position:
+        0 0,
+        0 8px,
+        8px -8px,
+        -8px 0;
+      background-size: 16px 16px;
+    }
+  }
+
+  &__fill {
+    display: block;
+    height: 100%;
+  }
+
+  &__label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--role-text-primary);
+  }
+
+  &__value {
+    font-family: ui-monospace, monospace;
+    font-size: 12px;
+    color: var(--role-text-muted);
+    overflow-wrap: anywhere;
+  }
+
+  &__note {
+    font-size: 11px;
+    font-style: italic;
+    color: var(--role-text-subtle);
+  }
+}
+
+.gradients {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  &__item {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    // Sized so all six gradients sit on one row, as the raster lays them out.
+    width: 195px;
+  }
+
+  &__swatch {
+    display: block;
+    height: 120px;
+    border: 1px solid var(--role-border-soft);
+    border-radius: 12px;
+  }
+
+  &__label {
+    font-size: 13px;
+    font-weight: 700;
+    text-align: center;
+    color: var(--role-text-primary);
+  }
+}
+
+.usage {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  &__card {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+
+    // Sized so all six specimens sit on one row, as the raster lays them out.
+    width: 200px;
+    padding: 20px;
+    background-color: var(--role-surface-card);
+    border: 1px solid var(--role-border-soft);
+    border-radius: 14px;
+  }
+
+  &__title {
+    font-size: 13px;
+    color: var(--role-text-secondary);
+  }
+
+  &__body {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    min-height: 56px;
+  }
+
+  &__caption {
+    font-size: 13px;
+    color: var(--role-text-secondary);
+  }
+}
+
+.spec-button {
+  padding: 14px 24px;
+  border-radius: 999px;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+
+  &--primary {
+    background: var(--color-brand-purple-500);
+    border: 1px solid var(--color-brand-purple-500);
+    color: var(--role-text-inverse);
+  }
+
+  &--secondary {
+    background: var(--role-surface-card);
+    border: 1px solid var(--role-border-focus);
+    color: var(--role-text-link);
+  }
+}
+
+.spec-badge {
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+
+  &--brand {
+    background-color: var(--role-surface-brand-soft);
+    color: var(--role-text-link);
+  }
+
+  &--success {
+    background-color: var(--role-state-success-soft);
+    color: var(--role-state-success);
+  }
+}
+
+// Shown in its focused appearance on purpose: the focus colour is the only
+// focus treatment the raster evidences. No ring geometry is implied.
+.spec-input {
+  width: 100%;
+  padding: 14px 16px;
+  background-color: var(--role-surface-card);
+  border: 2px solid var(--role-border-focus);
+  border-radius: 10px;
+  font: inherit;
+  font-size: 15px;
+  color: var(--role-text-primary);
+
+  &::placeholder {
+    color: var(--role-text-subtle);
+  }
+}
+
+.spec-price {
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--role-text-primary);
+
+  &__old {
+    font-size: 15px;
+    color: var(--role-text-muted);
+  }
+}
+
+.spec-chip {
+  padding: 10px 16px;
+  background-color: var(--role-surface-brand-soft);
+  border-radius: 999px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--role-text-link);
+}

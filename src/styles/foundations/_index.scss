@@ -1,0 +1,6 @@
+// Single entry point for the Foundations design tokens.
+// Loading this module emits every token as a CSS custom property on :root,
+// so it must be used exactly once per CSS entry (currently global.scss).
+
+@forward 'colors';
+@forward 'gradients';

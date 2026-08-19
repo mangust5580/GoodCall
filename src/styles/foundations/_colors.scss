@@ -1,0 +1,160 @@
+@use 'sass:map';
+@use '../helpers' as h;
+
+// Foundations / Colors.
+// Every value below is transcribed from the printed labels in
+// GoodCall-references/Foundations.png. Values are never pixel-sampled: the
+// raster carries lossy artifacts, so its rendered swatches are unreliable while
+// its printed hex labels are authoritative.
+// These maps are the single source of truth. They are emitted once, as CSS
+// custom properties, at the bottom of this file.
+
+// Primitives -----------------------------------------------------------------
+
+$base: (
+  'white': #fff,
+  'rich-text': #12131a,
+);
+$status: (
+  'success': #22c55e,
+  'warning': #f59e0b,
+  'danger': #ef4444,
+  'info': #3b82f6,
+);
+$brand-purple: (
+  '50': #f6f0ff,
+  '100': #ebddff,
+  '200': #d5b8ff,
+  '300': #be8eff,
+  '400': #a767ff,
+  '500': #8a3ffc,
+  '600': #7028e4,
+  '700': #5b1fc1,
+  '800': #45178f,
+  '900': #2f0f60,
+);
+$accent-violet: (
+  '100': #eef0ff,
+  '200': #dce2ff,
+  '300': #b8c2ff,
+  '400': #8d9bff,
+  '500': #6366ff,
+  '600': #4f46e5,
+  '700': #3730a3,
+);
+$neutral-gray: (
+  '50': #fafafc,
+  '100': #f3f4f7,
+  '200': #e5e7eb,
+  '300': #d1d5db,
+  '400': #9ca3af,
+  '500': #6b7280,
+  '600': #4b5563,
+  '700': #374151,
+  '800': #2d3342,
+  '900': #1f2330,
+);
+
+// Alpha ramps ----------------------------------------------------------------
+// Step names are the raster's own labels (opacity x 100). The black ramp is
+// deliberately asymmetric with the other two: it starts at 04 and has no 16
+// step, exactly as the raster documents it.
+
+$alpha-white: (
+  '08': rgb(255 255 255 / 8%),
+  '12': rgb(255 255 255 / 12%),
+  '16': rgb(255 255 255 / 16%),
+  '24': rgb(255 255 255 / 24%),
+  '36': rgb(255 255 255 / 36%),
+);
+$alpha-black: (
+  '04': rgb(18 19 26 / 4%),
+  '08': rgb(18 19 26 / 8%),
+  '12': rgb(18 19 26 / 12%),
+  '24': rgb(18 19 26 / 24%),
+  '36': rgb(18 19 26 / 36%),
+);
+$alpha-purple: (
+  '08': rgb(138 63 252 / 8%),
+  '12': rgb(138 63 252 / 12%),
+  '16': rgb(138 63 252 / 16%),
+  '24': rgb(138 63 252 / 24%),
+  '36': rgb(138 63 252 / 36%),
+);
+
+// Semantic / role colours ----------------------------------------------------
+// A role aliases a primitive wherever the raster's value matches one, which
+// keeps ownership visible. Eight roles carry literal values because the raster
+// specifies colours that exist in none of the primitive ramps; those literals
+// are marked below. Inventing primitive steps to absorb them would corrupt the
+// documented palette, so they stay semantic literals.
+
+$role-text: (
+  'primary': map.get($base, 'rich-text'),
+  'secondary': map.get($neutral-gray, '700'),
+  'muted': map.get($neutral-gray, '500'),
+  'subtle': map.get($neutral-gray, '400'),
+  'inverse': map.get($base, 'white'),
+  'link': map.get($brand-purple, '500'),
+  'link-hover': map.get($brand-purple, '600'),
+);
+$role-surface: (
+  'page': map.get($base, 'white'),
+  'page-soft': map.get($neutral-gray, '50'),
+  'card': map.get($base, 'white'),
+  'card-soft': #f6f7fb,
+  'header': map.get($base, 'white'),
+  'modal': map.get($base, 'white'),
+  'brand-soft': #f3ecff,
+  'hero': #f7f4ff,
+  'footer': map.get($neutral-gray, '50'),
+);
+$role-border: (
+  'soft': #eef0f3,
+  'default': map.get($neutral-gray, '200'),
+  'strong': map.get($neutral-gray, '300'),
+  'brand': map.get($brand-purple, '200'),
+  'focus': map.get($brand-purple, '500'),
+);
+$role-state: (
+  'success': map.get($status, 'success'),
+  'success-soft': #ecfdf5,
+  'warning': map.get($status, 'warning'),
+  'warning-soft': #fffbeb,
+  'danger': map.get($status, 'danger'),
+  'danger-soft': #fef2f2,
+  'info': map.get($status, 'info'),
+  'info-soft': #eff6ff,
+  'disabled': map.get($neutral-gray, '200'),
+);
+
+// The raster gives Overlay and Backdrop the same colour, shows both over a
+// checkerboard, and states no opacity or difference between them. Only the base
+// colour is evidenced, so only the base colour is defined. Composition is
+// deferred until a real consumer or explicit design evidence exists.
+
+$role-overlay: (
+  'base': map.get($base, 'rich-text'),
+);
+$role-backdrop: (
+  'base': map.get($base, 'rich-text'),
+);
+
+// Runtime tokens -------------------------------------------------------------
+
+:root {
+  @include h.emit-vars('color-base', $base);
+  @include h.emit-vars('color-status', $status);
+  @include h.emit-vars('color-brand-purple', $brand-purple);
+  @include h.emit-vars('color-accent-violet', $accent-violet);
+  @include h.emit-vars('color-neutral-gray', $neutral-gray);
+  @include h.emit-vars('alpha-white', $alpha-white);
+  @include h.emit-vars('alpha-black', $alpha-black);
+  @include h.emit-vars('alpha-purple', $alpha-purple);
+  @include h.emit-vars('role-text', $role-text);
+  @include h.emit-vars('role-surface', $role-surface);
+  @include h.emit-vars('role-border', $role-border);
+  @include h.emit-vars('role-state', $role-state);
+  @include h.emit-vars('role-overlay', $role-overlay);
+  @include h.emit-vars('role-backdrop', $role-backdrop);
+}
