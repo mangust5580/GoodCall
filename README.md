@@ -1,0 +1,101 @@
+# GoodCall
+
+GoodCall is a visual-first React single-page application. The interface is built
+from reviewed raster design references, one bounded milestone at a time, rather
+than from a speculative architecture written up front.
+
+The repository is currently at its bootstrap baseline: a minimal working
+React + TypeScript + Vite app plus the linting, formatting, CI and deployment
+setup that later milestones build on.
+
+## Stack
+
+- React 19 + TypeScript
+- Vite 8 (`@vitejs/plugin-react`)
+- SCSS via `sass-embedded`
+- PostCSS: `postcss-pxtorem` + Autoprefixer
+- ESLint 9 (flat config, type-aware), Stylelint 17, Prettier 3
+- GitHub Actions → GitHub Pages
+
+## Setup
+
+Requires Node.js LTS and npm.
+
+```bash
+npm ci
+npm run dev
+```
+
+## Scripts
+
+| Script                 | Purpose                              |
+| ---------------------- | ------------------------------------ |
+| `npm run dev`          | Start the Vite dev server            |
+| `npm run build`        | Typecheck, then build for production |
+| `npm run preview`      | Serve the production build locally   |
+| `npm run typecheck`    | TypeScript project check (`tsc -b`)  |
+| `npm run lint`         | ESLint over the repository           |
+| `npm run lint:styles`  | Stylelint over `src/**/*.scss`       |
+| `npm run format`       | Rewrite files with Prettier          |
+| `npm run format:check` | Verify formatting without writing    |
+
+## Project structure
+
+```
+.github/workflows/   CI and GitHub Pages deployment
+docs/                current-state.md — operational handoff
+src/
+  app/               application ownership (App component)
+  styles/            global.scss — shared styling entry
+  main.tsx           React entry point
+```
+
+Directories are added when a milestone needs them. There are deliberately no
+placeholder route families or speculative folders.
+
+## Visual-first workflow
+
+Each milestone starts from a reviewed raster reference, is implemented against
+that evidence, and is then checked visually before the next milestone begins.
+
+Order: Foundations → Components → Global Shell → Home → Catalog → Product Details
+→ Cart → Checkout → Order Confirmation → remaining route families.
+
+Design tokens and Sass helpers are created in Foundations, from raster evidence.
+They do not exist yet.
+
+### px → rem authoring
+
+Design measurements are authored in `px`, matching what the rasters show.
+`postcss.config.js` is the single boundary that converts them to `rem` against a
+16px root. Intentional 1px hairlines stay 1px, and relative units (`rem`, `em`,
+`%`, viewport and container units) are never rewritten.
+
+## GitHub Pages deployment
+
+The app is published as the GitHub Pages **project site** for
+`mangust5580/GoodCall`, so assets resolve under `/GoodCall/`.
+
+That base path is declared once, in `vite.config.ts`. Application code reads
+`import.meta.env.BASE_URL` instead of repeating the repository name — including
+any future router, which derives its basename from the same value.
+
+`.github/workflows/deploy.yml` builds and publishes on every push to `main`.
+Repository **Settings → Pages → Source** must be set to **GitHub Actions**.
+
+## Raster reference boundary
+
+Design evidence lives outside this repository:
+
+```
+E:\Work\Frontend\Pictures\GoodCall-references
+```
+
+That archive is **read-only design evidence**. It is not copied wholesale into
+the repository. A task reads the specific raster it names, and nothing more.
+
+## Agent entry points
+
+- [`AGENTS.md`](AGENTS.md) — canonical agent policy; wins on conflict.
+- [`CLAUDE.md`](CLAUDE.md) — entry pointer for Claude Code.
+- [`docs/current-state.md`](docs/current-state.md) — current operational handoff.

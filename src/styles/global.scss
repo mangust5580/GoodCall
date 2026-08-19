@@ -1,0 +1,38 @@
+// Global styling entry.
+// Foundations will define the real token and helper API from raster evidence.
+// Until then this file only carries the minimum needed to prove the SCSS,
+// PostCSS and px-to-rem pipeline works end to end.
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  // The px-to-rem boundary assumes a 16px root basis.
+  font-size: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, sans-serif;
+  line-height: 1.5;
+}
+
+.app {
+  padding: 24px;
+
+  &__title {
+    margin: 0 0 8px;
+    font-size: 32px;
+  }
+
+  &__note {
+    margin: 0;
+    padding-bottom: 16px;
+
+    // Intentional hairline: must survive the px-to-rem boundary as 1px.
+    border-bottom: 1px solid #d0d0d0;
+  }
+}

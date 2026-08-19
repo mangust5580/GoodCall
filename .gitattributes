@@ -1,0 +1,5 @@
+# Line endings are a repository decision, not a per-machine one.
+# Git stores LF and checks out LF everywhere, so Prettier's default
+# `endOfLine: "lf"` check behaves identically on Windows, macOS and CI.
+# `text=auto` still leaves detected binary files untouched.
+* text=auto eol=lf
