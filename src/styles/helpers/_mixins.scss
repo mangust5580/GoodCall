@@ -1,0 +1,25 @@
+@use 'functions';
+
+// Media helpers.
+// Breakpoints stay in px on purpose: postcss-pxtorem runs with
+// `mediaQuery: false`, so authored px bounds survive into the compiled CSS.
+// Each mixin accepts a raw px length (`media-up(768px)`) or, once Foundations
+// defines them, a name from `settings.$breakpoints`.
+
+@mixin media-up($breakpoint) {
+  @media (width >= #{functions.breakpoint($breakpoint)}) {
+    @content;
+  }
+}
+
+@mixin media-max($breakpoint) {
+  @media (width < #{functions.breakpoint($breakpoint)}) {
+    @content;
+  }
+}
+
+@mixin media-range($from, $to) {
+  @media (#{functions.breakpoint($from)} <= width < #{functions.breakpoint($to)}) {
+    @content;
+  }
+}

@@ -1,4 +1,12 @@
 {
   "extends": ["stylelint-config-standard-scss"],
-  "ignoreFiles": ["dist/**/*", "node_modules/**/*"]
+  "ignoreFiles": ["dist/**/*", "node_modules/**/*"],
+  "rules": {
+    "unit-disallowed-list": [
+      ["rem"],
+      {
+        "message": "Author lengths in px; rem is produced by the postcss-pxtorem boundary (see AGENTS.md)."
+      }
+    ]
+  }
 }

@@ -1,0 +1,7 @@
+// Single entry point for the generic SCSS helpers.
+// Consume these as `@use '../helpers' as h;` — never reach into the individual
+// partials, so the internal layout stays free to change.
+
+@forward 'settings';
+@forward 'functions';
+@forward 'mixins';

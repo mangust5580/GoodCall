@@ -1,0 +1,18 @@
+// Generic helper settings.
+// No design tokens live here. Foundations owns colours, type scales, spacing
+// and every other raster-derived value; this file only holds the small amount
+// of configuration the generic helpers themselves need.
+
+// Viewport range used by `fluid()`, as unitless px numbers.
+// This is the 320px -> 1280px interval proven in the previous GoodCall project.
+// The caller-facing API drops the `px` suffix, but the interval is unchanged.
+// Foundations may revise these once real visual evidence exists.
+$fluid-min-viewport: 320;
+$fluid-max-viewport: 1280;
+
+// Named breakpoints are deliberately deferred.
+// Nothing in the repository needs a named breakpoint yet, so naming one now
+// would be inventing a taxonomy ahead of evidence. The media mixins already
+// accept raw px lengths — `@include media-up(768px)` — and Foundations adds
+// names here when the rasters justify them.
+$breakpoints: ();

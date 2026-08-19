@@ -26,11 +26,15 @@ started.
   `build_type: workflow`, publishing from `.github/workflows/deploy.yml`.
 - Published site: <https://mangust5580.github.io/GoodCall/>
 
-## Audit output
+## Task handoff output
 
-Audits are not routine. When one is explicitly requested, the auditor overwrites
-repository-root `AUDIT.md` with the complete result. That file is gitignored and
-local-only, so audit history never accumulates in Git. See the Audits section of
+Every bounded Claude Code or Codex task finishes by fully overwriting
+repository-root `AUDIT.md` with its final result — implementation, publish,
+maintenance, review and correction tasks included, and blocked or failed tasks
+too. It is the current attachable handoff, never appended to and never
+committed; `/AUDIT.md` is gitignored.
+
+Independent audits themselves remain optional. See the AUDIT.md section of
 `AGENTS.md`.
 
 ## Implemented layers
@@ -39,6 +43,7 @@ local-only, so audit history never accumulates in Git. See the Audits section of
 - Entry point: `src/main.tsx`.
 - Application ownership: `src/app/` (currently a single minimal `App` component).
 - Global styling entry: `src/styles/global.scss`.
+- Generic SCSS helpers: `src/styles/helpers/` (fluid scalars, media mixins).
 
 Nothing else exists yet. There is no design system, no component library, no
 router, no data layer, and no feature architecture.
@@ -56,16 +61,34 @@ router, no data layer, and no feature architecture.
 | Formatting      | Prettier 3                                      |
 | CI / deployment | GitHub Actions                                  |
 
-### px → rem authoring boundary
+### px-first authoring, rem on output
 
-`postcss.config.js` is the single conversion point.
+SCSS source authors lengths in `px` and never hand-writes `rem`. Stylelint's
+`unit-disallowed-list` rejects `rem` in source. `postcss.config.js` is the single
+conversion point.
 
-- Root basis: 16px.
+- Root basis: 16px, `replace: true`.
 - `minPixelValue: 2` — intentional 1px hairlines stay 1px.
-- Only `px` is matched, so `rem`, `em`, `%`, viewport and container units pass
-  through untouched.
+- `mediaQuery: false` — authored px breakpoints stay px in compiled CSS.
+- Only `px` is matched, so `%`, viewport, container units, `fr`, angles, time and
+  unitless values pass through untouched.
 
-Verified in build output: `24px → 1.5rem`, `32px → 2rem`, `1px solid` unchanged.
+Verified in build output: `24px → 1.5rem`, `18px → 1.125rem`, `1px solid`
+unchanged, `50%` / `100dvh` unchanged, `@media (width >= 768px)` unchanged.
+
+### SCSS helpers
+
+`src/styles/helpers/` holds the generic helper layer, consumed through its entry
+point (`@use '../helpers' as h;`). It contains no design tokens — Foundations
+owns those.
+
+- `h.fluid($desktop, $mobile)` and `h.fluid-between($desktop, $mobile, $from, $to)`
+  take **unitless px numbers**: `h.fluid(18, 14)`. Unit-bearing input is a
+  compile-time error. They emit a bounded `clamp()` whose px terms the PostCSS
+  boundary converts to rem, leaving the `vw` term relative.
+- Default fluid viewport range: 320 → 1280.
+- `h.media-up`, `h.media-max`, `h.media-range` take a px length (`768px`).
+  Named breakpoints are deferred until Foundations defines them.
 
 ### Base path
 

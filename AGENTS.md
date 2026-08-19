@@ -59,9 +59,8 @@ linting broadly.
 
 Specific standing constraints:
 
-- Design measurements are authored in `px`. One PostCSS boundary
-  (`postcss.config.js`) converts them to `rem` against a 16px root. Intentional
-  1px hairlines stay 1px. Semantic relative units are never rewritten.
+- Lengths are authored in `px` and never in hand-written `rem`. See the Styling
+  contract section below for the full rule.
 - The GitHub Pages base path lives only in `vite.config.ts`. Application code
   reads `import.meta.env.BASE_URL`; it never repeats the repository name.
 
@@ -106,20 +105,71 @@ Keep `docs/current-state.md` accurate as an operational handoff. Do not turn it
 into a commit log, and do not introduce mandatory `AUDIT.md` ceremony or
 exact-SHA independent audits after every small change.
 
-## Audits
+## AUDIT.md — mandatory task handoff
 
-Audits are not mandatory after every task, and no agent should invent one.
+**Every** explicit Claude Code or Codex bounded task must finish by fully
+overwriting `AUDIT.md` in the repository root. This applies to implementation,
+publish, maintenance, review, correction and audit tasks alike.
 
-When an explicit Claude Code or Codex audit **is** requested:
+`AUDIT.md` is the current attachable task handoff, not historical documentation.
 
-- Write the complete result to `AUDIT.md` in the repository root.
-- Fully overwrite the previous `AUDIT.md`. It is a current handoff artifact, not
-  history — never append, and never keep an archive of past audits.
-- Include, when applicable: auditor; audit scope; branch and `HEAD`; checks and
-  evidence reviewed; findings with severity; unresolved issues; final verdict.
-- Also return a concise terminal/chat summary. `AUDIT.md` remains the canonical
-  attachable audit output.
+- Never append. Never archive old copies. Never commit it.
+- It stays `/AUDIT.md` in `.gitignore`, local-only.
+- Write it **last** — after final checks, commit, push and remote verification —
+  so it reflects the true final state.
+- If the task stops on a blocker or failure, still overwrite it before exiting,
+  recording the blocker and whatever evidence was completed.
+- Terminal/chat output may stay concise, because this file is the reliable
+  handoff channel.
 
-`AUDIT.md` is local-only and gitignored (`/AUDIT.md`), so audit results stay easy
-to attach elsewhere without accumulating audit history in Git. Do not commit it,
-and do not build any `AUDIT.md` lifecycle beyond explicit audit tasks.
+Ordinary implementation and maintenance tasks record at least: task title/type;
+date; repository; branch and final `HEAD`; scope; changed; intentionally not
+changed; dependencies changed, if any; checks and results; commit/push/CI state
+when applicable; remaining issues/blockers; next step.
+
+Explicit **audit** tasks additionally record: auditor; evidence reviewed;
+findings with severity; unresolved issues; final verdict.
+
+Writing the handoff file is mandatory. An independent audit is not — do not
+invent audit ceremony for tasks that were not asked to be audited.
+
+## Styling contract
+
+Lengths in SCSS source are authored in **px**. This includes font sizes,
+spacing, gaps, padding, margins, fixed widths and heights, radii, icon sizes,
+offsets, borders and breakpoint values.
+
+**Never hand-author `rem` in SCSS.** `rem` is a compiled-CSS output concern owned
+by the single `postcss-pxtorem` boundary in `postcss.config.js`. Stylelint's
+`unit-disallowed-list` enforces this.
+
+The flow is: SCSS authored in px → Sass → CSS in px → postcss-pxtorem →
+production CSS in rem. Do not add Sass `px-to-rem()` functions, rem tokens, or
+any second conversion path.
+
+Semantic exceptions — use the unit that carries the intended CSS meaning, and do
+not flatten it to px for uniformity: `%`; viewport units (`dvh`, `svh`, `lvh`,
+`vw`, `vh`); container query units; `fr`; angles (`deg`); time (`ms`, `s`); and
+unitless values where CSS expects them (`line-height`, `opacity`, `z-index`,
+flex factors).
+
+- Intentional 1px hairlines stay 1px (`minPixelValue: 2`).
+- Media queries keep px bounds (`mediaQuery: false`). This is intentional.
+
+### Helpers
+
+`src/styles/helpers/` is the generic helper layer, consumed through its entry
+point: `@use '../helpers' as h;` — never via deep partial imports.
+
+Fluid scalars take **unitless px numbers**: `font-size: h.fluid(18, 14)` is 18px
+at the wide end and 14px at the narrow end. Unit-bearing input is rejected at
+compile time. Use `h.fluid-between($desktop, $mobile, $from, $to)` for an
+explicit range. Default range: 320 → 1280.
+
+Use fluid interpolation only for scalars that should genuinely interpolate. It is
+not a way to avoid media queries for structural layout changes that need discrete
+responsive behaviour.
+
+Media mixins are `h.media-up`, `h.media-max` and `h.media-range`, taking a px
+length such as `768px`. Named breakpoints are deferred until Foundations defines
+them from raster evidence.

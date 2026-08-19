@@ -47,6 +47,7 @@ docs/                current-state.md — operational handoff
 src/
   app/               application ownership (App component)
   styles/            global.scss — shared styling entry
+    helpers/         generic SCSS helpers (fluid, media mixins)
   main.tsx           React entry point
 ```
 
@@ -64,12 +65,36 @@ Order: Foundations → Components → Global Shell → Home → Catalog → Prod
 Design tokens and Sass helpers are created in Foundations, from raster evidence.
 They do not exist yet.
 
-### px → rem authoring
+### px-first authoring
 
-Design measurements are authored in `px`, matching what the rasters show.
-`postcss.config.js` is the single boundary that converts them to `rem` against a
-16px root. Intentional 1px hairlines stay 1px, and relative units (`rem`, `em`,
-`%`, viewport and container units) are never rewritten.
+Design measurements are authored in `px`, matching what the rasters show. **Never
+hand-write `rem` in SCSS** — `postcss.config.js` is the single boundary that
+converts px to `rem` against a 16px root, and Stylelint rejects `rem` in source.
+
+Intentional 1px hairlines stay 1px, media-query bounds stay px, and semantically
+meaningful units (`%`, `dvh`/`vw`, container units, `fr`, `deg`, `ms`, unitless
+values) are left exactly as authored.
+
+### SCSS helpers
+
+`src/styles/helpers/` is a small generic helper layer, used through its entry
+point:
+
+```scss
+@use '../helpers' as h;
+
+.thing {
+  font-size: h.fluid(18, 14); // 18px wide-end, 14px narrow-end, across 320–1280
+
+  @include h.media-up(768px) {
+    padding: 32px;
+  }
+}
+```
+
+Fluid sizes are **unitless px numbers**; passing `18px` or `1rem` is a
+compile-time error. It contains no design tokens — Foundations defines those from
+raster evidence.
 
 ## GitHub Pages deployment
 

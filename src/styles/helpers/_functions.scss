@@ -1,0 +1,91 @@
+@use 'sass:list';
+@use 'sass:map';
+@use 'sass:math';
+@use 'sass:meta';
+@use 'settings';
+
+// Sizes passed to the fluid helpers are unitless px numbers: `fluid(18, 14)`.
+// Rejecting unit-bearing input here is the point: `fluid(18px, 14px)` and
+// `fluid(1rem, 0.875rem)` are caught at compile time rather than silently
+// producing a broken clamp.
+@function -px-number($value, $name) {
+  @if meta.type-of($value) != 'number' {
+    @error 'fluid(): #{$name} must be a unitless px number, got #{meta.type-of($value)} `#{$value}`.';
+  }
+
+  @if not math.is-unitless($value) {
+    @error 'fluid(): #{$name} must be unitless — write `18`, not `#{$value}`.';
+  }
+
+  @return $value;
+}
+
+// Linear interpolation between two sizes across an explicit viewport range.
+// Emits px terms so the single postcss-pxtorem boundary converts them to rem in
+// the final CSS. The viewport-relative term stays viewport-relative.
+@function fluid-between($desktop, $mobile, $from, $to) {
+  $size-wide: -px-number($desktop, '$desktop');
+  $size-narrow: -px-number($mobile, '$mobile');
+  $viewport-narrow: -px-number($from, '$from');
+  $viewport-wide: -px-number($to, '$to');
+
+  @if $viewport-narrow == $viewport-wide {
+    @error 'fluid(): $from and $to must differ, got `#{$viewport-narrow}` twice.';
+  }
+
+  @if $viewport-narrow > $viewport-wide {
+    @error 'fluid(): $from `#{$viewport-narrow}` must be smaller than $to `#{$viewport-wide}`.';
+  }
+
+  // Nothing to interpolate; a plain length is the honest output.
+  @if $size-wide == $size-narrow {
+    @return #{$size-wide}px;
+  }
+
+  $slope: math.div($size-wide - $size-narrow, $viewport-wide - $viewport-narrow);
+  $intercept: $size-narrow - $slope * $viewport-narrow;
+  $lower: math.min($size-narrow, $size-wide);
+  $upper: math.max($size-narrow, $size-wide);
+
+  @return clamp(#{$lower}px, #{$intercept}px + #{$slope * 100}vw, #{$upper}px);
+}
+
+// Interpolate across the project default viewport range.
+// `font-size: fluid(18, 14)` is 18px at 1280px wide and 14px at 320px wide,
+// clamped outside that range.
+@function fluid($desktop, $mobile) {
+  @return fluid-between(
+    $desktop,
+    $mobile,
+    settings.$fluid-min-viewport,
+    settings.$fluid-max-viewport
+  );
+}
+
+// Resolve a media query bound: either a raw px length or a name from
+// `settings.$breakpoints`.
+@function breakpoint($value) {
+  @if meta.type-of($value) == 'number' {
+    @if math.is-unitless($value) {
+      @error 'breakpoint(): write a px length such as `768px`, got unitless `#{$value}`.';
+    }
+
+    @if math.unit($value) != 'px' {
+      @error 'breakpoint(): breakpoints are authored in px, got `#{$value}`.';
+    }
+
+    @return $value;
+  }
+
+  $resolved: map.get(settings.$breakpoints, $value);
+
+  @if not $resolved {
+    @if list.length(map.keys(settings.$breakpoints)) == 0 {
+      @error 'breakpoint(): no named breakpoints are defined yet — pass a px length such as `768px`.';
+    }
+
+    @error 'breakpoint(): unknown breakpoint `#{$value}`; known names: #{map.keys(settings.$breakpoints)}.';
+  }
+
+  @return $resolved;
+}
