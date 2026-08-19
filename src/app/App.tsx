@@ -1,5 +1,6 @@
-import { ComponentsReference, ReferenceIndex } from './TemporaryReference';
+import { ComponentsReference } from './ComponentsReference';
 import { FoundationsColorReference } from './FoundationsColorReference';
+import { ReferenceIndex } from './TemporaryReference';
 
 function currentReference(): string | null {
   return new URLSearchParams(window.location.search).get('reference');

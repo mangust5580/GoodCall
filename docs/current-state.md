@@ -11,10 +11,13 @@ Operational handoff. This is not a history log.
 
 ## Current milestone
 
-**Foundations — complete.**
+**Components — open.** Implemented slice: **Components A — Core Controls & Forms**,
+covering raster sections 02 Buttons & Controls and 03 Inputs & Forms.
 
-Components A asset preparation is complete for the generic controls/forms icon
-subset only. No Components implementation has started.
+Components A is **awaiting user visual PASS**. Raster sections 01 and 04-08 are
+not implemented.
+
+**Foundations — complete.**
 
 **User visual PASS received for Foundations / Colors on 2026-08-19.** The
 approval came from the user; no agent self-certified it.
@@ -65,10 +68,29 @@ Independent audits themselves remain optional. See the AUDIT.md section of
 - Foundations colour reference surface: `src/app/FoundationsColorReference.tsx`
   with its own reference-only styles.
 - Temporary reference pages: `src/app/TemporaryReference.tsx`.
+- Reusable controls and form fields: `src/components/ui/`, with the shared
+  control system in `controls.scss`.
+- Components A reference surface: `src/app/ComponentsReference.tsx`.
 
-There is no component library, no router, no data layer, and no feature
-architecture. The reference surface is a development comparison page, not
-product UI, and its specimens are deliberately not reusable components.
+There is no router, no data layer, and no feature architecture. The reference
+surfaces are development comparison pages, not product UI.
+
+### Components A
+
+`src/components/ui/` provides Button, Tabs, Chip, Toggle, Checkbox, Radio,
+QuantityStepper, Pagination, TextField, SearchField, SelectField, TextareaField,
+PhoneField, DateField, RangeSlider and Icon, exported through `index.ts`.
+
+The shared control system lives in `controls.scss` as `--control-*` custom
+properties: one control height, three radii, one border and focus treatment, one
+padding and one icon size. It is owned by Components, not Foundations, and is
+deliberately not a general spacing, radius or type scale.
+
+Icons are the eight prepared SVGs in `src/assets/icons/`, applied as CSS masks so
+they inherit `currentColor`. The SVG paths are never duplicated into TypeScript.
+
+The Components reference surface composes the real components; it does not
+reimplement look-alike markup.
 
 ### Colour tokens
 
@@ -145,8 +167,7 @@ The base page no longer hosts the Foundations surface. A query-string check in
 
 - base URL — temporary reference index, linking to the two surfaces below
 - `?reference=foundations` — the Foundations colour reference
-- `?reference=components` — a placeholder only; the Components milestone has not
-  started
+- `?reference=components` — the Components A reference surface
 
 Links are built from `import.meta.env.BASE_URL`, so they resolve under the
 GitHub Pages base without hardcoding the repository name, and no SPA fallback is
@@ -154,6 +175,14 @@ needed because the path never changes.
 
 These are temporary development surfaces, not production routes, and will be
 removed when the reference surfaces are no longer needed.
+
+## Design reconciliation
+
+Raster evidence defines visual intent and component coverage; accepted
+Foundations and established system rules win over incidental raster differences.
+Near-duplicate specimen differences are normalized into the smallest coherent
+system rather than encoded as separate tokens or variants. See the System-first
+design section of `AGENTS.md`.
 
 ## Code comments
 
@@ -163,6 +192,10 @@ comments section of `AGENTS.md` for the governed file set and the rule on
 functional suppression directives.
 
 ## Current visual status
+
+**Components A — awaiting user visual PASS.** The reference surface at
+`?reference=components` composes the real reusable controls and mirrors the
+grouping of raster sections 02 and 03.
 
 **Foundations / Colors — visually accepted by the user on 2026-08-19.**
 
@@ -247,9 +280,11 @@ None.
 
 ## Next approved step
 
-**Components A implementation**, using
-`E:\Work\Frontend\Pictures\GoodCall-references\Components.png` and the prepared
-generic icon assets in `src/assets/icons/`.
+**ChatGPT / user visual review of Components A**, against sections 02 and 03 of
+`E:\Work\Frontend\Pictures\GoodCall-references\Components.png`.
+
+Components stays open after that review. Sections 01 and 04-08 each need their
+own bounded slice.
 
 ## Normative repository docs
 

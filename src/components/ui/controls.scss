@@ -1,0 +1,602 @@
+$icon-names: (
+  'search',
+  'calendar',
+  'chevron-down',
+  'chevron-left',
+  'chevron-right',
+  'plus',
+  'minus',
+  'check'
+);
+
+:root {
+  --control-height: 48px;
+  --control-radius: 12px;
+  --control-radius-sm: 8px;
+  --control-radius-pill: 999px;
+  --control-padding-x: 16px;
+  --control-border-width: 1px;
+  --control-icon-size: 20px;
+  --control-gap: 10px;
+  --control-font-size: 15px;
+  --control-label-size: 13px;
+  --control-hint-size: 13px;
+}
+
+@mixin control-focus {
+  &:focus-visible {
+    outline: 2px solid var(--role-border-focus);
+    outline-offset: 2px;
+  }
+}
+
+@mixin control-surface {
+  background-color: var(--role-surface-card);
+  border: var(--control-border-width) solid var(--role-border-default);
+  border-radius: var(--control-radius);
+}
+
+.ui-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  border: 0;
+  clip-path: inset(50%);
+}
+
+.ui-icon {
+  display: inline-block;
+  flex: none;
+  width: var(--control-icon-size);
+  height: var(--control-icon-size);
+  background-color: currentcolor;
+  mask-repeat: no-repeat;
+  mask-position: center;
+  mask-size: contain;
+
+  @each $name in $icon-names {
+    &--#{$name} {
+      mask-image: url('../../assets/icons/#{$name}.svg');
+    }
+  }
+}
+
+.ui-button {
+  display: inline-flex;
+  gap: var(--control-gap);
+  align-items: center;
+  justify-content: center;
+  min-height: var(--control-height);
+  padding: 0 24px;
+  border: var(--control-border-width) solid transparent;
+  border-radius: var(--control-radius-pill);
+  font: inherit;
+  font-size: var(--control-font-size);
+  font-weight: 600;
+  line-height: 1.2;
+  cursor: pointer;
+
+  @include control-focus;
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+  }
+
+  &--primary {
+    background-color: var(--color-brand-purple-600);
+    color: var(--role-text-inverse);
+
+    &:hover:not(:disabled) {
+      background-color: var(--color-brand-purple-700);
+    }
+  }
+
+  &--secondary {
+    background-color: var(--role-surface-card);
+    border-color: var(--role-border-brand);
+    color: var(--role-text-link);
+
+    &:hover:not(:disabled) {
+      border-color: var(--role-border-focus);
+    }
+  }
+
+  &--text {
+    padding: 0 8px;
+    background-color: transparent;
+    color: var(--role-text-link);
+
+    &:hover:not(:disabled) {
+      color: var(--role-text-link-hover);
+    }
+  }
+
+  &--danger {
+    background-color: var(--role-surface-card);
+    border-color: var(--role-state-danger);
+    color: var(--role-state-danger);
+
+    &:hover:not(:disabled) {
+      background-color: var(--role-state-danger-soft);
+    }
+  }
+}
+
+.ui-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--role-border-default);
+
+  &__tab {
+    min-height: var(--control-height);
+    padding: 0 20px;
+    background-color: transparent;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    font: inherit;
+    font-size: var(--control-font-size);
+    color: var(--role-text-muted);
+    cursor: pointer;
+
+    @include control-focus;
+
+    &:hover {
+      color: var(--role-text-primary);
+    }
+
+    &--active {
+      border-bottom-color: var(--role-border-focus);
+      color: var(--role-text-link);
+      font-weight: 600;
+    }
+  }
+}
+
+.ui-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 7px 12px;
+  border-radius: var(--control-radius-sm);
+  font-size: var(--control-label-size);
+  font-weight: 600;
+  line-height: 1.2;
+
+  &--brand {
+    background-color: var(--role-surface-brand-soft);
+    color: var(--role-text-link);
+  }
+
+  &--success {
+    background-color: var(--role-state-success-soft);
+    color: var(--role-state-success);
+  }
+
+  &--danger {
+    background-color: var(--role-state-danger-soft);
+    color: var(--role-state-danger);
+  }
+}
+
+.ui-toggle {
+  display: inline-flex;
+  gap: var(--control-gap);
+  align-items: center;
+  cursor: pointer;
+
+  &__input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+  }
+
+  &__track {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    width: 52px;
+    height: 28px;
+    padding: 3px;
+    background-color: var(--color-neutral-gray-300);
+    border-radius: var(--control-radius-pill);
+    transition: background-color 0.15s ease;
+  }
+
+  &__thumb {
+    width: 22px;
+    height: 22px;
+    background-color: var(--color-base-white);
+    border-radius: 50%;
+    transition: transform 0.15s ease;
+  }
+
+  &__input:checked + &__track {
+    background-color: var(--color-brand-purple-600);
+  }
+
+  &__input:checked + &__track &__thumb {
+    transform: translateX(24px);
+  }
+
+  &__input:focus-visible + &__track {
+    outline: 2px solid var(--role-border-focus);
+    outline-offset: 2px;
+  }
+
+  &__input:disabled + &__track {
+    cursor: not-allowed;
+    opacity: 0.55;
+  }
+
+  &__label {
+    font-size: var(--control-font-size);
+    color: var(--role-text-primary);
+  }
+}
+
+.ui-choice {
+  display: inline-flex;
+  gap: var(--control-gap);
+  align-items: center;
+  min-height: 32px;
+  cursor: pointer;
+
+  &__input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+  }
+
+  &__box {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    background-color: var(--role-surface-card);
+    border: var(--control-border-width) solid var(--role-border-strong);
+    border-radius: 6px;
+    transition:
+      background-color 0.15s ease,
+      border-color 0.15s ease;
+  }
+
+  &--radio &__box {
+    border-radius: 50%;
+  }
+
+  &__mark {
+    --control-icon-size: 16px;
+
+    color: var(--role-text-inverse);
+    opacity: 0;
+  }
+
+  &__dot {
+    width: 10px;
+    height: 10px;
+    background-color: var(--color-brand-purple-600);
+    border-radius: 50%;
+    opacity: 0;
+  }
+
+  &__input:checked + &__box {
+    background-color: var(--color-brand-purple-600);
+    border-color: var(--color-brand-purple-600);
+  }
+
+  &--radio &__input:checked + &__box {
+    background-color: var(--role-surface-card);
+    border-color: var(--color-brand-purple-600);
+  }
+
+  &__input:checked + &__box &__mark,
+  &__input:checked + &__box &__dot {
+    opacity: 1;
+  }
+
+  &__input:focus-visible + &__box {
+    outline: 2px solid var(--role-border-focus);
+    outline-offset: 2px;
+  }
+
+  &__input:disabled ~ &__label {
+    color: var(--role-text-subtle);
+  }
+
+  &__input:disabled + &__box {
+    background-color: var(--role-state-disabled);
+    cursor: not-allowed;
+  }
+
+  &__label {
+    font-size: var(--control-font-size);
+    color: var(--role-text-primary);
+  }
+}
+
+.ui-stepper {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--control-height);
+  padding: 0 6px;
+
+  @include control-surface;
+
+  &__button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    background-color: transparent;
+    border: 0;
+    border-radius: var(--control-radius-sm);
+    color: var(--role-text-primary);
+    cursor: pointer;
+
+    @include control-focus;
+
+    &:hover:not(:disabled) {
+      background-color: var(--role-surface-page-soft);
+    }
+
+    &:disabled {
+      color: var(--role-text-subtle);
+      cursor: not-allowed;
+    }
+  }
+
+  &__value {
+    min-width: 40px;
+    font-size: var(--control-font-size);
+    font-weight: 600;
+    text-align: center;
+    color: var(--role-text-primary);
+  }
+}
+
+.ui-pagination {
+  &__list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  &__item {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 40px;
+    height: 40px;
+    padding: 0 6px;
+    background-color: transparent;
+    border: 0;
+    border-radius: var(--control-radius-pill);
+    font: inherit;
+    font-size: var(--control-font-size);
+    color: var(--role-text-primary);
+    cursor: pointer;
+
+    @include control-focus;
+
+    &:hover:not(:disabled) {
+      background-color: var(--role-surface-page-soft);
+    }
+
+    &--active {
+      background-color: var(--color-brand-purple-600);
+      color: var(--role-text-inverse);
+      font-weight: 600;
+
+      &:hover:not(:disabled) {
+        background-color: var(--color-brand-purple-700);
+      }
+    }
+
+    &--arrow {
+      color: var(--role-text-secondary);
+    }
+
+    &:disabled {
+      color: var(--role-text-subtle);
+      cursor: not-allowed;
+    }
+  }
+
+  &__gap {
+    min-width: 24px;
+    text-align: center;
+    color: var(--role-text-subtle);
+  }
+}
+
+.ui-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+
+  &__label {
+    font-size: var(--control-label-size);
+    color: var(--role-text-secondary);
+  }
+
+  &__control {
+    position: relative;
+    display: flex;
+    align-items: center;
+    min-width: 0;
+  }
+
+  &__icon {
+    position: absolute;
+    right: var(--control-padding-x);
+    color: var(--role-text-subtle);
+    pointer-events: none;
+  }
+
+  &__hint {
+    margin: 0;
+    font-size: var(--control-hint-size);
+    color: var(--role-text-muted);
+  }
+}
+
+.ui-input {
+  width: 100%;
+  min-width: 0;
+  min-height: var(--control-height);
+  padding: 0 var(--control-padding-x);
+  font: inherit;
+  font-size: var(--control-font-size);
+  color: var(--role-text-primary);
+
+  @include control-surface;
+  @include control-focus;
+
+  &:focus-visible {
+    border-color: var(--role-border-focus);
+  }
+
+  &::placeholder {
+    color: var(--role-text-subtle);
+  }
+
+  &:disabled {
+    background-color: var(--role-state-disabled);
+    color: var(--role-text-subtle);
+    cursor: not-allowed;
+  }
+
+  &--with-icon {
+    padding-right: 44px;
+  }
+
+  &--select {
+    padding-right: 44px;
+    appearance: none;
+    cursor: pointer;
+  }
+
+  &--textarea {
+    min-height: 132px;
+    padding: 14px var(--control-padding-x);
+    line-height: 1.5;
+    resize: vertical;
+  }
+
+  &[type='date']::-webkit-calendar-picker-indicator {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+  }
+}
+
+.ui-range {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-width: 0;
+
+  &__values {
+    display: flex;
+    gap: 12px;
+    justify-content: space-between;
+  }
+
+  &__value {
+    display: inline-flex;
+    align-items: center;
+    min-height: 40px;
+    padding: 0 var(--control-padding-x);
+    font-size: var(--control-font-size);
+    font-weight: 600;
+    color: var(--role-text-primary);
+
+    @include control-surface;
+  }
+
+  &__track {
+    position: relative;
+    height: 20px;
+
+    &::before {
+      position: absolute;
+      top: 8px;
+      right: 0;
+      left: 0;
+      height: 4px;
+      background-color: var(--color-neutral-gray-200);
+      border-radius: var(--control-radius-pill);
+      content: '';
+    }
+  }
+
+  &__fill {
+    position: absolute;
+    top: 8px;
+    right: calc(100% - var(--ui-range-end));
+    left: var(--ui-range-start);
+    height: 4px;
+    background-color: var(--color-brand-purple-600);
+    border-radius: var(--control-radius-pill);
+  }
+
+  &__input {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 20px;
+    margin: 0;
+    background: transparent;
+    appearance: none;
+    pointer-events: none;
+
+    &::-webkit-slider-thumb {
+      width: 20px;
+      height: 20px;
+      background-color: var(--color-brand-purple-600);
+      border: 2px solid var(--color-base-white);
+      border-radius: 50%;
+      appearance: none;
+      cursor: pointer;
+      pointer-events: auto;
+    }
+
+    &::-moz-range-thumb {
+      width: 16px;
+      height: 16px;
+      background-color: var(--color-brand-purple-600);
+      border: 2px solid var(--color-base-white);
+      border-radius: 50%;
+      cursor: pointer;
+      pointer-events: auto;
+    }
+
+    &:focus-visible::-webkit-slider-thumb {
+      outline: 2px solid var(--role-border-focus);
+      outline-offset: 2px;
+    }
+
+    &:focus-visible::-moz-range-thumb {
+      outline: 2px solid var(--role-border-focus);
+      outline-offset: 2px;
+    }
+  }
+}

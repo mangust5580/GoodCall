@@ -96,6 +96,30 @@ the underlying code or config so it is not needed. If that would require a
 material unrelated refactor, stop and report the blocker rather than leaving the
 directive in place.
 
+## System-first design
+
+Raster evidence defines visual intent, component coverage and meaningful
+distinctions. Reviewed Foundations and already-established system rules win over
+incidental raster differences. Normalize visually similar cases into the smallest
+coherent system. Do not introduce one-off tokens, sizes or variants solely for
+pixel matching.
+
+Priority for design implementation:
+
+1. reviewed current repository system;
+2. accepted Foundations;
+3. established reusable Components;
+4. new raster evidence;
+5. local one-off decisions, only where a real semantic distinction requires them.
+
+This does not permit ignoring raster direction. It means normalizing accidental
+or near-duplicate visual differences instead of encoding them as separate APIs.
+Where a raster shows a slightly different colour with no semantic distinction,
+use the accepted Foundations role.
+
+Accessibility, responsive correctness and maintainability rank above literal
+raster copying. Record every deliberate normalization in the task's `AUDIT.md`.
+
 ## Raster references
 
 Raster design evidence lives outside the repository at:

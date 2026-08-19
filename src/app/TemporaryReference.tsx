@@ -21,16 +21,3 @@ export function ReferenceIndex() {
     </main>
   );
 }
-
-export function ComponentsReference() {
-  return (
-    <main className="temporary-reference">
-      <h1 className="temporary-reference__title">Components reference</h1>
-      <p className="temporary-reference__note">
-        The Components reference surface is not implemented yet. The Components milestone has not
-        started.
-      </p>
-      <a href={import.meta.env.BASE_URL}>Back to reference index</a>
-    </main>
-  );
-}
