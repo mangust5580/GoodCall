@@ -13,6 +13,9 @@ Operational handoff. This is not a history log.
 
 **Foundations — complete.**
 
+Components A asset preparation is complete for the generic controls/forms icon
+subset only. No Components implementation has started.
+
 **User visual PASS received for Foundations / Colors on 2026-08-19.** The
 approval came from the user; no agent self-certified it.
 
@@ -57,6 +60,8 @@ Independent audits themselves remain optional. See the AUDIT.md section of
   `_gradients.scss`, `_index.scss`).
 - Generic SCSS helpers: `src/styles/helpers/` (fluid scalars, media mixins,
   `emit-vars`).
+- Generic UI SVG icon assets for Components A controls/forms:
+  `src/assets/icons/`.
 - Foundations colour reference surface: `src/app/FoundationsColorReference.tsx`
   with its own reference-only styles.
 - Temporary reference pages: `src/app/TemporaryReference.tsx`.
@@ -242,12 +247,9 @@ None.
 
 ## Next approved step
 
-**Components visual intake**, using
-`E:\Work\Frontend\Pictures\GoodCall-references\Components.png`.
-
-That task is visual intake and scope reconciliation only. Components
-implementation does not begin until the intake has been reviewed and a separate
-bounded implementation task is issued.
+**Components A implementation**, using
+`E:\Work\Frontend\Pictures\GoodCall-references\Components.png` and the prepared
+generic icon assets in `src/assets/icons/`.
 
 ## Normative repository docs
 
