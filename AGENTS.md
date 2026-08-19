@@ -102,7 +102,7 @@ Implementation tasks report:
 - next step.
 
 Keep `docs/current-state.md` accurate as an operational handoff. Do not turn it
-into a commit log, and do not introduce mandatory `AUDIT.md` ceremony or
+into a commit log, and do not introduce mandatory independent audit ceremony or
 exact-SHA independent audits after every small change.
 
 ## AUDIT.md — mandatory task handoff
