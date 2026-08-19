@@ -1,2 +1,3 @@
-export const tabId = (id: string): string => `tab-${id}`;
-export const tabPanelId = (id: string): string => `tabpanel-${id}`;
+export const tabId = (idBase: string, itemId: string): string => `${idBase}-tab-${itemId}`;
+export const tabPanelId = (idBase: string, itemId: string): string =>
+  `${idBase}-tabpanel-${itemId}`;

@@ -8,13 +8,14 @@ export interface TabItem {
 }
 
 interface TabsProps {
+  readonly idBase: string;
   readonly items: readonly TabItem[];
   readonly activeId: string;
   readonly onChange: (id: string) => void;
   readonly label: string;
 }
 
-export function Tabs({ items, activeId, onChange, label }: TabsProps) {
+export function Tabs({ idBase, items, activeId, onChange, label }: TabsProps) {
   const handleKeyDown = (event: KeyboardEvent<HTMLButtonElement>) => {
     const offset = event.key === 'ArrowRight' ? 1 : event.key === 'ArrowLeft' ? -1 : 0;
 
@@ -29,7 +30,7 @@ export function Tabs({ items, activeId, onChange, label }: TabsProps) {
 
     if (next) {
       onChange(next.id);
-      document.getElementById(tabId(next.id))?.focus();
+      document.getElementById(tabId(idBase, next.id))?.focus();
     }
   };
 
@@ -40,10 +41,10 @@ export function Tabs({ items, activeId, onChange, label }: TabsProps) {
 
         return (
           <button
-            aria-controls={tabPanelId(item.id)}
+            aria-controls={tabPanelId(idBase, item.id)}
             aria-selected={selected}
             className={selected ? 'ui-tabs__tab ui-tabs__tab--active' : 'ui-tabs__tab'}
-            id={tabId(item.id)}
+            id={tabId(idBase, item.id)}
             key={item.id}
             onClick={() => {
               onChange(item.id);

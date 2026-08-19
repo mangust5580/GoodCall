@@ -44,6 +44,8 @@ const BRAND_FILTERS = [
   { id: 'budget', label: 'Недорогие', count: 56 },
 ];
 
+const PRODUCT_TABS = 'product-sections';
+
 const priceFormatter = new Intl.NumberFormat('ru-RU');
 
 const formatPrice = (value: number): string => `${priceFormatter.format(value)} ₽`;
@@ -122,16 +124,17 @@ export function ComponentsReference() {
         <Group title="Табы" wide>
           <Tabs
             activeId={activeTab}
+            idBase={PRODUCT_TABS}
             items={TAB_ITEMS}
             label="Разделы товара"
             onChange={setActiveTab}
           />
           {TAB_ITEMS.map((item) => (
             <div
-              aria-labelledby={tabId(item.id)}
+              aria-labelledby={tabId(PRODUCT_TABS, item.id)}
               className="cmp-tabpanel"
               hidden={item.id !== activeTab}
-              id={tabPanelId(item.id)}
+              id={tabPanelId(PRODUCT_TABS, item.id)}
               key={item.id}
               role="tabpanel"
               tabIndex={0}

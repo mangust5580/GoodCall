@@ -44,6 +44,10 @@ interface BaseFieldProps extends NativeInputProps {
   readonly id?: string;
 }
 
+type FixedTypeFieldProps = Omit<BaseFieldProps, 'type'>;
+
+type PhoneFieldProps = Omit<BaseFieldProps, 'type' | 'inputMode'>;
+
 function useControlId(explicit?: string): string {
   const generated = useId();
 
@@ -75,16 +79,16 @@ export function TextField(props: BaseFieldProps) {
   return <InputField type="text" {...props} />;
 }
 
-export function SearchField(props: BaseFieldProps) {
-  return <InputField icon="search" type="search" {...props} />;
+export function SearchField(props: FixedTypeFieldProps) {
+  return <InputField {...props} icon="search" type="search" />;
 }
 
-export function PhoneField(props: BaseFieldProps) {
-  return <InputField inputMode="tel" type="tel" {...props} />;
+export function PhoneField(props: PhoneFieldProps) {
+  return <InputField {...props} inputMode="tel" type="tel" />;
 }
 
-export function DateField(props: BaseFieldProps) {
-  return <InputField icon="calendar" type="date" {...props} />;
+export function DateField(props: FixedTypeFieldProps) {
+  return <InputField {...props} icon="calendar" type="date" />;
 }
 
 interface SelectFieldProps extends Omit<
