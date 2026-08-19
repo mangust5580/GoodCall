@@ -55,6 +55,7 @@ Independent audits themselves remain optional. See the AUDIT.md section of
   `emit-vars`).
 - Foundations colour reference surface: `src/app/FoundationsColorReference.tsx`
   with its own reference-only styles.
+- Temporary reference pages: `src/app/TemporaryReference.tsx`.
 
 There is no component library, no router, no data layer, and no feature
 architecture. The reference surface is a development comparison page, not
@@ -128,11 +129,41 @@ owns those.
 code reads `import.meta.env.BASE_URL`. A future router derives its basename from
 that same value.
 
+## Temporary reference pages
+
+The base page no longer hosts the Foundations surface. A query-string check in
+`App.tsx` selects the surface, with no router and no new dependency:
+
+- base URL — temporary reference index, linking to the two surfaces below
+- `?reference=foundations` — the Foundations colour reference
+- `?reference=components` — a placeholder only; the Components milestone has not
+  started
+
+Links are built from `import.meta.env.BASE_URL`, so they resolve under the
+GitHub Pages base without hardcoding the repository name, and no SPA fallback is
+needed because the path never changes.
+
+These are temporary development surfaces, not production routes, and will be
+removed when the reference surfaces are no longer needed.
+
+## Code comments
+
+The repository carries **no comments in authored code**, config, styles or
+workflows. Rationale lives in the Markdown documentation instead. See the No
+comments section of `AGENTS.md` for the governed file set and the rule on
+functional suppression directives.
+
 ## Current visual status
 
-`App` renders the Foundations / Colors reference surface, which mirrors the
-raster's five sections so the colour system can be compared side by side. A
-headless-Chrome screenshot was captured and compared against the raster.
+The Foundations / Colors reference surface mirrors the raster's five sections so
+the colour system can be compared side by side. It is reached at
+`?reference=foundations`.
+
+A gradient correction has been applied: the Footer gradient now runs
+left-to-right, matching the visible raster specimen, which is horizontal despite
+the poster's 180 degree annotation. Its stops are unchanged. The other five
+gradients were measured against their specimens and left as they were, since
+none showed a material mismatch.
 
 Typography and geometry deliberately do not match the raster: it documents no
 font family, type scale, spacing or radius scale, so those were not invented.

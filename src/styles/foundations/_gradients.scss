@@ -2,34 +2,12 @@
 @use '../helpers' as h;
 @use 'colors';
 
-// Foundations / Gradients.
-// Stops are the raster's printed values, referenced through the colour maps so
-// no hex is duplicated between the two files.
-
-// Direction: the raster prints an angle for each linear gradient (180deg or
-// 90deg) and those angles are implemented literally. The poster's own specimen
-// swatches are rendered with an extra diagonal sweep, and the Footer specimen
-// reads as predominantly left-to-right despite its 180deg label. That is
-// showcase rendering, not token intent, so the printed angles win.
-
-// Hero Glow and Soft Card Glow are annotated "180deg radial" in the raster,
-// which is not meaningful CSS: an angle does not apply to a radial gradient.
-// Both are implemented as radial gradients with the printed stops and the
-// meaningless angle dropped. This is a bounded normalisation of a contradictory
-// annotation, not a design change.
-
-// Soft Card Glow additionally has its stop order corrected. The raster prints
-// "transparent -> #EBDDFF", but its own specimen shows the tint concentrated in
-// the centre fading outward, which is also what the name describes. The printed
-// order would put the tint on the outer edge and clear glass in the middle.
-// Measured across the specimen interior: centre #E6D2FE, edges #F2E8FD.
-
 $-purple: colors.$brand-purple;
 $gradients: (
   'brand-vertical': linear-gradient(180deg, map.get($-purple, '300'), map.get($-purple, '500')),
   'brand-horizontal': linear-gradient(90deg, map.get($-purple, '400'), map.get($-purple, '700')),
   'cta': linear-gradient(90deg, map.get($-purple, '500'), map.get(colors.$accent-violet, '500')),
-  'footer': linear-gradient(180deg, map.get($-purple, '800'), map.get(colors.$neutral-gray, '900')),
+  'footer': linear-gradient(90deg, map.get($-purple, '800'), map.get(colors.$neutral-gray, '900')),
   'hero-glow': radial-gradient(
       map.get(colors.$role-surface, 'hero'),
       map.get($-purple, '100'),

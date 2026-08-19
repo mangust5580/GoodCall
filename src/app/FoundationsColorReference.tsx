@@ -3,19 +3,6 @@ import type { ReactNode } from 'react';
 
 import './FoundationsColorReference.scss';
 
-/**
- * Foundations / Colors reference surface.
- *
- * A development-only surface for comparing the implemented colour system against
- * GoodCall-references/Foundations.png. It is not product UI and the specimens
- * below are not a component library — nothing here should be extracted into
- * reusable components. That is Components milestone work.
- *
- * Swatch values are read back from the live CSS custom properties rather than
- * duplicated in TypeScript, so the SCSS token maps stay the single source of
- * truth and this surface shows what the browser actually resolved.
- */
-
 interface Token {
   readonly name: string;
   readonly label: string;
@@ -169,11 +156,6 @@ const ALL_TOKEN_NAMES: readonly string[] = [
   ...COMPOSED.map((t) => t.name),
 ];
 
-/**
- * Normalise a resolved custom property for display so it reads the way the
- * raster annotates it: #abc and #aabbcc become #AABBCC, and the 8-digit hex a
- * browser resolves an alpha colour to becomes rgba(...). Gradients pass through.
- */
 function formatValue(value: string): string {
   const trimmed = value.trim();
   const short = /^#([0-9a-f])([0-9a-f])([0-9a-f])$/i.exec(trimmed);
@@ -205,12 +187,6 @@ function readResolvedTokens(): Record<string, string> {
   return resolved;
 }
 
-/**
- * Read the tokens once, lazily, on first render. The stylesheet is applied
- * before this module runs in both dev and production, so the values are already
- * resolved; a lazy initialiser avoids the cascading render that setting state
- * from an effect would cause.
- */
 function useResolvedTokens(): Record<string, string> {
   const [values] = useState(readResolvedTokens);
 

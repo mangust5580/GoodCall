@@ -1,16 +1,12 @@
-# Dependencies
 node_modules/
 
-# Build output
 dist/
 dist-ssr/
 
-# Local environment files
 .env
 .env.*
 !.env.example
 
-# Tool caches / logs
 *.tsbuildinfo
 npm-debug.log*
 yarn-debug.log*
@@ -19,14 +15,10 @@ pnpm-debug.log*
 .eslintcache
 .stylelintcache
 
-# Local agent/tooling state
 .serena/
 
-# Audit output: current handoff artifact, kept local so audit history
-# never accumulates in Git. See the Audits section in AGENTS.md.
 /AUDIT.md
 
-# IDE / editor local state
 .idea/
 .vscode/
 *.suo
@@ -35,6 +27,5 @@ pnpm-debug.log*
 *.sln
 *.sw?
 
-# OS
 .DS_Store
 Thumbs.db

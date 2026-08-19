@@ -1,9 +1,3 @@
-// Global styling entry.
-// Loads the Foundations tokens exactly once and applies only the semantic roles
-// whose ownership is unambiguous: page surface, primary text and links.
-// Lengths are authored in px. rem is produced by the single postcss-pxtorem
-// boundary, never written by hand. See AGENTS.md.
-
 @use 'foundations';
 
 *,
@@ -13,15 +7,11 @@
 }
 
 html {
-  // The px-to-rem boundary assumes a 16px root basis.
   font-size: 100%;
 }
 
 body {
   margin: 0;
-
-  // The raster documents no font family and no type scale, so the system stack
-  // stays until typography evidence exists.
   background-color: var(--role-surface-page);
   color: var(--role-text-primary);
   font-family: system-ui, sans-serif;

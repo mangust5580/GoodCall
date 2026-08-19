@@ -1,0 +1,29 @@
+.temporary-reference {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 64px 24px;
+
+  &__title {
+    margin: 0 0 16px;
+    font-size: 32px;
+    font-weight: 800;
+    color: var(--role-text-primary);
+  }
+
+  &__note {
+    margin: 0 0 24px;
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--role-text-muted);
+  }
+
+  &__links {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: 16px;
+  }
+}

@@ -63,6 +63,38 @@ Specific standing constraints:
   contract section below for the full rule.
 - The GitHub Pages base path lives only in `vite.config.ts`. Application code
   reads `import.meta.env.BASE_URL`; it never repeats the repository name.
+- Authored code carries no comments. See the No comments section below.
+
+## No comments
+
+Authored project source, config, style and workflow files carry **no comments**.
+
+Never add line comments, block comments, JSDoc/TSDoc, JSX/HTML comments,
+Sass/CSS comments, YAML comments, or explanatory comments in config files. Never
+use a comment for a TODO, intent note, architecture explanation, workaround, or
+lint/type suppression.
+
+Code communicates through naming, structure and types. Rationale belongs in the
+operational Markdown documentation, which this rule does not govern: `README.md`,
+`AGENTS.md`, `CLAUDE.md`, `docs/**/*.md` and `AUDIT.md`.
+
+Governed files: `src/**/*.{ts,tsx,js,jsx,scss,css}`, root authored JS/TS config,
+HTML source, `.github/workflows/*.{yml,yaml}`, and other authored config such as
+`.gitignore` and `.gitattributes`.
+
+Not governed, and never edited merely to remove comments: generated or
+third-party content — `node_modules/`, `dist/`, lockfiles, and any vendored
+files.
+
+A shebang is an interpreter directive, not a comment, and may remain. Text that
+merely looks like a comment inside a string, URL, regex, glob, colour value or
+Sass interpolation is not a comment and must be left intact.
+
+If a functional suppression directive — `eslint-disable`, `stylelint-disable`,
+`@ts-ignore`, `@ts-expect-error`, a coverage-ignore — appears necessary, correct
+the underlying code or config so it is not needed. If that would require a
+material unrelated refactor, stop and report the blocker rather than leaving the
+directive in place.
 
 ## Raster references
 

@@ -1,16 +1,6 @@
 @use 'sass:map';
 @use '../helpers' as h;
 
-// Foundations / Colors.
-// Every value below is transcribed from the printed labels in
-// GoodCall-references/Foundations.png. Values are never pixel-sampled: the
-// raster carries lossy artifacts, so its rendered swatches are unreliable while
-// its printed hex labels are authoritative.
-// These maps are the single source of truth. They are emitted once, as CSS
-// custom properties, at the bottom of this file.
-
-// Primitives -----------------------------------------------------------------
-
 $base: (
   'white': #fff,
   'rich-text': #12131a,
@@ -54,12 +44,6 @@ $neutral-gray: (
   '800': #2d3342,
   '900': #1f2330,
 );
-
-// Alpha ramps ----------------------------------------------------------------
-// Step names are the raster's own labels (opacity x 100). The black ramp is
-// deliberately asymmetric with the other two: it starts at 04 and has no 16
-// step, exactly as the raster documents it.
-
 $alpha-white: (
   '08': rgb(255 255 255 / 8%),
   '12': rgb(255 255 255 / 12%),
@@ -81,14 +65,6 @@ $alpha-purple: (
   '24': rgb(138 63 252 / 24%),
   '36': rgb(138 63 252 / 36%),
 );
-
-// Semantic / role colours ----------------------------------------------------
-// A role aliases a primitive wherever the raster's value matches one, which
-// keeps ownership visible. Eight roles carry literal values because the raster
-// specifies colours that exist in none of the primitive ramps; those literals
-// are marked below. Inventing primitive steps to absorb them would corrupt the
-// documented palette, so they stay semantic literals.
-
 $role-text: (
   'primary': map.get($base, 'rich-text'),
   'secondary': map.get($neutral-gray, '700'),
@@ -127,20 +103,12 @@ $role-state: (
   'info-soft': #eff6ff,
   'disabled': map.get($neutral-gray, '200'),
 );
-
-// The raster gives Overlay and Backdrop the same colour, shows both over a
-// checkerboard, and states no opacity or difference between them. Only the base
-// colour is evidenced, so only the base colour is defined. Composition is
-// deferred until a real consumer or explicit design evidence exists.
-
 $role-overlay: (
   'base': map.get($base, 'rich-text'),
 );
 $role-backdrop: (
   'base': map.get($base, 'rich-text'),
 );
-
-// Runtime tokens -------------------------------------------------------------
 
 :root {
   @include h.emit-vars('color-base', $base);

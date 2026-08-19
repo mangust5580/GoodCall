@@ -1,10 +1,3 @@
-// Foundations / Colors reference surface styling.
-// Reference-only. The geometry here (paddings, gaps, radii, font sizes) exists
-// solely to lay this comparison page out. The raster documents no spacing,
-// radius or type scale, so none of these values are design tokens and none of
-// them may be promoted into Foundations. Colours, by contrast, come only from
-// the token custom properties.
-
 .reference {
   max-width: 1400px;
   margin: 0 auto;
@@ -104,8 +97,6 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
-
-  // Sized so a full 10-step ramp sits on one row, matching the raster's layout.
   width: 112px;
 
   &__chip {
@@ -115,8 +106,6 @@
     border-radius: 10px;
     overflow: hidden;
 
-    // Alpha tokens are only readable over a contrast pattern, mirroring the
-    // checkerboard the raster uses for its alpha swatches.
     &--alpha {
       background-color: var(--color-base-white);
       background-image:
@@ -170,8 +159,6 @@
     display: flex;
     flex-direction: column;
     gap: 8px;
-
-    // Sized so all six gradients sit on one row, as the raster lays them out.
     width: 195px;
   }
 
@@ -202,8 +189,6 @@
     display: flex;
     flex-direction: column;
     gap: 14px;
-
-    // Sized so all six specimens sit on one row, as the raster lays them out.
     width: 200px;
     padding: 20px;
     background-color: var(--role-surface-card);
@@ -268,8 +253,6 @@
   }
 }
 
-// Shown in its focused appearance on purpose: the focus colour is the only
-// focus treatment the raster evidences. No ring geometry is implied.
 .spec-input {
   width: 100%;
   padding: 14px 16px;

@@ -10,7 +10,6 @@ import tseslint from 'typescript-eslint';
 export default defineConfig([
   globalIgnores(['dist/**', 'node_modules/**']),
 
-  // Application sources: type-aware TypeScript + React + accessibility.
   {
     files: ['src/**/*.{ts,tsx}'],
     extends: [
@@ -33,12 +32,10 @@ export default defineConfig([
       react: { version: 'detect' },
     },
     rules: {
-      // Prop shapes are owned by TypeScript, not by runtime propTypes.
       'react/prop-types': 'off',
     },
   },
 
-  // Vite config: type-aware, but Node-flavoured and not a React module.
   {
     files: ['vite.config.ts'],
     extends: [js.configs.recommended, tseslint.configs.recommendedTypeChecked],
@@ -51,7 +48,6 @@ export default defineConfig([
     },
   },
 
-  // Plain-JS tooling config files: syntax-level linting only.
   {
     files: ['*.config.js', 'eslint.config.js'],
     extends: [js.configs.recommended],

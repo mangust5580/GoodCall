@@ -10,7 +10,6 @@ permissions:
   pages: write
   id-token: write
 
-# Allow one concurrent deployment; do not cancel a run that is already publishing.
 concurrency:
   group: pages
   cancel-in-progress: false
