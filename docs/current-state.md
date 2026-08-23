@@ -118,10 +118,12 @@ surfaces are development comparison pages, not product UI.
 QuantityStepper, Pagination, TextField, SearchField, SelectField, TextareaField,
 PhoneField, DateField, RangeSlider and Icon, exported through `index.ts`.
 
-The shared control system lives in `controls.scss` as `--control-*` custom
-properties: one control height, three radii, one border and focus treatment, one
-padding and one icon size. It is owned by Components, not Foundations, and is
-deliberately not a general spacing, radius or type scale.
+The shared control system lives in `controls.scss` as Components-owned custom
+properties: general controls use `--control-height: 48px`, generic Buttons use
+the dedicated `--button-height: 44px`, and the rest of the system keeps three
+radii, one border and focus treatment, one padding and one icon size. This is
+owned by Components, not Foundations, and is deliberately not a general spacing,
+radius, type or button-size scale.
 
 Icons are the prepared SVGs in `src/assets/icons/`, applied as CSS masks so they
 inherit `currentColor`. The SVG paths are never duplicated into TypeScript.

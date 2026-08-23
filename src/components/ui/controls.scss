@@ -16,6 +16,7 @@ $icon-names: (
 
 :root {
   --control-height: 48px;
+  --button-height: 44px;
   --control-radius: 12px;
   --control-radius-sm: 8px;
   --control-radius-pill: 999px;
@@ -77,7 +78,7 @@ $icon-names: (
   gap: var(--control-gap);
   align-items: center;
   justify-content: center;
-  min-height: var(--control-height);
+  min-height: var(--button-height);
   padding: 0 24px;
   border: var(--control-border-width) solid transparent;
   border-radius: var(--control-radius-pill);
