@@ -449,19 +449,17 @@ intrinsic flex wrapping; no media query and no named breakpoint was added.
 Section 07 shows no horizontal overflow at 1440px, 768px, 375px or 320px.
 
 Assets consumed: the three prepared generic icons `clock`, `phone` and `tools`
-plus the existing `map-pin` and `edit`, all through the `Icon` system; the three
-prepared payment marks `payment-visa.svg`, `payment-mastercard.svg` and
-`payment-mir.svg` as direct image assets that are deliberately not `IconName`
-entries; the prepared `store-europeisky.webp`; and the existing
-`src/assets/products/product-phone.svg` for the cart specimen. No new asset was
-added and no prepared asset geometry was changed.
-
-Known asset delta: `payment-mastercard.svg` draws its circles across only about
-44 percent of its `0 0 72 24` viewBox, while the VISA and MIR marks fill roughly
-90 percent of theirs. Rendered in one shared brand box the Mastercard mark
-therefore reads optically smaller than the raster shows. Prepared asset geometry
-was intentionally not edited in the implementation slice; normalizing the three
-marks to a common optical size belongs to a later asset correction.
+plus the existing `map-pin` and `edit`, all through the `Icon` system;
+`payment-mir.svg` as the only current saved-payment brand image asset, consumed
+as a direct image asset and deliberately not an `IconName` entry; the prepared
+`store-europeisky.webp`; and the existing `src/assets/products/product-phone.svg`
+for the cart specimen. The saved-payment reference uses three MIR-only demo rows
+with distinct masked endings, while `SavedPaymentList` remains brand-agnostic
+and receives `brandSrc`, `brandAlt` and `cardLabel` from presentation data. The
+payment-method selector still demonstrates multiple payment methods. The unused
+VISA and Mastercard reference assets were removed. No new asset was added and no
+prepared asset geometry was changed. The previous Mastercard optical-size delta
+no longer applies because Mastercard is no longer part of the current reference.
 
 ### Colour tokens
 
@@ -614,8 +612,10 @@ blocks rather than the raster's two slightly different weights, and one shared
 Commerce card surface and hairline divider across all six specimens. On user
 visual feedback the service-center card's metadata now uses the same icon-led
 row treatment as the store card, which the raster does not show, so both
-information cards scan alike. Section 07 shows no horizontal overflow at 1440px,
-768px, 375px or 320px. Components E is not closed.
+information cards scan alike. The saved-payment reference now shows three
+MIR-only demo entries through the brand-agnostic `SavedPaymentList`; the
+payment-method selector remains multi-method. Section 07 shows no horizontal
+overflow at 1440px, 768px, 375px or 320px. Components E is not closed.
 
 **Foundations / Colors — visually accepted by the user on 2026-08-19.**
 

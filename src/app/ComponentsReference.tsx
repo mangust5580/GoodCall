@@ -1,9 +1,7 @@
 import { useState } from 'react';
 import type { ReactNode } from 'react';
 
-import paymentMastercard from '../assets/commerce/payment-mastercard.svg';
 import paymentMir from '../assets/commerce/payment-mir.svg';
-import paymentVisa from '../assets/commerce/payment-visa.svg';
 import storeEuropeisky from '../assets/commerce/store-europeisky.webp';
 import brandTech from '../assets/marketing/brand-tech.svg';
 import promoSaleBags from '../assets/marketing/promo-sale-bags.svg';
@@ -131,9 +129,9 @@ const PAYMENT_OPTIONS: readonly CommerceOption[] = [
 ];
 
 const SAVED_PAYMENTS: readonly SavedPaymentEntry[] = [
-  { id: 'visa', brandSrc: paymentVisa, brandAlt: 'VISA', cardLabel: '•••• 4242' },
-  { id: 'mastercard', brandSrc: paymentMastercard, brandAlt: 'Mastercard', cardLabel: '•••• 1122' },
-  { id: 'mir', brandSrc: paymentMir, brandAlt: 'МИР', cardLabel: '•••• 5566' },
+  { id: 'mir-4242', brandSrc: paymentMir, brandAlt: 'МИР', cardLabel: '•••• 4242' },
+  { id: 'mir-1122', brandSrc: paymentMir, brandAlt: 'МИР', cardLabel: '•••• 1122' },
+  { id: 'mir-5566', brandSrc: paymentMir, brandAlt: 'МИР', cardLabel: '•••• 5566' },
 ];
 
 const priceFormatter = new Intl.NumberFormat('ru-RU');
