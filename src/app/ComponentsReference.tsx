@@ -368,12 +368,16 @@ export function ComponentsReference() {
         >
           <ProductCard
             availability={<Chip variant="success">В наличии</Chip>}
+            favoritePressed={favorites.includes(LAPTOP.id)}
             imageAlt={LAPTOP.imageAlt}
             imageSrc={productLaptop}
             layout="horizontal"
             oldPrice={formatPrice(99990)}
             onAddToCart={() => {
               addToCart(LAPTOP.title);
+            }}
+            onFavoriteToggle={(pressed) => {
+              toggleFavorite(LAPTOP.id, pressed);
             }}
             onQuantityChange={setLaptopQuantity}
             price={formatPrice(89990)}
