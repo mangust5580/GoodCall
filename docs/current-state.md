@@ -302,11 +302,11 @@ was not used for menu rows; an account-owned row style covers both.
 
 **Order status.** The existing success `Chip` is reused for the delivered state.
 The raster paints that status as bare green text, but status presentation is
-already normalized onto Chip by the closed section-04 work, and a bare
-`--role-state-success` label on the card surface would sit at roughly 2.3:1
-against white. Reusing the accepted Chip keeps one status treatment and adds no
-new contrast deficiency. No account-owned status element was created and the
-Chip API was not extended.
+already normalized onto Chip by the closed section-04 work. The shared success
+Chip keeps `--role-state-success-soft` as its background and now uses the
+accepted `--role-text-secondary` foreground, bringing the status contrast to
+roughly 9.78:1 without adding or changing any Foundations token. No
+account-owned status element was created and the Chip API was not extended.
 
 **Order actions.** The raster shows the details affordance twice - as a bare
 chevron at the right edge of the product row and as a small bordered square
@@ -314,10 +314,11 @@ button beside the cart button. These were normalized into one bordered details
 control that uses the existing `chevron-right` icon, sitting next to the filled
 reorder control that uses the existing `cart` icon. `OrderRow` renders the
 details control as an anchor when given `detailsHref` and as a button when given
-`onDetails`, so navigation and action semantics are never swapped. Both controls
-are account-owned `.account-action` treatments; the product-owned
-`product-action` primitive was not borrowed and no generic IconButton was
-created.
+`onDetails`, and its public props require exactly one of those targets. Both or
+neither are invalid at the TypeScript API boundary, so navigation and action
+semantics are never swapped. Both controls are account-owned `.account-action`
+treatments; the product-owned `product-action` primitive was not borrowed and no
+generic IconButton was created.
 
 These are presentation components. They take labels, formatted strings, icon
 names, image source/alt, hrefs, callbacks and checked booleans. There is no
@@ -482,6 +483,11 @@ carries small body text at AA.
 after user-accepted RangeSlider post-PASS hardening.** The reference surface at
 `?reference=components` composes the real reusable controls and mirrors the
 grouping of raster sections 02 and 03.
+
+The shared success Chip accessibility correction keeps Components A and B
+closed after focused regression. Success Chips keep the same success-soft
+surface and geometry while using the accepted secondary text role for AA text
+contrast. Foundations remains closed and unchanged.
 
 **Components D - Account Components awaits user visual PASS.** Section 06
 Account Components is implemented on the reference surface at

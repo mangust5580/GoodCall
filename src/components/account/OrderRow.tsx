@@ -1,6 +1,6 @@
 import { Chip, Icon } from '../ui';
 
-interface OrderRowProps {
+interface OrderRowPresentationProps {
   readonly orderLabel: string;
   readonly date: string;
   readonly status: string;
@@ -11,28 +11,38 @@ interface OrderRowProps {
   readonly price: string;
   readonly quantity: string;
   readonly detailsLabel: string;
-  readonly detailsHref?: string;
-  readonly onDetails?: () => void;
   readonly reorderLabel: string;
   readonly onReorder: () => void;
 }
 
-export function OrderRow({
-  orderLabel,
-  date,
-  status,
-  imageSrc,
-  imageAlt,
-  title,
-  variant,
-  price,
-  quantity,
-  detailsLabel,
-  detailsHref,
-  onDetails,
-  reorderLabel,
-  onReorder,
-}: OrderRowProps) {
+type OrderRowDetailsTarget =
+  | {
+      readonly detailsHref: string;
+      readonly onDetails?: never;
+    }
+  | {
+      readonly detailsHref?: never;
+      readonly onDetails: () => void;
+    };
+
+type OrderRowProps = OrderRowPresentationProps & OrderRowDetailsTarget;
+
+export function OrderRow(props: OrderRowProps) {
+  const {
+    orderLabel,
+    date,
+    status,
+    imageSrc,
+    imageAlt,
+    title,
+    variant,
+    price,
+    quantity,
+    detailsLabel,
+    reorderLabel,
+    onReorder,
+  } = props;
+
   return (
     <article className="order-row">
       <header className="order-row__head">
@@ -51,11 +61,11 @@ export function OrderRow({
           </p>
         </div>
         <div className="order-row__actions">
-          {detailsHref === undefined ? (
+          {props.detailsHref === undefined ? (
             <button
               aria-label={detailsLabel}
               className="account-action account-action--outline"
-              onClick={onDetails}
+              onClick={props.onDetails}
               type="button"
             >
               <Icon name="chevron-right" />
@@ -64,7 +74,7 @@ export function OrderRow({
             <a
               aria-label={detailsLabel}
               className="account-action account-action--outline"
-              href={detailsHref}
+              href={props.detailsHref}
             >
               <Icon name="chevron-right" />
             </a>
