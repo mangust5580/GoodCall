@@ -38,7 +38,7 @@
   &--favorite {
     color: var(--role-text-subtle);
 
-    &:hover:not(:disabled) {
+    &:not([aria-pressed='true']):hover:not(:disabled) {
       background-color: var(--role-surface-page-soft);
       color: var(--role-text-secondary);
     }
