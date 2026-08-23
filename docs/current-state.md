@@ -33,13 +33,12 @@ layer, marketing data model or newsletter backend was introduced.
 Components D — Account Components received user visual PASS on 2026-08-23 and
 is closed.
 
-Components E — Commerce Blocks planning and asset preparation for raster section
-07 are complete. Implementation has not started, Components E has no visual
-status, and it is not closed.
+**Components E — Commerce Blocks, covering raster section 07, is implemented
+and awaits user visual PASS.** It is not closed.
 
 Components A, B, C and D are closed. Overall Components remains open. Raster
-sections 07-08 are not implemented. Section 01 Header & Navigation remains
-deferred until future Global Shell work creates the real shell consumer.
+section 08 is not implemented. Section 01 Header & Navigation remains deferred
+until future Global Shell work creates the real shell consumer.
 
 The current Components A visual-polish correction is applied: active Tabs no
 longer change on hover, enabled field surfaces share a coherent hover state, and
@@ -119,8 +118,12 @@ Independent audits themselves remain optional. See the AUDIT.md section of
   their styles in `content-components.scss`.
 - Reusable account presentation components: `src/components/account/`, with
   their styles in `account-components.scss`.
+- Reusable commerce presentation components: `src/components/commerce/`, with
+  their styles in `commerce-components.scss`.
+- Commerce brand and store assets for section 07: `src/assets/commerce/`.
 - Content and marketing assets for section 05: `src/assets/marketing/`.
-- Components A, B, C and D reference surface: `src/app/ComponentsReference.tsx`.
+- Components A, B, C, D and E reference surface:
+  `src/app/ComponentsReference.tsx`.
 
 There is no router, no data layer, and no feature architecture. The reference
 surfaces are development comparison pages, not product UI.
@@ -374,94 +377,89 @@ architecture, account/user entity, address/order/payment model, loyalty model,
 notification persistence model, router, global state or API/backend contract has
 been chosen or introduced.
 
-### Components E planning
+### Components E
 
-Components E — Commerce Blocks covers raster section 07. Planning, asset
-inventory and bounded asset preparation are complete; implementation has not
-started and no component or style file exists for it yet.
+`src/components/commerce/` provides CommerceCartSummary, CommerceOptionGroup,
+SavedPaymentList, CommerceLocationCard and CommerceServiceCard, exported through
+`index.ts`, with styles in `commerce-components.scss`. Section 07 of the raster
+is reachable at `?reference=components`. Components E awaits user visual PASS
+and is not closed.
 
-Visible section-07 roles are six Commerce-owned specimens: a mini cart summary,
-a delivery option block, a payment-method selector, a saved-payment list, a
-store card and a service-center card. The delivery and payment selector blocks
-form one selectable-options family, while the store card and service-center card
-share an information-card pattern but remain distinct because one is
-media-backed and location/contact oriented, while the other is a service-center
-summary with a large service icon.
+Section 07 contains six visible presentation roles served by five components:
+mini cart summary, delivery option block, payment-method selector, saved-payment
+list, store card and service-center card.
 
-Reuse plan:
+**Normalization.** The delivery option block and the payment-method selector are
+one Commerce-owned selectable-options family. Both are repeated mutually
+exclusive rows with a primary label, optional trailing value, optional secondary
+metadata and a selected state, so `CommerceOptionGroup` serves both; two
+primitive families were rejected. `SavedPaymentList` stays separate because
+saved instruments are not mutually exclusive choices and carry brand marks
+rather than radio semantics. `CommerceCartSummary` stays Commerce-owned rather
+than extending `ProductCard`, `MiniProductCard` or `OrderRow`.
+`CommerceLocationCard` and `CommerceServiceCard` stay distinct owners: the store
+card is media-backed with iconed contact rows, while the service card is a large
+decorative `tools` glyph beside plain text lines with no per-row icons. A
+generic `CommerceCard` mega-component is rejected.
 
-- Mini cart summary — composition reuse. Use the existing product-phone asset,
-  `QuantityStepper` and primary `Button`; create a Commerce-owned summary card
-  rather than stretching `ProductCard` or `OrderRow`.
-- Delivery option block — composition reuse. Use native radio semantics through
-  the existing `Radio` primitive where its label can carry two-line option
-  metadata; keep delivery price/date strings consumer-owned.
-- Payment-method selector — composition reuse. Use the existing `Radio`
-  primitive for the mutually exclusive options and a text/anchor affordance for
-  `Подробнее`.
-- Saved-payment list — new Commerce-owned component required. Existing form
-  primitives do not own saved card rows or payment brand marks; the add-card
-  affordance can reuse the existing `edit` icon.
-- Store card — new Commerce-owned component required. It needs a store image,
-  store title, address/hours/phone metadata and existing `map-pin` plus missing
-  clock/phone icons.
-- Service-center card — visual pattern reuse only. It should reuse accepted card
-  surfaces and colour roles, but no content/account card owns the large service
-  icon plus service-center text layout.
+**Primitive reuse.** `CommerceCartSummary` composes the existing
+`QuantityStepper` and `Button`, rendering the CTA as an anchor when given
+`actionHref` and as `Button` when given `onAction`, mirroring the accepted
+`PromoBanner` pattern so navigation and action semantics are never swapped.
+`CommerceOptionGroup` composes the existing `Radio`, whose `label` already
+accepts a `ReactNode`, so the two-line option content needs no Radio change. The
+option row re-lays `.ui-choice` as a two-column grid from Commerce-owned styles;
+the `Radio` component and its API were not modified. `clock`, `phone`, `tools`,
+`map-pin` and `edit` are consumed through the existing `Icon` mask system.
 
-Section-07 asset preparation is complete with exactly seven prepared assets.
-Generic currentColor icons are `src/assets/icons/clock.svg`,
-`src/assets/icons/phone.svg` and `src/assets/icons/tools.svg`, all registered in
-the existing typed `Icon` system and SCSS mask registry. Commerce brand/image
-assets are `src/assets/commerce/payment-visa.svg`,
-`src/assets/commerce/payment-mastercard.svg`,
-`src/assets/commerce/payment-mir.svg` and
-`src/assets/commerce/store-europeisky.webp`. Payment marks remain direct image
-assets and are not `IconName` entries. The store image is cropped from the
-section-07 raster evidence, not generated or sourced elsewhere. No dependency
-was added. The existing `product-phone.svg`, `map-pin`, `edit`, `minus` and
-`plus` assets cover the remaining visible asset needs.
+**Group labelling.** `CommerceOptionGroup` is a real `<fieldset>` with a
+`<legend>`, and `SavedPaymentList` is a `<section>` with an `<h3>`. Both accept
+`hideLabel`, mirroring the accepted `Toggle` API. The reference passes
+`hideLabel` because the raster shows those captions as specimen labels above the
+card, which the reference `Group` title already renders; duplicating them inside
+the cards would deviate from the raster.
 
-Normalization boundaries:
+These are presentation components. They take labels, formatted strings, ids,
+selected ids, image source/alt, brand source/alt, hrefs, callbacks and a
+quantity value. There is no `Cart`, `CartItem`, `PaymentMethod`, `SavedCard`,
+`DeliveryMethod`, `Store` or `ServiceCenter` type, no backend DTO and no shared
+commerce-domain type module. The only exported types are the two
+component-local repeated-item shapes `CommerceOption` and `SavedPaymentEntry`.
 
-- Do not create a generic CommerceCard or AccountCard-like mega-component.
-- Repeated option rows normalize into one selectable-option row pattern owned by
-  Commerce.
-- Repeated price, date, masked-card and contact rows are formatted presentation
-  data, not money/payment/shipping/domain models.
-- CTA buttons use the accepted `Button` variants unless a future implementation
-  finds a concrete semantic mismatch.
-- Section widths and specimen grouping remain reference-owned in
-  `ComponentsReference.scss`; reusable components stay container-driven.
-- Styling, when implemented, should live provisionally in
-  `src/components/commerce/commerce-components.scss` with only
-  section-owned geometry shared by two or more Commerce components. Foundations
-  remains closed.
+No cart store, checkout state machine, order creation, pricing/coupon/tax/
+shipping engine, payment SDK, tokenization, persistence, router, global state,
+auth/session or API contract was introduced. The reference surface holds the
+only state: quantity, selected delivery option, selected payment option and one
+visually hidden `aria-live` demo message.
 
-Accessibility and state plan:
+Commerce Components add a small Components-owned geometry group —
+`--commerce-card-radius`, `--commerce-card-padding`, `--commerce-card-gap` and
+`--commerce-row-gap` — consumed by more than one section-07 component, plus two
+Commerce-owned mixins for the shared card surface and the shared hairline
+divider. Everything else reuses accepted Foundations colour roles, the existing
+`--control-*` geometry and the `control-focus` mixin. No account-owned custom
+property is borrowed, no new spacing/radius/type scale was introduced and
+Foundations was not reopened.
 
-- The cart CTA is a button or anchor according to the consuming workflow; the
-  reference can use a button.
-- Quantity remains the existing `QuantityStepper` with consumer-owned local
-  state and callback.
-- Delivery and payment selection are radio groups with visible labels.
-- Add-card is a button with an accessible name and the existing decorative edit
-  icon.
-- Store/service contact details remain readable text; icons are decorative when
-  adjacent text carries meaning.
-- No cart store, checkout state machine, pricing engine, coupon engine, tax or
-  shipping calculation, payment integration, address persistence, API/backend
-  contract, router, global state, authentication/session or analytics
-  architecture is introduced by this slice.
+Section-07 specimen widths belong to the reference composition. The reusable
+components are container-driven and carry no reference max-width. Layout is
+intrinsic flex wrapping; no media query and no named breakpoint was added.
+Section 07 shows no horizontal overflow at 1440px, 768px, 375px or 320px.
 
-Responsive plan: all Commerce specimens should wrap intrinsically at the
-reference surface, with narrow layouts stacking internal media/text/actions and
-preserving text wrapping at 1440px, 768px, 375px and 320px. No named breakpoint
-system is introduced. Local media queries are acceptable only where an individual
-Commerce card needs a real structural change.
+Assets consumed: the three prepared generic icons `clock`, `phone` and `tools`
+plus the existing `map-pin` and `edit`, all through the `Icon` system; the three
+prepared payment marks `payment-visa.svg`, `payment-mastercard.svg` and
+`payment-mir.svg` as direct image assets that are deliberately not `IconName`
+entries; the prepared `store-europeisky.webp`; and the existing
+`src/assets/products/product-phone.svg` for the cart specimen. No new asset was
+added and no prepared asset geometry was changed.
 
-No new dependency is planned. React, platform semantics, existing primitives and
-current dependencies are sufficient for the evidenced interactions.
+Known asset delta: `payment-mastercard.svg` draws its circles across only about
+44 percent of its `0 0 72 24` viewBox, while the VISA and MIR marks fill roughly
+90 percent of theirs. Rendered in one shared brand box the Mastercard mark
+therefore reads optically smaller than the raster shows. Prepared asset geometry
+was intentionally not edited in the implementation slice; normalizing the three
+marks to a common optical size belongs to a later asset correction.
 
 ### Colour tokens
 
@@ -538,7 +536,7 @@ The base page no longer hosts the Foundations surface. A query-string check in
 
 - base URL — temporary reference index, linking to the two surfaces below
 - `?reference=foundations` — the Foundations colour reference
-- `?reference=components` — the Components A, B, C and D reference surface
+- `?reference=components` — the Components A, B, C, D and E reference surface
 
 Links are built from `import.meta.env.BASE_URL`, so they resolve under the
 GitHub Pages base without hardcoding the repository name, and no SPA fallback is
@@ -605,9 +603,14 @@ card uses one icon per metric, ignoring the stray duplicated glyphs the raster
 renders on the bonus and favourites value lines. Section 06 shows no horizontal
 overflow at 1440px, 768px, 375px or 320px.
 
-**Components E — Commerce Blocks planning and asset preparation complete;
-implementation not started.** Section 07 has six inventoried Commerce roles and
-exactly seven prepared assets/icons. Components E has no visual status and is
+**Components E — Commerce Blocks awaits user visual PASS.** Section 07 Commerce
+Blocks is implemented on the reference surface at `?reference=components`,
+composing the real reusable commerce components. The system-first normalizations
+applied against the raster are the shared selectable-options family for the
+delivery and payment blocks, one trailing-value treatment across both option
+blocks rather than the raster's two slightly different weights, and one shared
+Commerce card surface and hairline divider across all six specimens. Section 07
+shows no horizontal overflow at 1440px, 768px, 375px or 320px. Components E is
 not closed.
 
 **Foundations / Colors — visually accepted by the user on 2026-08-19.**
@@ -702,8 +705,9 @@ None.
 
 ## Next approved step
 
-**Components E — Commerce Blocks bounded implementation.** Implement only raster
-section 07 using the prepared assets and the reviewed planning boundaries.
+**User visual review of Components E — Commerce Blocks, raster section 07.**
+Components E is implemented and technically ready; it stays open until the user
+gives visual PASS.
 
 Components stays open. Section 08 needs a later bounded slice. Section 01 Header
 & Navigation remains deferred to future Global Shell work rather than being

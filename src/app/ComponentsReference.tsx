@@ -1,6 +1,10 @@
 import { useState } from 'react';
 import type { ReactNode } from 'react';
 
+import paymentMastercard from '../assets/commerce/payment-mastercard.svg';
+import paymentMir from '../assets/commerce/payment-mir.svg';
+import paymentVisa from '../assets/commerce/payment-visa.svg';
+import storeEuropeisky from '../assets/commerce/store-europeisky.webp';
 import brandTech from '../assets/marketing/brand-tech.svg';
 import promoSaleBags from '../assets/marketing/promo-sale-bags.svg';
 import productEarbuds from '../assets/products/product-earbuds.svg';
@@ -14,6 +18,14 @@ import {
   OrderRow,
 } from '../components/account';
 import type { AccountNavigationItem, AccountStatsMetric } from '../components/account';
+import {
+  CommerceCartSummary,
+  CommerceLocationCard,
+  CommerceOptionGroup,
+  CommerceServiceCard,
+  SavedPaymentList,
+} from '../components/commerce';
+import type { CommerceOption, SavedPaymentEntry } from '../components/commerce';
 import {
   BrandCard,
   CategoryCard,
@@ -106,6 +118,24 @@ const ACCOUNT_STATS_METRICS: readonly AccountStatsMetric[] = [
   { id: 'favorites', icon: 'heart', label: 'Избранное', value: '24', delta: '+3' },
 ];
 
+const DELIVERY_OPTIONS: readonly CommerceOption[] = [
+  { id: 'pickup', label: 'Самовывоз', trailing: 'Бесплатно', meta: 'Сегодня' },
+  { id: 'courier', label: 'Доставка курьером', trailing: '499 ₽', meta: 'Завтра, 19 мая' },
+];
+
+const PAYMENT_OPTIONS: readonly CommerceOption[] = [
+  { id: 'card', label: 'Банковская карта' },
+  { id: 'sbp', label: 'СБП' },
+  { id: 'on-delivery', label: 'Оплата при получении' },
+  { id: 'installment', label: 'Рассрочка' },
+];
+
+const SAVED_PAYMENTS: readonly SavedPaymentEntry[] = [
+  { id: 'visa', brandSrc: paymentVisa, brandAlt: 'VISA', cardLabel: '•••• 4242' },
+  { id: 'mastercard', brandSrc: paymentMastercard, brandAlt: 'Mastercard', cardLabel: '•••• 1122' },
+  { id: 'mir', brandSrc: paymentMir, brandAlt: 'МИР', cardLabel: '•••• 5566' },
+];
+
 const priceFormatter = new Intl.NumberFormat('ru-RU');
 
 const formatPrice = (value: number): string => `${priceFormatter.format(value)} ₽`;
@@ -179,6 +209,10 @@ export function ComponentsReference() {
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [pushNotifications, setPushNotifications] = useState(true);
   const [accountMessage, setAccountMessage] = useState('');
+  const [cartQuantity, setCartQuantity] = useState(1);
+  const [deliveryOption, setDeliveryOption] = useState('courier');
+  const [paymentOption, setPaymentOption] = useState('card');
+  const [commerceMessage, setCommerceMessage] = useState('');
   const visibleBrands = brandsExpanded
     ? BRAND_FILTERS
     : BRAND_FILTERS.slice(0, BRAND_FILTERS_INITIAL_COUNT);
@@ -204,7 +238,8 @@ export function ComponentsReference() {
       <header className="cmp-reference__head">
         <span className="cmp-reference__brand">GOODCALL</span>
         <span className="cmp-reference__caption">
-          Components A, B, C &amp; D — Controls, Forms, Product, Content and Account Components
+          Components A, B, C, D &amp; E — Controls, Forms, Product, Content, Account and Commerce
+          Components
         </span>
       </header>
 
@@ -608,6 +643,83 @@ export function ComponentsReference() {
 
         <p aria-live="polite" className="ui-visually-hidden">
           {accountMessage}
+        </p>
+      </Section>
+
+      <Section index="07" title="Commerce Blocks">
+        <Group className="cmp-commerce-group cmp-commerce-group--cart" title="Корзина (мини)">
+          <CommerceCartSummary
+            actionHref={REFERENCE_HREF}
+            actionLabel="Перейти в корзину"
+            imageAlt={PHONE.imageAlt}
+            imageSrc={productPhone}
+            onQuantityChange={setCartQuantity}
+            price={formatPrice(69990)}
+            quantity={cartQuantity}
+            quantityLabel="Количество товара в корзине"
+            title="Apple iPhone 15 128 ГБ"
+          />
+        </Group>
+
+        <Group className="cmp-commerce-group cmp-commerce-group--delivery" title="Блок доставки">
+          <CommerceOptionGroup
+            hideLabel
+            label="Способ доставки"
+            onSelect={setDeliveryOption}
+            options={DELIVERY_OPTIONS}
+            selectedId={deliveryOption}
+          />
+        </Group>
+
+        <Group className="cmp-commerce-group cmp-commerce-group--payment" title="Способы оплаты">
+          <CommerceOptionGroup
+            actionHref={REFERENCE_HREF}
+            actionLabel="Подробнее"
+            hideLabel
+            label="Способ оплаты"
+            onSelect={setPaymentOption}
+            options={PAYMENT_OPTIONS}
+            selectedId={paymentOption}
+          />
+        </Group>
+
+        <Group className="cmp-commerce-group cmp-commerce-group--saved" title="Способы оплаты">
+          <SavedPaymentList
+            addLabel="Добавить карту"
+            entries={SAVED_PAYMENTS}
+            hideLabel
+            label="Сохранённые карты"
+            onAdd={() => {
+              setCommerceMessage('Добавление новой карты');
+            }}
+          />
+        </Group>
+
+        <Group className="cmp-commerce-group cmp-commerce-group--store" title="Карточка магазина">
+          <CommerceLocationCard
+            address="Москва, пл. Киевского вокзала, 2"
+            hours="Ежедневно 10:00 – 22:00"
+            imageAlt="Витрина магазина GOODCALL в торговом центре"
+            imageSrc={storeEuropeisky}
+            phone="+7 (499) 123-45-67"
+            title="GOODCALL, ТЦ «Европейский»"
+          />
+        </Group>
+
+        <Group
+          className="cmp-commerce-group cmp-commerce-group--service"
+          title="Карточка сервисного центра"
+        >
+          <CommerceServiceCard
+            address="Москва, ул. Ленина, 15"
+            hours="Ежедневно 10:00 – 20:00"
+            phone="+7 (495) 987-65-43"
+            title="Сервисный центр GOODCALL"
+          />
+        </Group>
+
+        <p aria-live="polite" className="ui-visually-hidden">
+          {commerceMessage}
         </p>
       </Section>
 

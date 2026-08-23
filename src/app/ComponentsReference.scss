@@ -248,3 +248,37 @@
     flex: 0 1 300px;
   }
 }
+
+.cmp-commerce-group {
+  flex: 1 1 250px;
+  min-width: 0;
+
+  &--cart {
+    max-width: 300px;
+  }
+
+  &--delivery {
+    flex-basis: 240px;
+    max-width: 300px;
+  }
+
+  &--payment {
+    flex-basis: 220px;
+    max-width: 280px;
+  }
+
+  &--saved {
+    flex-basis: 230px;
+    max-width: 280px;
+  }
+
+  &--store {
+    flex-basis: 300px;
+    max-width: 360px;
+  }
+
+  &--service {
+    flex-basis: 280px;
+    max-width: 340px;
+  }
+}

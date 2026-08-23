@@ -1,0 +1,356 @@
+@use '../ui/controls';
+
+:root {
+  --commerce-card-radius: 16px;
+  --commerce-card-padding: 16px;
+  --commerce-card-gap: 14px;
+  --commerce-row-gap: 10px;
+}
+
+@mixin commerce-surface {
+  background-color: var(--role-surface-card);
+  border: var(--control-border-width) solid var(--role-border-default);
+  border-radius: var(--commerce-card-radius);
+}
+
+@mixin commerce-divider {
+  border-top: 1px solid var(--role-border-soft);
+}
+
+.commerce-cart-summary {
+  display: flex;
+  flex-direction: column;
+  gap: var(--commerce-card-gap);
+  min-width: 0;
+  padding: var(--commerce-card-padding);
+
+  @include commerce-surface;
+
+  &__item {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--commerce-card-gap);
+    align-items: flex-start;
+    min-width: 0;
+  }
+
+  &__image {
+    flex: none;
+    width: 76px;
+    height: 96px;
+    object-fit: contain;
+    background-color: var(--role-surface-card);
+    border-radius: 10px;
+  }
+
+  &__details {
+    display: flex;
+    flex: 1 1 140px;
+    flex-direction: column;
+    gap: 8px;
+    align-items: flex-start;
+    min-width: 0;
+  }
+
+  &__title {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 500;
+    line-height: 1.35;
+    color: var(--role-text-secondary);
+    overflow-wrap: anywhere;
+  }
+
+  &__price {
+    margin: 0;
+    font-size: 19px;
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--role-text-primary);
+  }
+
+  &__action {
+    width: 100%;
+    text-decoration: none;
+  }
+}
+
+.commerce-option-group {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  margin: 0;
+  padding: 4px var(--commerce-card-padding);
+
+  @include commerce-surface;
+
+  &__legend {
+    padding: 12px 0 0;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--role-text-primary);
+  }
+
+  &__row {
+    display: flex;
+    min-width: 0;
+    padding: 12px 0;
+
+    @include commerce-divider;
+
+    &:first-of-type {
+      border-top: 0;
+    }
+
+    .ui-choice {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      align-items: start;
+      width: 100%;
+      min-height: 0;
+    }
+  }
+
+  &__line {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 12px;
+    align-items: baseline;
+    justify-content: space-between;
+    min-width: 0;
+  }
+
+  &__label {
+    min-width: 0;
+    font-size: 15px;
+    color: var(--role-text-secondary);
+    overflow-wrap: anywhere;
+  }
+
+  &__trailing {
+    flex: none;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--role-text-primary);
+  }
+
+  &__meta {
+    display: block;
+    margin-top: 6px;
+    font-size: 13px;
+    color: var(--role-text-muted);
+    overflow-wrap: anywhere;
+  }
+
+  &__action {
+    align-self: flex-start;
+    margin: 0 0 12px;
+    padding: 4px 0;
+    background-color: transparent;
+    border: 0;
+    font: inherit;
+    font-size: 14px;
+    color: var(--role-text-link);
+    text-decoration: none;
+    cursor: pointer;
+
+    @include controls.control-focus;
+
+    &:hover {
+      color: var(--role-text-link-hover);
+      text-decoration: underline;
+    }
+  }
+}
+
+.saved-payment-list {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 4px var(--commerce-card-padding);
+
+  @include commerce-surface;
+
+  &__title {
+    margin: 12px 0 0;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--role-text-primary);
+  }
+
+  &__items {
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  &__item {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 16px;
+    align-items: center;
+    justify-content: space-between;
+    min-width: 0;
+    padding: 14px 0;
+
+    @include commerce-divider;
+
+    &:first-child {
+      border-top: 0;
+    }
+  }
+
+  &__brand {
+    flex: none;
+    width: 52px;
+    height: 28px;
+    object-fit: contain;
+    object-position: left center;
+  }
+
+  &__card {
+    min-width: 0;
+    font-size: 15px;
+    color: var(--role-text-secondary);
+    overflow-wrap: anywhere;
+  }
+
+  &__add {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    min-width: 0;
+    padding: 14px 0;
+    background-color: transparent;
+    border: 0;
+    font: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--role-text-link);
+    text-align: start;
+    cursor: pointer;
+
+    @include commerce-divider;
+    @include controls.control-focus;
+
+    &:hover {
+      color: var(--role-text-link-hover);
+    }
+  }
+}
+
+.commerce-location-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  padding: var(--commerce-card-padding);
+
+  @include commerce-surface;
+
+  &__image {
+    width: 100%;
+    height: 116px;
+    object-fit: cover;
+    border-radius: 10px;
+  }
+
+  &__title {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1.3;
+    color: var(--role-text-primary);
+    overflow-wrap: anywhere;
+  }
+
+  &__rows {
+    display: flex;
+    flex-direction: column;
+    gap: var(--commerce-row-gap);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  &__row {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    min-width: 0;
+    font-size: 14px;
+    color: var(--role-text-muted);
+    overflow-wrap: anywhere;
+  }
+
+  &__icon {
+    --control-icon-size: 18px;
+
+    margin-top: 2px;
+    color: var(--role-text-link);
+  }
+
+  &__phone {
+    color: var(--role-text-link);
+
+    @include controls.control-focus;
+
+    &:hover {
+      color: var(--role-text-link-hover);
+    }
+  }
+}
+
+.commerce-service-card {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--commerce-card-gap);
+  align-items: flex-start;
+  min-width: 0;
+  padding: var(--commerce-card-padding);
+
+  @include commerce-surface;
+
+  &__icon {
+    --control-icon-size: 44px;
+
+    flex: none;
+    color: var(--role-text-link);
+  }
+
+  &__body {
+    display: flex;
+    flex: 1 1 160px;
+    flex-direction: column;
+    gap: var(--commerce-row-gap);
+    min-width: 0;
+  }
+
+  &__title {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1.3;
+    color: var(--role-text-primary);
+    overflow-wrap: anywhere;
+  }
+
+  &__line {
+    margin: 0;
+    font-size: 14px;
+    color: var(--role-text-muted);
+    overflow-wrap: anywhere;
+  }
+
+  &__phone {
+    color: var(--role-text-link);
+
+    @include controls.control-focus;
+
+    &:hover {
+      color: var(--role-text-link-hover);
+    }
+  }
+}
