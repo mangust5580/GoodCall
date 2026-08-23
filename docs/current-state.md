@@ -38,9 +38,11 @@ is closed.
 Components E — Commerce Blocks received user visual PASS on 2026-08-24 and is
 closed.
 
-Components A, B, C, D and E are closed. Overall Components remains open. Raster
-section 08 is not implemented. Section 01 Header & Navigation remains deferred
-until future Global Shell work creates the real shell consumer.
+Components A, B, C, D and E are closed. Overall Components remains open.
+Components F / raster section 08 planning and asset inventory are complete, but
+implementation has not started and there is no visual status. Section 01 Header
+& Navigation remains deferred until future Global Shell work creates the real
+shell consumer.
 
 The current Components A visual-polish correction is applied: active Tabs no
 longer change on hover, enabled field surfaces share a coherent hover state, and
@@ -463,6 +465,88 @@ VISA and Mastercard reference assets were removed. No new asset was added and no
 prepared asset geometry was changed. The previous Mastercard optical-size delta
 no longer applies because Mastercard is no longer part of the current reference.
 
+### Components F planning
+
+Components F / Utility & Feedback covers raster section 08. Planning and asset
+inventory are complete; implementation has not started, section 08 is not yet on
+`?reference=components`, there is no user visual review state and Components F
+is not closed.
+
+Section 08 contains six visible specimens: FAQ accordion, empty cart state,
+success feedback panel, informational modal, destructive confirmation and a
+product modal. The FAQ is passive informational utility with one expanded row
+and one collapsed row, chevrons and divider structure. The empty state is an
+empty/no-result surface with a cart glyph, title, message and catalog CTA. The
+success panel is status feedback with a check-in-circle treatment, title,
+message and orders CTA. The informational modal is a modal dialog with heading,
+message and acknowledgement action. The destructive confirmation is an alert
+dialog with heading, message, cancel action and destructive confirm action. The
+product modal is a product action dialog with image, title, price and cart CTA.
+
+Reuse classification: FAQ needs a new Utility & Feedback owner using native
+disclosure semantics and existing chevron icons; empty state, success feedback,
+informational modal, destructive confirmation and product modal need new
+section-owned owners that compose existing Button, Icon, accepted product image
+assets and accepted control/floating-surface precedent. `Chip`, `ProductCard`,
+`MiniProductCard`, `PriceBlock`, `SupportCard`, `CommerceOptionGroup`, account
+owners and commerce owners do not own these roles; their visual patterns may
+inform styling only where semantics match.
+
+Proposed future owner is one bounded `src/components/feedback/` family with
+`feedback-components.scss`; public names remain provisional until
+implementation. Do not create broad UtilityCard, FeedbackCard or StateCard
+mega-components. A small section-owned geometry group is justified for repeated
+panel/dialog surfaces and row gaps only; reference widths remain reference-owned
+and Foundations stays closed.
+
+Assets/icons: section 08 can reuse existing `cart`, `check`, `chevron-down` and
+`chevron-right`/rotation-capable chevron treatment through the Icon system, plus
+the existing `src/assets/products/product-earbuds.svg` for the product modal.
+The check circle can be CSS around the existing check icon. No spinner,
+illustration, warning/info glyph, close icon, toast mark or new product asset is
+evidenced. Exact missing asset/icon count: 0.
+
+Semantics and accessibility plan: FAQ should use native disclosure or equivalent
+accordion semantics with visible focus and colour-independent expanded state.
+Empty state remains document-flow content and exposes its CTA as an anchor or
+button according to consumer target. Success feedback should only use
+`role="status"` / polite live announcement when dynamically inserted or updated;
+static reference rendering does not need announcement. Informational and product
+modals should use dialog semantics, labelled headings, described body text,
+focus entry on open and focus return on close. Destructive confirmation should
+use alert-dialog semantics, keep cancel and destructive actions as real buttons,
+move focus into the dialog, return focus on close and communicate danger through
+text and button styling rather than colour alone. Icon-only controls need
+accessible names. Non-essential dialog/feedback motion must respect
+`prefers-reduced-motion`.
+
+Reference-only local state is justified later for FAQ open/closed rows, empty
+CTA demo feedback, success CTA demo feedback, dialog open/close and destructive
+confirmation outcome messaging. Reusable components should remain presentation
+APIs with status/variant, title/message, icon, CTA href/callback, dismiss/close
+callbacks and controlled open/progress only where evidenced. No notification
+bus, event emitter, analytics, error reporting service, centralized modal
+manager, global loading manager, server error normalization, retry/backoff
+framework, async job/task model, persistence, router, global state, backend/API
+contract or product/cart architecture is introduced.
+
+Overlay/floating work is evidenced by the informational, destructive and product
+modal specimens. The existing `radix-ui` dependency already exposes Dialog and
+AlertDialog, and current Select/Date work already establishes floating surface
+visual precedent, so no new overlay dependency is required. No tooltip, popover,
+toast, skeleton, spinner, progress bar or loading animation is evidenced.
+Motion, if any, should be CSS-only and minimal. No new dependency required.
+
+Responsive plan: every section-08 component should be container-driven with
+reference-owned specimen widths. FAQ questions and answers must wrap without
+forcing a minimum width. Empty and success panels must stack icon, copy and CTA
+cleanly at narrow widths. Dialog button rows must wrap or stack at 320px, with
+the destructive pair keeping both buttons reachable. The product modal must let
+image, product text, price and CTA wrap without absolute positioning. Future
+implementation verification widths are 1440px, 768px, 375px and 320px. Do not
+introduce named breakpoints, and do not mix this work with the deferred
+section-03 overflow correction.
+
 ### Colour tokens
 
 86 CSS custom properties are emitted on `:root` from Sass maps, which are the
@@ -713,20 +797,19 @@ None.
 
 ## Next approved step
 
-**Components F — Utility & Feedback, raster section 08 planning and asset
-inventory.**
+**Components F — Utility & Feedback, raster section 08 implementation.**
 
-Plan before implementation: inspect raster section 08 only, inventory visible
-Utility & Feedback roles, identify reuse from accepted Foundations and
-Components A-E, identify genuinely missing icons/assets, define normalization
-boundaries, identify semantics and accessibility requirements, and keep
-architecture, state and data deferred unless a concrete current consumer
-requires them. Do not implement until planning is reviewed.
+Implement the planned section-08 Utility & Feedback family on
+`?reference=components` using the existing assets and dependency stack. Missing
+asset/icon count is 0, so no asset-preparation task is required first.
+Components F implementation must remain bounded to section 08 and preserve the
+documented state, accessibility, responsive and architecture boundaries.
 
 Components stays open. Section 01 Header & Navigation remains deferred to future
 Global Shell work rather than being treated as an isolated Components slice. The
 known section-03 narrow reference-composition overflow remains a separate
-correction required before the overall Components milestone closes.
+correction required before the overall Components milestone closes, even after
+Components F eventually closes.
 
 ## Normative repository docs
 
