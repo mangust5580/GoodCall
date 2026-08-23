@@ -12,8 +12,9 @@ Operational handoff. This is not a history log.
 ## Current milestone
 
 **Components — open.** Closed slices: **Components A — Core Controls & Forms**,
-covering raster sections 02 Buttons & Controls and 03 Inputs & Forms, and
-**Components B — Product Components**, covering raster section 04.
+covering raster sections 02 Buttons & Controls and 03 Inputs & Forms,
+**Components B — Product Components**, covering raster section 04, and
+**Components C — Content & Marketing**, covering raster section 05.
 
 Components A received user visual PASS on 2026-08-23 and is closed.
 
@@ -22,13 +23,15 @@ prepared product assets are consumed, the existing Chip, QuantityStepper and Ico
 primitives are reused, and no product domain model, cart store or wishlist store
 was introduced. Raster sections 01 and 06-08 are not implemented.
 
-**Components C — Content & Marketing is implemented**, covering raster
-section 05. It is not closed: it awaits user visual PASS. All four prepared
-section-05 assets are consumed — the reused `product-phone.svg`, the headset
-icon through the existing Icon system, the sale-bags promo illustration and the
-generic technology brand mark. No CMS layer, marketing data model or
-newsletter backend was introduced. Raster sections 01 and 06-08 are not
-implemented.
+User visual PASS received for Components C — Content & Marketing on 2026-08-23.
+Components C is closed. All four prepared section-05 assets are consumed — the
+reused `product-phone.svg`, the headset icon through the existing Icon system,
+the sale-bags promo illustration and the generic technology brand mark. No CMS
+layer, marketing data model or newsletter backend was introduced.
+
+Components A, B and C are closed. Overall Components remains open. Raster
+sections 06-08 are not implemented. Section 01 Header & Navigation remains
+deferred until future Global Shell work creates the real shell consumer.
 
 The current Components A visual-polish correction is applied: active Tabs no
 longer change on hover, enabled field surfaces share a coherent hover state, and
@@ -377,14 +380,15 @@ prefix and star-after-value ordering; and availability is expressed as the
 success Chip inline in cards, with the product-owned `ProductAvailability` row
 used only where section 04 shows the fuller bordered status row.
 
-**Components C — awaiting user visual PASS.** Section 05 Content & Marketing is
-implemented on the reference surface at `?reference=components`, composing the
-real reusable content components. The system-first normalization applied against
-the raster is the banner family: both banner specimens share one `PromoBanner`
-on the single accepted `--gradient-cta` surface, rather than two components or
-two one-off purple mixes. Measured contrast of white banner text over that
-gradient is 4.99 falling to 4.73 across the title and 4.91 across the supporting
-line, so the surface carries small body text at AA.
+**Components C — visually accepted by the user on 2026-08-23 and closed.**
+Section 05 Content & Marketing is implemented on the reference surface at
+`?reference=components`, composing the real reusable content components. The
+system-first normalization applied against the raster is the banner family:
+both banner specimens share one `PromoBanner` on the single accepted
+`--gradient-cta` surface, rather than two components or two one-off purple
+mixes. Measured contrast of white banner text over that gradient is 4.99 falling
+to 4.73 across the title and 4.91 across the supporting line, so the surface
+carries small body text at AA.
 
 **Components A — visually accepted by the user on 2026-08-23 and remains closed
 after user-accepted RangeSlider post-PASS hardening.** The reference surface at
@@ -460,6 +464,10 @@ none of them blocks the closed milestone.
 
 ## Known deferred work
 
+- The Components reference section 03 can overflow at a 320px viewport because
+  the reference grid currently uses a 360px minimum track. This is a deferred
+  reference-composition correction, does not reopen Components A and does not
+  block Components C closure.
 - Phone validation, country selection and international formatting are deferred
   until a real product form consumer defines those requirements.
 - ESLint is pinned to the 9.x line. ESLint 10 is current, but
@@ -478,11 +486,13 @@ None.
 
 ## Next approved step
 
-**Components C visual review.** Return the section-05 screenshots and the
-current `AUDIT.md` for user visual PASS review. The next step is review, not
-another implementation slice.
+**Components D — Account Components, raster section 06.** The next step is a
+bounded planning/asset task for section 06, not implementation in the current
+closeout.
 
-Components stays open. Sections 01 and 06-08 each need their own bounded slice.
+Components stays open. Sections 06-08 each need their own bounded slice. Section
+01 Header & Navigation remains deferred to future Global Shell work rather than
+being treated as an isolated Components slice.
 
 ## Normative repository docs
 
