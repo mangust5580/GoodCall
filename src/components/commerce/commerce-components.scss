@@ -17,6 +17,42 @@
   border-top: 1px solid var(--role-border-soft);
 }
 
+@mixin commerce-meta-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--commerce-row-gap);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+@mixin commerce-meta-row {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  min-width: 0;
+  font-size: 14px;
+  color: var(--role-text-muted);
+  overflow-wrap: anywhere;
+}
+
+@mixin commerce-meta-icon {
+  --control-icon-size: 18px;
+
+  margin-top: 2px;
+  color: var(--role-text-link);
+}
+
+@mixin commerce-meta-link {
+  color: var(--role-text-link);
+
+  @include controls.control-focus;
+
+  &:hover {
+    color: var(--role-text-link-hover);
+  }
+}
+
 .commerce-cart-summary {
   display: flex;
   flex-direction: column;
@@ -269,39 +305,19 @@
   }
 
   &__rows {
-    display: flex;
-    flex-direction: column;
-    gap: var(--commerce-row-gap);
-    margin: 0;
-    padding: 0;
-    list-style: none;
+    @include commerce-meta-list;
   }
 
   &__row {
-    display: flex;
-    gap: 10px;
-    align-items: flex-start;
-    min-width: 0;
-    font-size: 14px;
-    color: var(--role-text-muted);
-    overflow-wrap: anywhere;
+    @include commerce-meta-row;
   }
 
   &__icon {
-    --control-icon-size: 18px;
-
-    margin-top: 2px;
-    color: var(--role-text-link);
+    @include commerce-meta-icon;
   }
 
   &__phone {
-    color: var(--role-text-link);
-
-    @include controls.control-focus;
-
-    &:hover {
-      color: var(--role-text-link-hover);
-    }
+    @include commerce-meta-link;
   }
 }
 
@@ -315,7 +331,7 @@
 
   @include commerce-surface;
 
-  &__icon {
+  &__glyph {
     --control-icon-size: 44px;
 
     flex: none;
@@ -339,20 +355,19 @@
     overflow-wrap: anywhere;
   }
 
-  &__line {
-    margin: 0;
-    font-size: 14px;
-    color: var(--role-text-muted);
-    overflow-wrap: anywhere;
+  &__rows {
+    @include commerce-meta-list;
+  }
+
+  &__row {
+    @include commerce-meta-row;
+  }
+
+  &__icon {
+    @include commerce-meta-icon;
   }
 
   &__phone {
-    color: var(--role-text-link);
-
-    @include controls.control-focus;
-
-    &:hover {
-      color: var(--role-text-link-hover);
-    }
+    @include commerce-meta-link;
   }
 }

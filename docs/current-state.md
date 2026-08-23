@@ -398,9 +398,11 @@ saved instruments are not mutually exclusive choices and carry brand marks
 rather than radio semantics. `CommerceCartSummary` stays Commerce-owned rather
 than extending `ProductCard`, `MiniProductCard` or `OrderRow`.
 `CommerceLocationCard` and `CommerceServiceCard` stay distinct owners: the store
-card is media-backed with iconed contact rows, while the service card is a large
-decorative `tools` glyph beside plain text lines with no per-row icons. A
-generic `CommerceCard` mega-component is rejected.
+card is media-backed, while the service card leads with a large decorative
+`tools` glyph. Both present their address, hours and phone as the same icon-led
+metadata rows (`map-pin`, `clock`, `phone`), which the two cards share through
+Commerce-owned SCSS mixins rather than a shared component. A generic
+`CommerceCard` mega-component is rejected.
 
 **Primitive reuse.** `CommerceCartSummary` composes the existing
 `QuantityStepper` and `Button`, rendering the CTA as an anchor when given
@@ -609,9 +611,11 @@ composing the real reusable commerce components. The system-first normalizations
 applied against the raster are the shared selectable-options family for the
 delivery and payment blocks, one trailing-value treatment across both option
 blocks rather than the raster's two slightly different weights, and one shared
-Commerce card surface and hairline divider across all six specimens. Section 07
-shows no horizontal overflow at 1440px, 768px, 375px or 320px. Components E is
-not closed.
+Commerce card surface and hairline divider across all six specimens. On user
+visual feedback the service-center card's metadata now uses the same icon-led
+row treatment as the store card, which the raster does not show, so both
+information cards scan alike. Section 07 shows no horizontal overflow at 1440px,
+768px, 375px or 320px. Components E is not closed.
 
 **Foundations / Colors — visually accepted by the user on 2026-08-19.**
 

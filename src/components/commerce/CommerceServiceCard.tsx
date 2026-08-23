@@ -17,20 +17,29 @@ export function CommerceServiceCard({
 }: CommerceServiceCardProps) {
   return (
     <article className="commerce-service-card">
-      <Icon className="commerce-service-card__icon" name="tools" />
+      <Icon className="commerce-service-card__glyph" name="tools" />
       <div className="commerce-service-card__body">
         <h3 className="commerce-service-card__title">{title}</h3>
-        <p className="commerce-service-card__line">{address}</p>
-        <p className="commerce-service-card__line">{hours}</p>
-        <p className="commerce-service-card__line">
-          {phoneHref === undefined ? (
-            phone
-          ) : (
-            <a className="commerce-service-card__phone" href={phoneHref}>
-              {phone}
-            </a>
-          )}
-        </p>
+        <ul className="commerce-service-card__rows">
+          <li className="commerce-service-card__row">
+            <Icon className="commerce-service-card__icon" name="map-pin" />
+            <span>{address}</span>
+          </li>
+          <li className="commerce-service-card__row">
+            <Icon className="commerce-service-card__icon" name="clock" />
+            <span>{hours}</span>
+          </li>
+          <li className="commerce-service-card__row">
+            <Icon className="commerce-service-card__icon" name="phone" />
+            {phoneHref === undefined ? (
+              <span>{phone}</span>
+            ) : (
+              <a className="commerce-service-card__phone" href={phoneHref}>
+                {phone}
+              </a>
+            )}
+          </li>
+        </ul>
       </div>
     </article>
   );
