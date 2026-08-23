@@ -222,3 +222,29 @@
     flex: 0 1 330px;
   }
 }
+
+.cmp-account-group {
+  flex: 0 1 260px;
+  min-width: 0;
+
+  &--navigation {
+    flex: 0 1 250px;
+  }
+
+  &--stats {
+    flex: 0 1 230px;
+  }
+
+  &--order {
+    flex: 1 1 420px;
+    max-width: 560px;
+  }
+
+  &--address {
+    flex: 0 1 260px;
+  }
+
+  &--settings {
+    flex: 0 1 300px;
+  }
+}

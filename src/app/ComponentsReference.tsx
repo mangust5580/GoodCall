@@ -7,6 +7,14 @@ import productEarbuds from '../assets/products/product-earbuds.svg';
 import productLaptop from '../assets/products/product-laptop.svg';
 import productPhone from '../assets/products/product-phone.svg';
 import {
+  AccountNavigation,
+  AccountSettingsCard,
+  AccountStats,
+  AddressCard,
+  OrderRow,
+} from '../components/account';
+import type { AccountNavigationItem, AccountStatsMetric } from '../components/account';
+import {
   BrandCard,
   CategoryCard,
   NewsletterCard,
@@ -81,6 +89,23 @@ const EARBUDS = {
 
 const REFERENCE_HREF = `${import.meta.env.BASE_URL}?reference=components`;
 
+const ACCOUNT_NAV_ITEMS: readonly AccountNavigationItem[] = [
+  { id: 'profile', label: 'Личный кабинет', icon: 'person', href: REFERENCE_HREF },
+  { id: 'orders', label: 'Заказы', icon: 'package', href: REFERENCE_HREF },
+  { id: 'favorites', label: 'Избранное', icon: 'heart', href: REFERENCE_HREF },
+  { id: 'comparison', label: 'Сравнение', icon: 'compare', href: REFERENCE_HREF },
+  { id: 'returns', label: 'Возвраты', icon: 'return', href: REFERENCE_HREF },
+  { id: 'bonuses', label: 'Бонусы и скидки', icon: 'bonus', href: REFERENCE_HREF },
+  { id: 'addresses', label: 'Адреса', icon: 'map-pin', href: REFERENCE_HREF },
+  { id: 'settings', label: 'Настройки', icon: 'settings', href: REFERENCE_HREF },
+];
+
+const ACCOUNT_STATS_METRICS: readonly AccountStatsMetric[] = [
+  { id: 'orders', icon: 'package', label: 'Заказы', value: '12', delta: '+2 за месяц' },
+  { id: 'bonuses', icon: 'bonus', label: 'Бонусные баллы', value: '2 450', delta: '+150' },
+  { id: 'favorites', icon: 'heart', label: 'Избранное', value: '24', delta: '+3' },
+];
+
 const priceFormatter = new Intl.NumberFormat('ru-RU');
 
 const formatPrice = (value: number): string => `${priceFormatter.format(value)} ₽`;
@@ -151,6 +176,9 @@ export function ComponentsReference() {
   const [cartMessage, setCartMessage] = useState('');
   const [newsletterEmail, setNewsletterEmail] = useState('');
   const [newsletterMessage, setNewsletterMessage] = useState('');
+  const [emailNotifications, setEmailNotifications] = useState(true);
+  const [pushNotifications, setPushNotifications] = useState(true);
+  const [accountMessage, setAccountMessage] = useState('');
   const visibleBrands = brandsExpanded
     ? BRAND_FILTERS
     : BRAND_FILTERS.slice(0, BRAND_FILTERS_INITIAL_COUNT);
@@ -176,7 +204,7 @@ export function ComponentsReference() {
       <header className="cmp-reference__head">
         <span className="cmp-reference__brand">GOODCALL</span>
         <span className="cmp-reference__caption">
-          Components A, B &amp; C — Controls, Forms, Product and Content Components
+          Components A, B, C &amp; D — Controls, Forms, Product, Content and Account Components
         </span>
       </header>
 
@@ -511,6 +539,76 @@ export function ComponentsReference() {
             {newsletterMessage}
           </p>
         </Group>
+      </Section>
+
+      <Section index="06" title="Account Components">
+        <Group className="cmp-account-group cmp-account-group--navigation" title="Боковое меню">
+          <AccountNavigation
+            currentId="profile"
+            items={ACCOUNT_NAV_ITEMS}
+            label="Разделы личного кабинета"
+            onSignOut={() => {
+              setAccountMessage('Выход из личного кабинета');
+            }}
+            signOutLabel="Выйти"
+          />
+        </Group>
+
+        <Group className="cmp-account-group cmp-account-group--stats" title="Статистика (мини)">
+          <AccountStats metrics={ACCOUNT_STATS_METRICS} />
+        </Group>
+
+        <Group className="cmp-account-group cmp-account-group--order" title="Строка заказа">
+          <OrderRow
+            date="18 мая 2024"
+            detailsHref={REFERENCE_HREF}
+            detailsLabel="Подробнее о заказе №ИСС-2024-05124"
+            imageAlt={EARBUDS.imageAlt}
+            imageSrc={productEarbuds}
+            onReorder={() => {
+              setAccountMessage('Товар из заказа добавлен в корзину');
+            }}
+            orderLabel="Заказ №ИСС-2024-05124"
+            price={formatPrice(24490)}
+            quantity="× 1 шт"
+            reorderLabel="Повторить заказ №ИСС-2024-05124"
+            status="Доставлен"
+            title="Apple AirPods Pro 2"
+            variant="White, MagSafe"
+          />
+        </Group>
+
+        <Group className="cmp-account-group cmp-account-group--address" title="Адрес доставки">
+          <AddressCard
+            addressLine="ул. Тверская, д. 1, кв. 25"
+            editLabel="Изменить адрес доставки"
+            localityLine="Москва, 125009"
+            onEdit={() => {
+              setAccountMessage('Редактирование адреса доставки');
+            }}
+            phone="+7 (999) 123-45-67"
+            recipientName="Иван Иванов"
+          />
+        </Group>
+
+        <Group className="cmp-account-group cmp-account-group--settings" title="Настройки">
+          <AccountSettingsCard
+            actionLabel="Открыть настройки"
+            emailChecked={emailNotifications}
+            emailLabel="Email-уведомления"
+            onAction={() => {
+              setAccountMessage('Открыты настройки уведомлений');
+            }}
+            onEmailChange={setEmailNotifications}
+            onPushChange={setPushNotifications}
+            pushChecked={pushNotifications}
+            pushLabel="Push-уведомления"
+          />
+        </Group>
+
+        <p aria-live="polite" className="ui-visually-hidden">
+          {accountMessage}
+        </p>
       </Section>
 
       <a className="cmp-reference__back" href={import.meta.env.BASE_URL}>

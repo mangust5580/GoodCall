@@ -29,11 +29,12 @@ reused `product-phone.svg`, the headset icon through the existing Icon system,
 the sale-bags promo illustration and the generic technology brand mark. No CMS
 layer, marketing data model or newsletter backend was introduced.
 
+**Components D - Account Components, covering raster section 06, is
+implemented and awaits user visual PASS.** It is not closed.
+
 Components A, B and C are closed. Overall Components remains open. Raster
-sections 06-08 are not implemented. Components D - Account Components is
-planned and its exact section-06 icon assets are prepared, but implementation
-has not started. Section 01 Header & Navigation remains deferred until future
-Global Shell work creates the real shell consumer.
+sections 07-08 are not implemented. Section 01 Header & Navigation remains
+deferred until future Global Shell work creates the real shell consumer.
 
 The current Components A visual-polish correction is applied: active Tabs no
 longer change on hover, enabled field surfaces share a coherent hover state, and
@@ -111,8 +112,10 @@ Independent audits themselves remain optional. See the AUDIT.md section of
 - Product illustration assets for section 04: `src/assets/products/`.
 - Reusable content and marketing components: `src/components/content/`, with
   their styles in `content-components.scss`.
+- Reusable account presentation components: `src/components/account/`, with
+  their styles in `account-components.scss`.
 - Content and marketing assets for section 05: `src/assets/marketing/`.
-- Components A, B and C reference surface: `src/app/ComponentsReference.tsx`.
+- Components A, B, C and D reference surface: `src/app/ComponentsReference.tsx`.
 
 There is no router, no data layer, and no feature architecture. The reference
 surfaces are development comparison pages, not product UI.
@@ -274,29 +277,81 @@ substituted.
 
 ### Components D
 
-Components D - Account Components is planned from raster section 06 only.
-Components D implementation has not started. Components D has no visual status
-and is not closed.
+`src/components/account/` provides AccountNavigation, AccountStats, OrderRow,
+AddressCard and AccountSettingsCard, exported through `index.ts`, with styles in
+`account-components.scss`. Section 06 of the raster is reachable at
+`?reference=components`. Components D awaits user visual PASS and is not closed.
 
-Section 06 inventory contains five visible presentation specimens: account
-navigation, account statistics, order row, delivery address card and settings
-card. Account navigation is planned as one future reusable presentation
-component with repeated rows. Account statistics is planned as one future
-reusable presentation component with repeated metric rows. The order row,
-delivery address card and settings card remain separate because their
-interaction and markup semantics differ materially. A generic `AccountCard`
-mega-component is rejected.
+Section 06 contains five visible presentation roles, and each has exactly one
+owner: account navigation, account statistics, order row, delivery address card
+and settings card.
 
-Expected primitive and asset reuse is bounded to the current system: Icon,
-Button, Toggle, Chip if the delivered-state surface still matches during
-implementation, existing `heart`, existing `cart`, existing `chevron-right` and
-existing `src/assets/products/product-earbuds.svg`.
+**Normalization.** `AccountNavigation` owns the nine repeated navigation rows;
+nine bespoke row components were rejected. `AccountStats` owns the three
+repeated metric rows and is deliberately not a generic application-wide Stats
+component. `OrderRow`, `AddressCard` and `AccountSettingsCard` stay separate
+because their markup and interaction semantics differ materially. A generic
+`AccountCard` mega-component is rejected.
 
-Prepared section-06 generic icons are `person`, `package`, `compare`, `return`,
-`bonus`, `map-pin`, `settings`, `log-out` and `edit` in `src/assets/icons/`,
-registered through the existing Icon type and SCSS mask registry. No additional
-account artwork, avatar imagery, payment logo, delivery logo, loyalty artwork or
-QR code was introduced.
+**Navigation semantics.** `AccountNavigation` renders a real `<nav>` with an
+accessible label and a `<ul>`. The eight navigation rows are real anchors and
+the current one carries `aria-current="page"` plus a weight change, so the
+selected state is not colour-only. Sign out is a real `<button>` in the same row
+family because it is an action, not navigation. The pill-shaped generic Button
+was not used for menu rows; an account-owned row style covers both.
+
+**Order status.** The existing success `Chip` is reused for the delivered state.
+The raster paints that status as bare green text, but status presentation is
+already normalized onto Chip by the closed section-04 work, and a bare
+`--role-state-success` label on the card surface would sit at roughly 2.3:1
+against white. Reusing the accepted Chip keeps one status treatment and adds no
+new contrast deficiency. No account-owned status element was created and the
+Chip API was not extended.
+
+**Order actions.** The raster shows the details affordance twice - as a bare
+chevron at the right edge of the product row and as a small bordered square
+button beside the cart button. These were normalized into one bordered details
+control that uses the existing `chevron-right` icon, sitting next to the filled
+reorder control that uses the existing `cart` icon. `OrderRow` renders the
+details control as an anchor when given `detailsHref` and as a button when given
+`onDetails`, so navigation and action semantics are never swapped. Both controls
+are account-owned `.account-action` treatments; the product-owned
+`product-action` primitive was not borrowed and no generic IconButton was
+created.
+
+These are presentation components. They take labels, formatted strings, icon
+names, image source/alt, hrefs, callbacks and checked booleans. There is no
+`User`, `Account`, `Order`, `Address` or `LoyaltyAccount` type, no backend DTO,
+no repository or service interface and no shared account-domain type module. The
+only exported types are the two component-local item shapes
+`AccountNavigationItem` and `AccountStatsMetric`.
+
+`AccountSettingsCard` reuses the existing `Toggle` unchanged for both
+notification switches and is fully controlled by its consumer. Its label-left /
+switch-right order is achieved by account-owned layout around `.ui-toggle`, not
+by a Toggle API change. Its outline action is an account-owned rounded-rect
+`<button>` rather than the pill-shaped `Button`, because the raster action is a
+full-width row control, not a pill. There is no persistence and no async state.
+
+Account Components add a small Components-owned geometry group -
+`--account-card-radius`, `--account-card-padding`, `--account-card-gap`,
+`--account-row-radius`, `--account-action-size` and `--account-action-radius` -
+consumed by more than one section-06 component. Everything else reuses accepted
+Foundations colour roles, the existing `--control-*` geometry and the
+`control-focus` mixin. No new spacing, radius or type scale was introduced,
+Foundations was not reopened, and there is no dependency on
+`content-components.scss` geometry.
+
+Section-06 specimen widths belong to the reference composition. The reusable
+components are container-driven and carry no reference max-width. Layout is
+intrinsic flex wrapping; no media query and no named breakpoint was added.
+
+Assets consumed: all nine prepared section-06 icons - `person`, `package`,
+`compare`, `return`, `bonus`, `map-pin`, `settings`, `log-out` and `edit` - plus
+the existing `heart`, `cart` and `chevron-right` icons, all through the existing
+Icon mask system, and the existing `src/assets/products/product-earbuds.svg` for
+the order specimen. No new asset was added and no prepared icon geometry was
+changed.
 
 The visible account concepts remain presentation-only. No auth/session
 architecture, account/user entity, address/order/payment model, loyalty model,
@@ -378,7 +433,7 @@ The base page no longer hosts the Foundations surface. A query-string check in
 
 - base URL — temporary reference index, linking to the two surfaces below
 - `?reference=foundations` — the Foundations colour reference
-- `?reference=components` — the Components A, B and C reference surface
+- `?reference=components` — the Components A, B, C and D reference surface
 
 Links are built from `import.meta.env.BASE_URL`, so they resolve under the
 GitHub Pages base without hardcoding the repository name, and no SPA fallback is
@@ -428,10 +483,16 @@ after user-accepted RangeSlider post-PASS hardening.** The reference surface at
 `?reference=components` composes the real reusable controls and mirrors the
 grouping of raster sections 02 and 03.
 
-**Components D - Account Components has no visual status yet.** Section 06 is
-planned and its exact nine generic account icons are prepared, but Account
-Components implementation has not started and no section-06 reference markup
-exists.
+**Components D - Account Components awaits user visual PASS.** Section 06
+Account Components is implemented on the reference surface at
+`?reference=components`, composing the real reusable account components. Three
+system-first normalizations were applied against the raster: the delivered
+status uses the accepted success Chip instead of the bare green text the raster
+paints; the duplicated details affordance in the order specimen was collapsed
+into one bordered chevron control beside the reorder control; and the statistics
+card uses one icon per metric, ignoring the stray duplicated glyphs the raster
+renders on the bonus and favourites value lines. Section 06 shows no horizontal
+overflow at 1440px, 768px, 375px or 320px. Components D is not closed.
 
 **Foundations / Colors — visually accepted by the user on 2026-08-19.**
 
@@ -524,10 +585,11 @@ None.
 
 ## Next approved step
 
-**Components D — Account Components, raster section 06.** The next step is
-bounded Claude Code implementation of Components D.
+**User visual review of Components D — Account Components, raster section 06.**
+Components D is implemented and technically ready; it stays open until the user
+gives visual PASS.
 
-Components stays open. Sections 06-08 each need their own bounded slice. Section
+Components stays open. Sections 07-08 each need their own bounded slice. Section
 01 Header & Navigation remains deferred to future Global Shell work rather than
 being treated as an isolated Components slice.
 
