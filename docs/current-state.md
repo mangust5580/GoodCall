@@ -17,6 +17,11 @@ covering raster sections 02 Buttons & Controls and 03 Inputs & Forms.
 Components A is **awaiting user visual PASS**. Raster sections 01 and 04-08 are
 not implemented.
 
+The current Components A visual-polish correction is applied: active Tabs no
+longer change on hover, enabled field surfaces share a coherent hover state, and
+SelectField / DateField now use GoodCall-styled floating popup surfaces instead
+of browser-native popup UI.
+
 **Foundations — complete.**
 
 **User visual PASS received for Foundations / Colors on 2026-08-19.** The
@@ -88,6 +93,11 @@ deliberately not a general spacing, radius or type scale.
 
 Icons are the eight prepared SVGs in `src/assets/icons/`, applied as CSS masks so
 they inherit `currentColor`. The SVG paths are never duplicated into TypeScript.
+
+SelectField uses Radix Select and DateField uses Radix Popover with DayPicker
+from `@daypicker/react`. Their popup surfaces share Components-owned background,
+border, radius and elevation decisions; those decisions have not moved into
+Foundations.
 
 The Components reference surface composes the real components; it does not
 reimplement look-alike markup.
@@ -217,7 +227,7 @@ None. No router is installed.
 
 ## Current dependencies
 
-Runtime: `react`, `react-dom`.
+Runtime: `react`, `react-dom`, `radix-ui`, `@daypicker/react`.
 
 Dev: `vite`, `@vitejs/plugin-react`, `typescript`, `@types/react`,
 `@types/react-dom`, `@types/node`, `sass-embedded`, `postcss`, `autoprefixer`,
@@ -226,7 +236,7 @@ Dev: `vite`, `@vitejs/plugin-react`, `typescript`, `@types/react`,
 `eslint-plugin-jsx-a11y`, `prettier`, `stylelint`, `stylelint-config-standard-scss`.
 
 Nothing else is installed. In particular there is no router, no Supabase, no
-data-fetching, state, form, schema, mocking, or E2E library.
+data-fetching, state, form, schema, masking, mocking, or E2E library.
 
 ## Scripts
 
@@ -264,6 +274,9 @@ none of them blocks the closed milestone.
 
 ## Known deferred work
 
+- Phone masking / formatting is deferred until a real product form consumer
+  defines country, format, paste, edit and validation requirements. A masking
+  library may be introduced later when that requirement is concrete.
 - ESLint is pinned to the 9.x line. ESLint 10 is current, but
   `eslint-plugin-jsx-a11y@6.10.2` and `eslint-plugin-react@7.37.5` declare peer
   support only through ESLint 9. Accessibility coverage was kept rather than

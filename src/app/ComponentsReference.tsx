@@ -90,6 +90,8 @@ export function ComponentsReference() {
   const [notifications, setNotifications] = useState(true);
   const [muted, setMuted] = useState(false);
   const [delivery, setDelivery] = useState('courier');
+  const [sort, setSort] = useState('');
+  const [deliveryDate, setDeliveryDate] = useState('');
   const [quantity, setQuantity] = useState(1);
   const [page, setPage] = useState(1);
   const [brands, setBrands] = useState<readonly string[]>(['samsung']);
@@ -207,8 +209,10 @@ export function ComponentsReference() {
           <SearchField label="Поиск товаров" placeholder="Поиск товаров" />
           <SelectField
             label="Выпадающий список"
+            onValueChange={setSort}
             options={SELECT_OPTIONS}
             placeholder="Выберите опцию"
+            value={sort}
           />
           <TextareaField label="Текстовая область" placeholder="Введите описание" />
           <PhoneField label="Телефон" placeholder="+7 (___) ___-__-__" />
@@ -232,7 +236,7 @@ export function ComponentsReference() {
             </div>
             <Button variant="text">Показать ещё</Button>
           </div>
-          <DateField label="Выбор даты" />
+          <DateField label="Выбор даты" onValueChange={setDeliveryDate} value={deliveryDate} />
           <div className="cmp-fields__wide">
             <span className="cmp-range-label" id="price-range-label">
               Слайдер (диапазон цен)
