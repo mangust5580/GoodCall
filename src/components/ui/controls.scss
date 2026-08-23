@@ -831,17 +831,41 @@ $icon-names: (
   &__value {
     display: inline-flex;
     align-items: center;
+    width: min(46%, 180px);
     min-height: 40px;
     padding: 0 var(--control-padding-x);
+    font: inherit;
     font-size: var(--control-font-size);
     font-weight: 600;
     color: var(--role-text-primary);
+    text-align: center;
+    appearance: none;
 
     @include control-surface;
+    @include control-focus;
+
+    &:hover:not(:focus-visible) {
+      border-color: var(--role-border-strong);
+    }
+
+    &:focus-visible {
+      border-color: var(--role-border-focus);
+    }
+  }
+
+  &__slider {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    height: 20px;
+    touch-action: none;
+    cursor: pointer;
   }
 
   &__track {
     position: relative;
+    flex: 1;
     height: 20px;
 
     &::before {
@@ -859,53 +883,25 @@ $icon-names: (
   &__fill {
     position: absolute;
     top: 8px;
-    right: calc(100% - var(--ui-range-end));
-    left: var(--ui-range-start);
     height: 4px;
     background-color: var(--color-brand-purple-600);
     border-radius: var(--control-radius-pill);
   }
 
-  &__input {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
+  &__thumb {
+    display: block;
+    width: 20px;
     height: 20px;
-    margin: 0;
-    background: transparent;
-    appearance: none;
-    pointer-events: none;
+    background-color: var(--color-brand-purple-600);
+    border: 2px solid var(--color-base-white);
+    border-radius: 50%;
+    box-shadow: 0 2px 8px rgb(70 43 156 / 18%);
+    cursor: grab;
 
-    &::-webkit-slider-thumb {
-      width: 20px;
-      height: 20px;
-      background-color: var(--color-brand-purple-600);
-      border: 2px solid var(--color-base-white);
-      border-radius: 50%;
-      appearance: none;
-      cursor: pointer;
-      pointer-events: auto;
-    }
+    @include control-focus;
 
-    &::-moz-range-thumb {
-      width: 16px;
-      height: 16px;
-      background-color: var(--color-brand-purple-600);
-      border: 2px solid var(--color-base-white);
-      border-radius: 50%;
-      cursor: pointer;
-      pointer-events: auto;
-    }
-
-    &:focus-visible::-webkit-slider-thumb {
-      outline: 2px solid var(--role-border-focus);
-      outline-offset: 2px;
-    }
-
-    &:focus-visible::-moz-range-thumb {
-      outline: 2px solid var(--role-border-focus);
-      outline-offset: 2px;
+    &:active {
+      cursor: grabbing;
     }
   }
 }

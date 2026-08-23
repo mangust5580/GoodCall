@@ -33,6 +33,13 @@ a fixed RU Maskito mask, the reference show-more filter demo is functional, and
 the stepper/range layout corrections are reference-owned. Components A has user
 visual PASS and is closed.
 
+The RangeSlider post-PASS interaction hardening is applied. It now uses the
+already-installed Radix Slider primitive and supports direct lower/upper numeric
+entry, drag, keyboard and click/tap track interaction while remaining a generic
+container-driven numeric range primitive. Catalog URL state, backend commits and
+filter/search architecture remain deferred feature-level work. Components A
+remains closed after focused RangeSlider regression validation.
+
 **Foundations — complete.**
 
 **User visual PASS received for Foundations / Colors on 2026-08-19.** The
@@ -139,6 +146,12 @@ Real catalog filtering should be URL-driven at feature/page level rather than
 hidden only in local component state. Checkbox, RangeSlider and Button remain
 reusable primitives; the current Preferences show-more behaviour is reference
 demo composition only.
+
+RangeSlider uses Radix Slider through the existing `radix-ui` dependency. It is
+controlled by a generic lower/upper numeric tuple, renders compact editable value
+fields, preserves formatted display outside editing, and supports pointer,
+keyboard and nearest-thumb track click/tap interaction. It does not own ecommerce
+price, query, request or apply/reset semantics.
 
 PhoneField uses Maskito with a fixed Russian presentation mask for
 `+7 (___) ___-__-__`. It is input assistance, not phone-number validation.
@@ -297,9 +310,10 @@ availability is expressed as the success Chip inline in cards, with the
 product-owned `ProductAvailability` row used only where section 04 shows the
 fuller bordered status row.
 
-**Components A — visually accepted by the user on 2026-08-23.** The reference
-surface at `?reference=components` composes the real reusable controls and
-mirrors the grouping of raster sections 02 and 03.
+**Components A — visually accepted by the user on 2026-08-23 and remains closed
+after focused RangeSlider regression validation.** The reference surface at
+`?reference=components` composes the real reusable controls and mirrors the
+grouping of raster sections 02 and 03.
 
 **Foundations / Colors — visually accepted by the user on 2026-08-19.**
 
