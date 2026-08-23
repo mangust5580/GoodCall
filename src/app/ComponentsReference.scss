@@ -174,3 +174,25 @@
   width: 100%;
   max-width: 760px;
 }
+
+.cmp-product-group {
+  flex: 0 1 300px;
+
+  &--horizontal {
+    flex: 1 1 500px;
+    max-width: 560px;
+  }
+
+  &--mini {
+    flex: 0 1 250px;
+  }
+
+  &--price {
+    flex: 0 1 320px;
+  }
+
+  &--badges {
+    flex: 0 1 200px;
+    min-width: 160px;
+  }
+}

@@ -14,10 +14,13 @@ Operational handoff. This is not a history log.
 **Components — open.** Closed slice: **Components A — Core Controls & Forms**,
 covering raster sections 02 Buttons & Controls and 03 Inputs & Forms.
 
-Components A received user visual PASS on 2026-08-23 and is closed. The current
-next slice is **Components B — Product Components**. Section 04 Product
-Components asset preparation is complete; Product Components implementation has
-not started. Raster sections 01 and 05-08 are not implemented.
+Components A received user visual PASS on 2026-08-23 and is closed.
+
+**Components B — Product Components is implemented**, covering raster section 04.
+It is not closed: it awaits user visual PASS. The prepared product assets are
+consumed, the existing Chip, QuantityStepper and Icon primitives are reused, and
+no product domain model, cart store or wishlist store was introduced. Raster
+sections 01 and 05-08 are not implemented.
 
 The current Components A visual-polish correction is applied: active Tabs no
 longer change on hover, enabled field surfaces share a coherent hover state, and
@@ -83,7 +86,10 @@ Independent audits themselves remain optional. See the AUDIT.md section of
 - Temporary reference pages: `src/app/TemporaryReference.tsx`.
 - Reusable controls and form fields: `src/components/ui/`, with the shared
   control system in `controls.scss`.
-- Components A reference surface: `src/app/ComponentsReference.tsx`.
+- Reusable product presentation components: `src/components/product/`, with their
+  styles in `product-components.scss`.
+- Product illustration assets for section 04: `src/assets/products/`.
+- Components A and B reference surface: `src/app/ComponentsReference.tsx`.
 
 There is no router, no data layer, and no feature architecture. The reference
 surfaces are development comparison pages, not product UI.
@@ -141,6 +147,45 @@ until concrete product form requirements exist.
 
 The Components reference surface composes the real components; it does not
 reimplement look-alike markup.
+
+### Components B
+
+`src/components/product/` provides ProductCard, MiniProductCard, PriceBlock,
+ProductRating, ProductAvailability, FavoriteButton and AddToCartButton, exported
+through `index.ts`. Section 04 of the raster is reachable at
+`?reference=components`.
+
+One `ProductCard` covers both raster card specimens through a `layout` prop
+(`vertical` / `horizontal`). The two layouts share one markup tree; the
+differences are expressed entirely in CSS, so no layout branching exists in the
+component. `MiniProductCard` stays separate because section 04 evidences only
+media plus the two actions for it, and folding it into ProductCard would have
+required optional slots the larger cards do not need.
+
+These are presentation components. They take formatted display strings for
+prices, plus callbacks and pressed/quantity state from their consumer. There is
+no product entity, SKU schema, money model, inventory type or API response type,
+and no cart, wishlist or comparison store. Price formatting for the reference
+specimens lives in the reference layer.
+
+Chip remains the only badge primitive — it covers Новинка, Хит продаж, -25% and
+В наличии without extension. QuantityStepper remains the only quantity
+primitive and is reused unchanged in the horizontal card. The heart, cart and
+star icons are consumed through the existing Icon mask system.
+
+Favorite and cart actions share one product-owned `product-action` primitive.
+A generic application-wide IconButton was deliberately not created: the two
+current consumers are both product surfaces, and Components A controls were not
+retrofitted.
+
+Product Components add a small Components-owned geometry group —
+`--product-card-radius`, `--product-card-padding`, `--product-card-gap`,
+`--product-media-height`, `--product-action-size` and `--product-action-radius` —
+consumed by more than one section-04 component. It is not a general spacing or
+radius scale and does not reopen Foundations.
+
+Section-04 specimen widths belong to the reference composition, not to the
+components. The reusable components take the width their consumer gives them.
 
 ### Colour tokens
 
@@ -217,7 +262,7 @@ The base page no longer hosts the Foundations surface. A query-string check in
 
 - base URL — temporary reference index, linking to the two surfaces below
 - `?reference=foundations` — the Foundations colour reference
-- `?reference=components` — the Components A reference surface
+- `?reference=components` — the Components A and B reference surface
 
 Links are built from `import.meta.env.BASE_URL`, so they resolve under the
 GitHub Pages base without hardcoding the repository name, and no SPA fallback is
@@ -242,6 +287,15 @@ comments section of `AGENTS.md` for the governed file set and the rule on
 functional suppression directives.
 
 ## Current visual status
+
+**Components B — awaiting user visual PASS.** Section 04 Product Components is
+implemented on the reference surface at `?reference=components`, composing the
+real reusable product components. Two system-first normalizations were applied
+against the raster: one rating presentation is used everywhere, so the price
+block drops the raster's `Рейтинг` prefix and star-after-value ordering; and
+availability is expressed as the success Chip inline in cards, with the
+product-owned `ProductAvailability` row used only where section 04 shows the
+fuller bordered status row.
 
 **Components A — visually accepted by the user on 2026-08-23.** The reference
 surface at `?reference=components` composes the real reusable controls and
@@ -334,11 +388,11 @@ None.
 
 ## Next approved step
 
-**Components B — Product Components**, bounded implementation against section 04
-of `E:\Work\Frontend\Pictures\GoodCall-references\Components.png`.
+**Components B visual review.** Return the reference screenshots and the current
+`AUDIT.md` for ChatGPT/user visual review of section 04 and a PASS decision. The
+next step is review, not another implementation slice.
 
-Components stays open. Product Components implementation has not started.
-Sections 01 and 05-08 each need their own bounded slice.
+Components stays open. Sections 01 and 05-08 each need their own bounded slice.
 
 ## Normative repository docs
 
