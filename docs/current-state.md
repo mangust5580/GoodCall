@@ -15,14 +15,16 @@ Operational handoff. This is not a history log.
 covering raster sections 02 Buttons & Controls and 03 Inputs & Forms,
 **Components B — Product Components**, covering raster section 04, and
 **Components C — Content & Marketing**, covering raster section 05, and
-**Components D — Account Components**, covering raster section 06.
+**Components D — Account Components**, covering raster section 06, and
+**Components E — Commerce Blocks**, covering raster section 07.
 
 Components A received user visual PASS on 2026-08-23 and is closed.
 
 Components B received user visual PASS on 2026-08-23 and is closed. The
 prepared product assets are consumed, the existing Chip, QuantityStepper and Icon
 primitives are reused, and no product domain model, cart store or wishlist store
-was introduced. Raster sections 01 and 07-08 are not implemented.
+was introduced. Raster section 01 remains deferred and section 08 is not
+implemented.
 
 User visual PASS received for Components C — Content & Marketing on 2026-08-23.
 Components C is closed. All four prepared section-05 assets are consumed — the
@@ -33,10 +35,10 @@ layer, marketing data model or newsletter backend was introduced.
 Components D — Account Components received user visual PASS on 2026-08-23 and
 is closed.
 
-**Components E — Commerce Blocks, covering raster section 07, is implemented
-and awaits user visual PASS.** It is not closed.
+Components E — Commerce Blocks received user visual PASS on 2026-08-24 and is
+closed.
 
-Components A, B, C and D are closed. Overall Components remains open. Raster
+Components A, B, C, D and E are closed. Overall Components remains open. Raster
 section 08 is not implemented. Section 01 Header & Navigation remains deferred
 until future Global Shell work creates the real shell consumer.
 
@@ -382,8 +384,8 @@ been chosen or introduced.
 `src/components/commerce/` provides CommerceCartSummary, CommerceOptionGroup,
 SavedPaymentList, CommerceLocationCard and CommerceServiceCard, exported through
 `index.ts`, with styles in `commerce-components.scss`. Section 07 of the raster
-is reachable at `?reference=components`. Components E awaits user visual PASS
-and is not closed.
+is reachable at `?reference=components`. Components E received user visual PASS
+on 2026-08-24 and is closed.
 
 Section 07 contains six visible presentation roles served by five components:
 mini cart summary, delivery option block, payment-method selector, saved-payment
@@ -603,19 +605,21 @@ card uses one icon per metric, ignoring the stray duplicated glyphs the raster
 renders on the bonus and favourites value lines. Section 06 shows no horizontal
 overflow at 1440px, 768px, 375px or 320px.
 
-**Components E — Commerce Blocks awaits user visual PASS.** Section 07 Commerce
-Blocks is implemented on the reference surface at `?reference=components`,
-composing the real reusable commerce components. The system-first normalizations
-applied against the raster are the shared selectable-options family for the
-delivery and payment blocks, one trailing-value treatment across both option
-blocks rather than the raster's two slightly different weights, and one shared
-Commerce card surface and hairline divider across all six specimens. On user
-visual feedback the service-center card's metadata now uses the same icon-led
-row treatment as the store card, which the raster does not show, so both
-information cards scan alike. The saved-payment reference now shows three
-MIR-only demo entries through the brand-agnostic `SavedPaymentList`; the
-payment-method selector remains multi-method. Section 07 shows no horizontal
-overflow at 1440px, 768px, 375px or 320px. Components E is not closed.
+**Components E — visually accepted by the user on 2026-08-24 and closed.**
+Section 07 Commerce Blocks is implemented on the reference surface at
+`?reference=components`, composing the real reusable commerce components. The
+system-first normalizations applied against the raster are the shared
+selectable-options family for the delivery and payment blocks, one
+trailing-value treatment across both option blocks rather than the raster's two
+slightly different weights, and one shared Commerce card surface and hairline
+divider across all six specimens. On user visual feedback the service-center
+card's metadata now uses the same icon-led row treatment as the store card,
+which the raster does not show, so both information cards scan alike while the
+service card retains its large decorative tools glyph. The saved-payment
+reference now shows three MIR-only demo entries through the brand-agnostic
+`SavedPaymentList`; `payment-mir.svg` is the only current saved-payment brand
+asset, and the payment-method selector remains multi-method. Section 07 shows no
+horizontal overflow at 1440px, 768px, 375px or 320px.
 
 **Foundations / Colors — visually accepted by the user on 2026-08-19.**
 
@@ -709,13 +713,20 @@ None.
 
 ## Next approved step
 
-**User visual review of Components E — Commerce Blocks, raster section 07.**
-Components E is implemented and technically ready; it stays open until the user
-gives visual PASS.
+**Components F — Utility & Feedback, raster section 08 planning and asset
+inventory.**
 
-Components stays open. Section 08 needs a later bounded slice. Section 01 Header
-& Navigation remains deferred to future Global Shell work rather than being
-treated as an isolated Components slice.
+Plan before implementation: inspect raster section 08 only, inventory visible
+Utility & Feedback roles, identify reuse from accepted Foundations and
+Components A-E, identify genuinely missing icons/assets, define normalization
+boundaries, identify semantics and accessibility requirements, and keep
+architecture, state and data deferred unless a concrete current consumer
+requires them. Do not implement until planning is reviewed.
+
+Components stays open. Section 01 Header & Navigation remains deferred to future
+Global Shell work rather than being treated as an isolated Components slice. The
+known section-03 narrow reference-composition overflow remains a separate
+correction required before the overall Components milestone closes.
 
 ## Normative repository docs
 
