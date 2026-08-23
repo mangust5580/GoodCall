@@ -11,7 +11,16 @@ export type IconName =
   | 'plus'
   | 'minus'
   | 'check'
-  | 'close';
+  | 'close'
+  | 'person'
+  | 'package'
+  | 'compare'
+  | 'return'
+  | 'bonus'
+  | 'map-pin'
+  | 'settings'
+  | 'log-out'
+  | 'edit';
 
 interface IconProps {
   readonly name: IconName;

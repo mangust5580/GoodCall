@@ -30,8 +30,10 @@ the sale-bags promo illustration and the generic technology brand mark. No CMS
 layer, marketing data model or newsletter backend was introduced.
 
 Components A, B and C are closed. Overall Components remains open. Raster
-sections 06-08 are not implemented. Section 01 Header & Navigation remains
-deferred until future Global Shell work creates the real shell consumer.
+sections 06-08 are not implemented. Components D - Account Components is
+planned and its exact section-06 icon assets are prepared, but implementation
+has not started. Section 01 Header & Navigation remains deferred until future
+Global Shell work creates the real shell consumer.
 
 The current Components A visual-polish correction is applied: active Tabs no
 longer change on hover, enabled field surfaces share a coherent hover state, and
@@ -270,6 +272,37 @@ card, and the `headset` icon through the existing Icon system. The brand card
 uses the generic mark with a generic `GoodTech` label; no trademark was
 substituted.
 
+### Components D
+
+Components D - Account Components is planned from raster section 06 only.
+Components D implementation has not started. Components D has no visual status
+and is not closed.
+
+Section 06 inventory contains five visible presentation specimens: account
+navigation, account statistics, order row, delivery address card and settings
+card. Account navigation is planned as one future reusable presentation
+component with repeated rows. Account statistics is planned as one future
+reusable presentation component with repeated metric rows. The order row,
+delivery address card and settings card remain separate because their
+interaction and markup semantics differ materially. A generic `AccountCard`
+mega-component is rejected.
+
+Expected primitive and asset reuse is bounded to the current system: Icon,
+Button, Toggle, Chip if the delivered-state surface still matches during
+implementation, existing `heart`, existing `cart`, existing `chevron-right` and
+existing `src/assets/products/product-earbuds.svg`.
+
+Prepared section-06 generic icons are `person`, `package`, `compare`, `return`,
+`bonus`, `map-pin`, `settings`, `log-out` and `edit` in `src/assets/icons/`,
+registered through the existing Icon type and SCSS mask registry. No additional
+account artwork, avatar imagery, payment logo, delivery logo, loyalty artwork or
+QR code was introduced.
+
+The visible account concepts remain presentation-only. No auth/session
+architecture, account/user entity, address/order/payment model, loyalty model,
+notification persistence model, router, global state or API/backend contract has
+been chosen or introduced.
+
 ### Colour tokens
 
 86 CSS custom properties are emitted on `:root` from Sass maps, which are the
@@ -395,6 +428,11 @@ after user-accepted RangeSlider post-PASS hardening.** The reference surface at
 `?reference=components` composes the real reusable controls and mirrors the
 grouping of raster sections 02 and 03.
 
+**Components D - Account Components has no visual status yet.** Section 06 is
+planned and its exact nine generic account icons are prepared, but Account
+Components implementation has not started and no section-06 reference markup
+exists.
+
 **Foundations / Colors — visually accepted by the user on 2026-08-19.**
 
 The Foundations reference surface mirrors the raster's five sections so the
@@ -486,9 +524,8 @@ None.
 
 ## Next approved step
 
-**Components D — Account Components, raster section 06.** The next step is a
-bounded planning/asset task for section 06, not implementation in the current
-closeout.
+**Components D — Account Components, raster section 06.** The next step is
+bounded Claude Code implementation of Components D.
 
 Components stays open. Sections 06-08 each need their own bounded slice. Section
 01 Header & Navigation remains deferred to future Global Shell work rather than
