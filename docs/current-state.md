@@ -22,6 +22,12 @@ longer change on hover, enabled field surfaces share a coherent hover state, and
 SelectField / DateField now use GoodCall-styled floating popup surfaces instead
 of browser-native popup UI.
 
+The Components A production-controls correction is applied: SearchField is now a
+stable base search primitive with GoodCall-owned clear behaviour, PhoneField uses
+a fixed RU Maskito mask, the reference show-more filter demo is functional, and
+the stepper/range layout corrections are reference-owned. Components A still
+awaits user visual PASS.
+
 **Foundations — complete.**
 
 **User visual PASS received for Foundations / Colors on 2026-08-19.** The
@@ -98,6 +104,38 @@ SelectField uses Radix Select and DateField uses Radix Popover with DayPicker
 from `@daypicker/react`. Their popup surfaces share Components-owned background,
 border, radius and elevation decisions; those decisions have not moved into
 Foundations.
+
+SearchField is a reusable control primitive only. It keeps native `type="search"`
+semantics, suppresses browser-native cancel UI, and owns value, clear and submit
+control behaviour. Future ProductSearch belongs to a feature-level consumer that
+composes SearchField with a dedicated combobox/autocomplete interaction layer
+when the Header/Search milestone creates a real consumer.
+
+Future ProductSearch must account for query autocomplete, product/category/brand
+suggestions, keyboard navigation, Enter / Escape / Arrow key behaviour, click
+outside, async loading, request cancellation / stale-result protection,
+IME/composition correctness, touch/mobile behaviour, empty/error/no-result
+states, and a "show all results" action. A future interaction library such as
+Downshift may be introduced then if it is still the best fit; none is installed
+now.
+
+Future ecommerce search backend capability requirements are recorded as
+requirements, not an engine choice: typo tolerance, Russian morphology,
+transliteration, keyboard-layout correction, synonyms, model/SKU exact matching,
+prefix search, ranking/boosting, category/brand/attribute facets, facet counts,
+price range, pagination, suggestions, and availability/popularity ranking inputs.
+No Elasticsearch, OpenSearch, Typesense, Meilisearch, Algolia or other engine is
+selected yet.
+
+Real catalog filtering should be URL-driven at feature/page level rather than
+hidden only in local component state. Checkbox, RangeSlider and Button remain
+reusable primitives; the current Preferences show-more behaviour is reference
+demo composition only.
+
+PhoneField uses Maskito with a fixed Russian presentation mask for
+`+7 (___) ___-__-__`. It is input assistance, not phone-number validation.
+International support, country selection and backend validation remain deferred
+until concrete product form requirements exist.
 
 The Components reference surface composes the real components; it does not
 reimplement look-alike markup.
@@ -227,7 +265,8 @@ None. No router is installed.
 
 ## Current dependencies
 
-Runtime: `react`, `react-dom`, `radix-ui`, `@daypicker/react`.
+Runtime: `react`, `react-dom`, `radix-ui`, `@daypicker/react`, `@maskito/core`,
+`@maskito/react`.
 
 Dev: `vite`, `@vitejs/plugin-react`, `typescript`, `@types/react`,
 `@types/react-dom`, `@types/node`, `sass-embedded`, `postcss`, `autoprefixer`,
@@ -236,7 +275,8 @@ Dev: `vite`, `@vitejs/plugin-react`, `typescript`, `@types/react`,
 `eslint-plugin-jsx-a11y`, `prettier`, `stylelint`, `stylelint-config-standard-scss`.
 
 Nothing else is installed. In particular there is no router, no Supabase, no
-data-fetching, state, form, schema, masking, mocking, or E2E library.
+data-fetching, state, form, schema, search/autocomplete, phone validation,
+mocking, or E2E library.
 
 ## Scripts
 
@@ -274,9 +314,8 @@ none of them blocks the closed milestone.
 
 ## Known deferred work
 
-- Phone masking / formatting is deferred until a real product form consumer
-  defines country, format, paste, edit and validation requirements. A masking
-  library may be introduced later when that requirement is concrete.
+- Phone validation, country selection and international formatting are deferred
+  until a real product form consumer defines those requirements.
 - ESLint is pinned to the 9.x line. ESLint 10 is current, but
   `eslint-plugin-jsx-a11y@6.10.2` and `eslint-plugin-react@7.37.5` declare peer
   support only through ESLint 9. Accessibility coverage was kept rather than

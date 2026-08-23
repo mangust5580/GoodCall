@@ -1,8 +1,17 @@
 import { DayFlag, DayPicker, SelectionState, UI } from '@daypicker/react';
 import { ru } from '@daypicker/react/locale';
+import type { MaskitoOptions } from '@maskito/core';
+import { useMaskito } from '@maskito/react';
 import { Popover, Select } from 'radix-ui';
-import { useId, useState } from 'react';
-import type { InputHTMLAttributes, ReactNode, TextareaHTMLAttributes } from 'react';
+import { useId, useRef, useState } from 'react';
+import type {
+  ChangeEvent,
+  FormEvent,
+  InputHTMLAttributes,
+  KeyboardEvent,
+  ReactNode,
+  TextareaHTMLAttributes,
+} from 'react';
 import type { ChevronProps, ClassNames } from '@daypicker/react';
 
 import { Icon } from './Icon';
@@ -43,10 +52,6 @@ interface BaseFieldProps extends NativeInputProps {
   readonly id?: string;
 }
 
-type FixedTypeFieldProps = Omit<BaseFieldProps, 'type'>;
-
-type PhoneFieldProps = Omit<BaseFieldProps, 'type' | 'inputMode'>;
-
 function useControlId(explicit?: string): string {
   const generated = useId();
 
@@ -82,12 +87,202 @@ export function TextField(props: BaseFieldProps) {
   return <InputField type="text" {...props} />;
 }
 
-export function SearchField(props: FixedTypeFieldProps) {
-  return <InputField {...props} icon="search" type="search" />;
+interface SearchFieldProps {
+  readonly label: string;
+  readonly hint?: string;
+  readonly id?: string;
+  readonly name?: string;
+  readonly placeholder?: string;
+  readonly value?: string;
+  readonly defaultValue?: string;
+  readonly onValueChange?: (value: string) => void;
+  readonly onSubmit?: (value: string) => void;
+  readonly onClear?: () => void;
+  readonly disabled?: boolean;
+  readonly required?: boolean;
+  readonly autoComplete?: string;
 }
 
-export function PhoneField(props: PhoneFieldProps) {
-  return <InputField {...props} inputMode="tel" type="tel" />;
+export function SearchField({
+  label,
+  hint,
+  id,
+  name,
+  placeholder,
+  value,
+  defaultValue = '',
+  onValueChange,
+  onSubmit,
+  onClear,
+  disabled = false,
+  required = false,
+  autoComplete,
+}: SearchFieldProps) {
+  const controlId = useControlId(id);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [internalValue, setInternalValue] = useState(defaultValue);
+  const currentValue = value ?? internalValue;
+  const hasValue = currentValue.length > 0;
+
+  const updateValue = (nextValue: string) => {
+    if (value === undefined) {
+      setInternalValue(nextValue);
+    }
+
+    onValueChange?.(nextValue);
+  };
+
+  const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
+    updateValue(event.currentTarget.value);
+  };
+
+  const handleClear = () => {
+    updateValue('');
+    onClear?.();
+    inputRef.current?.focus();
+  };
+
+  const handleSubmit = () => {
+    onSubmit?.(currentValue);
+  };
+
+  const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Enter' && onSubmit) {
+      event.preventDefault();
+      handleSubmit();
+    }
+  };
+
+  return (
+    <FieldShell controlId={controlId} hint={hint} label={label}>
+      <input
+        aria-describedby={hint ? `${controlId}-hint` : undefined}
+        autoComplete={autoComplete}
+        className="ui-input ui-input--search"
+        disabled={disabled}
+        id={controlId}
+        name={name}
+        onChange={handleChange}
+        onKeyDown={handleKeyDown}
+        placeholder={placeholder}
+        ref={inputRef}
+        required={required}
+        type="search"
+        value={currentValue}
+      />
+      <div className="ui-search-actions">
+        {hasValue ? (
+          <button
+            aria-label="Очистить поиск"
+            className="ui-search-actions__button"
+            disabled={disabled}
+            onClick={handleClear}
+            type="button"
+          >
+            <Icon name="close" />
+          </button>
+        ) : null}
+        {onSubmit ? (
+          <button
+            aria-label="Выполнить поиск"
+            className="ui-search-actions__button"
+            disabled={disabled}
+            onClick={handleSubmit}
+            type="button"
+          >
+            <Icon name="search" />
+          </button>
+        ) : (
+          <Icon className="ui-search-actions__icon" name="search" />
+        )}
+      </div>
+    </FieldShell>
+  );
+}
+
+interface PhoneFieldProps {
+  readonly label: string;
+  readonly hint?: string;
+  readonly id?: string;
+  readonly name?: string;
+  readonly placeholder?: string;
+  readonly value?: string;
+  readonly defaultValue?: string;
+  readonly onValueChange?: (value: string) => void;
+  readonly disabled?: boolean;
+  readonly required?: boolean;
+}
+
+const phoneMaskOptions: MaskitoOptions = {
+  mask: [
+    '+',
+    '7',
+    ' ',
+    '(',
+    /\d/,
+    /\d/,
+    /\d/,
+    ')',
+    ' ',
+    /\d/,
+    /\d/,
+    /\d/,
+    '-',
+    /\d/,
+    /\d/,
+    '-',
+    /\d/,
+    /\d/,
+  ],
+};
+
+export function PhoneField({
+  label,
+  hint,
+  id,
+  name,
+  placeholder = '+7 (___) ___-__-__',
+  value,
+  defaultValue = '',
+  onValueChange,
+  disabled = false,
+  required = false,
+}: PhoneFieldProps) {
+  const controlId = useControlId(id);
+  const maskRef = useMaskito({ options: phoneMaskOptions });
+  const [internalValue, setInternalValue] = useState(defaultValue);
+  const currentValue = value ?? internalValue;
+
+  const updateValue = (nextValue: string) => {
+    if (value === undefined) {
+      setInternalValue(nextValue);
+    }
+
+    onValueChange?.(nextValue);
+  };
+
+  const handleInput = (event: FormEvent<HTMLInputElement>) => {
+    updateValue(event.currentTarget.value);
+  };
+
+  return (
+    <FieldShell controlId={controlId} hint={hint} label={label}>
+      <input
+        aria-describedby={hint ? `${controlId}-hint` : undefined}
+        className="ui-input"
+        disabled={disabled}
+        id={controlId}
+        inputMode="tel"
+        name={name}
+        onInput={handleInput}
+        placeholder={placeholder}
+        ref={maskRef}
+        required={required}
+        type="tel"
+        value={currentValue}
+      />
+    </FieldShell>
+  );
 }
 
 interface SelectFieldProps {

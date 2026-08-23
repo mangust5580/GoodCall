@@ -6,7 +6,8 @@ export type IconName =
   | 'chevron-right'
   | 'plus'
   | 'minus'
-  | 'check';
+  | 'check'
+  | 'close';
 
 interface IconProps {
   readonly name: IconName;

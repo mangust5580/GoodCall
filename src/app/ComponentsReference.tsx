@@ -44,6 +44,8 @@ const BRAND_FILTERS = [
   { id: 'budget', label: 'Недорогие', count: 56 },
 ];
 
+const BRAND_FILTERS_INITIAL_COUNT = 3;
+
 const PRODUCT_TABS = 'product-sections';
 
 const priceFormatter = new Intl.NumberFormat('ru-RU');
@@ -90,12 +92,19 @@ export function ComponentsReference() {
   const [notifications, setNotifications] = useState(true);
   const [muted, setMuted] = useState(false);
   const [delivery, setDelivery] = useState('courier');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [submittedSearch, setSubmittedSearch] = useState('');
+  const [phone, setPhone] = useState('');
   const [sort, setSort] = useState('');
   const [deliveryDate, setDeliveryDate] = useState('');
   const [quantity, setQuantity] = useState(1);
   const [page, setPage] = useState(1);
   const [brands, setBrands] = useState<readonly string[]>(['samsung']);
+  const [brandsExpanded, setBrandsExpanded] = useState(false);
   const [price, setPrice] = useState<[number, number]>([10000, 80000]);
+  const visibleBrands = brandsExpanded
+    ? BRAND_FILTERS
+    : BRAND_FILTERS.slice(0, BRAND_FILTERS_INITIAL_COUNT);
 
   const toggleBrand = (id: string, checked: boolean) => {
     setBrands((current) =>
@@ -195,7 +204,9 @@ export function ComponentsReference() {
         </Group>
 
         <Group title="Счётчик">
-          <QuantityStepper label="Количество товара" onChange={setQuantity} value={quantity} />
+          <div className="cmp-stepper-specimen">
+            <QuantityStepper label="Количество товара" onChange={setQuantity} value={quantity} />
+          </div>
         </Group>
 
         <Group title="Пагинация" wide>
@@ -206,7 +217,19 @@ export function ComponentsReference() {
       <Section index="03" title="Inputs &amp; Forms">
         <div className="cmp-fields">
           <TextField label="Текстовое поле" placeholder="Введите текст" />
-          <SearchField label="Поиск товаров" placeholder="Поиск товаров" />
+          <div className="cmp-search-specimen">
+            <SearchField
+              label="Поиск товаров"
+              onClear={() => {
+                setSubmittedSearch('');
+              }}
+              onSubmit={setSubmittedSearch}
+              onValueChange={setSearchQuery}
+              placeholder="Поиск товаров"
+              value={searchQuery}
+            />
+            <span className="ui-visually-hidden">{submittedSearch}</span>
+          </div>
           <SelectField
             label="Выпадающий список"
             onValueChange={setSort}
@@ -215,11 +238,16 @@ export function ComponentsReference() {
             value={sort}
           />
           <TextareaField label="Текстовая область" placeholder="Введите описание" />
-          <PhoneField label="Телефон" placeholder="+7 (___) ___-__-__" />
+          <PhoneField
+            label="Телефон"
+            onValueChange={setPhone}
+            placeholder="+7 (___) ___-__-__"
+            value={phone}
+          />
           <div className="cmp-checkbox-group">
             <h4 className="cmp-checkbox-group__title">Предпочтения</h4>
             <div className="cmp-stack">
-              {BRAND_FILTERS.map((brand) => (
+              {visibleBrands.map((brand) => (
                 <Checkbox
                   checked={brands.includes(brand.id)}
                   key={brand.id}
@@ -234,23 +262,32 @@ export function ComponentsReference() {
                 />
               ))}
             </div>
-            <Button variant="text">Показать ещё</Button>
+            <Button
+              onClick={() => {
+                setBrandsExpanded((current) => !current);
+              }}
+              variant="text"
+            >
+              {brandsExpanded ? 'Скрыть' : 'Показать ещё'}
+            </Button>
           </div>
           <DateField label="Выбор даты" onValueChange={setDeliveryDate} value={deliveryDate} />
           <div className="cmp-fields__wide">
             <span className="cmp-range-label" id="price-range-label">
               Слайдер (диапазон цен)
             </span>
-            <RangeSlider
-              formatValue={formatPrice}
-              max={150000}
-              maxLabel="Максимальная цена"
-              min={0}
-              minLabel="Минимальная цена"
-              onChange={setPrice}
-              step={1000}
-              values={price}
-            />
+            <div className="cmp-range-specimen">
+              <RangeSlider
+                formatValue={formatPrice}
+                max={150000}
+                maxLabel="Максимальная цена"
+                min={0}
+                minLabel="Минимальная цена"
+                onChange={setPrice}
+                step={1000}
+                values={price}
+              />
+            </div>
           </div>
         </div>
       </Section>

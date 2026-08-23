@@ -119,6 +119,10 @@
   color: var(--role-text-muted);
 }
 
+.cmp-stepper-specimen {
+  align-self: flex-start;
+}
+
 .cmp-fields {
   display: grid;
   gap: 24px;
@@ -133,6 +137,11 @@
     min-width: 0;
     grid-column: 1 / -1;
   }
+}
+
+.cmp-search-specimen {
+  display: flex;
+  flex-direction: column;
 }
 
 .cmp-checkbox-group {
@@ -159,4 +168,9 @@
 .cmp-range-label {
   font-size: 13px;
   color: var(--role-text-secondary);
+}
+
+.cmp-range-specimen {
+  width: 100%;
+  max-width: 760px;
 }
