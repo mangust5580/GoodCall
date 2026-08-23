@@ -1,12 +1,14 @@
 export type IconName =
   | 'search'
   | 'calendar'
+  | 'clock'
   | 'chevron-down'
   | 'chevron-left'
   | 'chevron-right'
   | 'heart'
   | 'headset'
   | 'cart'
+  | 'phone'
   | 'star'
   | 'plus'
   | 'minus'
@@ -19,6 +21,7 @@ export type IconName =
   | 'bonus'
   | 'map-pin'
   | 'settings'
+  | 'tools'
   | 'log-out'
   | 'edit';
 

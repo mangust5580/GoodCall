@@ -33,9 +33,9 @@ layer, marketing data model or newsletter backend was introduced.
 Components D — Account Components received user visual PASS on 2026-08-23 and
 is closed.
 
-Components E — Commerce Blocks planning for raster section 07 is complete.
-Implementation has not started, Components E has no visual status, and it is not
-closed.
+Components E — Commerce Blocks planning and asset preparation for raster section
+07 are complete. Implementation has not started, Components E has no visual
+status, and it is not closed.
 
 Components A, B, C and D are closed. Overall Components remains open. Raster
 sections 07-08 are not implemented. Section 01 Header & Navigation remains
@@ -376,9 +376,9 @@ been chosen or introduced.
 
 ### Components E planning
 
-Components E — Commerce Blocks covers raster section 07. Planning and asset
-inventory are complete; implementation has not started and no component, style
-or asset file exists for it yet.
+Components E — Commerce Blocks covers raster section 07. Planning, asset
+inventory and bounded asset preparation are complete; implementation has not
+started and no component or style file exists for it yet.
 
 Visible section-07 roles are six Commerce-owned specimens: a mini cart summary,
 a delivery option block, a payment-method selector, a saved-payment list, a
@@ -409,16 +409,18 @@ Reuse plan:
   surfaces and colour roles, but no content/account card owns the large service
   icon plus service-center text layout.
 
-Missing section-07 assets/icons: seven. Required generic currentColor icons are
-`src/assets/icons/clock.svg`, `src/assets/icons/phone.svg` and
-`src/assets/icons/tools.svg`. Required Commerce assets are provisional
-`src/assets/commerce/payment-visa.svg`,
+Section-07 asset preparation is complete with exactly seven prepared assets.
+Generic currentColor icons are `src/assets/icons/clock.svg`,
+`src/assets/icons/phone.svg` and `src/assets/icons/tools.svg`, all registered in
+the existing typed `Icon` system and SCSS mask registry. Commerce brand/image
+assets are `src/assets/commerce/payment-visa.svg`,
 `src/assets/commerce/payment-mastercard.svg`,
 `src/assets/commerce/payment-mir.svg` and
-`src/assets/commerce/store-europeisky.webp`. The payment marks should not use
-currentColor; the store image is section-specific raster evidence. The existing
-`product-phone.svg`, `map-pin`, `edit`, `minus` and `plus` assets cover the
-remaining visible asset needs.
+`src/assets/commerce/store-europeisky.webp`. Payment marks remain direct image
+assets and are not `IconName` entries. The store image is cropped from the
+section-07 raster evidence, not generated or sourced elsewhere. No dependency
+was added. The existing `product-phone.svg`, `map-pin`, `edit`, `minus` and
+`plus` assets cover the remaining visible asset needs.
 
 Normalization boundaries:
 
@@ -603,9 +605,10 @@ card uses one icon per metric, ignoring the stray duplicated glyphs the raster
 renders on the bonus and favourites value lines. Section 06 shows no horizontal
 overflow at 1440px, 768px, 375px or 320px.
 
-**Components E — Commerce Blocks planning complete; implementation not
-started.** Section 07 has six inventoried Commerce roles and seven missing
-assets/icons. Components E has no visual status and is not closed.
+**Components E — Commerce Blocks planning and asset preparation complete;
+implementation not started.** Section 07 has six inventoried Commerce roles and
+exactly seven prepared assets/icons. Components E has no visual status and is
+not closed.
 
 **Foundations / Colors — visually accepted by the user on 2026-08-19.**
 
@@ -699,9 +702,8 @@ None.
 
 ## Next approved step
 
-**Components E — Commerce Blocks bounded asset preparation.** Prepare only the
-seven section-07 assets/icons identified by planning, then return for a separate
-bounded implementation task.
+**Components E — Commerce Blocks bounded implementation.** Implement only raster
+section 07 using the prepared assets and the reviewed planning boundaries.
 
 Components stays open. Section 08 needs a later bounded slice. Section 01 Header
 & Navigation remains deferred to future Global Shell work rather than being
