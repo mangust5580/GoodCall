@@ -14,14 +14,15 @@ Operational handoff. This is not a history log.
 **Components — open.** Closed slices: **Components A — Core Controls & Forms**,
 covering raster sections 02 Buttons & Controls and 03 Inputs & Forms,
 **Components B — Product Components**, covering raster section 04, and
-**Components C — Content & Marketing**, covering raster section 05.
+**Components C — Content & Marketing**, covering raster section 05, and
+**Components D — Account Components**, covering raster section 06.
 
 Components A received user visual PASS on 2026-08-23 and is closed.
 
 Components B received user visual PASS on 2026-08-23 and is closed. The
 prepared product assets are consumed, the existing Chip, QuantityStepper and Icon
 primitives are reused, and no product domain model, cart store or wishlist store
-was introduced. Raster sections 01 and 06-08 are not implemented.
+was introduced. Raster sections 01 and 07-08 are not implemented.
 
 User visual PASS received for Components C — Content & Marketing on 2026-08-23.
 Components C is closed. All four prepared section-05 assets are consumed — the
@@ -29,10 +30,10 @@ reused `product-phone.svg`, the headset icon through the existing Icon system,
 the sale-bags promo illustration and the generic technology brand mark. No CMS
 layer, marketing data model or newsletter backend was introduced.
 
-**Components D - Account Components, covering raster section 06, is
-implemented and awaits user visual PASS.** It is not closed.
+Components D — Account Components received user visual PASS on 2026-08-23 and
+is closed.
 
-Components A, B and C are closed. Overall Components remains open. Raster
+Components A, B, C and D are closed. Overall Components remains open. Raster
 sections 07-08 are not implemented. Section 01 Header & Navigation remains
 deferred until future Global Shell work creates the real shell consumer.
 
@@ -280,7 +281,8 @@ substituted.
 `src/components/account/` provides AccountNavigation, AccountStats, OrderRow,
 AddressCard and AccountSettingsCard, exported through `index.ts`, with styles in
 `account-components.scss`. Section 06 of the raster is reachable at
-`?reference=components`. Components D awaits user visual PASS and is not closed.
+`?reference=components`. Components D received user visual PASS on 2026-08-23
+and is closed.
 
 Section 06 contains five visible presentation roles, and each has exactly one
 owner: account navigation, account statistics, order row, delivery address card
@@ -499,8 +501,8 @@ surface and geometry while using an accessible green-forward Components-owned
 treatment with measured AA text contrast. Foundations remains closed and
 unchanged.
 
-**Components D - Account Components awaits user visual PASS.** Section 06
-Account Components is implemented on the reference surface at
+**Components D — visually accepted by the user on 2026-08-23 and closed.**
+Section 06 Account Components is implemented on the reference surface at
 `?reference=components`, composing the real reusable account components. Three
 system-first normalizations were applied against the raster: the delivered
 status uses the accepted success Chip instead of the bare green text the raster
@@ -508,7 +510,7 @@ paints; the duplicated details affordance in the order specimen was collapsed
 into one bordered chevron control beside the reorder control; and the statistics
 card uses one icon per metric, ignoring the stray duplicated glyphs the raster
 renders on the bonus and favourites value lines. Section 06 shows no horizontal
-overflow at 1440px, 768px, 375px or 320px. Components D is not closed.
+overflow at 1440px, 768px, 375px or 320px.
 
 **Foundations / Colors — visually accepted by the user on 2026-08-19.**
 
@@ -582,7 +584,8 @@ none of them blocks the closed milestone.
 - The Components reference section 03 can overflow at a 320px viewport because
   the reference grid currently uses a 360px minimum track. This is a deferred
   reference-composition correction, does not reopen Components A and does not
-  block Components C closure.
+  block any closed Components slice, but remains required before the overall
+  Components milestone can close.
 - Phone validation, country selection and international formatting are deferred
   until a real product form consumer defines those requirements.
 - ESLint is pinned to the 9.x line. ESLint 10 is current, but
@@ -601,13 +604,15 @@ None.
 
 ## Next approved step
 
-**User visual review of Components D — Account Components, raster section 06.**
-Components D is implemented and technically ready; it stays open until the user
-gives visual PASS.
+**Components E — Commerce Blocks, raster section 07 planning and asset
+inventory.** Inspect raster section 07 only, inventory visible Commerce Blocks,
+identify reuse from accepted Foundations and Components A-D, identify genuinely
+missing assets or icons, and define normalization boundaries before
+implementation.
 
-Components stays open. Sections 07-08 each need their own bounded slice. Section
-01 Header & Navigation remains deferred to future Global Shell work rather than
-being treated as an isolated Components slice.
+Components stays open. Section 08 needs a later bounded slice. Section 01 Header
+& Navigation remains deferred to future Global Shell work rather than being
+treated as an isolated Components slice.
 
 ## Normative repository docs
 
