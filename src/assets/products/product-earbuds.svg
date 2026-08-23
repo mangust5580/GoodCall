@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 220" fill="none">
+  <defs>
+    <linearGradient
+      id="earbuds-case"
+      x1="54"
+      y1="92"
+      x2="163"
+      y2="185"
+      gradientUnits="userSpaceOnUse"
+    >
+      <stop stop-color="#ffffff" />
+      <stop offset="1" stop-color="#d9dde5" />
+    </linearGradient>
+    <linearGradient
+      id="earbud-shell"
+      x1="64"
+      y1="37"
+      x2="151"
+      y2="119"
+      gradientUnits="userSpaceOnUse"
+    >
+      <stop stop-color="#ffffff" />
+      <stop offset="1" stop-color="#cfd5df" />
+    </linearGradient>
+  </defs>
+  <path
+    d="M59 98h102c11 0 20 9 20 20v38c0 21.5-17.5 39-39 39H78c-21.5 0-39-17.5-39-39v-38c0-11 9-20 20-20Z"
+    fill="url(#earbuds-case)"
+    stroke="#b9c0cc"
+    stroke-width="3"
+  />
+  <path d="M43 126h134" stroke="#c4cad4" stroke-width="3" stroke-linecap="round" />
+  <path d="M87 121h46" stroke="#b4bbc7" stroke-width="3" stroke-linecap="round" />
+  <path
+    d="M78 42c15.5 0 28 12.5 28 28v43c0 9.4-7.6 17-17 17s-17-7.6-17-17V87c-13.8-2.9-23-12-23-25 0-11 8.9-20 29-20Z"
+    fill="url(#earbud-shell)"
+    stroke="#b9c0cc"
+    stroke-width="3"
+  />
+  <path
+    d="M142 42c-15.5 0-28 12.5-28 28v43c0 9.4 7.6 17 17 17s17-7.6 17-17V87c13.8-2.9 23-12 23-25 0-11-8.9-20-29-20Z"
+    fill="url(#earbud-shell)"
+    stroke="#b9c0cc"
+    stroke-width="3"
+  />
+  <circle cx="78" cy="64" r="10" fill="#0f141d" />
+  <circle cx="142" cy="64" r="10" fill="#0f141d" />
+  <path d="M83 87v25" stroke="#aeb6c2" stroke-width="3" stroke-linecap="round" />
+  <path d="M137 87v25" stroke="#aeb6c2" stroke-width="3" stroke-linecap="round" />
+</svg>

@@ -11,11 +11,13 @@ Operational handoff. This is not a history log.
 
 ## Current milestone
 
-**Components — open.** Implemented slice: **Components A — Core Controls & Forms**,
+**Components — open.** Closed slice: **Components A — Core Controls & Forms**,
 covering raster sections 02 Buttons & Controls and 03 Inputs & Forms.
 
-Components A is **awaiting user visual PASS**. Raster sections 01 and 04-08 are
-not implemented.
+Components A received user visual PASS on 2026-08-23 and is closed. The current
+next slice is **Components B — Product Components**. Section 04 Product
+Components asset preparation is complete; Product Components implementation has
+not started. Raster sections 01 and 05-08 are not implemented.
 
 The current Components A visual-polish correction is applied: active Tabs no
 longer change on hover, enabled field surfaces share a coherent hover state, and
@@ -25,8 +27,8 @@ of browser-native popup UI.
 The Components A production-controls correction is applied: SearchField is now a
 stable base search primitive with GoodCall-owned clear behaviour, PhoneField uses
 a fixed RU Maskito mask, the reference show-more filter demo is functional, and
-the stepper/range layout corrections are reference-owned. Components A still
-awaits user visual PASS.
+the stepper/range layout corrections are reference-owned. Components A has user
+visual PASS and is closed.
 
 **Foundations — complete.**
 
@@ -241,9 +243,9 @@ functional suppression directives.
 
 ## Current visual status
 
-**Components A — awaiting user visual PASS.** The reference surface at
-`?reference=components` composes the real reusable controls and mirrors the
-grouping of raster sections 02 and 03.
+**Components A — visually accepted by the user on 2026-08-23.** The reference
+surface at `?reference=components` composes the real reusable controls and
+mirrors the grouping of raster sections 02 and 03.
 
 **Foundations / Colors — visually accepted by the user on 2026-08-19.**
 
@@ -332,11 +334,11 @@ None.
 
 ## Next approved step
 
-**ChatGPT / user visual review of Components A**, against sections 02 and 03 of
-`E:\Work\Frontend\Pictures\GoodCall-references\Components.png`.
+**Components B — Product Components**, bounded implementation against section 04
+of `E:\Work\Frontend\Pictures\GoodCall-references\Components.png`.
 
-Components stays open after that review. Sections 01 and 04-08 each need their
-own bounded slice.
+Components stays open. Product Components implementation has not started.
+Sections 01 and 05-08 each need their own bounded slice.
 
 ## Normative repository docs
 

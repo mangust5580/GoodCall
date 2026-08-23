@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 220" fill="none">
+  <defs>
+    <linearGradient
+      id="laptop-screen"
+      x1="89"
+      y1="44"
+      x2="229"
+      y2="148"
+      gradientUnits="userSpaceOnUse"
+    >
+      <stop stop-color="#2f3750" />
+      <stop offset="0.52" stop-color="#151a27" />
+      <stop offset="1" stop-color="#080b12" />
+    </linearGradient>
+    <linearGradient
+      id="laptop-glow"
+      x1="110"
+      y1="61"
+      x2="210"
+      y2="134"
+      gradientUnits="userSpaceOnUse"
+    >
+      <stop stop-color="#8f6bff" />
+      <stop offset="1" stop-color="#3e6ad8" stop-opacity="0" />
+    </linearGradient>
+    <linearGradient
+      id="laptop-base"
+      x1="62"
+      y1="157"
+      x2="258"
+      y2="183"
+      gradientUnits="userSpaceOnUse"
+    >
+      <stop stop-color="#d9dde5" />
+      <stop offset="0.5" stop-color="#f6f7fa" />
+      <stop offset="1" stop-color="#bcc3d0" />
+    </linearGradient>
+  </defs>
+  <path d="M78 37h164c9.9 0 18 8.1 18 18v105H60V55c0-9.9 8.1-18 18-18Z" fill="#151923" />
+  <path d="M76 51h168v96H76V51Z" fill="url(#laptop-screen)" />
+  <path d="M94 55h150v92H94L76 129V73l18-18Z" fill="url(#laptop-glow)" opacity="0.7" />
+  <path d="M60 160h200l24 25H36l24-25Z" fill="url(#laptop-base)" />
+  <path d="M113 165h94l9 10H104l9-10Z" fill="#c9ced8" />
+  <path d="M36 185h248c-4.9 6.2-12.4 10-20.3 10H56.3c-7.9 0-15.4-3.8-20.3-10Z" fill="#aeb6c4" />
+  <path
+    d="M78 37h164c9.9 0 18 8.1 18 18v105H60V55c0-9.9 8.1-18 18-18Z"
+    stroke="#373f50"
+    stroke-width="3"
+  />
+</svg>

@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" fill="none">
+  <defs>
+    <linearGradient
+      id="phone-body"
+      x1="78"
+      y1="28"
+      x2="164"
+      y2="210"
+      gradientUnits="userSpaceOnUse"
+    >
+      <stop stop-color="#29313f" />
+      <stop offset="1" stop-color="#10141d" />
+    </linearGradient>
+    <linearGradient
+      id="phone-panel"
+      x1="100"
+      y1="44"
+      x2="150"
+      y2="116"
+      gradientUnits="userSpaceOnUse"
+    >
+      <stop stop-color="#59606e" />
+      <stop offset="1" stop-color="#202634" />
+    </linearGradient>
+  </defs>
+  <path
+    d="M86 31h68c15.5 0 28 12.5 28 28v122c0 15.5-12.5 28-28 28H86c-15.5 0-28-12.5-28-28V59c0-15.5 12.5-28 28-28Z"
+    fill="url(#phone-body)"
+  />
+  <path
+    d="M91 39h58c13.8 0 25 11.2 25 25v112c0 13.8-11.2 25-25 25H91c-13.8 0-25-11.2-25-25V64c0-13.8 11.2-25 25-25Z"
+    stroke="#485161"
+    stroke-width="2"
+  />
+  <path
+    d="M94 54h47c9.9 0 18 8.1 18 18v47c0 9.9-8.1 18-18 18H94c-9.9 0-18-8.1-18-18V72c0-9.9 8.1-18 18-18Z"
+    fill="url(#phone-panel)"
+  />
+  <circle cx="99" cy="78" r="13" fill="#0d111a" stroke="#768092" stroke-width="3" />
+  <circle cx="136" cy="78" r="13" fill="#0d111a" stroke="#768092" stroke-width="3" />
+  <circle cx="117" cy="112" r="13" fill="#0d111a" stroke="#768092" stroke-width="3" />
+  <circle cx="139" cy="111" r="4" fill="#a7afbd" />
+  <path d="M84 161h72" stroke="#3a4353" stroke-width="3" stroke-linecap="round" />
+  <path d="M95 174h50" stroke="#313949" stroke-width="3" stroke-linecap="round" />
+</svg>
