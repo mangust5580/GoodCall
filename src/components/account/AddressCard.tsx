@@ -19,11 +19,19 @@ export function AddressCard({
 }: AddressCardProps) {
   return (
     <article className="address-card">
-      <p className="address-card__line">{addressLine}</p>
-      <p className="address-card__locality">{localityLine}</p>
-      <div className="address-card__contact">
-        <p className="address-card__recipient">{recipientName}</p>
-        <p className="address-card__phone">{phone}</p>
+      <div className="address-card__group">
+        <Icon className="address-card__icon" name="map-pin" />
+        <div className="address-card__content">
+          <p className="address-card__line">{addressLine}</p>
+          <p className="address-card__locality">{localityLine}</p>
+        </div>
+      </div>
+      <div className="address-card__group address-card__group--contact">
+        <Icon className="address-card__icon" name="person" />
+        <div className="address-card__content">
+          <p className="address-card__recipient">{recipientName}</p>
+          <p className="address-card__phone">{phone}</p>
+        </div>
       </div>
       <button
         aria-label={editLabel}

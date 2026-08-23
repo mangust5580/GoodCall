@@ -288,11 +288,36 @@
 .address-card {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 14px;
   min-width: 0;
   padding: var(--account-card-padding);
 
   @include account-surface;
+
+  &__group {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    min-width: 0;
+
+    &--contact {
+      padding-top: var(--account-card-gap);
+      border-top: 1px solid var(--role-border-soft);
+    }
+  }
+
+  &__icon {
+    margin-top: 1px;
+    color: var(--role-text-link);
+  }
+
+  &__content {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+  }
 
   &__line {
     margin: 0;
@@ -310,15 +335,6 @@
     overflow-wrap: anywhere;
   }
 
-  &__contact {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    margin-top: 10px;
-    padding-top: var(--account-card-gap);
-    border-top: 1px solid var(--role-border-soft);
-  }
-
   &__recipient {
     margin: 0;
     font-size: 15px;
@@ -334,8 +350,8 @@
     overflow-wrap: anywhere;
   }
 
-  &__contact + .account-action {
-    margin-block-start: 12px;
+  &__group + .account-action {
+    margin-block-start: 4px;
     margin-inline-start: auto;
   }
 }

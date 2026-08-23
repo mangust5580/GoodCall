@@ -303,10 +303,12 @@ was not used for menu rows; an account-owned row style covers both.
 **Order status.** The existing success `Chip` is reused for the delivered state.
 The raster paints that status as bare green text, but status presentation is
 already normalized onto Chip by the closed section-04 work. The shared success
-Chip keeps `--role-state-success-soft` as its background and now uses the
-accepted `--role-text-secondary` foreground, bringing the status contrast to
-roughly 9.78:1 without adding or changing any Foundations token. No
-account-owned status element was created and the Chip API was not extended.
+Chip keeps `--role-state-success-soft` as its background and now uses a
+Components-owned green-forward `color-mix()` treatment derived from
+`--role-state-success` and `--role-text-primary`, plus an inset success ring.
+This restores clear positive semantics while keeping measured AA text contrast
+at roughly 5.45:1 and adding or changing no Foundations token. No account-owned
+status element was created and the Chip API was not extended.
 
 **Order actions.** The raster shows the details affordance twice - as a bare
 chevron at the right edge of the product row and as a small bordered square
@@ -319,6 +321,9 @@ neither are invalid at the TypeScript API boundary, so navigation and action
 semantics are never swapped. Both controls are account-owned `.account-action`
 treatments; the product-owned `product-action` primitive was not borrowed and no
 generic IconButton was created.
+Editable order quantity, reactive item totals and removing a single order item
+remain deferred because they belong to a future editable cart/order-line
+workflow rather than the current account order-history presentation row.
 
 These are presentation components. They take labels, formatted strings, icon
 names, image source/alt, hrefs, callbacks and checked booleans. There is no
@@ -333,6 +338,10 @@ switch-right order is achieved by account-owned layout around `.ui-toggle`, not
 by a Toggle API change. Its outline action is an account-owned rounded-rect
 `<button>` rather than the pill-shaped `Button`, because the raster action is a
 full-width row control, not a pill. There is no persistence and no async state.
+
+`AddressCard` reuses the existing `map-pin` and `person` icons as decorative
+leading scan aids for the address and recipient/contact groups. Its public API,
+plain readable text order and edit button semantics are unchanged.
 
 Account Components add a small Components-owned geometry group -
 `--account-card-radius`, `--account-card-padding`, `--account-card-gap`,
@@ -486,8 +495,9 @@ grouping of raster sections 02 and 03.
 
 The shared success Chip accessibility correction keeps Components A and B
 closed after focused regression. Success Chips keep the same success-soft
-surface and geometry while using the accepted secondary text role for AA text
-contrast. Foundations remains closed and unchanged.
+surface and geometry while using an accessible green-forward Components-owned
+treatment with measured AA text contrast. Foundations remains closed and
+unchanged.
 
 **Components D - Account Components awaits user visual PASS.** Section 06
 Account Components is implemented on the reference surface at
