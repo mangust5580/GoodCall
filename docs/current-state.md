@@ -11,16 +11,22 @@ Operational handoff. This is not a history log.
 
 ## Current milestone
 
-**Components — open.** Closed slice: **Components A — Core Controls & Forms**,
-covering raster sections 02 Buttons & Controls and 03 Inputs & Forms.
+**Components — open.** Closed slices: **Components A — Core Controls & Forms**,
+covering raster sections 02 Buttons & Controls and 03 Inputs & Forms, and
+**Components B — Product Components**, covering raster section 04.
 
 Components A received user visual PASS on 2026-08-23 and is closed.
 
-**Components B — Product Components is implemented**, covering raster section 04.
-It is not closed: it awaits user visual PASS. The prepared product assets are
-consumed, the existing Chip, QuantityStepper and Icon primitives are reused, and
-no product domain model, cart store or wishlist store was introduced. Raster
-sections 01 and 05-08 are not implemented.
+Components B received user visual PASS on 2026-08-23 and is closed. The
+prepared product assets are consumed, the existing Chip, QuantityStepper and Icon
+primitives are reused, and no product domain model, cart store or wishlist store
+was introduced. Raster sections 01 and 06-08 are not implemented.
+
+The current next slice is **Components C — Content & Marketing**, covering
+raster section 05. Section 05 asset preparation is complete: the existing
+`product-phone.svg` remains the reusable phone/category artwork, and the missing
+headset icon, sale-bags promo illustration and generic technology brand mark are
+prepared. Content & Marketing implementation has not started.
 
 The current Components A visual-polish correction is applied: active Tabs no
 longer change on hover, enabled field surfaces share a coherent hover state, and
@@ -38,7 +44,7 @@ already-installed Radix Slider primitive and supports direct lower/upper numeric
 entry, drag, keyboard and click/tap track interaction while remaining a generic
 container-driven numeric range primitive. Catalog URL state, backend commits and
 filter/search architecture remain deferred feature-level work. Components A
-remains closed after focused RangeSlider regression validation.
+remains closed after the user-accepted RangeSlider regression validation.
 
 **Foundations — complete.**
 
@@ -96,6 +102,7 @@ Independent audits themselves remain optional. See the AUDIT.md section of
 - Reusable product presentation components: `src/components/product/`, with their
   styles in `product-components.scss`.
 - Product illustration assets for section 04: `src/assets/products/`.
+- Content and marketing assets for section 05: `src/assets/marketing/`.
 - Components A and B reference surface: `src/app/ComponentsReference.tsx`.
 
 There is no router, no data layer, and no feature architecture. The reference
@@ -112,8 +119,8 @@ properties: one control height, three radii, one border and focus treatment, one
 padding and one icon size. It is owned by Components, not Foundations, and is
 deliberately not a general spacing, radius or type scale.
 
-Icons are the eight prepared SVGs in `src/assets/icons/`, applied as CSS masks so
-they inherit `currentColor`. The SVG paths are never duplicated into TypeScript.
+Icons are the prepared SVGs in `src/assets/icons/`, applied as CSS masks so they
+inherit `currentColor`. The SVG paths are never duplicated into TypeScript.
 
 SelectField uses Radix Select and DateField uses Radix Popover with DayPicker
 from `@daypicker/react`. Their popup surfaces share Components-owned background,
@@ -199,6 +206,24 @@ radius scale and does not reopen Foundations.
 
 Section-04 specimen widths belong to the reference composition, not to the
 components. The reusable components take the width their consumer gives them.
+
+### Components C
+
+Content & Marketing implementation has not started. Section 05 asset preparation
+is complete for the next bounded slice.
+
+The existing `src/assets/products/product-phone.svg` is the reusable phone and
+category artwork for section-05 phone imagery. No duplicate phone illustration
+was created.
+
+`src/assets/icons/headset.svg` is registered in the generic Icon system for the
+support/info card role.
+
+`src/assets/marketing/promo-sale-bags.svg` provides reusable shopping-bag sale
+artwork for the category or seasonal promo banner.
+
+`src/assets/marketing/brand-tech.svg` provides a generic technology brand mark
+for the brand card. It is not copied from Apple or any retailer identity.
 
 ### Colour tokens
 
@@ -301,17 +326,21 @@ functional suppression directives.
 
 ## Current visual status
 
-**Components B — awaiting user visual PASS.** Section 04 Product Components is
-implemented on the reference surface at `?reference=components`, composing the
-real reusable product components. Two system-first normalizations were applied
-against the raster: one rating presentation is used everywhere, so the price
-block drops the raster's `Рейтинг` prefix and star-after-value ordering; and
-availability is expressed as the success Chip inline in cards, with the
-product-owned `ProductAvailability` row used only where section 04 shows the
-fuller bordered status row.
+**Components B — visually accepted by the user on 2026-08-23 and closed.**
+Section 04 Product Components is implemented on the reference surface at
+`?reference=components`, composing the real reusable product components. Two
+system-first normalizations were applied against the raster: one rating
+presentation is used everywhere, so the price block drops the raster's `Рейтинг`
+prefix and star-after-value ordering; and availability is expressed as the
+success Chip inline in cards, with the product-owned `ProductAvailability` row
+used only where section 04 shows the fuller bordered status row.
+
+**Components C — Content & Marketing has not started implementation.** Section
+05 asset preparation is complete and ready for the next bounded implementation
+task.
 
 **Components A — visually accepted by the user on 2026-08-23 and remains closed
-after focused RangeSlider regression validation.** The reference surface at
+after user-accepted RangeSlider post-PASS hardening.** The reference surface at
 `?reference=components` composes the real reusable controls and mirrors the
 grouping of raster sections 02 and 03.
 
@@ -402,11 +431,10 @@ None.
 
 ## Next approved step
 
-**Components B visual review.** Return the reference screenshots and the current
-`AUDIT.md` for ChatGPT/user visual review of section 04 and a PASS decision. The
-next step is review, not another implementation slice.
+**Components C implementation.** Request the bounded Claude Code implementation
+prompt for Components C — Content & Marketing.
 
-Components stays open. Sections 01 and 05-08 each need their own bounded slice.
+Components stays open. Sections 01 and 06-08 each need their own bounded slice.
 
 ## Normative repository docs
 
