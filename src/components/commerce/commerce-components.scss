@@ -96,10 +96,12 @@
     min-width: 0;
     padding: 12px 0;
 
-    @include commerce-divider;
+    &--separated {
+      @include commerce-divider;
 
-    &:first-of-type {
-      border-top: 0;
+      &:first-of-type {
+        border-top: 0;
+      }
     }
 
     .ui-choice {

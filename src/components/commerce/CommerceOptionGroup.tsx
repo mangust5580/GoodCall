@@ -35,6 +35,12 @@ export function CommerceOptionGroup({
 }: CommerceOptionGroupProps) {
   const generatedName = useId();
   const groupName = name ?? generatedName;
+  const separated = options.some(
+    (option) => option.trailing !== undefined || option.meta !== undefined,
+  );
+  const rowClasses = separated
+    ? 'commerce-option-group__row commerce-option-group__row--separated'
+    : 'commerce-option-group__row';
 
   const action = (() => {
     if (actionLabel === undefined) {
@@ -66,7 +72,7 @@ export function CommerceOptionGroup({
         {label}
       </legend>
       {options.map((option) => (
-        <div className="commerce-option-group__row" key={option.id}>
+        <div className={rowClasses} key={option.id}>
           <Radio
             checked={option.id === selectedId}
             disabled={option.disabled}
