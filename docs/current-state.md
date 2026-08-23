@@ -22,11 +22,13 @@ prepared product assets are consumed, the existing Chip, QuantityStepper and Ico
 primitives are reused, and no product domain model, cart store or wishlist store
 was introduced. Raster sections 01 and 06-08 are not implemented.
 
-The current next slice is **Components C — Content & Marketing**, covering
-raster section 05. Section 05 asset preparation is complete: the existing
-`product-phone.svg` remains the reusable phone/category artwork, and the missing
-headset icon, sale-bags promo illustration and generic technology brand mark are
-prepared. Content & Marketing implementation has not started.
+**Components C — Content & Marketing is implemented**, covering raster
+section 05. It is not closed: it awaits user visual PASS. All four prepared
+section-05 assets are consumed — the reused `product-phone.svg`, the headset
+icon through the existing Icon system, the sale-bags promo illustration and the
+generic technology brand mark. No CMS layer, marketing data model or
+newsletter backend was introduced. Raster sections 01 and 06-08 are not
+implemented.
 
 The current Components A visual-polish correction is applied: active Tabs no
 longer change on hover, enabled field surfaces share a coherent hover state, and
@@ -102,8 +104,10 @@ Independent audits themselves remain optional. See the AUDIT.md section of
 - Reusable product presentation components: `src/components/product/`, with their
   styles in `product-components.scss`.
 - Product illustration assets for section 04: `src/assets/products/`.
+- Reusable content and marketing components: `src/components/content/`, with
+  their styles in `content-components.scss`.
 - Content and marketing assets for section 05: `src/assets/marketing/`.
-- Components A and B reference surface: `src/app/ComponentsReference.tsx`.
+- Components A, B and C reference surface: `src/app/ComponentsReference.tsx`.
 
 There is no router, no data layer, and no feature architecture. The reference
 surfaces are development comparison pages, not product UI.
@@ -209,21 +213,57 @@ components. The reusable components take the width their consumer gives them.
 
 ### Components C
 
-Content & Marketing implementation has not started. Section 05 asset preparation
-is complete for the next bounded slice.
+`src/components/content/` provides PromoBanner, CategoryCard, BrandCard,
+SupportCard and NewsletterCard, exported through `index.ts`. Section 05 of the
+raster is reachable at `?reference=components`.
 
-The existing `src/assets/products/product-phone.svg` is the reusable phone and
-category artwork for section-05 phone imagery. No duplicate phone illustration
-was created.
+**Banner normalization.** The raster's two banner specimens — промо and
+категория — are structurally identical: title, supporting line, CTA and
+subordinate artwork on a purple gradient surface. They are therefore served by
+one `PromoBanner` with no tone or style variant. Both surfaces use the accepted
+`--gradient-cta`; the raster's two slightly different purple mixes were
+normalized into that one accepted gradient rather than encoded as one-off
+colours. That gradient is also the only accepted brand gradient whose stops keep
+white body text at or above 4.5:1 contrast, so the normalization is an
+accessibility decision as much as a system one.
 
-`src/assets/icons/headset.svg` is registered in the generic Icon system for the
-support/info card role.
+These are presentation components. They take copy strings, image sources and
+callbacks. There is no CMS entity, campaign model, category or brand registry,
+analytics payload or content DTO, and no application-wide `Content` type.
 
-`src/assets/marketing/promo-sale-bags.svg` provides reusable shopping-bag sale
-artwork for the category or seasonal promo banner.
+`PromoBanner` renders its CTA as an anchor when given `href` and as the existing
+Button when given `onAction`, so navigation and action semantics are never
+swapped. `CategoryCard` and `BrandCard` become a single whole-card anchor when
+given `href` and stay non-interactive otherwise; neither ever nests interactive
+controls. `SupportCard` takes an `IconName` and renders it through the existing
+Icon system as decorative artwork beside visible text.
 
-`src/assets/marketing/brand-tech.svg` provides a generic technology brand mark
-for the brand card. It is not copied from Apple or any retailer identity.
+`NewsletterCard` is a real `<form>` with a native `type="email"` `required`
+input, a programmatic visually hidden label and a real submit button. It owns
+presentation and local form semantics only: value and submit are controlled by
+the consumer through `value` / `onValueChange` / `onSubmit`. There is no
+request, no persistence, no subscription service, no validation library and no
+async loading architecture. Native browser validation gates submission. The
+reference surface holds the only state — an email string and an `aria-live`
+confirmation message.
+
+Content Components add four Components-owned geometry properties —
+`--content-card-radius`, `--content-card-padding`, `--content-banner-radius` and
+`--content-banner-padding`. Everything else reuses accepted Foundations colour
+roles and the existing `--control-*` geometry, `.ui-input`, `.ui-button`,
+`.ui-visually-hidden` and the `control-focus` mixin. No new spacing, radius or
+type scale was introduced and Foundations was not reopened.
+
+Section-05 specimen widths belong to the reference composition. The reusable
+components are container-driven and carry no reference max-width. Layout is
+intrinsic flex wrapping; no media query and no named breakpoint were added.
+
+Assets consumed: the reused `src/assets/products/product-phone.svg` for the
+promo banner and the category card, `src/assets/marketing/promo-sale-bags.svg`
+for the seasonal banner, `src/assets/marketing/brand-tech.svg` for the brand
+card, and the `headset` icon through the existing Icon system. The brand card
+uses the generic mark with a generic `GoodTech` label; no trademark was
+substituted.
 
 ### Colour tokens
 
@@ -300,7 +340,7 @@ The base page no longer hosts the Foundations surface. A query-string check in
 
 - base URL — temporary reference index, linking to the two surfaces below
 - `?reference=foundations` — the Foundations colour reference
-- `?reference=components` — the Components A and B reference surface
+- `?reference=components` — the Components A, B and C reference surface
 
 Links are built from `import.meta.env.BASE_URL`, so they resolve under the
 GitHub Pages base without hardcoding the repository name, and no SPA fallback is
@@ -335,9 +375,14 @@ prefix and star-after-value ordering; and availability is expressed as the
 success Chip inline in cards, with the product-owned `ProductAvailability` row
 used only where section 04 shows the fuller bordered status row.
 
-**Components C — Content & Marketing has not started implementation.** Section
-05 asset preparation is complete and ready for the next bounded implementation
-task.
+**Components C — awaiting user visual PASS.** Section 05 Content & Marketing is
+implemented on the reference surface at `?reference=components`, composing the
+real reusable content components. The system-first normalization applied against
+the raster is the banner family: both banner specimens share one `PromoBanner`
+on the single accepted `--gradient-cta` surface, rather than two components or
+two one-off purple mixes. Measured contrast of white banner text over that
+gradient is 4.99 falling to 4.73 across the title and 4.91 across the supporting
+line, so the surface carries small body text at AA.
 
 **Components A — visually accepted by the user on 2026-08-23 and remains closed
 after user-accepted RangeSlider post-PASS hardening.** The reference surface at
@@ -431,8 +476,9 @@ None.
 
 ## Next approved step
 
-**Components C implementation.** Request the bounded Claude Code implementation
-prompt for Components C — Content & Marketing.
+**Components C visual review.** Return the section-05 screenshots and the
+current `AUDIT.md` for user visual PASS review. The next step is review, not
+another implementation slice.
 
 Components stays open. Sections 01 and 06-08 each need their own bounded slice.
 

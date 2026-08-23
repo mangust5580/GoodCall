@@ -196,3 +196,29 @@
     min-width: 160px;
   }
 }
+
+.cmp-content-group {
+  flex: 0 1 320px;
+  min-width: 0;
+
+  &--banner {
+    flex: 1 1 330px;
+    max-width: 400px;
+  }
+
+  &--category {
+    flex: 0 1 210px;
+  }
+
+  &--brand {
+    flex: 0 1 170px;
+  }
+
+  &--support {
+    flex: 0 1 200px;
+  }
+
+  &--newsletter {
+    flex: 0 1 330px;
+  }
+}

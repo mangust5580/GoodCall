@@ -1,9 +1,18 @@
 import { useState } from 'react';
 import type { ReactNode } from 'react';
 
+import brandTech from '../assets/marketing/brand-tech.svg';
+import promoSaleBags from '../assets/marketing/promo-sale-bags.svg';
 import productEarbuds from '../assets/products/product-earbuds.svg';
 import productLaptop from '../assets/products/product-laptop.svg';
 import productPhone from '../assets/products/product-phone.svg';
+import {
+  BrandCard,
+  CategoryCard,
+  NewsletterCard,
+  PromoBanner,
+  SupportCard,
+} from '../components/content';
 import { MiniProductCard, PriceBlock, ProductCard } from '../components/product';
 import {
   Button,
@@ -69,6 +78,8 @@ const EARBUDS = {
   title: 'Наушники Apple AirPods Pro 2',
   imageAlt: 'Беспроводные наушники Apple AirPods Pro 2 в открытом зарядном футляре',
 };
+
+const REFERENCE_HREF = `${import.meta.env.BASE_URL}?reference=components`;
 
 const priceFormatter = new Intl.NumberFormat('ru-RU');
 
@@ -138,6 +149,8 @@ export function ComponentsReference() {
   const [favorites, setFavorites] = useState<readonly string[]>([]);
   const [laptopQuantity, setLaptopQuantity] = useState(1);
   const [cartMessage, setCartMessage] = useState('');
+  const [newsletterEmail, setNewsletterEmail] = useState('');
+  const [newsletterMessage, setNewsletterMessage] = useState('');
   const visibleBrands = brandsExpanded
     ? BRAND_FILTERS
     : BRAND_FILTERS.slice(0, BRAND_FILTERS_INITIAL_COUNT);
@@ -163,7 +176,7 @@ export function ComponentsReference() {
       <header className="cmp-reference__head">
         <span className="cmp-reference__brand">GOODCALL</span>
         <span className="cmp-reference__caption">
-          Components A &amp; B — Controls, Forms and Product Components
+          Components A, B &amp; C — Controls, Forms, Product and Content Components
         </span>
       </header>
 
@@ -427,6 +440,77 @@ export function ComponentsReference() {
         <p aria-live="polite" className="ui-visually-hidden">
           {cartMessage}
         </p>
+      </Section>
+
+      <Section index="05" title="Content &amp; Marketing">
+        <Group className="cmp-content-group cmp-content-group--banner" title="Баннер (промо)">
+          <PromoBanner
+            actionLabel="Подробнее"
+            description="До 20 мая"
+            href={REFERENCE_HREF}
+            imageAlt=""
+            imageSrc={productPhone}
+            title="Скидки до 40% на смартфоны"
+          />
+        </Group>
+
+        <Group className="cmp-content-group cmp-content-group--banner" title="Баннер (категория)">
+          <PromoBanner
+            actionLabel="Подробнее"
+            description="До -50% на технику"
+            href={REFERENCE_HREF}
+            imageAlt=""
+            imageSrc={promoSaleBags}
+            title="Весенние скидки в GOODCALL"
+          />
+        </Group>
+
+        <Group className="cmp-content-group cmp-content-group--category" title="Категория">
+          <CategoryCard
+            href={REFERENCE_HREF}
+            imageAlt=""
+            imageSrc={productPhone}
+            meta="12 530 товаров"
+            title="Смартфоны"
+          />
+        </Group>
+
+        <Group className="cmp-content-group cmp-content-group--brand" title="Бренд">
+          <BrandCard href={REFERENCE_HREF} logoSrc={brandTech} meta="301 товар" name="GoodTech" />
+        </Group>
+
+        <Group className="cmp-content-group cmp-content-group--support" title="Инфо-карточка">
+          <SupportCard
+            description="Мы всегда на связи и готовы помочь"
+            icon="headset"
+            title="Поддержка 24/7"
+          />
+        </Group>
+
+        <Group
+          className="cmp-content-group cmp-content-group--newsletter"
+          title="Подписка на новости"
+        >
+          <NewsletterCard
+            actionLabel="Подписаться"
+            description="Получайте эксклюзивные предложения, новости и акции"
+            emailLabel="Электронная почта для подписки"
+            onSubmit={(email) => {
+              setNewsletterMessage(`Подписка оформлена: ${email}`);
+            }}
+            onValueChange={(email) => {
+              setNewsletterEmail(email);
+              setNewsletterMessage('');
+            }}
+            placeholder="Ваш e-mail"
+            policyHref={REFERENCE_HREF}
+            policyLabel="Политика конфиденциальности"
+            value={newsletterEmail}
+          />
+          <p aria-live="polite" className="ui-visually-hidden">
+            {newsletterMessage}
+          </p>
+        </Group>
       </Section>
 
       <a className="cmp-reference__back" href={import.meta.env.BASE_URL}>
