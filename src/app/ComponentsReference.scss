@@ -282,3 +282,27 @@
     max-width: 340px;
   }
 }
+
+.cmp-feedback-group {
+  flex: 1 1 260px;
+  min-width: 0;
+
+  &--faq {
+    flex-basis: 360px;
+    max-width: 400px;
+  }
+
+  &--empty {
+    flex-basis: 300px;
+    max-width: 340px;
+  }
+
+  &--success {
+    flex-basis: 350px;
+    max-width: 380px;
+  }
+
+  &--dialog {
+    flex: 0 1 220px;
+  }
+}

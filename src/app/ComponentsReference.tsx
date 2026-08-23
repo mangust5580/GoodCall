@@ -17,6 +17,15 @@ import {
 } from '../components/account';
 import type { AccountNavigationItem, AccountStatsMetric } from '../components/account';
 import {
+  ConfirmationDialog,
+  EmptyState,
+  FAQAccordion,
+  InfoDialog,
+  ProductActionDialog,
+  SuccessFeedback,
+} from '../components/feedback';
+import type { FAQItem } from '../components/feedback';
+import {
   CommerceCartSummary,
   CommerceLocationCard,
   CommerceOptionGroup,
@@ -134,6 +143,19 @@ const SAVED_PAYMENTS: readonly SavedPaymentEntry[] = [
   { id: 'mir-5566', brandSrc: paymentMir, brandAlt: 'МИР', cardLabel: '•••• 5566' },
 ];
 
+const FAQ_ITEMS: readonly FAQItem[] = [
+  {
+    id: 'checkout',
+    question: 'Как оформить заказ?',
+    answer: 'Выберите товары, добавьте их в корзину и оформите заказ удобным способом.',
+  },
+  {
+    id: 'payment',
+    question: 'Как оплатить заказ?',
+    answer: 'Оплатить можно картой, через СБП, при получении или в рассрочку.',
+  },
+];
+
 const priceFormatter = new Intl.NumberFormat('ru-RU');
 
 const formatPrice = (value: number): string => `${priceFormatter.format(value)} ₽`;
@@ -211,9 +233,22 @@ export function ComponentsReference() {
   const [deliveryOption, setDeliveryOption] = useState('courier');
   const [paymentOption, setPaymentOption] = useState('card');
   const [commerceMessage, setCommerceMessage] = useState('');
+  const [openFaqIds, setOpenFaqIds] = useState<readonly string[]>(['checkout']);
+  const [openDialog, setOpenDialog] = useState<'info' | 'confirm' | 'product' | null>(null);
+  const [feedbackMessage, setFeedbackMessage] = useState('');
   const visibleBrands = brandsExpanded
     ? BRAND_FILTERS
     : BRAND_FILTERS.slice(0, BRAND_FILTERS_INITIAL_COUNT);
+
+  const toggleFaq = (id: string, open: boolean) => {
+    setOpenFaqIds((current) => (open ? [...current, id] : current.filter((faqId) => faqId !== id)));
+  };
+
+  const closeDialog = (open: boolean) => {
+    if (!open) {
+      setOpenDialog(null);
+    }
+  };
 
   const toggleBrand = (id: string, checked: boolean) => {
     setBrands((current) =>
@@ -236,8 +271,8 @@ export function ComponentsReference() {
       <header className="cmp-reference__head">
         <span className="cmp-reference__brand">GOODCALL</span>
         <span className="cmp-reference__caption">
-          Components A, B, C, D &amp; E — Controls, Forms, Product, Content, Account and Commerce
-          Components
+          Components A, B, C, D, E &amp; F — Controls, Forms, Product, Content, Account, Commerce
+          and Utility Components
         </span>
       </header>
 
@@ -718,6 +753,110 @@ export function ComponentsReference() {
 
         <p aria-live="polite" className="ui-visually-hidden">
           {commerceMessage}
+        </p>
+      </Section>
+
+      <Section index="08" title="Utility &amp; Feedback">
+        <Group className="cmp-feedback-group cmp-feedback-group--faq" title="FAQ (аккордеон)">
+          <FAQAccordion items={FAQ_ITEMS} onOpenChange={toggleFaq} openIds={openFaqIds} />
+        </Group>
+
+        <Group className="cmp-feedback-group cmp-feedback-group--empty" title="Пустое состояние">
+          <EmptyState
+            action={{ label: 'Перейти в каталог', href: REFERENCE_HREF }}
+            message="Добавьте товары, чтобы оформить заказ."
+            title="Корзина пуста"
+          />
+        </Group>
+
+        <Group className="cmp-feedback-group cmp-feedback-group--success" title="Успех">
+          <SuccessFeedback
+            action={{ label: 'Перейти к заказам', href: REFERENCE_HREF }}
+            message="Ваш заказ №ИСС-2024-05124 принят в обработку."
+            title="Заказ оформлен"
+          />
+        </Group>
+
+        <Group
+          className="cmp-feedback-group cmp-feedback-group--dialog"
+          title="Информационное модальное окно"
+        >
+          <Button
+            onClick={() => {
+              setOpenDialog('info');
+            }}
+            variant="secondary"
+          >
+            Показать окно
+          </Button>
+          <InfoDialog
+            actionLabel="Понятно"
+            message="Проверьте правильность данных перед подтверждением."
+            onAcknowledge={() => {
+              setFeedbackMessage('Информационное окно закрыто');
+            }}
+            onOpenChange={closeDialog}
+            open={openDialog === 'info'}
+            title="Важно знать!"
+          />
+        </Group>
+
+        <Group
+          className="cmp-feedback-group cmp-feedback-group--dialog"
+          title="Подтверждение действия"
+        >
+          <Button
+            onClick={() => {
+              setOpenDialog('confirm');
+            }}
+            variant="secondary"
+          >
+            Показать окно
+          </Button>
+          <ConfirmationDialog
+            cancelLabel="Отмена"
+            confirmLabel="Удалить"
+            message="Этот товар будет удалён из вашей корзины."
+            onConfirm={() => {
+              setFeedbackMessage('Товар удалён из корзины');
+            }}
+            onOpenChange={closeDialog}
+            open={openDialog === 'confirm'}
+            title="Удалить товар из корзины?"
+          />
+        </Group>
+
+        <Group
+          className="cmp-feedback-group cmp-feedback-group--dialog"
+          title="Модальное окно (товар)"
+        >
+          <Button
+            onClick={() => {
+              setOpenDialog('product');
+            }}
+            variant="secondary"
+          >
+            Показать окно
+          </Button>
+          <ProductActionDialog
+            action={{
+              label: 'В корзину',
+              onClick: () => {
+                setFeedbackMessage('Товар добавлен в корзину');
+                setOpenDialog(null);
+              },
+            }}
+            imageAlt={EARBUDS.imageAlt}
+            imageSrc={productEarbuds}
+            onOpenChange={closeDialog}
+            open={openDialog === 'product'}
+            price={formatPrice(34490)}
+            title="Apple AirPods Pro 2 (USB-C)"
+          />
+        </Group>
+
+        <p aria-live="polite" className="ui-visually-hidden">
+          {feedbackMessage}
         </p>
       </Section>
 

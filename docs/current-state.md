@@ -38,11 +38,15 @@ is closed.
 Components E — Commerce Blocks received user visual PASS on 2026-08-24 and is
 closed.
 
-Components A, B, C, D and E are closed. Overall Components remains open.
-Components F / raster section 08 planning and asset inventory are complete, but
-implementation has not started and there is no visual status. Section 01 Header
-& Navigation remains deferred until future Global Shell work creates the real
-shell consumer.
+**Components F — Utility & Feedback, covering raster section 08, is implemented
+and awaits user visual PASS.** It is not closed.
+
+Components A, B, C, D and E are closed. Overall Components remains open. Every
+raster Components section except 01 is now implemented. Section 01 Header &
+Navigation remains deferred until future Global Shell work creates the real
+shell consumer. The known section-03 narrow reference-composition overflow is
+still an open correction that must be completed before the overall Components
+milestone can close, independently of the Components F visual review.
 
 The current Components A visual-polish correction is applied: active Tabs no
 longer change on hover, enabled field surfaces share a coherent hover state, and
@@ -124,9 +128,11 @@ Independent audits themselves remain optional. See the AUDIT.md section of
   their styles in `account-components.scss`.
 - Reusable commerce presentation components: `src/components/commerce/`, with
   their styles in `commerce-components.scss`.
+- Reusable utility and feedback components: `src/components/feedback/`, with
+  their styles in `feedback-components.scss`.
 - Commerce brand and store assets for section 07: `src/assets/commerce/`.
 - Content and marketing assets for section 05: `src/assets/marketing/`.
-- Components A, B, C, D and E reference surface:
+- Components A, B, C, D, E and F reference surface:
   `src/app/ComponentsReference.tsx`.
 
 There is no router, no data layer, and no feature architecture. The reference
@@ -465,87 +471,95 @@ VISA and Mastercard reference assets were removed. No new asset was added and no
 prepared asset geometry was changed. The previous Mastercard optical-size delta
 no longer applies because Mastercard is no longer part of the current reference.
 
-### Components F planning
+### Components F
 
-Components F / Utility & Feedback covers raster section 08. Planning and asset
-inventory are complete; implementation has not started, section 08 is not yet on
-`?reference=components`, there is no user visual review state and Components F
-is not closed.
+`src/components/feedback/` provides FAQAccordion, EmptyState, SuccessFeedback,
+InfoDialog, ConfirmationDialog and ProductActionDialog, exported through
+`index.ts`, with styles in `feedback-components.scss`. Section 08 of the raster
+is reachable at `?reference=components`. Components F awaits user visual PASS
+and is not closed.
 
-Section 08 contains six visible specimens: FAQ accordion, empty cart state,
-success feedback panel, informational modal, destructive confirmation and a
-product modal. The FAQ is passive informational utility with one expanded row
-and one collapsed row, chevrons and divider structure. The empty state is an
-empty/no-result surface with a cart glyph, title, message and catalog CTA. The
-success panel is status feedback with a check-in-circle treatment, title,
-message and orders CTA. The informational modal is a modal dialog with heading,
-message and acknowledgement action. The destructive confirmation is an alert
-dialog with heading, message, cancel action and destructive confirm action. The
-product modal is a product action dialog with image, title, price and cart CTA.
+Section 08 contains six visible presentation roles, each with exactly one owner:
+FAQ accordion, empty cart state, success feedback panel, informational modal,
+destructive confirmation and product action modal. No `UtilityCard`,
+`FeedbackCard`, `StateCard` or schema-driven feedback renderer exists.
 
-Reuse classification: FAQ needs a new Utility & Feedback owner using native
-disclosure semantics and existing chevron icons; empty state, success feedback,
-informational modal, destructive confirmation and product modal need new
-section-owned owners that compose existing Button, Icon, accepted product image
-assets and accepted control/floating-surface precedent. `Chip`, `ProductCard`,
-`MiniProductCard`, `PriceBlock`, `SupportCard`, `CommerceOptionGroup`, account
-owners and commerce owners do not own these roles; their visual patterns may
-inform styling only where semantics match.
+**FAQ semantics.** `FAQAccordion` uses native `<details>` / `<summary>`
+disclosure, so expanded state, keyboard interaction and assistive-technology
+exposure come from the platform. Open state is controlled by the consumer
+through `openIds` plus `onOpenChange`, and the `onToggle` handler only calls
+back when the DOM state actually diverges from the prop, so a controlled
+consumer cannot loop. Multiple rows may be open at once — the raster does not
+evidence single-open exclusivity. The existing `chevron-down` icon rotates 180
+degrees when open, and the open state is additionally carried by the visible
+answer text rather than colour alone.
 
-Proposed future owner is one bounded `src/components/feedback/` family with
-`feedback-components.scss`; public names remain provisional until
-implementation. Do not create broad UtilityCard, FeedbackCard or StateCard
-mega-components. A small section-owned geometry group is justified for repeated
-panel/dialog surfaces and row gaps only; reference widths remain reference-owned
-and Foundations stays closed.
+**Empty state and success feedback stay separate.** `EmptyState` is an
+empty/no-result surface with the decorative `cart` glyph; `SuccessFeedback` is a
+status surface on the accepted `--role-state-success-soft` background with a
+CSS ring around the existing `check` icon. Only the success status is evidenced,
+so no warning/error/info variant family was created. `SuccessFeedback` is static
+and silent by default; an explicit `announce` prop adds `role="status"` for
+consumers that insert it dynamically, and the reference leaves it off.
 
-Assets/icons: section 08 can reuse existing `cart`, `check`, `chevron-down` and
-`chevron-right`/rotation-capable chevron treatment through the Icon system, plus
-the existing `src/assets/products/product-earbuds.svg` for the product modal.
-The check circle can be CSS around the existing check icon. No spinner,
-illustration, warning/info glyph, close icon, toast mark or new product asset is
-evidenced. Exact missing asset/icon count: 0.
+**Dialog semantics.** Three explicit owners use the already installed
+`radix-ui`: `InfoDialog` and `ProductActionDialog` use `Dialog`,
+`ConfirmationDialog` uses `AlertDialog`. All three are controlled through `open`
+and `onOpenChange` with no trigger baked into their API, so the consumer owns
+the launch control; the reference renders ordinary Buttons beside each specimen.
+There is no centralized dialog manager and no generic public Dialog component.
 
-Semantics and accessibility plan: FAQ should use native disclosure or equivalent
-accordion semantics with visible focus and colour-independent expanded state.
-Empty state remains document-flow content and exposes its CTA as an anchor or
-button according to consumer target. Success feedback should only use
-`role="status"` / polite live announcement when dynamically inserted or updated;
-static reference rendering does not need announcement. Informational and product
-modals should use dialog semantics, labelled headings, described body text,
-focus entry on open and focus return on close. Destructive confirmation should
-use alert-dialog semantics, keep cancel and destructive actions as real buttons,
-move focus into the dialog, return focus on close and communicate danger through
-text and button styling rather than colour alone. Icon-only controls need
-accessible names. Non-essential dialog/feedback motion must respect
-`prefers-reduced-motion`.
+Each dialog sets `aria-modal` explicitly. Radix relies on the `aria-hidden`
+package's `hideOthers`, which deliberately keeps every `[aria-live]` element and
+its ancestors visible; because the reference page holds live regions inside
+`#root`, the page behind an open dialog would otherwise stay exposed to
+assistive technology. `role="dialog"` does not imply modality on its own, so
+`aria-modal` is the required companion attribute rather than redundant ARIA, and
+it also makes the components robust for any consumer page that owns a live
+region.
 
-Reference-only local state is justified later for FAQ open/closed rows, empty
-CTA demo feedback, success CTA demo feedback, dialog open/close and destructive
-confirmation outcome messaging. Reusable components should remain presentation
-APIs with status/variant, title/message, icon, CTA href/callback, dismiss/close
-callbacks and controlled open/progress only where evidenced. No notification
-bus, event emitter, analytics, error reporting service, centralized modal
-manager, global loading manager, server error normalization, retry/backoff
-framework, async job/task model, persistence, router, global state, backend/API
-contract or product/cart architecture is introduced.
+Focus return is handled explicitly. Radix's own restoration left focus on
+`<body>` in this app, so each dialog captures the previously focused element in
+`onOpenAutoFocus` and restores it in `onCloseAutoFocus` through the small
+private `useReturnFocus` hook. Verified: focus enters the dialog on open and
+returns to the launch control on both the action-button and Escape close paths
+for all three dialogs.
 
-Overlay/floating work is evidenced by the informational, destructive and product
-modal specimens. The existing `radix-ui` dependency already exposes Dialog and
-AlertDialog, and current Select/Date work already establishes floating surface
-visual precedent, so no new overlay dependency is required. No tooltip, popover,
-toast, skeleton, spinner, progress bar or loading animation is evidenced.
-Motion, if any, should be CSS-only and minimal. No new dependency required.
+**Backdrop and motion.** The overlay is a transparent interaction-blocking layer
+only. The raster evidences no dimmed backdrop and Foundations has no accepted
+Overlay/Backdrop opacity token, so none was invented and Foundations was not
+reopened. Dialog surfaces reuse the accepted floating-surface precedent
+(`--control-floating-shadow`, `--control-floating-z-index`). No entrance or exit
+animation was added, so there is no reduced-motion concern.
 
-Responsive plan: every section-08 component should be container-driven with
-reference-owned specimen widths. FAQ questions and answers must wrap without
-forcing a minimum width. Empty and success panels must stack icon, copy and CTA
-cleanly at narrow widths. Dialog button rows must wrap or stack at 320px, with
-the destructive pair keeping both buttons reachable. The product modal must let
-image, product text, price and CTA wrap without absolute positioning. Future
-implementation verification widths are 1440px, 768px, 375px and 320px. Do not
-introduce named breakpoints, and do not mix this work with the deferred
-section-03 overflow correction.
+These are presentation components. They take labels, formatted strings, image
+source/alt and callbacks. `EmptyState`, `SuccessFeedback` and
+`ProductActionDialog` share one `FeedbackAction` discriminated union whose
+`never` members make it impossible to pass both `href` and `onClick`, so an
+action target is always exactly one of navigation or callback. There is no
+notification bus, event emitter, modal manager, global loading manager,
+retry/error framework, router, global state, backend contract, persistence or
+product/cart architecture.
+
+Feedback Components add a small Components-owned geometry group —
+`--feedback-surface-radius`, `--feedback-surface-padding`,
+`--feedback-surface-gap`, `--feedback-dialog-max-width` and
+`--feedback-dialog-inset` — plus three private mixins for the shared surface,
+panel title and panel message. Everything else reuses accepted Foundations
+colour roles, the existing `--control-*` geometry and the `control-focus` mixin.
+No global card, spacing, radius, type or elevation scale was introduced.
+
+Dialog width is `calc(100vw - 32px)` capped at 400px with
+`max-height: calc(100dvh - 32px)` and `overflow-y: auto`, so no dialog has a
+fixed height and none clips at 320px. Section-08 specimen widths belong to the
+reference composition; the reusable components carry no reference max-width. No
+media query and no named breakpoint was added. Section 08 shows no horizontal
+overflow at 1440px, 768px, 375px or 320px.
+
+Assets consumed: the existing `cart`, `check` and `chevron-down` icons through
+the Icon system, and the existing `src/assets/products/product-earbuds.svg` in
+the reference product specimen only. New asset count: 0. No new `IconName` was
+registered and no dependency was added.
 
 ### Colour tokens
 
@@ -622,7 +636,8 @@ The base page no longer hosts the Foundations surface. A query-string check in
 
 - base URL — temporary reference index, linking to the two surfaces below
 - `?reference=foundations` — the Foundations colour reference
-- `?reference=components` — the Components A, B, C, D and E reference surface
+- `?reference=components` — the Components A, B, C, D, E and F reference
+  surface
 
 Links are built from `import.meta.env.BASE_URL`, so they resolve under the
 GitHub Pages base without hardcoding the repository name, and no SPA fallback is
@@ -797,13 +812,11 @@ None.
 
 ## Next approved step
 
-**Components F — Utility & Feedback, raster section 08 implementation.**
-
-Implement the planned section-08 Utility & Feedback family on
-`?reference=components` using the existing assets and dependency stack. Missing
-asset/icon count is 0, so no asset-preparation task is required first.
-Components F implementation must remain bounded to section 08 and preserve the
-documented state, accessibility, responsive and architecture boundaries.
+**User visual review of Components F — Utility & Feedback, raster section 08.**
+Components F is implemented and technically ready; it stays open until the user
+gives visual PASS. The three modal specimens are launched from Buttons on the
+reference surface, so the visual review needs the open-dialog screenshots as
+well as the section-08 composition.
 
 Components stays open. Section 01 Header & Navigation remains deferred to future
 Global Shell work rather than being treated as an isolated Components slice. The

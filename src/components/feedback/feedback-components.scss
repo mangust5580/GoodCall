@@ -1,0 +1,266 @@
+@use '../ui/controls';
+
+:root {
+  --feedback-surface-radius: 16px;
+  --feedback-surface-padding: 20px;
+  --feedback-surface-gap: 12px;
+  --feedback-dialog-max-width: 400px;
+  --feedback-dialog-inset: 16px;
+}
+
+@mixin feedback-surface {
+  background-color: var(--role-surface-card);
+  border: var(--control-border-width) solid var(--role-border-default);
+  border-radius: var(--feedback-surface-radius);
+}
+
+@mixin feedback-panel-title {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--role-text-primary);
+  overflow-wrap: anywhere;
+}
+
+@mixin feedback-panel-message {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--role-text-muted);
+  overflow-wrap: anywhere;
+}
+
+.faq-accordion {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 4px var(--feedback-surface-padding);
+
+  @include feedback-surface;
+
+  &__item {
+    min-width: 0;
+    padding: 4px 0;
+    border-top: 1px solid var(--role-border-soft);
+
+    &:first-child {
+      border-top: 0;
+    }
+
+    &[open] {
+      padding-bottom: 16px;
+    }
+  }
+
+  &__question {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    justify-content: space-between;
+    min-width: 0;
+    padding: 12px 0;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--role-text-link);
+    list-style: none;
+    cursor: pointer;
+
+    @include controls.control-focus;
+
+    &::-webkit-details-marker {
+      display: none;
+    }
+
+    &:hover {
+      color: var(--role-text-link-hover);
+    }
+  }
+
+  &__label {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  &__icon {
+    --control-icon-size: 18px;
+
+    details[open] & {
+      transform: rotate(180deg);
+    }
+  }
+
+  &__answer {
+    @include feedback-panel-message;
+  }
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  gap: var(--feedback-surface-gap);
+  align-items: center;
+  min-width: 0;
+  padding: var(--feedback-surface-padding);
+  text-align: center;
+
+  @include feedback-surface;
+
+  &__icon {
+    --control-icon-size: 40px;
+
+    color: var(--role-text-link);
+  }
+
+  &__title {
+    @include feedback-panel-title;
+  }
+
+  &__message {
+    @include feedback-panel-message;
+  }
+
+  &__action {
+    width: 100%;
+    margin-top: 4px;
+    text-decoration: none;
+  }
+}
+
+.success-feedback {
+  display: flex;
+  flex-direction: column;
+  gap: var(--feedback-surface-gap);
+  align-items: flex-start;
+  min-width: 0;
+  padding: var(--feedback-surface-padding);
+  background-color: var(--role-state-success-soft);
+  border: var(--control-border-width) solid var(--role-state-success);
+  border-radius: var(--feedback-surface-radius);
+
+  &__mark {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    background-color: var(--role-surface-card);
+    border: 2px solid var(--role-state-success);
+    border-radius: 50%;
+    color: var(--role-state-success);
+  }
+
+  &__title {
+    @include feedback-panel-title;
+  }
+
+  &__message {
+    @include feedback-panel-message;
+
+    color: var(--role-text-secondary);
+  }
+
+  &__action {
+    width: 100%;
+    margin-top: 4px;
+    text-decoration: none;
+  }
+}
+
+.feedback-dialog {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  z-index: var(--control-floating-z-index);
+  display: flex;
+  flex-direction: column;
+  gap: var(--feedback-surface-gap);
+  width: calc(100vw - (var(--feedback-dialog-inset) * 2));
+  max-width: var(--feedback-dialog-max-width);
+  max-height: calc(100dvh - (var(--feedback-dialog-inset) * 2));
+  padding: var(--feedback-surface-padding);
+  overflow-y: auto;
+  transform: translate(-50%, -50%);
+  box-shadow: var(--control-floating-shadow);
+
+  @include feedback-surface;
+
+  &__overlay {
+    position: fixed;
+    inset: 0;
+    z-index: var(--control-floating-z-index);
+  }
+
+  &__title {
+    @include feedback-panel-title;
+  }
+
+  &__message {
+    @include feedback-panel-message;
+  }
+
+  &__action {
+    width: 100%;
+    margin-top: 4px;
+  }
+
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--feedback-surface-gap);
+    margin-top: 4px;
+
+    > * {
+      flex: 1 1 130px;
+    }
+  }
+}
+
+.product-action-dialog {
+  &__item {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    align-items: center;
+    min-width: 0;
+  }
+
+  &__image {
+    flex: none;
+    width: 88px;
+    height: 88px;
+    object-fit: contain;
+  }
+
+  &__details {
+    display: flex;
+    flex: 1 1 140px;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+  }
+
+  &__title {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 500;
+    line-height: 1.35;
+    color: var(--role-text-secondary);
+    overflow-wrap: anywhere;
+  }
+
+  &__price {
+    margin: 0;
+    font-size: 21px;
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--role-text-primary);
+  }
+
+  &__action {
+    width: 100%;
+    margin-top: 4px;
+    text-decoration: none;
+  }
+}
