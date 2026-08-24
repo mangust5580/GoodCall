@@ -1,5 +1,6 @@
 import { ComponentsReference } from './ComponentsReference';
 import { FoundationsColorReference } from './FoundationsColorReference';
+import { HeaderReference } from './HeaderReference';
 import { LayoutReference } from './LayoutReference';
 import { ReferenceIndex } from './TemporaryReference';
 
@@ -20,6 +21,10 @@ export function App() {
 
   if (reference === 'layout') {
     return <LayoutReference />;
+  }
+
+  if (reference === 'header') {
+    return <HeaderReference />;
   }
 
   return <ReferenceIndex />;

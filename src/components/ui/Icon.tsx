@@ -20,6 +20,7 @@ export type IconName =
   | 'return'
   | 'bonus'
   | 'map-pin'
+  | 'menu'
   | 'settings'
   | 'tools'
   | 'log-out'

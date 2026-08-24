@@ -20,6 +20,9 @@ export function ReferenceIndex() {
         <li>
           <a href={referenceUrl('layout')}>Layout reference</a>
         </li>
+        <li>
+          <a href={referenceUrl('header')}>Header reference</a>
+        </li>
       </ul>
     </main>
   );

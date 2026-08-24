@@ -23,12 +23,23 @@ interface FieldShellProps {
   readonly hint?: string;
   readonly children: ReactNode;
   readonly icon?: IconName;
+  readonly labelVisuallyHidden?: boolean;
 }
 
-function FieldShell({ controlId, label, hint, children, icon }: FieldShellProps) {
+function FieldShell({
+  controlId,
+  label,
+  hint,
+  children,
+  icon,
+  labelVisuallyHidden = false,
+}: FieldShellProps) {
   return (
     <div className="ui-field">
-      <label className="ui-field__label" htmlFor={controlId}>
+      <label
+        className={cx('ui-field__label', labelVisuallyHidden && 'ui-visually-hidden')}
+        htmlFor={controlId}
+      >
         {label}
       </label>
       <div className="ui-field__control">
@@ -101,6 +112,7 @@ interface SearchFieldProps {
   readonly disabled?: boolean;
   readonly required?: boolean;
   readonly autoComplete?: string;
+  readonly labelVisuallyHidden?: boolean;
 }
 
 export function SearchField({
@@ -117,6 +129,7 @@ export function SearchField({
   disabled = false,
   required = false,
   autoComplete,
+  labelVisuallyHidden = false,
 }: SearchFieldProps) {
   const controlId = useControlId(id);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -154,7 +167,12 @@ export function SearchField({
   };
 
   return (
-    <FieldShell controlId={controlId} hint={hint} label={label}>
+    <FieldShell
+      controlId={controlId}
+      hint={hint}
+      label={label}
+      labelVisuallyHidden={labelVisuallyHidden}
+    >
       <input
         aria-describedby={hint ? `${controlId}-hint` : undefined}
         autoComplete={autoComplete}

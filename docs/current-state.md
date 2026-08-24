@@ -11,9 +11,68 @@ Operational handoff. This is not a history log.
 
 ## Current milestone
 
-**Global Shell — open. Global Shell A begins with Container.**
+**Global Shell — open. Global Shell A / Container is accepted; Global Shell B /
+Header is technically implemented and awaits user visual PASS.**
 
-Global Shell A adds exactly one production layout primitive, `Container`, in
+### Global Shell B — SiteHeader
+
+**User visual PASS is still required.** The technical implementation is complete;
+the visual gate is the user's and was not self-closed.
+
+`src/components/shell/` owns one canonical, reusable `SiteHeader`. It deliberately
+**normalizes** the recurring header evidence across the supplied Home, Shops,
+About, Blog and Catalog page rasters instead of mirroring any one of them, and it
+follows raster section 01 Header & Navigation for styling and proportions. There
+are no page-specific header variants — no HomeHeader, CatalogHeader, BlogHeader,
+AboutHeader or ShopsHeader, and no checkout/minimal header.
+
+Anatomy — three full-width regions, each placing its content in the accepted
+`Container`, so all three rows share the same inner horizontal edges:
+
+- **UtilityBar** — brand-purple surface carrying the normalized service content:
+  location (`Москва`), `Доставка по всей России`, `Магазины`, `Поддержка 24/7`.
+  Page-specific geo banners and campaign copy are deliberately excluded.
+- **MainHeader** — brand lockup, prominent purple catalog entry, the reused
+  `SearchField`, and the four user actions Compare / Favorites / Cart / Account
+  with optional numeric badges.
+- **CategoryNav** — `<nav aria-label="Категории товаров">` with the canonical
+  compact category set and a trailing `Ещё` link to the catalog. Text labels
+  only; no category icon set was invented, and no mega-menu or flyout exists.
+
+`SiteHeader` is presentation-only. It accepts narrow explicit destination props,
+optional action counts, an optional search-submit callback and an optional
+category list. It owns **no** router, application state, cart/wishlist/comparison
+model, auth or session inference, and makes no network request. With no router
+installed, destination props default to `import.meta.env.BASE_URL`.
+
+Two small backwards-compatible extensions were proved by this real consumer and
+nothing else changed in closed Components:
+
+- `SearchField` gained `labelVisuallyHidden?: boolean` (default `false`), which
+  applies the existing `.ui-visually-hidden` utility to the field label so the
+  compact header search keeps a real accessible label with no visible one.
+  Existing callers and the Components reference render identically.
+- The typed `Icon` registry gained one `menu` icon, backed by a new
+  `src/assets/icons/menu.svg` in the existing stroke style. No icon dependency
+  was added.
+
+Responsive behaviour is **system-first**, because no authoritative mobile raster
+exists for this normalized header. Three rows at 1280px and above; the main row
+splits into brand + actions over catalog + search below 1080px; below 560px the
+brand and icon-only actions share a row while search and catalog take their own,
+with action labels clipped by a visually-hidden treatment so their accessible
+names survive. Category navigation scrolls horizontally when it cannot fit. No
+hamburger drawer, overlay or mobile menu was invented.
+
+`?reference=header` renders the real production `SiteHeader` above a neutral
+reference-only body. Footer, NewsletterBand and every page family remain
+unimplemented. No dependency was added.
+
+### Global Shell A — Container
+
+**User visual PASS received on 2026-08-24. Global Shell A is accepted.**
+
+Global Shell A added exactly one production layout primitive, `Container`, in
 `src/components/layout/`. Its contract:
 
 - one neutral horizontal layout primitive rendering a plain `<div>` with the
@@ -28,14 +87,8 @@ Global Shell A adds exactly one production layout primitive, `Container`, in
   ownership.
 
 Region backgrounds stay full viewport width; only the content inside a
-`Container` is constrained. `?reference=layout` is the temporary visual
-verification surface for this contract.
-
-Header, Navigation, Newsletter and Footer are **not** implemented by this slice.
-No dependency was added.
-
-**Container awaits user visual PASS.** The technical implementation is complete;
-the visual gate is the user's and was not self-closed.
+`Container` is constrained, and `SiteHeader` is its first production consumer.
+`?reference=layout` remains the Container verification surface.
 
 **Components — closed.**
 
@@ -170,6 +223,8 @@ Independent audits themselves remain optional. See the AUDIT.md section of
 - Temporary reference pages: `src/app/TemporaryReference.tsx`.
 - Canonical layout primitive: `src/components/layout/` — `Container`, with its
   styles in `layout.scss`.
+- Canonical global shell: `src/components/shell/` — `SiteHeader`, with its styles
+  in `header.scss` and its brand lockup asset in `src/assets/shell/`.
 - Reusable controls and form fields: `src/components/ui/`, with the shared
   control system in `controls.scss`.
 - Reusable product presentation components: `src/components/product/`, with their
@@ -189,6 +244,8 @@ Independent audits themselves remain optional. See the AUDIT.md section of
   `src/app/ComponentsReference.tsx`.
 - Global Shell Container reference surface: `src/app/LayoutReference.tsx`, with
   its reference-only styles in `LayoutReference.scss`.
+- Global Shell Header reference surface: `src/app/HeaderReference.tsx`, with its
+  reference-only styles in `HeaderReference.scss`.
 
 There is no router, no data layer, and no feature architecture. The reference
 surfaces are development comparison pages, not product UI.
@@ -666,7 +723,7 @@ that same value.
 The base page no longer hosts the Foundations surface. A query-string check in
 `App.tsx` selects the surface, with no router and no new dependency:
 
-- base URL — temporary reference index, linking to the three surfaces below
+- base URL — temporary reference index, linking to the four surfaces below
 - `?reference=foundations` — the Foundations colour reference
 - `?reference=components` — the Components A, B, C, D, E and F reference
   surface
@@ -675,6 +732,9 @@ The base page no longer hosts the Foundations surface. A query-string check in
   horizontal edges at every viewport. It is deliberately neutral and is not a
   draft Header or Footer; its bands, surfaces and blocks are reference-owned
   styling that exists only to expose Container boundaries.
+- `?reference=header` — the Global Shell Header reference surface: the real
+  production `SiteHeader` above a neutral reference-only body. It is not a Home
+  page, and it implements no hero, catalog, breadcrumbs, footer or newsletter.
 
 Links are built from `import.meta.env.BASE_URL`, so they resolve under the
 GitHub Pages base without hardcoding the repository name, and no SPA fallback is
@@ -700,9 +760,18 @@ functional suppression directives.
 
 ## Current visual status
 
-**Global Shell A / Container — technically complete, user visual PASS still
-required.** `?reference=layout` measures 1440px maximum outer width, centred at
-1920px, and 32px / 32px / 32px / 23.4667px / 16.9167px / 16.0001px gutters at
+**Global Shell B / SiteHeader — technically complete, user visual PASS still
+required.** `?reference=header` measures zero horizontal document overflow at
+1920 / 1440 / 1280 / 1024 / 768 / 375 / 320, with all three header rows sharing
+identical Container inner edges at every width. Header height is 180.58px at
+1280px and above, 248.58px at 1024–768px and 288–305px at 375/320. The compact
+search keeps the accessible label `Поиск по каталогу`; every action, category and
+utility destination is a real anchor, and the only header `<button>` is the
+search submit.
+
+**Global Shell A / Container — visually accepted by the user on 2026-08-24.**
+`?reference=layout` measures 1440px maximum outer width, centred at 1920px, and
+32px / 32px / 32px / 23.4667px / 16.9167px / 16.0001px gutters at
 1920 / 1440 / 1280 / 768 / 375 / 320, with zero horizontal overflow and
 identical inner edges across all four reference bands at every tested width.
 
@@ -864,18 +933,14 @@ None.
 
 ## Next approved step
 
-**User visual review of Global Shell A / Container**, using the
-`?reference=layout` screenshots. Container is technically complete and waits on
-that gate.
+**User visual review of Global Shell B / SiteHeader**, using the
+`?reference=header` screenshots, followed by any correction the review calls for.
+Header is technically complete and waits on that gate.
 
-After explicit user visual PASS: **bounded Header planning and implementation**,
-starting from raster section 01 Header & Navigation and reusing the accepted
-Container, Foundations and Components. Not broad shell architecture.
-
-Do not begin Header implementation before Container receives user visual PASS.
-Do not add router, state or data architecture, and do not add dependencies
-unless a concrete shell requirement proves necessary. Accepted system decisions
-win over incidental raster differences.
+Do not begin Newsletter or Footer implementation before Header receives explicit
+user visual PASS. Do not add router, state or data architecture, and do not add
+dependencies unless a concrete shell requirement proves necessary. Accepted
+system decisions win over incidental raster differences.
 
 ## Normative repository docs
 
