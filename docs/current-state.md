@@ -13,10 +13,11 @@ Operational handoff. This is not a history log.
 
 **Components — open.** Closed slices: **Components A — Core Controls & Forms**,
 covering raster sections 02 Buttons & Controls and 03 Inputs & Forms,
-**Components B — Product Components**, covering raster section 04, and
-**Components C — Content & Marketing**, covering raster section 05, and
-**Components D — Account Components**, covering raster section 06, and
-**Components E — Commerce Blocks**, covering raster section 07.
+**Components B — Product Components**, covering raster section 04,
+**Components C — Content & Marketing**, covering raster section 05,
+**Components D — Account Components**, covering raster section 06,
+**Components E — Commerce Blocks**, covering raster section 07, and
+**Components F — Utility & Feedback**, covering raster section 08.
 
 Components A received user visual PASS on 2026-08-23 and is closed.
 
@@ -38,23 +39,23 @@ is closed.
 Components E — Commerce Blocks received user visual PASS on 2026-08-24 and is
 closed.
 
-**Components F — Utility & Feedback, covering raster section 08, received user
-visual PASS on 2026-08-24.** Formal Components F closeout is still pending until
-the shared cross-component polish that followed the full-page review is itself
-reviewed. It is not closed.
+Components F — Utility & Feedback received user visual PASS on 2026-08-24 and is
+closed.
 
-Components A, B, C, D and E are closed. Overall Components remains open. Every
-raster Components section except 01 is now implemented. Section 01 Header &
-Navigation remains deferred until future Global Shell work creates the real shell
-consumer.
+Foundations and Components A, B, C, D, E and F are closed. Overall Components
+remains open pending explicit user visual PASS for the final integrated
+post-polish/post-section-03 reference. Every raster Components section except 01
+is implemented. Section 01 Header & Navigation remains deferred until future
+Global Shell work creates the real shell consumer and is not an open
+Components-slice blocker.
 
 The section-03 narrow reference-composition overflow is corrected. The root cause
 was the reference-only fixed 360px minimum on `.cmp-fields`; reusable Inputs &
 Forms primitives were unchanged, and Components A remains closed. Section 03 now
 measures 0px horizontal overflow at 1440px, 768px, 375px and 320px, and the whole
 Components reference no longer horizontally overflows at 375px or 320px. No
-dependency, Foundation or public API changed. After final visual confirmation,
-only formal Components F and overall Components closeout remains.
+dependency, Foundation or public API changed. No technical blocker remains before
+overall Components milestone closure.
 
 The current Components A visual-polish correction is applied: active Tabs no
 longer change on hover, enabled field surfaces share a coherent hover state, and
@@ -74,7 +75,15 @@ container-driven numeric range primitive. Catalog URL state, backend commits and
 filter/search architecture remain deferred feature-level work. Components A
 remains closed after the user-accepted RangeSlider regression validation.
 
-**Foundations — complete.**
+The shared cross-component polish is technically complete: Pagination renders the
+current page as a non-interactive `aria-current` marker; selected Tabs retain tab
+semantics and ignore repeated active clicks; inline links use deliberate
+continuous underline geometry; AddressCard uses a visible icon-plus-text edit
+action and structured city/postal presentation; Chip variants share soft
+background plus semantic inset ring; and Textarea remains native
+`resize: vertical`.
+
+**Foundations — closed.**
 
 **User visual PASS received for Foundations / Colors on 2026-08-19.** The
 approval came from the user; no agent self-certified it.
@@ -533,107 +542,23 @@ no longer applies because Mastercard is no longer part of the current reference.
 `src/components/feedback/` provides FAQAccordion, EmptyState, SuccessFeedback,
 InfoDialog, ConfirmationDialog and ProductActionDialog, exported through
 `index.ts`, with styles in `feedback-components.scss`. Section 08 of the raster
-is reachable at `?reference=components`. Components F received user visual PASS
-on 2026-08-24; formal closeout is still pending the shared polish review, so it
-is not closed.
+is reachable at `?reference=components`. Components F — Utility & Feedback
+received user visual PASS on 2026-08-24 and is closed.
 
 Section 08 contains six visible presentation roles, each with exactly one owner:
 FAQ accordion, empty cart state, success feedback panel, informational modal,
 destructive confirmation and product action modal. No `UtilityCard`,
 `FeedbackCard`, `StateCard` or schema-driven feedback renderer exists.
 
-**FAQ semantics.** `FAQAccordion` is a controlled single-open accordion built on
-the already installed `radix-ui` `Accordion` (`Root` `type="single"`
-`collapsible`, plus `Item`, `Header`, `Trigger` and `Content`). At most one item
-is open, opening one closes the previous, and the open item can be collapsed to
-leave none open. The public contract is `value?: string` plus
-`onValueChange(value: string | undefined)`; Radix's empty-string collapsed value
-is normalized to `undefined` at the component boundary, so no array contract
-survives for a single-open component. Triggers are real buttons inside `<h3>`
-headers with roving keyboard focus from Radix, closed content carries `hidden`,
-and the open state is carried by the visible answer and chevron direction rather
-than colour alone. The existing `chevron-down` icon rotates 180 degrees when
-open. This replaces the earlier multi-open `<details>` contract on explicit user
-product direction.
+FAQAccordion is a controlled single-open Radix Accordion with a local
+reduced-motion-aware transition. InfoDialog and ProductActionDialog use Radix
+Dialog, while ConfirmationDialog uses Radix AlertDialog. No dependency,
+notification bus, modal manager or global feedback architecture was introduced.
 
-**FAQ motion.** A local CSS animation expands and collapses the content between
-`0` and Radix's `--radix-accordion-content-height`, roughly 200ms, with a
-matching chevron transform transition. It is scoped to the accordion and is not
-a global animation system: no timing or easing token was added, no animation
-dependency was installed and no JS animation logic exists. A local
-`prefers-reduced-motion: reduce` block disables both the content animation and
-the chevron transition.
-
-**Empty state and success feedback stay separate.** `EmptyState` is an
-empty/no-result surface with the decorative `cart` glyph; `SuccessFeedback` is a
-status surface on the accepted `--role-state-success-soft` background with a
-CSS ring around the existing `check` icon. Both panels centre their
-composition, so the success mark, title, message and full-width CTA align the
-same way as the empty state; this was a Components-F styling change only, with
-no change to `SuccessFeedback` markup, props, `announce` semantics or CTA
-semantics. Only the success status is evidenced,
-so no warning/error/info variant family was created. `SuccessFeedback` is static
-and silent by default; an explicit `announce` prop adds `role="status"` for
-consumers that insert it dynamically, and the reference leaves it off.
-
-**Dialog semantics.** Three explicit owners use the already installed
-`radix-ui`: `InfoDialog` and `ProductActionDialog` use `Dialog`,
-`ConfirmationDialog` uses `AlertDialog`. All three are controlled through `open`
-and `onOpenChange` with no trigger baked into their API, so the consumer owns
-the launch control; the reference renders ordinary Buttons beside each specimen.
-There is no centralized dialog manager and no generic public Dialog component.
-
-Each dialog sets `aria-modal` explicitly. Radix relies on the `aria-hidden`
-package's `hideOthers`, which deliberately keeps every `[aria-live]` element and
-its ancestors visible; because the reference page holds live regions inside
-`#root`, the page behind an open dialog would otherwise stay exposed to
-assistive technology. `role="dialog"` does not imply modality on its own, so
-`aria-modal` is the required companion attribute rather than redundant ARIA, and
-it also makes the components robust for any consumer page that owns a live
-region.
-
-Focus return is handled explicitly. Radix's own restoration left focus on
-`<body>` in this app, so each dialog captures the previously focused element in
-`onOpenAutoFocus` and restores it in `onCloseAutoFocus` through the small
-private `useReturnFocus` hook. Verified: focus enters the dialog on open and
-returns to the launch control on both the action-button and Escape close paths
-for all three dialogs.
-
-**Backdrop and motion.** The overlay is a transparent interaction-blocking layer
-only. The raster evidences no dimmed backdrop and Foundations has no accepted
-Overlay/Backdrop opacity token, so none was invented and Foundations was not
-reopened. Dialog surfaces reuse the accepted floating-surface precedent
-(`--control-floating-shadow`, `--control-floating-z-index`). No entrance or exit
-animation was added, so there is no reduced-motion concern.
-
-These are presentation components. They take labels, formatted strings, image
-source/alt and callbacks. `EmptyState`, `SuccessFeedback` and
-`ProductActionDialog` share one `FeedbackAction` discriminated union whose
-`never` members make it impossible to pass both `href` and `onClick`, so an
-action target is always exactly one of navigation or callback. There is no
-notification bus, event emitter, modal manager, global loading manager,
-retry/error framework, router, global state, backend contract, persistence or
-product/cart architecture.
-
-Feedback Components add a small Components-owned geometry group —
-`--feedback-surface-radius`, `--feedback-surface-padding`,
-`--feedback-surface-gap`, `--feedback-dialog-max-width` and
-`--feedback-dialog-inset` — plus three private mixins for the shared surface,
-panel title and panel message. Everything else reuses accepted Foundations
-colour roles, the existing `--control-*` geometry and the `control-focus` mixin.
-No global card, spacing, radius, type or elevation scale was introduced.
-
-Dialog width is `calc(100vw - 32px)` capped at 400px with
-`max-height: calc(100dvh - 32px)` and `overflow-y: auto`, so no dialog has a
-fixed height and none clips at 320px. Section-08 specimen widths belong to the
-reference composition; the reusable components carry no reference max-width. No
-media query and no named breakpoint was added. Section 08 shows no horizontal
-overflow at 1440px, 768px, 375px or 320px.
-
-Assets consumed: the existing `cart`, `check` and `chevron-down` icons through
+Components F uses the existing `cart`, `check` and `chevron-down` icons through
 the Icon system, and the existing `src/assets/products/product-earbuds.svg` in
-the reference product specimen only. New asset count: 0. No new `IconName` was
-registered and no dependency was added.
+the reference product specimen only. New asset count: 0. Section 08 shows no
+horizontal overflow at 1440px, 768px, 375px or 320px.
 
 ### Colour tokens
 
@@ -794,6 +719,13 @@ reference now shows three MIR-only demo entries through the brand-agnostic
 asset, and the payment-method selector remains multi-method. Section 07 shows no
 horizontal overflow at 1440px, 768px, 375px or 320px.
 
+**Components F — Utility & Feedback received user visual PASS on 2026-08-24 and
+is closed.** Section 08 is implemented on the reference surface at
+`?reference=components`, composing FAQAccordion, EmptyState, SuccessFeedback,
+InfoDialog, ConfirmationDialog and ProductActionDialog. It uses the existing
+Radix dependency for the single-open accordion and dialog semantics; no
+notification bus, modal manager or global feedback architecture exists.
+
 **Foundations / Colors — visually accepted by the user on 2026-08-19.**
 
 The Foundations reference surface mirrors the raster's five sections so the
@@ -865,6 +797,9 @@ none of them blocks the closed milestone.
 
 - Phone validation, country selection and international formatting are deferred
   until a real product form consumer defines those requirements.
+- Textarea auto-grow remains deferred until a concrete consumer requires it.
+- Any future animation system remains a separate topic; Components F owns only
+  its local reduced-motion-aware FAQ transition.
 - ESLint is pinned to the 9.x line. ESLint 10 is current, but
   `eslint-plugin-jsx-a11y@6.10.2` and `eslint-plugin-react@7.37.5` declare peer
   support only through ESLint 9. Accessibility coverage was kept rather than
@@ -881,19 +816,23 @@ None.
 
 ## Next approved step
 
-**Formal Components F and overall Components closeout review.** The section-03
-narrow reference-composition overflow is resolved. A focused user visual review
-of the shared cross-component polish is outstanding: Pagination current-page
-semantics, selected-Tab semantics, the inline-link underline treatment, the
-AddressCard visible edit action and locality hierarchy, and the Chip
-semantic-ring normalization. Components A, B and D remain closed after focused
-regression of those areas; no dependency was added.
+**Final integrated Components visual review.** Review the post-polish and
+post-section-03 Components reference at `?reference=components`. Minimum focus:
+section 02 active Tabs, Pagination current-page marker and Chips; section 03
+375px / 320px responsive containment; section 06 AddressCard visible
+`Редактировать` action and city/postal hierarchy; global inline-link underline;
+and overall sections 02-08 visual consistency.
 
-Components F received user visual PASS on 2026-08-24 but its formal closeout is
-still pending that shared polish review.
+Overall Components remains open pending explicit user visual PASS for the final
+integrated post-polish/post-section-03 reference. No technical blocker remains
+before overall Components milestone closure. Do not require another code task
+unless the user finds a real issue.
 
-Components stays open. Section 01 Header & Navigation remains deferred to future
-Global Shell work rather than being treated as an isolated Components slice.
+After explicit user visual PASS, the next task is docs-only overall Components
+milestone closeout.
+
+Section 01 Header & Navigation remains deferred to future Global Shell work
+rather than being treated as an isolated Components slice.
 
 ## Normative repository docs
 
