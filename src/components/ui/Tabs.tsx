@@ -47,7 +47,9 @@ export function Tabs({ idBase, items, activeId, onChange, label }: TabsProps) {
             id={tabId(idBase, item.id)}
             key={item.id}
             onClick={() => {
-              onChange(item.id);
+              if (!selected) {
+                onChange(item.id);
+              }
             }}
             onKeyDown={handleKeyDown}
             role="tab"

@@ -87,20 +87,24 @@ export function Pagination({
             </li>
           ) : (
             <li key={slot}>
-              <button
-                aria-current={slot === page ? 'page' : undefined}
-                className={
-                  slot === page
-                    ? 'ui-pagination__item ui-pagination__item--active'
-                    : 'ui-pagination__item'
-                }
-                onClick={() => {
-                  onChange(slot);
-                }}
-                type="button"
-              >
-                {slot}
-              </button>
+              {slot === page ? (
+                <span
+                  aria-current="page"
+                  className="ui-pagination__item ui-pagination__item--active"
+                >
+                  {slot}
+                </span>
+              ) : (
+                <button
+                  className="ui-pagination__item"
+                  onClick={() => {
+                    onChange(slot);
+                  }}
+                  type="button"
+                >
+                  {slot}
+                </button>
+              )}
             </li>
           ),
         )}

@@ -38,8 +38,10 @@ is closed.
 Components E — Commerce Blocks received user visual PASS on 2026-08-24 and is
 closed.
 
-**Components F — Utility & Feedback, covering raster section 08, is implemented
-and awaits user visual PASS.** It is not closed.
+**Components F — Utility & Feedback, covering raster section 08, received user
+visual PASS on 2026-08-24.** Formal Components F closeout is still pending until
+the shared cross-component polish that followed the full-page review is itself
+reviewed. It is not closed.
 
 Components A, B, C, D and E are closed. Overall Components remains open. Every
 raster Components section except 01 is now implemented. Section 01 Header &
@@ -107,7 +109,12 @@ Independent audits themselves remain optional. See the AUDIT.md section of
 - Entry point: `src/main.tsx`.
 - Application ownership: `src/app/`.
 - Global styling entry: `src/styles/global.scss` — applies page surface, primary
-  text and link roles.
+  text and link roles. Ordinary inline links carry a deliberate continuous
+  underline (`text-decoration-thickness: 1px`, `text-underline-offset: 3px`,
+  `text-decoration-skip-ink: none`) so Cyrillic descenders do not break the rule
+  and links stay distinguishable by more than colour. Anchors carrying
+  `.ui-button` remain un-underlined because the shared Button contract sets
+  `text-decoration: none`.
 - Foundations colour tokens: `src/styles/foundations/` (`_colors.scss`,
   `_gradients.scss`, `_index.scss`).
 - Generic SCSS helpers: `src/styles/helpers/` (fluid scalars, media mixins,
@@ -150,6 +157,30 @@ the dedicated `--button-height: 44px`, and the rest of the system keeps three
 radii, one border and focus treatment, one padding and one icon size. This is
 owned by Components, not Foundations, and is deliberately not a general spacing,
 radius, type or button-size scale.
+
+Pagination renders the current page as a non-interactive
+`<span aria-current="page">` carrying the active geometry with `cursor: default`
+and no hover change; every other numeric page stays a button and the
+previous/next arrows keep their disabled semantics. The public Pagination API is
+unchanged.
+
+Selected Tabs keep full tab semantics — real `<button>`, `role="tab"`,
+`aria-selected="true"`, `tabIndex={0}` and ArrowLeft/ArrowRight roving focus —
+but use `cursor: default` and ignore a repeated click on the already-selected
+tab, so `onChange` never re-fires for the current selection. The Tabs API is
+unchanged.
+
+All three Chip variants share one treatment: semantic soft background, semantic
+readable text and a thin semantic inset ring. The rings are `inset box-shadow`
+rather than a border, so Chip geometry is byte-identical across variants and
+consumers. Brand derives its ring from `--role-text-link` and danger from
+`--role-state-danger`; the accepted accessible success treatment is unchanged.
+`Chip` keeps exactly `brand | success | danger` — the reference's Бейджи group
+is another composition of the same Chip, not a separate Badge component.
+
+TextareaField deliberately keeps native `resize: vertical`. Auto-grow is
+deferred until a concrete consumer requires it; no scrollHeight measurement,
+ResizeObserver or autosize dependency was introduced.
 
 `.ui-button` owns the complete visual state of any element carrying its classes,
 including anchors. The global `a:hover` rule outranks a bare variant class, so
@@ -327,6 +358,18 @@ selected state is not colour-only. Sign out is a real `<button>` in the same row
 family because it is an action, not navigation. The pill-shaped generic Button
 was not used for menu rows; an account-owned row style covers both.
 
+**Address presentation.** `AddressCard` takes structured locality props —
+`city` plus optional `postalCode` — instead of a flat locality string, so no
+consumer string is parsed and no address domain model exists. The city carries
+bounded emphasis (weight 600 on the secondary text role) while the postal code
+stays regular and muted, joined by ordinary punctuation. Its edit affordance is
+a visible icon-plus-text button (`.address-card__edit`) above a hairline
+divider, matching the scanability of the commerce saved-payment add action while
+staying Account-owned; the visible label is the accessible name and the icon is
+decorative. The former icon-only square treatment and its now-unused
+`.account-action--edit` modifier were removed; `.account-action--outline` and
+`--cart` remain in use by `OrderRow`.
+
 **Order status.** The existing success `Chip` is reused for the delivered state.
 The raster paints that status as bare green text, but status presentation is
 already normalized onto Chip by the closed section-04 work. The shared success
@@ -484,8 +527,9 @@ no longer applies because Mastercard is no longer part of the current reference.
 `src/components/feedback/` provides FAQAccordion, EmptyState, SuccessFeedback,
 InfoDialog, ConfirmationDialog and ProductActionDialog, exported through
 `index.ts`, with styles in `feedback-components.scss`. Section 08 of the raster
-is reachable at `?reference=components`. Components F awaits user visual PASS
-and is not closed.
+is reachable at `?reference=components`. Components F received user visual PASS
+on 2026-08-24; formal closeout is still pending the shared polish review, so it
+is not closed.
 
 Section 08 contains six visible presentation roles, each with exactly one owner:
 FAQ accordion, empty cart state, success feedback panel, informational modal,
@@ -836,24 +880,22 @@ None.
 
 ## Next approved step
 
-**User visual review of Components F — Utility & Feedback, raster section 08.**
-Components F is implemented and technically ready; it stays open until the user
-gives visual PASS. The three modal specimens are launched from Buttons on the
-reference surface, so the visual review needs the open-dialog screenshots as
-well as the section-08 composition.
+**Section-03 narrow reference-composition overflow correction.** That is the
+next separate technical task, and it is required before the overall Components
+milestone can close.
 
-The user's first visual review produced three corrections, now applied: shared
-anchor/native Button hover parity fixed centrally in `controls.scss`,
-`SuccessFeedback` centred like `EmptyState`, and the FAQ converted to a
-controlled single-open Radix Accordion with a local reduced-motion-aware
-transition. No dependency was added and no global animation system was
-introduced.
+Ahead of it, a focused user visual review of the shared cross-component polish
+is outstanding: Pagination current-page semantics, selected-Tab semantics, the
+inline-link underline treatment, the AddressCard visible edit action and
+locality hierarchy, and the Chip semantic-ring normalization. Components A, B
+and D remain closed after focused regression of those areas; no dependency was
+added.
+
+Components F received user visual PASS on 2026-08-24 but its formal closeout is
+still pending that shared polish review.
 
 Components stays open. Section 01 Header & Navigation remains deferred to future
-Global Shell work rather than being treated as an isolated Components slice. The
-known section-03 narrow reference-composition overflow remains a separate
-correction required before the overall Components milestone closes, even after
-Components F eventually closes.
+Global Shell work rather than being treated as an isolated Components slice.
 
 ## Normative repository docs
 

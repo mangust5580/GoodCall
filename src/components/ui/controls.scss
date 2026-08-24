@@ -177,6 +177,7 @@ $icon-names: (
       border-bottom-color: var(--role-border-focus);
       color: var(--role-text-link);
       font-weight: 600;
+      cursor: default;
 
       &:hover {
         color: var(--role-text-link);
@@ -195,8 +196,11 @@ $icon-names: (
   line-height: 1.2;
 
   &--brand {
+    --chip-brand-ring: color-mix(in srgb, var(--role-text-link) 24%, transparent);
+
     background-color: var(--role-surface-brand-soft);
     color: var(--role-text-link);
+    box-shadow: inset 0 0 0 1px var(--chip-brand-ring);
   }
 
   &--success {
@@ -213,8 +217,11 @@ $icon-names: (
   }
 
   &--danger {
+    --chip-danger-ring: color-mix(in srgb, var(--role-state-danger) 26%, transparent);
+
     background-color: var(--role-state-danger-soft);
     color: var(--role-state-danger);
+    box-shadow: inset 0 0 0 1px var(--chip-danger-ring);
   }
 }
 
@@ -435,9 +442,10 @@ $icon-names: (
       background-color: var(--color-brand-purple-600);
       color: var(--role-text-inverse);
       font-weight: 600;
+      cursor: default;
 
       &:hover:not(:disabled) {
-        background-color: var(--color-brand-purple-700);
+        background-color: var(--color-brand-purple-600);
       }
     }
 

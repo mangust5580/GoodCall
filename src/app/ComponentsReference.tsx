@@ -645,12 +645,13 @@ export function ComponentsReference() {
         <Group className="cmp-account-group cmp-account-group--address" title="Адрес доставки">
           <AddressCard
             addressLine="ул. Тверская, д. 1, кв. 25"
-            editLabel="Изменить адрес доставки"
-            localityLine="Москва, 125009"
+            city="Москва"
+            editLabel="Редактировать"
             onEdit={() => {
               setAccountMessage('Редактирование адреса доставки');
             }}
             phone="+7 (999) 123-45-67"
+            postalCode="125009"
             recipientName="Иван Иванов"
           />
         </Group>

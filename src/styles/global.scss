@@ -26,6 +26,10 @@ body {
 
 a {
   color: var(--role-text-link);
+  text-decoration-line: underline;
+  text-decoration-thickness: 1px;
+  text-decoration-skip-ink: none;
+  text-underline-offset: 3px;
 
   &:hover {
     color: var(--role-text-link-hover);

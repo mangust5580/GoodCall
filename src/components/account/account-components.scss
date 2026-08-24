@@ -48,15 +48,6 @@
       background-color: var(--color-brand-purple-700);
     }
   }
-
-  &--edit {
-    color: var(--role-text-link);
-
-    &:hover {
-      background-color: var(--role-surface-hero);
-      color: var(--role-text-link-hover);
-    }
-  }
 }
 
 .account-navigation {
@@ -335,6 +326,15 @@
     overflow-wrap: anywhere;
   }
 
+  &__city {
+    font-weight: 600;
+    color: var(--role-text-secondary);
+  }
+
+  &__postal {
+    color: var(--role-text-muted);
+  }
+
   &__recipient {
     margin: 0;
     font-size: 15px;
@@ -350,9 +350,28 @@
     overflow-wrap: anywhere;
   }
 
-  &__group + .account-action {
-    margin-block-start: 4px;
-    margin-inline-start: auto;
+  &__edit {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    min-width: 0;
+    padding: var(--account-card-gap) 0 0;
+    background-color: transparent;
+    border: 0;
+    border-top: 1px solid var(--role-border-soft);
+    font: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--role-text-link);
+    text-align: start;
+    overflow-wrap: anywhere;
+    cursor: pointer;
+
+    @include controls.control-focus;
+
+    &:hover {
+      color: var(--role-text-link-hover);
+    }
   }
 }
 

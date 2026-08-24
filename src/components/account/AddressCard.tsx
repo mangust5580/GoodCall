@@ -2,7 +2,8 @@ import { Icon } from '../ui';
 
 interface AddressCardProps {
   readonly addressLine: string;
-  readonly localityLine: string;
+  readonly city: string;
+  readonly postalCode?: string;
   readonly recipientName: string;
   readonly phone: string;
   readonly editLabel: string;
@@ -11,7 +12,8 @@ interface AddressCardProps {
 
 export function AddressCard({
   addressLine,
-  localityLine,
+  city,
+  postalCode,
   recipientName,
   phone,
   editLabel,
@@ -23,7 +25,15 @@ export function AddressCard({
         <Icon className="address-card__icon" name="map-pin" />
         <div className="address-card__content">
           <p className="address-card__line">{addressLine}</p>
-          <p className="address-card__locality">{localityLine}</p>
+          <p className="address-card__locality">
+            <span className="address-card__city">{city}</span>
+            {postalCode === undefined ? null : (
+              <>
+                {', '}
+                <span className="address-card__postal">{postalCode}</span>
+              </>
+            )}
+          </p>
         </div>
       </div>
       <div className="address-card__group address-card__group--contact">
@@ -33,13 +43,9 @@ export function AddressCard({
           <p className="address-card__phone">{phone}</p>
         </div>
       </div>
-      <button
-        aria-label={editLabel}
-        className="account-action account-action--edit"
-        onClick={onEdit}
-        type="button"
-      >
+      <button className="address-card__edit" onClick={onEdit} type="button">
         <Icon name="edit" />
+        <span>{editLabel}</span>
       </button>
     </article>
   );
