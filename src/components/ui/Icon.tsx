@@ -1,5 +1,6 @@
 export type IconName =
   | 'search'
+  | 'scan-qr'
   | 'calendar'
   | 'clock'
   | 'chevron-down'
@@ -24,7 +25,17 @@ export type IconName =
   | 'settings'
   | 'tools'
   | 'log-out'
-  | 'edit';
+  | 'edit'
+  | 'store'
+  | 'smartphone'
+  | 'tablet'
+  | 'laptop'
+  | 'accessories'
+  | 'headphones'
+  | 'watch'
+  | 'tv'
+  | 'gamepad'
+  | 'appliance';
 
 interface IconProps {
   readonly name: IconName;

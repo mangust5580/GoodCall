@@ -98,6 +98,12 @@ export function TextField(props: BaseFieldProps) {
   return <InputField type="text" {...props} />;
 }
 
+export interface SearchFieldTrailingAction {
+  readonly icon: IconName;
+  readonly label: string;
+  readonly onClick: () => void;
+}
+
 interface SearchFieldProps {
   readonly label: string;
   readonly hint?: string;
@@ -113,6 +119,7 @@ interface SearchFieldProps {
   readonly required?: boolean;
   readonly autoComplete?: string;
   readonly labelVisuallyHidden?: boolean;
+  readonly trailingAction?: SearchFieldTrailingAction;
 }
 
 export function SearchField({
@@ -130,6 +137,7 @@ export function SearchField({
   required = false,
   autoComplete,
   labelVisuallyHidden = false,
+  trailingAction,
 }: SearchFieldProps) {
   const controlId = useControlId(id);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -176,7 +184,11 @@ export function SearchField({
       <input
         aria-describedby={hint ? `${controlId}-hint` : undefined}
         autoComplete={autoComplete}
-        className="ui-input ui-input--search"
+        className={cx(
+          'ui-input',
+          'ui-input--search',
+          trailingAction && 'ui-input--search-trailing',
+        )}
         disabled={disabled}
         id={controlId}
         name={name}
@@ -198,6 +210,17 @@ export function SearchField({
             type="button"
           >
             <Icon name="close" />
+          </button>
+        ) : null}
+        {trailingAction ? (
+          <button
+            aria-label={trailingAction.label}
+            className="ui-search-actions__button"
+            disabled={disabled}
+            onClick={trailingAction.onClick}
+            type="button"
+          >
+            <Icon name={trailingAction.icon} />
           </button>
         ) : null}
         {onSubmit ? (

@@ -2,6 +2,7 @@
   "extends": ["stylelint-config-standard-scss"],
   "ignoreFiles": ["dist/**/*", "node_modules/**/*"],
   "rules": {
+    "length-zero-no-unit": [true, { "ignoreFunctions": ["env"] }],
     "unit-disallowed-list": [
       ["rem"],
       {

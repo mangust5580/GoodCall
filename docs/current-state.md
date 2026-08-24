@@ -14,10 +14,12 @@ Operational handoff. This is not a history log.
 **Global Shell — open. Global Shell A / Container is accepted; Global Shell B /
 Header is technically implemented and awaits user visual PASS.**
 
-### Global Shell B — SiteHeader
+### Global Shell B — SiteHeader and MobileActionBar
 
-**User visual PASS is still required.** The technical implementation is complete;
-the visual gate is the user's and was not self-closed.
+**Header remains the active visual gate. User visual PASS is still required.**
+The desktop direction was reviewed and accepted by the user; the mobile
+correction is technically complete and awaits PASS. The visual gate is the
+user's and was not self-closed.
 
 `src/components/shell/` owns one canonical, reusable `SiteHeader`. It deliberately
 **normalizes** the recurring header evidence across the supplied Home, Shops,
@@ -33,11 +35,22 @@ Anatomy — three full-width regions, each placing its content in the accepted
   location (`Москва`), `Доставка по всей России`, `Магазины`, `Поддержка 24/7`.
   Page-specific geo banners and campaign copy are deliberately excluded.
 - **MainHeader** — brand lockup, prominent purple catalog entry, the reused
-  `SearchField`, and the four user actions Compare / Favorites / Cart / Account
-  with optional numeric badges.
+  `SearchField`, and — at 768px and above — the four user actions Compare /
+  Favorites / Cart / Account with optional numeric badges.
 - **CategoryNav** — `<nav aria-label="Категории товаров">` with the canonical
-  compact category set and a trailing `Ещё` link to the catalog. Text labels
-  only; no category icon set was invented, and no mega-menu or flyout exists.
+  compact category set and a trailing `Ещё` link to the catalog. Every canonical
+  category now carries a typed line icon; no mega-menu or flyout exists.
+
+**`MobileActionBar` is a separate mobile shell owner**, not a header
+subcomponent: `src/components/shell/MobileActionBar.tsx`, rendered by the page
+alongside `SiteHeader`. Below 768px the four user actions leave the header
+entirely and appear here as `<nav aria-label="Быстрые действия">` fixed to the
+bottom of the viewport, with `env(safe-area-inset-bottom)` respected and the same
+optional count badges. The actions are never visible in both places at once. It
+owns no state, store, context, auth inference or router. Because no GlobalShell
+wrapper exists yet, **any real page or shell integration must reserve the mobile
+bottom inset itself** — the temporary header reference does this with
+reference-owned bottom padding, and production CSS adds no global body padding.
 
 `SiteHeader` is presentation-only. It accepts narrow explicit destination props,
 optional action counts, an optional search-submit callback and an optional
@@ -45,28 +58,46 @@ category list. It owns **no** router, application state, cart/wishlist/compariso
 model, auth or session inference, and makes no network request. With no router
 installed, destination props default to `import.meta.env.BASE_URL`.
 
-Two small backwards-compatible extensions were proved by this real consumer and
-nothing else changed in closed Components:
+Backwards-compatible extensions proved by these real consumers; nothing else
+changed in closed Components:
 
 - `SearchField` gained `labelVisuallyHidden?: boolean` (default `false`), which
   applies the existing `.ui-visually-hidden` utility to the field label so the
   compact header search keeps a real accessible label with no visible one.
-  Existing callers and the Components reference render identically.
-- The typed `Icon` registry gained one `menu` icon, backed by a new
-  `src/assets/icons/menu.svg` in the existing stroke style. No icon dependency
-  was added.
+- `SearchField` gained `trailingAction?: SearchFieldTrailingAction` (default
+  `undefined`) — one extra real `<button type="button">` in the existing search
+  action area, with its own accessible label. `SiteHeader` passes it as the
+  mobile QR affordance only when the consumer supplies `onScanRequest`, so no
+  non-functional control is ever rendered. **QR scanning itself does not exist**:
+  there is no camera access, permissions request, QR library or decoding — the
+  callback is presentation only.
+- The typed `Icon` registry gained `menu`, `store`, `scan-qr` and the nine
+  category icons `smartphone`, `tablet`, `laptop`, `accessories`, `headphones`,
+  `watch`, `tv`, `gamepad`, `appliance`, each backed by a local SVG in the
+  existing 24×24 stroke style. No icon dependency was added.
+- `SiteHeaderCategory` gained an optional `icon?: IconName`. The canonical
+  categories supply their own; consumer-supplied categories may omit it.
+
+Existing `SearchField` callers and the Components reference render identically:
+the defaults produce byte-identical markup, and the Components reference shows no
+trailing action and unchanged input padding.
 
 Responsive behaviour is **system-first**, because no authoritative mobile raster
-exists for this normalized header. Three rows at 1280px and above; the main row
-splits into brand + actions over catalog + search below 1080px; below 560px the
-brand and icon-only actions share a row while search and catalog take their own,
-with action labels clipped by a visually-hidden treatment so their accessible
-names survive. Category navigation scrolls horizontally when it cannot fit. No
-hamburger drawer, overlay or mobile menu was invented.
+exists for this normalized header. At 1280px and above the three rows are
+unchanged from the accepted desktop direction. Below 1080px the main row splits
+into brand + actions over catalog + search. Below **768px** the header switches
+to its mobile composition: the utility row keeps only `Москва` and `Магазины`,
+the top action group is hidden in favour of `MobileActionBar`, the catalog entry
+becomes a compact `Каталог` action beside the brand rather than a full-width
+purple block, search takes its own full-width row and gains the QR action, and
+category navigation switches to a horizontally scrollable icon-over-label row. No
+hamburger drawer, overlay, mega-menu or mobile menu was invented.
 
-`?reference=header` renders the real production `SiteHeader` above a neutral
-reference-only body. Footer, NewsletterBand and every page family remain
-unimplemented. No dependency was added.
+`?reference=header` renders the real production `SiteHeader` and
+`MobileActionBar` above a neutral reference-only body, and passes a real local
+`onScanRequest` callback so the QR button can be exercised without fake
+behaviour. Footer, NewsletterBand and every page family remain unimplemented. No
+dependency was added.
 
 ### Global Shell A — Container
 
@@ -223,8 +254,9 @@ Independent audits themselves remain optional. See the AUDIT.md section of
 - Temporary reference pages: `src/app/TemporaryReference.tsx`.
 - Canonical layout primitive: `src/components/layout/` — `Container`, with its
   styles in `layout.scss`.
-- Canonical global shell: `src/components/shell/` — `SiteHeader`, with its styles
-  in `header.scss` and its brand lockup asset in `src/assets/shell/`.
+- Canonical global shell: `src/components/shell/` — `SiteHeader` and
+  `MobileActionBar`, with their styles in `header.scss` and the brand lockup
+  asset in `src/assets/shell/`.
 - Reusable controls and form fields: `src/components/ui/`, with the shared
   control system in `controls.scss`.
 - Reusable product presentation components: `src/components/product/`, with their
@@ -698,6 +730,12 @@ conversion point.
 Verified in build output: `24px → 1.5rem`, `18px → 1.125rem`, `1px solid`
 unchanged, `50%` / `100dvh` unchanged, `@media (width >= 768px)` unchanged.
 
+Stylelint's `length-zero-no-unit` is configured with `ignoreFunctions: ["env"]`.
+This is a deliberate, narrow option, not a disable: `env(safe-area-inset-bottom,
+0px)` needs a _united_ zero because the fallback is also consumed inside
+`calc()`, where adding a unitless `0` to a length is invalid CSS. Zero lengths
+everywhere else still must be unitless.
+
 ### SCSS helpers
 
 `src/styles/helpers/` holds the generic helper layer, consumed through its entry
@@ -733,7 +771,8 @@ The base page no longer hosts the Foundations surface. A query-string check in
   draft Header or Footer; its bands, surfaces and blocks are reference-owned
   styling that exists only to expose Container boundaries.
 - `?reference=header` — the Global Shell Header reference surface: the real
-  production `SiteHeader` above a neutral reference-only body. It is not a Home
+  production `SiteHeader` and `MobileActionBar` around a neutral reference-only
+  body that reserves bottom space for the fixed bar below 768px. It is not a Home
   page, and it implements no hero, catalog, breadcrumbs, footer or newsletter.
 
 Links are built from `import.meta.env.BASE_URL`, so they resolve under the
@@ -760,14 +799,24 @@ functional suppression directives.
 
 ## Current visual status
 
-**Global Shell B / SiteHeader — technically complete, user visual PASS still
-required.** `?reference=header` measures zero horizontal document overflow at
-1920 / 1440 / 1280 / 1024 / 768 / 375 / 320, with all three header rows sharing
-identical Container inner edges at every width. Header height is 180.58px at
-1280px and above, 248.58px at 1024–768px and 288–305px at 375/320. The compact
-search keeps the accessible label `Поиск по каталогу`; every action, category and
-utility destination is a real anchor, and the only header `<button>` is the
-search submit.
+**Global Shell B / SiteHeader + MobileActionBar — technically complete, user
+visual PASS still required.** The desktop direction was reviewed and accepted;
+the mobile correction now awaits PASS.
+
+`?reference=header` measures zero horizontal document overflow at
+1920 / 1440 / 1280 / 1024 / 768 / 430 / 390 / 375 / 360 / 320, with all three
+header rows sharing identical Container inner edges at every width. Header height
+is 180.58px at 1280px and above, 248.58px at 1024–768px and 233.19px across
+430–320 — shorter than before the correction despite the added search row,
+because the four actions moved out. The 55px `MobileActionBar` appears only below
+768px and never coexists with the top action group. The compact search keeps the
+accessible label `Поиск по каталогу`; every action, category and utility
+destination is a real anchor, and the only header `<button>`s are the search
+submit and — on mobile only, with a real callback — the QR action.
+
+**The current reconstructed GoodCall brand mark is visually accepted by the
+user** and is intentionally unchanged. `src/assets/shell/brand-mark.svg` was not
+redrawn or replaced.
 
 **Global Shell A / Container — visually accepted by the user on 2026-08-24.**
 `?reference=layout` measures 1440px maximum outer width, centred at 1920px, and
@@ -925,7 +974,11 @@ none of them blocks the closed milestone.
   `typescript-eslint@8.67` requires `<6.1.0`. Revisit when it supports 7.
 - No `public/` directory exists. Add one only when a genuine stable public asset
   is needed.
-- No favicon is declared yet.
+- **Brand/Logo extraction + favicon reuse — deferred until after Header mobile
+  correction PASS.** The accepted brand mark stays local to the header; no
+  `BrandLogo`/`Logo` component exists, no favicon files exist, and
+  `index.html` favicon metadata is untouched. This is an approved future task,
+  not part of the current slice.
 
 ## Active open questions
 
@@ -933,14 +986,16 @@ None.
 
 ## Next approved step
 
-**User visual review of Global Shell B / SiteHeader**, using the
-`?reference=header` screenshots, followed by any correction the review calls for.
-Header is technically complete and waits on that gate.
+**User visual review of the corrected Global Shell B / SiteHeader +
+MobileActionBar**, using the `?reference=header` screenshots, followed by any
+correction the review calls for. Header is technically complete and waits on that
+gate.
 
-Do not begin Newsletter or Footer implementation before Header receives explicit
-user visual PASS. Do not add router, state or data architecture, and do not add
-dependencies unless a concrete shell requirement proves necessary. Accepted
-system decisions win over incidental raster differences.
+Do not begin Logo/favicon, Newsletter or Footer implementation before Header
+receives explicit user visual PASS. Do not add router, state or data
+architecture, and do not add dependencies unless a concrete shell requirement
+proves necessary. Accepted system decisions win over incidental raster
+differences.
 
 ## Normative repository docs
 

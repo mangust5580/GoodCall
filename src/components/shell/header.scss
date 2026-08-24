@@ -50,10 +50,10 @@
       outline: 2px solid var(--color-base-white);
       outline-offset: 3px;
     }
+  }
 
-    &:first-of-type {
-      margin-inline-start: auto;
-    }
+  &__stores {
+    margin-inline-start: auto;
   }
 
   &__main-inner {
@@ -115,6 +115,10 @@
     }
 
     @include controls.control-focus;
+  }
+
+  &__catalog-label-short {
+    display: none;
   }
 
   &__search {
@@ -191,6 +195,8 @@
   }
 
   &__category-list {
+    --control-icon-size: 18px;
+
     display: flex;
     gap: 4px var(--header-category-gap);
     justify-content: space-between;
@@ -204,8 +210,10 @@
   }
 
   &__category {
-    display: inline-block;
+    display: inline-flex;
     flex: none;
+    gap: 8px;
+    align-items: center;
     padding: 6px 4px;
     border-radius: var(--control-radius-sm);
     font-size: 14px;
@@ -226,9 +234,11 @@
     }
   }
 
-  @include h.media-max(1080px) {
-    --header-category-gap: 16px;
+  @include h.media-max(1300px) {
+    --header-category-gap: 12px;
+  }
 
+  @include h.media-max(1080px) {
     &__main-inner {
       grid-template-areas:
         'brand actions'
@@ -246,47 +256,162 @@
   }
 
   @include h.media-max(768px) {
-    &__service {
+    --header-brand-size: 17px;
+    --header-category-gap: 8px;
+
+    &__service,
+    &__support,
+    &__actions {
       display: none;
     }
-  }
 
-  @include h.media-max(560px) {
-    --header-action-gap: 4px;
-    --header-brand-size: 16px;
+    &__utility-inner {
+      flex-wrap: nowrap;
+      min-height: 36px;
+      padding-block: 6px;
+    }
+
+    &__location {
+      min-width: 0;
+    }
 
     &__main-inner {
       grid-template-areas:
-        'brand actions'
-        'search search'
-        'catalog catalog';
+        'brand catalog'
+        'search search';
+      grid-template-columns: minmax(0, 1fr) auto;
       gap: 12px;
+      padding-block: 12px;
+    }
+
+    &__brand {
+      gap: 8px;
+      min-width: 0;
     }
 
     &__brand-mark {
-      width: 20px;
-      height: 25px;
+      width: 21px;
+      height: 26px;
     }
 
     &__catalog {
-      justify-content: center;
+      gap: 6px;
+      min-height: 40px;
+      padding: 0 14px;
+      font-size: 14px;
     }
 
-    &__action {
-      min-width: 32px;
+    &__catalog-label {
+      display: none;
+    }
+
+    &__catalog-label-short {
+      display: inline;
+    }
+
+    &__category-list {
+      --control-icon-size: 22px;
+
+      justify-content: flex-start;
+      padding-block: 8px;
+    }
+
+    &__category {
+      flex-direction: column;
+      gap: 4px;
+      justify-content: flex-start;
+      min-width: 62px;
       padding: 6px;
+      font-size: 11px;
+      line-height: 1.2;
+      text-align: center;
+    }
+  }
+}
+
+.mobile-action-bar {
+  --control-icon-size: 24px;
+
+  position: fixed;
+  inset-inline: 0;
+  inset-block-end: 0;
+  z-index: 20;
+  display: none;
+  padding-block-end: env(safe-area-inset-bottom, 0px);
+  background-color: var(--role-surface-card);
+  border-top: var(--control-border-width) solid var(--role-border-default);
+
+  @include h.media-max(768px) {
+    display: block;
+  }
+
+  &__list {
+    display: flex;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  &__item {
+    display: flex;
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  &__link {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: 4px;
+    align-items: center;
+    justify-content: center;
+    min-height: 54px;
+    padding: 6px 2px;
+    border-radius: var(--control-radius-sm);
+    font-size: 11px;
+    line-height: 1.2;
+    color: var(--role-text-secondary);
+    text-align: center;
+    text-decoration-line: none;
+
+    &:hover {
+      color: var(--role-text-link);
     }
 
-    &__action-label {
-      position: absolute;
-      width: 1px;
-      height: 1px;
-      margin: -1px;
-      padding: 0;
-      overflow: hidden;
-      white-space: nowrap;
-      border: 0;
-      clip-path: inset(50%);
+    @include controls.control-focus;
+
+    &:focus-visible {
+      outline-offset: -2px;
     }
+  }
+
+  &__glyph {
+    position: relative;
+    display: inline-flex;
+  }
+
+  &__badge {
+    position: absolute;
+    inset-block-start: -5px;
+    inset-inline-start: 13px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 17px;
+    height: 17px;
+    padding: 0 5px;
+    background-color: var(--color-brand-purple-600);
+    border-radius: var(--control-radius-pill);
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--role-text-inverse);
+  }
+
+  &__label {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 }

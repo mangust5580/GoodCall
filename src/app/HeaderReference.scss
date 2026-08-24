@@ -1,3 +1,5 @@
+@use '../styles/helpers' as h;
+
 .header-reference {
   min-height: 100dvh;
   background-color: var(--role-surface-page);
@@ -5,6 +7,10 @@
   &__body {
     display: block;
     padding-block: 40px 64px;
+
+    @include h.media-max(768px) {
+      padding-block-end: calc(96px + env(safe-area-inset-bottom, 0px));
+    }
   }
 
   &__inner {

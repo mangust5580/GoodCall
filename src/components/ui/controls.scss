@@ -1,5 +1,6 @@
 $icon-names: (
   'search',
+  'scan-qr',
   'calendar',
   'clock',
   'chevron-down',
@@ -24,7 +25,17 @@ $icon-names: (
   'settings',
   'tools',
   'log-out',
-  'edit'
+  'edit',
+  'store',
+  'smartphone',
+  'tablet',
+  'laptop',
+  'accessories',
+  'headphones',
+  'watch',
+  'tv',
+  'gamepad',
+  'appliance'
 );
 
 :root {
@@ -535,6 +546,10 @@ $icon-names: (
 
   &--search {
     padding-right: 82px;
+
+    &-trailing {
+      padding-right: 118px;
+    }
 
     &::-webkit-search-cancel-button,
     &::-webkit-search-decoration,

@@ -1,51 +1,59 @@
+import { useSyncExternalStore } from 'react';
+
 import brandMark from '../../assets/shell/brand-mark.svg';
 import { Container } from '../layout';
 import { Icon, SearchField } from '../ui';
 import type { IconName } from '../ui';
+import { shellActions } from './shellActions';
+import type { ShellAction, ShellActionInput } from './shellActions';
 
 export interface SiteHeaderCategory {
   readonly label: string;
   readonly href: string;
+  readonly icon?: IconName;
 }
 
-export interface SiteHeaderProps {
+export interface SiteHeaderProps extends Omit<ShellActionInput, 'fallbackHref'> {
   readonly homeHref?: string;
   readonly catalogHref?: string;
-  readonly comparisonHref?: string;
-  readonly favoritesHref?: string;
-  readonly cartHref?: string;
-  readonly accountHref?: string;
   readonly storesHref?: string;
   readonly supportHref?: string;
   readonly locationLabel?: string;
-  readonly comparisonCount?: number;
-  readonly favoritesCount?: number;
-  readonly cartCount?: number;
   readonly categories?: readonly SiteHeaderCategory[];
   readonly searchPlaceholder?: string;
   readonly onSearchSubmit?: (value: string) => void;
+  readonly onScanRequest?: () => void;
 }
 
-const CATEGORY_LABELS = [
-  'Смартфоны',
-  'Планшеты',
-  'Ноутбуки',
-  'Аксессуары',
-  'Наушники',
-  'Умные часы',
-  'ТВ и аудио',
-  'Игры и консоли',
-  'Бытовая техника',
-] as const;
+const NARROW_VIEWPORT_QUERY = '(max-width: 767.98px)';
 
-interface HeaderAction {
-  readonly label: string;
-  readonly icon: IconName;
-  readonly href: string;
-  readonly count?: number;
+function subscribeToNarrowViewport(onChange: () => void): () => void {
+  const query = window.matchMedia(NARROW_VIEWPORT_QUERY);
+
+  query.addEventListener('change', onChange);
+
+  return () => {
+    query.removeEventListener('change', onChange);
+  };
 }
 
-function ActionLink({ label, icon, href, count }: HeaderAction) {
+function readNarrowViewport(): boolean {
+  return window.matchMedia(NARROW_VIEWPORT_QUERY).matches;
+}
+
+const CANONICAL_CATEGORIES: readonly { readonly label: string; readonly icon: IconName }[] = [
+  { label: 'Смартфоны', icon: 'smartphone' },
+  { label: 'Планшеты', icon: 'tablet' },
+  { label: 'Ноутбуки', icon: 'laptop' },
+  { label: 'Аксессуары', icon: 'accessories' },
+  { label: 'Наушники', icon: 'headphones' },
+  { label: 'Умные часы', icon: 'watch' },
+  { label: 'ТВ и аудио', icon: 'tv' },
+  { label: 'Игры и консоли', icon: 'gamepad' },
+  { label: 'Бытовая техника', icon: 'appliance' },
+];
+
+function ActionLink({ label, icon, href, count }: ShellAction) {
   return (
     <li className="site-header__action-item">
       <a className="site-header__action" href={href}>
@@ -62,36 +70,22 @@ function ActionLink({ label, icon, href, count }: HeaderAction) {
 export function SiteHeader({
   homeHref,
   catalogHref,
-  comparisonHref,
-  favoritesHref,
-  cartHref,
-  accountHref,
   storesHref,
   supportHref,
   locationLabel = 'Москва',
-  comparisonCount,
-  favoritesCount,
-  cartCount,
   categories,
-  searchPlaceholder = 'Поиск среди 50 000+ товаров',
+  searchPlaceholder,
   onSearchSubmit,
+  onScanRequest,
+  ...actionInput
 }: SiteHeaderProps) {
   const base = import.meta.env.BASE_URL;
+  const narrow = useSyncExternalStore(subscribeToNarrowViewport, readNarrowViewport, () => false);
   const home = homeHref ?? base;
   const catalog = catalogHref ?? base;
-  const categoryItems = categories ?? CATEGORY_LABELS.map((label) => ({ label, href: catalog }));
-
-  const actions: readonly HeaderAction[] = [
-    {
-      label: 'Сравнение',
-      icon: 'compare',
-      href: comparisonHref ?? base,
-      count: comparisonCount,
-    },
-    { label: 'Избранное', icon: 'heart', href: favoritesHref ?? base, count: favoritesCount },
-    { label: 'Корзина', icon: 'cart', href: cartHref ?? base, count: cartCount },
-    { label: 'Войти', icon: 'person', href: accountHref ?? base },
-  ];
+  const categoryItems =
+    categories ?? CANONICAL_CATEGORIES.map((category) => ({ ...category, href: catalog }));
+  const actions = shellActions({ fallbackHref: base, ...actionInput });
 
   return (
     <header className="site-header">
@@ -102,10 +96,11 @@ export function SiteHeader({
             {locationLabel}
           </p>
           <p className="site-header__service">Доставка по всей России</p>
-          <a className="site-header__utility-link" href={storesHref ?? base}>
+          <a className="site-header__utility-link site-header__stores" href={storesHref ?? base}>
+            <Icon name="store" />
             Магазины
           </a>
-          <a className="site-header__utility-link" href={supportHref ?? base}>
+          <a className="site-header__utility-link site-header__support" href={supportHref ?? base}>
             <Icon name="headset" />
             Поддержка 24/7
           </a>
@@ -121,7 +116,8 @@ export function SiteHeader({
 
           <a className="site-header__catalog" href={catalog}>
             <Icon name="menu" />
-            Каталог товаров
+            <span className="site-header__catalog-label">Каталог товаров</span>
+            <span className="site-header__catalog-label-short">Каталог</span>
           </a>
 
           <div className="site-header__search">
@@ -130,7 +126,14 @@ export function SiteHeader({
               labelVisuallyHidden
               name="q"
               onSubmit={onSearchSubmit}
-              placeholder={searchPlaceholder}
+              placeholder={
+                searchPlaceholder ?? (narrow ? 'Поиск товаров' : 'Поиск среди 50 000+ товаров')
+              }
+              trailingAction={
+                narrow && onScanRequest
+                  ? { icon: 'scan-qr', label: 'Сканировать QR-код', onClick: onScanRequest }
+                  : undefined
+              }
             />
           </div>
 
@@ -154,13 +157,15 @@ export function SiteHeader({
             {categoryItems.map((category) => (
               <li key={category.label}>
                 <a className="site-header__category" href={category.href}>
-                  {category.label}
+                  {category.icon ? <Icon name={category.icon} /> : null}
+                  <span className="site-header__category-label">{category.label}</span>
                 </a>
               </li>
             ))}
             <li>
               <a className="site-header__category site-header__category--all" href={catalog}>
-                Ещё
+                <Icon name="menu" />
+                <span className="site-header__category-label">Ещё</span>
               </a>
             </li>
           </ul>
