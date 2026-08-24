@@ -1,0 +1,79 @@
+.layout-reference {
+  padding-block: 0 64px;
+
+  &__band {
+    width: 100%;
+    padding-block: 24px;
+
+    &--a {
+      background-color: var(--role-surface-page-soft);
+    }
+
+    &--b {
+      background-color: var(--role-surface-brand-soft);
+    }
+
+    &--c {
+      background-color: var(--role-surface-card-soft);
+    }
+  }
+
+  &__surface {
+    padding: 16px;
+    background-color: var(--role-surface-card);
+    border: 1px dashed var(--role-border-strong);
+    border-radius: 8px;
+  }
+
+  &__title {
+    margin: 0 0 12px;
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--role-text-primary);
+  }
+
+  &__heading {
+    margin: 0 0 12px;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--role-text-primary);
+  }
+
+  &__note {
+    margin: 0;
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--role-text-secondary);
+  }
+
+  &__blocks {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  &__block {
+    min-width: 0;
+    padding: 24px 12px;
+    background-color: var(--role-surface-page-soft);
+    border: 1px solid var(--role-border-default);
+    border-radius: 8px;
+    font-size: 14px;
+    color: var(--role-text-secondary);
+    text-align: center;
+  }
+
+  &__measure {
+    margin: 12px 0 0;
+    font-size: 13px;
+    color: var(--role-text-muted);
+    overflow-wrap: anywhere;
+  }
+
+  &__back {
+    font-size: 15px;
+  }
+}

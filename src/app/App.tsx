@@ -1,5 +1,6 @@
 import { ComponentsReference } from './ComponentsReference';
 import { FoundationsColorReference } from './FoundationsColorReference';
+import { LayoutReference } from './LayoutReference';
 import { ReferenceIndex } from './TemporaryReference';
 
 function currentReference(): string | null {
@@ -15,6 +16,10 @@ export function App() {
 
   if (reference === 'components') {
     return <ComponentsReference />;
+  }
+
+  if (reference === 'layout') {
+    return <LayoutReference />;
   }
 
   return <ReferenceIndex />;

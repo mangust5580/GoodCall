@@ -1,0 +1,9 @@
+@use '../../styles/helpers';
+
+.layout-container {
+  width: 100%;
+  min-width: 0;
+  max-width: 1440px;
+  margin-inline: auto;
+  padding-inline: helpers.fluid(32, 16);
+}

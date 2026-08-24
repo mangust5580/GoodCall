@@ -11,6 +11,32 @@ Operational handoff. This is not a history log.
 
 ## Current milestone
 
+**Global Shell — open. Global Shell A begins with Container.**
+
+Global Shell A adds exactly one production layout primitive, `Container`, in
+`src/components/layout/`. Its contract:
+
+- one neutral horizontal layout primitive rendering a plain `<div>` with the
+  canonical class `.layout-container`;
+- maximum outer width 1440px — the outer border-box width, horizontal padding
+  included, because the app is globally `box-sizing: border-box`;
+- centred with `margin-inline: auto`;
+- responsive horizontal gutters from the existing helper, authored as
+  `helpers.fluid(32, 16)` over the unchanged 320 → 1280 viewport range;
+- no size, fluid, gutter, padding or variant props, and no polymorphic `as`;
+- no vertical spacing, background, border, typography, grid or semantic
+  ownership.
+
+Region backgrounds stay full viewport width; only the content inside a
+`Container` is constrained. `?reference=layout` is the temporary visual
+verification surface for this contract.
+
+Header, Navigation, Newsletter and Footer are **not** implemented by this slice.
+No dependency was added.
+
+**Container awaits user visual PASS.** The technical implementation is complete;
+the visual gate is the user's and was not self-closed.
+
 **Components — closed.**
 
 Final integrated Components visual PASS received from the user on 2026-08-24.
@@ -142,6 +168,8 @@ Independent audits themselves remain optional. See the AUDIT.md section of
 - Foundations colour reference surface: `src/app/FoundationsColorReference.tsx`
   with its own reference-only styles.
 - Temporary reference pages: `src/app/TemporaryReference.tsx`.
+- Canonical layout primitive: `src/components/layout/` — `Container`, with its
+  styles in `layout.scss`.
 - Reusable controls and form fields: `src/components/ui/`, with the shared
   control system in `controls.scss`.
 - Reusable product presentation components: `src/components/product/`, with their
@@ -159,6 +187,8 @@ Independent audits themselves remain optional. See the AUDIT.md section of
 - Content and marketing assets for section 05: `src/assets/marketing/`.
 - Components A, B, C, D, E and F reference surface:
   `src/app/ComponentsReference.tsx`.
+- Global Shell Container reference surface: `src/app/LayoutReference.tsx`, with
+  its reference-only styles in `LayoutReference.scss`.
 
 There is no router, no data layer, and no feature architecture. The reference
 surfaces are development comparison pages, not product UI.
@@ -636,10 +666,15 @@ that same value.
 The base page no longer hosts the Foundations surface. A query-string check in
 `App.tsx` selects the surface, with no router and no new dependency:
 
-- base URL — temporary reference index, linking to the two surfaces below
+- base URL — temporary reference index, linking to the three surfaces below
 - `?reference=foundations` — the Foundations colour reference
 - `?reference=components` — the Components A, B, C, D, E and F reference
   surface
+- `?reference=layout` — the Global Shell Container reference surface: several
+  neutral full-width bands whose `Container` content must share identical inner
+  horizontal edges at every viewport. It is deliberately neutral and is not a
+  draft Header or Footer; its bands, surfaces and blocks are reference-owned
+  styling that exists only to expose Container boundaries.
 
 Links are built from `import.meta.env.BASE_URL`, so they resolve under the
 GitHub Pages base without hardcoding the repository name, and no SPA fallback is
@@ -664,6 +699,12 @@ comments section of `AGENTS.md` for the governed file set and the rule on
 functional suppression directives.
 
 ## Current visual status
+
+**Global Shell A / Container — technically complete, user visual PASS still
+required.** `?reference=layout` measures 1440px maximum outer width, centred at
+1920px, and 32px / 32px / 32px / 23.4667px / 16.9167px / 16.0001px gutters at
+1920 / 1440 / 1280 / 768 / 375 / 320, with zero horizontal overflow and
+identical inner edges across all four reference bands at every tested width.
 
 **Components B — visually accepted by the user on 2026-08-23 and closed.**
 Section 04 Product Components is implemented on the reference surface at
@@ -790,9 +831,12 @@ none of them blocks the closed milestone.
 - Spacing scale.
 - Radius scale.
 - Shadow / elevation scale.
-- Layout primitives.
-- Named breakpoints and responsive token decisions — `$breakpoints` stays empty
-  and `fluid()` has no consumer.
+- Layout primitives beyond horizontal content geometry. The Global Shell
+  `Container` now owns centred width and gutters; no Box, Stack, Grid, Section
+  or Surface primitive exists, and none is invented ahead of a real consumer.
+- Named breakpoints and responsive token decisions — `$breakpoints` stays empty.
+  `fluid()` now has one concrete consumer, the Container gutter; the helper and
+  its 320 → 1280 range were not changed.
 - Overlay and Backdrop opacity, and what distinguishes the two roles.
 - Raster scale factor (1x / 1.5x / 2x), still unconfirmed; it blocks geometry
   work but never affected colour.
@@ -820,17 +864,18 @@ None.
 
 ## Next approved step
 
-**Global Shell planning / evidence audit.** Start from current raster evidence
-and accepted Foundations/Components. Section 01 Header & Navigation is the
-primary deferred Components.png evidence for the shell; evaluate footer evidence
-in shell context as well. Define bounded shell ownership, real component reuse,
-responsive/accessibility requirements and any missing evidence before
-implementation.
+**User visual review of Global Shell A / Container**, using the
+`?reference=layout` screenshots. Container is technically complete and waits on
+that gate.
 
-Planning only: do not implement Global Shell, add router/state/data architecture,
-or add dependencies unless a concrete shell requirement proves necessary. Reuse
-accepted Foundations and Components; raster evidence guides visual direction,
-but accepted system decisions win over incidental raster differences.
+After explicit user visual PASS: **bounded Header planning and implementation**,
+starting from raster section 01 Header & Navigation and reusing the accepted
+Container, Foundations and Components. Not broad shell architecture.
+
+Do not begin Header implementation before Container receives user visual PASS.
+Do not add router, state or data architecture, and do not add dependencies
+unless a concrete shell requirement proves necessary. Accepted system decisions
+win over incidental raster differences.
 
 ## Normative repository docs
 
