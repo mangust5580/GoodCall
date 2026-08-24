@@ -151,6 +151,14 @@ radii, one border and focus treatment, one padding and one icon size. This is
 owned by Components, not Foundations, and is deliberately not a general spacing,
 radius, type or button-size scale.
 
+`.ui-button` owns the complete visual state of any element carrying its classes,
+including anchors. The global `a:hover` rule outranks a bare variant class, so
+every variant reasserts its own hover colour and `.ui-button` sets
+`text-decoration: none` centrally. Without that, an `<a class="ui-button">` CTA
+picked up the link hover colour while the native `<button>` did not. This was a
+stylesheet-only correction: no Button API, variant set, geometry or markup
+changed, and no consumer needed a local override.
+
 Icons are the prepared SVGs in `src/assets/icons/`, applied as CSS masks so they
 inherit `currentColor`. The SVG paths are never duplicated into TypeScript.
 
@@ -484,20 +492,36 @@ FAQ accordion, empty cart state, success feedback panel, informational modal,
 destructive confirmation and product action modal. No `UtilityCard`,
 `FeedbackCard`, `StateCard` or schema-driven feedback renderer exists.
 
-**FAQ semantics.** `FAQAccordion` uses native `<details>` / `<summary>`
-disclosure, so expanded state, keyboard interaction and assistive-technology
-exposure come from the platform. Open state is controlled by the consumer
-through `openIds` plus `onOpenChange`, and the `onToggle` handler only calls
-back when the DOM state actually diverges from the prop, so a controlled
-consumer cannot loop. Multiple rows may be open at once — the raster does not
-evidence single-open exclusivity. The existing `chevron-down` icon rotates 180
-degrees when open, and the open state is additionally carried by the visible
-answer text rather than colour alone.
+**FAQ semantics.** `FAQAccordion` is a controlled single-open accordion built on
+the already installed `radix-ui` `Accordion` (`Root` `type="single"`
+`collapsible`, plus `Item`, `Header`, `Trigger` and `Content`). At most one item
+is open, opening one closes the previous, and the open item can be collapsed to
+leave none open. The public contract is `value?: string` plus
+`onValueChange(value: string | undefined)`; Radix's empty-string collapsed value
+is normalized to `undefined` at the component boundary, so no array contract
+survives for a single-open component. Triggers are real buttons inside `<h3>`
+headers with roving keyboard focus from Radix, closed content carries `hidden`,
+and the open state is carried by the visible answer and chevron direction rather
+than colour alone. The existing `chevron-down` icon rotates 180 degrees when
+open. This replaces the earlier multi-open `<details>` contract on explicit user
+product direction.
+
+**FAQ motion.** A local CSS animation expands and collapses the content between
+`0` and Radix's `--radix-accordion-content-height`, roughly 200ms, with a
+matching chevron transform transition. It is scoped to the accordion and is not
+a global animation system: no timing or easing token was added, no animation
+dependency was installed and no JS animation logic exists. A local
+`prefers-reduced-motion: reduce` block disables both the content animation and
+the chevron transition.
 
 **Empty state and success feedback stay separate.** `EmptyState` is an
 empty/no-result surface with the decorative `cart` glyph; `SuccessFeedback` is a
 status surface on the accepted `--role-state-success-soft` background with a
-CSS ring around the existing `check` icon. Only the success status is evidenced,
+CSS ring around the existing `check` icon. Both panels centre their
+composition, so the success mark, title, message and full-width CTA align the
+same way as the empty state; this was a Components-F styling change only, with
+no change to `SuccessFeedback` markup, props, `announce` semantics or CTA
+semantics. Only the success status is evidenced,
 so no warning/error/info variant family was created. `SuccessFeedback` is static
 and silent by default; an explicit `announce` prop adds `role="status"` for
 consumers that insert it dynamically, and the reference leaves it off.
@@ -817,6 +841,13 @@ Components F is implemented and technically ready; it stays open until the user
 gives visual PASS. The three modal specimens are launched from Buttons on the
 reference surface, so the visual review needs the open-dialog screenshots as
 well as the section-08 composition.
+
+The user's first visual review produced three corrections, now applied: shared
+anchor/native Button hover parity fixed centrally in `controls.scss`,
+`SuccessFeedback` centred like `EmptyState`, and the FAQ converted to a
+controlled single-open Radix Accordion with a local reduced-motion-aware
+transition. No dependency was added and no global animation system was
+introduced.
 
 Components stays open. Section 01 Header & Navigation remains deferred to future
 Global Shell work rather than being treated as an isolated Components slice. The

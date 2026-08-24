@@ -233,16 +233,12 @@ export function ComponentsReference() {
   const [deliveryOption, setDeliveryOption] = useState('courier');
   const [paymentOption, setPaymentOption] = useState('card');
   const [commerceMessage, setCommerceMessage] = useState('');
-  const [openFaqIds, setOpenFaqIds] = useState<readonly string[]>(['checkout']);
+  const [openFaqId, setOpenFaqId] = useState<string | undefined>('checkout');
   const [openDialog, setOpenDialog] = useState<'info' | 'confirm' | 'product' | null>(null);
   const [feedbackMessage, setFeedbackMessage] = useState('');
   const visibleBrands = brandsExpanded
     ? BRAND_FILTERS
     : BRAND_FILTERS.slice(0, BRAND_FILTERS_INITIAL_COUNT);
-
-  const toggleFaq = (id: string, open: boolean) => {
-    setOpenFaqIds((current) => (open ? [...current, id] : current.filter((faqId) => faqId !== id)));
-  };
 
   const closeDialog = (open: boolean) => {
     if (!open) {
@@ -758,7 +754,7 @@ export function ComponentsReference() {
 
       <Section index="08" title="Utility &amp; Feedback">
         <Group className="cmp-feedback-group cmp-feedback-group--faq" title="FAQ (аккордеон)">
-          <FAQAccordion items={FAQ_ITEMS} onOpenChange={toggleFaq} openIds={openFaqIds} />
+          <FAQAccordion items={FAQ_ITEMS} onValueChange={setOpenFaqId} value={openFaqId} />
         </Group>
 
         <Group className="cmp-feedback-group cmp-feedback-group--empty" title="Пустое состояние">

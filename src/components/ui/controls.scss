@@ -98,6 +98,7 @@ $icon-names: (
   font-size: var(--control-font-size);
   font-weight: 600;
   line-height: 1.2;
+  text-decoration: none;
   cursor: pointer;
 
   @include control-focus;
@@ -113,6 +114,7 @@ $icon-names: (
 
     &:hover:not(:disabled) {
       background-color: var(--color-brand-purple-700);
+      color: var(--role-text-inverse);
     }
   }
 
@@ -123,6 +125,7 @@ $icon-names: (
 
     &:hover:not(:disabled) {
       border-color: var(--role-border-focus);
+      color: var(--role-text-link);
     }
   }
 
@@ -143,6 +146,7 @@ $icon-names: (
 
     &:hover:not(:disabled) {
       background-color: var(--role-state-danger-soft);
+      color: var(--role-state-danger);
     }
   }
 }
