@@ -45,10 +45,16 @@ reviewed. It is not closed.
 
 Components A, B, C, D and E are closed. Overall Components remains open. Every
 raster Components section except 01 is now implemented. Section 01 Header &
-Navigation remains deferred until future Global Shell work creates the real
-shell consumer. The known section-03 narrow reference-composition overflow is
-still an open correction that must be completed before the overall Components
-milestone can close, independently of the Components F visual review.
+Navigation remains deferred until future Global Shell work creates the real shell
+consumer.
+
+The section-03 narrow reference-composition overflow is corrected. The root cause
+was the reference-only fixed 360px minimum on `.cmp-fields`; reusable Inputs &
+Forms primitives were unchanged, and Components A remains closed. Section 03 now
+measures 0px horizontal overflow at 1440px, 768px, 375px and 320px, and the whole
+Components reference no longer horizontally overflows at 375px or 320px. No
+dependency, Foundation or public API changed. After final visual confirmation,
+only formal Components F and overall Components closeout remains.
 
 The current Components A visual-polish correction is applied: active Tabs no
 longer change on hover, enabled field surfaces share a coherent hover state, and
@@ -857,11 +863,6 @@ none of them blocks the closed milestone.
 
 ## Known deferred work
 
-- The Components reference section 03 can overflow at a 320px viewport because
-  the reference grid currently uses a 360px minimum track. This is a deferred
-  reference-composition correction, does not reopen Components A and does not
-  block any closed Components slice, but remains required before the overall
-  Components milestone can close.
 - Phone validation, country selection and international formatting are deferred
   until a real product form consumer defines those requirements.
 - ESLint is pinned to the 9.x line. ESLint 10 is current, but
@@ -880,16 +881,13 @@ None.
 
 ## Next approved step
 
-**Section-03 narrow reference-composition overflow correction.** That is the
-next separate technical task, and it is required before the overall Components
-milestone can close.
-
-Ahead of it, a focused user visual review of the shared cross-component polish
-is outstanding: Pagination current-page semantics, selected-Tab semantics, the
-inline-link underline treatment, the AddressCard visible edit action and
-locality hierarchy, and the Chip semantic-ring normalization. Components A, B
-and D remain closed after focused regression of those areas; no dependency was
-added.
+**Formal Components F and overall Components closeout review.** The section-03
+narrow reference-composition overflow is resolved. A focused user visual review
+of the shared cross-component polish is outstanding: Pagination current-page
+semantics, selected-Tab semantics, the inline-link underline treatment, the
+AddressCard visible edit action and locality hierarchy, and the Chip
+semantic-ring normalization. Components A, B and D remain closed after focused
+regression of those areas; no dependency was added.
 
 Components F received user visual PASS on 2026-08-24 but its formal closeout is
 still pending that shared polish review.
