@@ -11,21 +11,26 @@ Operational handoff. This is not a history log.
 
 ## Current milestone
 
-**Components — open.** Closed slices: **Components A — Core Controls & Forms**,
-covering raster sections 02 Buttons & Controls and 03 Inputs & Forms,
-**Components B — Product Components**, covering raster section 04,
-**Components C — Content & Marketing**, covering raster section 05,
-**Components D — Account Components**, covering raster section 06,
-**Components E — Commerce Blocks**, covering raster section 07, and
-**Components F — Utility & Feedback**, covering raster section 08.
+**Components — closed.**
+
+Final integrated Components visual PASS received from the user on 2026-08-24.
+This applies to the post-polish / post-section-03 integrated Components
+reference and is the acceptance basis for closing the overall Components
+milestone.
+
+Closed slices: **Components A — Core Controls & Forms**, covering raster sections
+02 Buttons & Controls and 03 Inputs & Forms, **Components B — Product
+Components**, covering raster section 04, **Components C — Content & Marketing**,
+covering raster section 05, **Components D — Account Components**, covering
+raster section 06, **Components E — Commerce Blocks**, covering raster section
+07, and **Components F — Utility & Feedback**, covering raster section 08.
 
 Components A received user visual PASS on 2026-08-23 and is closed.
 
 Components B received user visual PASS on 2026-08-23 and is closed. The
 prepared product assets are consumed, the existing Chip, QuantityStepper and Icon
 primitives are reused, and no product domain model, cart store or wishlist store
-was introduced. Raster section 01 remains deferred and section 08 is not
-implemented.
+was introduced. Raster section 01 remains deferred to future Global Shell work.
 
 User visual PASS received for Components C — Content & Marketing on 2026-08-23.
 Components C is closed. All four prepared section-05 assets are consumed — the
@@ -42,12 +47,10 @@ closed.
 Components F — Utility & Feedback received user visual PASS on 2026-08-24 and is
 closed.
 
-Foundations and Components A, B, C, D, E and F are closed. Overall Components
-remains open pending explicit user visual PASS for the final integrated
-post-polish/post-section-03 reference. Every raster Components section except 01
-is implemented. Section 01 Header & Navigation remains deferred until future
-Global Shell work creates the real shell consumer and is not an open
-Components-slice blocker.
+Foundations and Components A, B, C, D, E and F are closed. Overall Components is
+closed. Every raster Components section except 01 is implemented. Section 01
+Header & Navigation remains deferred until future Global Shell work creates the
+real shell consumer and is not an open Components-slice blocker.
 
 The section-03 narrow reference-composition overflow is corrected. The root cause
 was the reference-only fixed 360px minimum on `.cmp-fields`; reusable Inputs &
@@ -732,10 +735,11 @@ The Foundations reference surface mirrors the raster's five sections so the
 colour system can be compared side by side. It is reached at
 `?reference=foundations`.
 
-The Footer gradient runs left-to-right, matching the visible raster specimen,
-which is horizontal despite the poster's 180 degree annotation. Its stops are
-unchanged. The other five gradients were measured against their specimens and
-left as they were, since none showed a material mismatch.
+The footer-like gradient specimen runs left-to-right, matching the visible
+raster evidence, which is horizontal despite the poster's 180 degree annotation.
+Its colour stops are unchanged. Footer evidence should be evaluated during
+future Global Shell planning if operationally useful, not treated as a completed
+reusable Footer component from Components closure.
 
 Typography and geometry deliberately do not match the raster: it documents no
 font family, type scale, spacing or radius scale, so those were not invented.
@@ -816,23 +820,17 @@ None.
 
 ## Next approved step
 
-**Final integrated Components visual review.** Review the post-polish and
-post-section-03 Components reference at `?reference=components`. Minimum focus:
-section 02 active Tabs, Pagination current-page marker and Chips; section 03
-375px / 320px responsive containment; section 06 AddressCard visible
-`Редактировать` action and city/postal hierarchy; global inline-link underline;
-and overall sections 02-08 visual consistency.
+**Global Shell planning / evidence audit.** Start from current raster evidence
+and accepted Foundations/Components. Section 01 Header & Navigation is the
+primary deferred Components.png evidence for the shell; evaluate footer evidence
+in shell context as well. Define bounded shell ownership, real component reuse,
+responsive/accessibility requirements and any missing evidence before
+implementation.
 
-Overall Components remains open pending explicit user visual PASS for the final
-integrated post-polish/post-section-03 reference. No technical blocker remains
-before overall Components milestone closure. Do not require another code task
-unless the user finds a real issue.
-
-After explicit user visual PASS, the next task is docs-only overall Components
-milestone closeout.
-
-Section 01 Header & Navigation remains deferred to future Global Shell work
-rather than being treated as an isolated Components slice.
+Planning only: do not implement Global Shell, add router/state/data architecture,
+or add dependencies unless a concrete shell requirement proves necessary. Reuse
+accepted Foundations and Components; raster evidence guides visual direction,
+but accepted system decisions win over incidental raster differences.
 
 ## Normative repository docs
 
