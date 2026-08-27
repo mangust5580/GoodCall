@@ -20,7 +20,9 @@ export function FooterReference() {
           <p className="footer-reference__note">
             No router exists yet, so footer navigation labels and legal labels render as
             non-interactive text rather than fake links. Only genuinely actionable destinations are
-            anchors: the brand home link, the support phone and the support email.
+            anchors: the brand home link, the support phone and the support email. The VK, Telegram,
+            YouTube and RUTUBE marks are production visual content, but they stay non-interactive
+            until real GoodCall destinations exist, so they add no tab stops.
           </p>
           <p className="footer-reference__note">
             Below 768px the real production <code>MobileActionBar</code> is fixed to the bottom of

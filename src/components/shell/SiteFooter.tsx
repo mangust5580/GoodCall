@@ -1,4 +1,9 @@
 import paymentMir from '../../assets/commerce/payment-mir.svg';
+import paymentSbp from '../../assets/commerce/payment-sbp.svg';
+import socialRutube from '../../assets/social/rutube.svg';
+import socialTelegram from '../../assets/social/telegram.svg';
+import socialVk from '../../assets/social/vk.svg';
+import socialYoutube from '../../assets/social/youtube.svg';
 import { BrandLogo } from '../brand';
 import { Container } from '../layout';
 import { Icon } from '../ui';
@@ -27,6 +32,27 @@ const FOOTER_GROUPS: readonly FooterGroup[] = [
   },
 ];
 
+interface BrandMark {
+  readonly name: string;
+  readonly src: string;
+}
+
+interface PaymentMark extends BrandMark {
+  readonly modifier: string;
+}
+
+const SOCIAL_MARKS: readonly BrandMark[] = [
+  { name: 'VK', src: socialVk },
+  { name: 'Telegram', src: socialTelegram },
+  { name: 'YouTube', src: socialYoutube },
+  { name: 'RUTUBE', src: socialRutube },
+];
+
+const PAYMENT_MARKS: readonly PaymentMark[] = [
+  { name: 'МИР', src: paymentMir, modifier: 'mir' },
+  { name: 'СБП', src: paymentSbp, modifier: 'sbp' },
+];
+
 const LEGAL_ITEMS: readonly string[] = [
   'Политика конфиденциальности',
   'Пользовательское соглашение',
@@ -49,6 +75,13 @@ export function SiteFooter({ homeHref }: SiteFooterProps) {
               <BrandLogo />
             </a>
             <p className="site-footer__tagline">Ваш надёжный магазин электроники и гаджетов</p>
+            <ul aria-label="Мы в соцсетях" className="site-footer__socials">
+              {SOCIAL_MARKS.map((mark) => (
+                <li key={mark.name}>
+                  <img alt={mark.name} className="site-footer__social-mark" src={mark.src} />
+                </li>
+              ))}
+            </ul>
           </div>
 
           {FOOTER_GROUPS.map((group) => (
@@ -97,9 +130,15 @@ export function SiteFooter({ homeHref }: SiteFooterProps) {
             ))}
           </ul>
           <ul className="site-footer__payments">
-            <li>
-              <img alt="МИР" className="site-footer__payment-mark" src={paymentMir} />
-            </li>
+            {PAYMENT_MARKS.map((mark) => (
+              <li key={mark.name}>
+                <img
+                  alt={mark.name}
+                  className={`site-footer__payment-mark site-footer__payment-mark--${mark.modifier}`}
+                  src={mark.src}
+                />
+              </li>
+            ))}
           </ul>
         </div>
       </Container>

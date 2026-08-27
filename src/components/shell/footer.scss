@@ -40,6 +40,22 @@
     color: var(--role-text-muted);
   }
 
+  &__socials {
+    display: flex;
+    flex-flow: row wrap;
+    gap: 12px;
+    align-items: center;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  &__social-mark {
+    display: block;
+    width: auto;
+    height: 32px;
+  }
+
   &__group {
     min-width: 0;
   }
@@ -167,8 +183,15 @@
 
   &__payment-mark {
     display: block;
-    width: 54px;
-    height: 18px;
+    width: auto;
+
+    &--mir {
+      height: 18px;
+    }
+
+    &--sbp {
+      height: 26px;
+    }
   }
 
   @include h.media-up(560px) {

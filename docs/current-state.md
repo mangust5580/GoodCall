@@ -88,12 +88,29 @@ confirmation. No address, legal entity or support hours beyond the repeated
 9:00-21:00 window were fabricated.
 
 **Assets.** `BrandLogo` is reused unchanged inside a footer-owned anchor, and the
-existing `src/assets/commerce/payment-mir.svg` is the payment mark. The `phone`
-and `mail` glyphs come from the accepted `Icon` registry. **Two asset gaps are
-open**: the social row (VK / Telegram / YouTube / Instagram) repeats in 4 of 5
-rasters but no authored brand marks exist in the repository and third-party logos
-must not be reconstructed, and the additional payment marks (VISA, Mastercard,
-Apple Pay, Google Pay) are likewise absent. Both are omitted rather than faked.
+`phone` and `mail` glyphs come from the accepted `Icon` registry.
+
+The social and payment gaps are now closed with **officially sourced third-party
+brand marks**, vendored one file per mark and never reconstructed by hand or
+generated: `src/assets/social/vk.svg`, `telegram.svg`, `youtube.svg` and
+`rutube.svg`, plus `src/assets/commerce/payment-sbp.svg` beside the existing
+`payment-mir.svg`. Sources are recorded in the task audit. They are ordinary
+asset imports rendered as `<img>` with the brand name as `alt`; **none is
+registered in `IconName`**, because these are brand marks, not UI glyphs.
+
+**Socials are non-interactive.** GoodCall has no real VK / Telegram / YouTube /
+RUTUBE destinations yet, so the row is an informative
+`<ul aria-label="Мы в соцсетях">` of images with no anchors, no `href="#"`, no
+handlers and no tab stops. It converts to links when real destinations exist; no
+social-links API was added now.
+
+**Payments are МИР + СБП only.** VISA, Mastercard, Apple Pay, Google Pay, SberPay
+and YooMoney are deliberately not shown.
+
+**App-store badges stay deferred.** No RuStore, App Store, Google Play or
+AppGallery badge exists, because GoodCall has no application and no real store
+destination contract; no placeholder badge or reserved empty download area was
+created.
 
 **Responsive direction** is CSS only. One column below 560px, two from 560px,
 three from 768px with the contacts block spanning two cells, and the five-column
@@ -166,18 +183,24 @@ newsletter/marketing SDK, `localStorage`, cookie, loading state, retry,
 analytics, validation schema, form library or React form state. No success or
 failure UI exists inside the production component.
 
-**Surface and artwork.** `newsletter-band__content` paints two restrained white
-radial glows over a `102deg` linear gradient running
-`--color-brand-purple-800` → `-700` → `-600` → `-500` → a tail stop. The tail is
-a Newsletter-local custom property: `--color-brand-purple-400` only from 768px
-up, where the gift reserve keeps copy out of the light zone, and
-`--color-brand-purple-500` below that, so white body copy stays at or above
-4.98:1 at every tested width. There is no animation, particle field, filter stack
-or noise. `src/assets/marketing/newsletter-gift.svg` is imported as an ordinary
-asset URL and rendered as a decorative `<img alt="" aria-hidden="true">`
-absolutely positioned bottom-right with `object-fit: contain`, so it always fits
-the band and crops only into the 14px below it. It is not an `Icon`, not a
-`Picture`, and not registered in the icon registry.
+**Surface and artwork.** `newsletter-band__content` stacks three background
+layers: one restrained white radial glow at the upper left, a dedicated right
+decorative zone — `linear-gradient(to right, transparent, --color-brand-purple-200)`
+sized in px from the right edge by the Newsletter-local `--newsletter-band-zone`
+— and a `102deg` linear gradient running `--color-brand-purple-800` → `-700` →
+`-600` → `-500` → `--newsletter-band-tail`. Both locals are breakpoint-scoped: the
+zone is `0` below 768px and interpolates 170px → 560px across 768px → 1440px, and
+the tail is `--color-brand-purple-500` below 768px and `--color-brand-purple-300`
+above it. Sizing the zone from the right edge keeps it inside the reserved gift
+area at every width, so white body copy never crosses onto the light backdrop and
+stays at or above 4.98:1. There is no animation, particle field, filter stack or
+noise. `src/assets/marketing/newsletter-gift.svg` — reworked to a 240×150 viewBox
+with deepened box facets and a real two-loop ribbon bow so it separates from the
+lavender zone — is imported as an ordinary asset URL and rendered as a decorative
+`<img alt="" aria-hidden="true">` at `right: -12px; bottom: -10px` with
+`object-fit: contain` and one soft `drop-shadow`, so it always fits the band and
+crops only into the 10px below it. It is not an `Icon`, not a `Picture`, and not
+registered in the icon registry.
 
 **Mail motif.** The typed `Icon` registry gained one glyph, `mail`, in the
 existing 24×24 stroke style, backed by `src/assets/icons/mail.svg`; `IconName`
@@ -725,6 +748,9 @@ Independent audits themselves remain optional. See the AUDIT.md section of
 - Commerce brand and store assets for section 07: `src/assets/commerce/`.
 - Content and marketing assets for section 05, plus the decorative
   `newsletter-gift.svg` consumed by `NewsletterBand`: `src/assets/marketing/`.
+- Officially sourced third-party social brand marks consumed by `SiteFooter`:
+  `src/assets/social/` — `vk.svg`, `telegram.svg`, `youtube.svg`, `rutube.svg`.
+  They are brand assets, not `Icon` registry entries.
 - Components A, B, C, D, E and F reference surface:
   `src/app/ComponentsReference.tsx`.
 - Global Shell Container reference surface: `src/app/LayoutReference.tsx`, with
@@ -1276,10 +1302,11 @@ functional suppression directives.
 required.** `?reference=footer` reports zero horizontal document overflow, zero
 runtime errors and zero failed requests at 1920 / 1440 / 1280 / 1024 / 768 / 430 /
 390 / 375 / 320, and so do the base index and every earlier reference surface. The
-footer surface is 255.4px tall at 1280px and above against roughly 224px in the
-normalized Home raster — the difference is the omitted social row. Layout is five
-columns from 1200px, three from 768px with the contacts block spanning two cells,
-two from 560px and one below that. The composition holds exactly one `<footer>`
+footer surface is 264px tall at 1280px and above. Layout is five columns from
+1200px, three from 768px with the contacts block spanning two cells, two from
+560px and one below that. The social row stays a single line of four official
+marks (178px wide) at every width down to 320px, and the МИР and СБП marks share
+one centred line everywhere. The composition holds exactly one `<footer>`
 and one `<main>`; heading order runs h1 (reference) then h2 for the newsletter and
 each footer group. Measured contrast on the footer surface is 4.64:1 for muted
 legal and tagline text, 9.89:1 for group items and 17.77:1 for group headings; the
@@ -1294,27 +1321,10 @@ the bar is not displayed.
 **Global Shell D / NewsletterBand — user visual PASS received on 2026-08-27 and
 closed.**
 
-**Global Shell D / NewsletterBand rich promotional polish — technically
-complete; user visual PASS is still required.** The earlier flat brand-soft
-treatment was judged too plain by the user; the band now uses the selected violet
-promotional direction. `?reference=newsletter` reports zero horizontal document
-overflow and zero runtime errors at 1920 / 1440 / 1280 / 1024 / 768 / 430 / 390 /
-375 / 320. The band surface shares the accepted Container inner edges at every
-width, and measures 116.25px at 1440px and above, 138px at 1280px, 191.73px at
-1024px, 208.97px at 768px and 346.31px at 390px. The gift artwork is visible from
-768px up and hidden below it; copy and form share one row at 1280px and above and
-separate below that; the controls stack full width below 560px. Measured white
-copy contrast over the painted gradient at each text run's darkest-to-lightest
-extent stays between 4.98:1 and 10.5:1, so body copy holds AA at every width.
-Form verification is unchanged and re-run: empty submit and the invalid values
-`foo`, `foo@` and `@example.com` produce **0** submissions; `user@example.com`
-produces exactly one per attempt from both a button click and Enter; a
-whitespace-padded address is delivered trimmed; page navigations stay at the
-single initial load, so nothing reloads on submit. The email input carries the
-accessible name `Электронная почта` from a visually hidden real `<label>`, the
-section is named by its `<h2>`, the gift is `alt=""` plus `aria-hidden`, the mail
-tile adds no accessible text, and both controls show the accepted 2px brand focus
-ring in visual order.
+The accepted band measures 116.25px at 1440px and above, 138px at 1280px,
+191.73px at 1024px, 208.97px at 768px and 346.31px at 390px; the gift is visible
+from 768px up and hidden below it; measured white copy contrast over the painted
+gradient stays between 4.98:1 and 10.5:1 at every width.
 
 **Location Foundation / CitySelector — user visual PASS received on 2026-08-27,
 with one explicit correction applied: service-unavailable and geolocation-failure
