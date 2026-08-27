@@ -1,3 +1,4 @@
+import { CatalogReference } from './CatalogReference';
 import { ComponentsReference } from './ComponentsReference';
 import { FooterReference } from './FooterReference';
 import { FoundationsColorReference } from './FoundationsColorReference';
@@ -40,6 +41,10 @@ export function App() {
 
   if (reference === 'footer') {
     return <FooterReference />;
+  }
+
+  if (reference === 'catalog') {
+    return <CatalogReference />;
   }
 
   return <ReferenceIndex />;

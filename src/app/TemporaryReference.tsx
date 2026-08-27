@@ -32,6 +32,9 @@ export function ReferenceIndex() {
         <li>
           <a href={referenceUrl('footer')}>Footer reference</a>
         </li>
+        <li>
+          <a href={referenceUrl('catalog')}>Catalog reference</a>
+        </li>
       </ul>
     </main>
   );

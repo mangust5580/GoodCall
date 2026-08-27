@@ -32,14 +32,93 @@ Open external integration:
   configuration. It is a separate configuration-dependent gate and does not
   block visual shell work.
 
+Technically complete, final polish deferred:
+
+- **Global Shell E / SiteFooter — technically complete and usable. Final user
+  visual polish is deferred until integrated page review near the end of the
+  project, so page-family work is not blocked on an immediate Footer visual
+  PASS.** Its open items ride along: the support phone conflict across the five
+  rasters, social destination wiring until real URLs exist, and app-store badges
+  until a real GoodCall application and store contract exists.
+
 Active visual slice:
 
-- **Global Shell E / SiteFooter — technically complete, user visual PASS is
-  still required.**
+- **Catalog A / Page Foundation & Layout — technically complete, user visual
+  PASS is still required.**
+
+### Catalog A — Page Foundation & Layout
+
+**Active slice. User visual PASS is still required.**
+
+`src/pages/catalog/` owns `CatalogPage` and `catalog.scss`, the first real
+GoodCall page family. **Public API is exactly `resultCount?: number`**
+(default 2546, the raster's specimen figure). There is no
+`src/features/catalog/`, provider, context, store, `catalogApi`,
+`catalogService`, `catalogRepository`, `catalog.types` or `routeConfig`.
+
+**Shell ownership.** `CatalogPage` renders **only** the page `<main>`. The
+reference surface owns the shell composition — `SiteHeader`, `CatalogPage`,
+`NewsletterBand`, `SiteFooter`, `MobileActionBar` — so the shell regions stay
+independently reusable and none becomes page-owned. No generic `PageShell` was
+extracted for a single consumer.
+
+**Anatomy.** `<main class="catalog-page">` → accepted `Container` → a breadcrumb
+`<nav>` above a CSS-grid `__layout` holding three areas: `heading`, `sidebar`
+and `results`. From 1024px the grid is
+`var(--catalog-sidebar-width) minmax(0, 1fr)` with areas
+`'sidebar heading' / 'sidebar results'`, which reproduces the raster, where the
+`<h1>` sits at the results column's left edge and the sidebar spans both rows.
+Below 1024px it collapses to one column ordered heading → sidebar → results, so
+the `<h1>` stays first. `--catalog-sidebar-width: 250px` and
+`--catalog-column-gap: 32px` are Catalog-local custom properties for real
+repeated page geometry; no global Catalog token was added.
+
+**Breadcrumbs.** `Catalog.png` shows **no breadcrumb row** — the category nav
+runs straight into the hero. Breadcrumbs are implemented because the slice
+requires them, following the house treatment visible in
+`Second_level_category.png` (`Главная > … > current`, small muted text with
+chevron separators, above the title). Copy is `Главная / Каталог / Смартфоны`,
+derived from the accepted Header, which reaches top-level categories through its
+catalog entry. Semantics: `<nav aria-label="Хлебные крошки">` with an `<ol>`;
+`Главная` is a real anchor to `import.meta.env.BASE_URL`, `Каталог` has no route
+yet and is non-interactive text, and the current page carries
+`aria-current="page"`. No generic `Breadcrumb` component was extracted until a
+second page proves the pattern. **Their placement and rhythm are task-directed,
+not raster-derived, and need user confirmation.**
+
+**Heading and count.** A real `<h1>Смартфоны</h1>` with
+`2 546 товаров` beside it, formatted through `Intl.NumberFormat('ru-RU')`. The
+count is visible text, never colour- or position-only. Russian plural forms are
+deferred to the data slice; the current wording is correct for the canonical
+figure.
+
+**Toolbar.** The raster's sort control sits on the heading row at the results
+column's right edge. Catalog A reproduces that position with a non-interactive
+`Сортировка: Сначала популярные` indicator. A real control is deliberately **not**
+rendered: sort behaviour belongs to the slice that owns the grid, and a select
+that sorts nothing would be exactly the fake interactivity this project forbids.
+The raster's quick-filter chip row and its two view-mode toggles are likewise
+deferred.
+
+**Reserved regions.** The sidebar and results areas hold neutral dashed
+placeholders (520px tall from 1024px, 160/320px below) purely so column widths,
+the gap and the collapse can be reviewed. They carry no copy, no controls and no
+data, and disappear when Catalog B and C fill them.
+
+**Deferred:** Catalog B — filters and real mobile filter behaviour.
+Catalog C — product grid, pagination and sort behaviour. `ProductCard`,
+`Pagination`, `RangeSlider`, `Checkbox` and `Chip` already exist and were
+deliberately **not** pulled forward.
+
+**Routing.** No router was added. The milestone is exposed through the existing
+`?reference=catalog` development mechanism, so GitHub Pages direct entry keeps
+working without a history fallback. Routing remains a separate decision gate;
+see the task audit for the assessment.
 
 ### Global Shell E — SiteFooter
 
-**Active slice. User visual PASS is still required.**
+**Technically complete and usable. Final user visual polish is deferred until
+integrated page review near the end of the project.**
 
 `src/components/shell/` owns `SiteFooter`, the canonical global shell footer,
 with its styles in `footer.scss`. There is no `src/components/footer/`,
@@ -762,6 +841,9 @@ Independent audits themselves remain optional. See the AUDIT.md section of
   `NewsletterReference.scss`.
 - Global Shell SiteFooter reference surface: `src/app/FooterReference.tsx`, with
   its reference-only styles in `FooterReference.scss`.
+- First page family: `src/pages/catalog/` — `CatalogPage`, with its styles in
+  `catalog.scss`. Its reference surface is `src/app/CatalogReference.tsx`, with
+  reference-only styles in `CatalogReference.scss`.
 
 There is no router, no data layer, and no feature architecture. The reference
 surfaces are development comparison pages, not product UI.
@@ -1273,6 +1355,10 @@ The base page no longer hosts the Foundations surface. A query-string check in
   reference-only intro followed by the real production `NewsletterBand` and
   `SiteFooter`, plus `MobileActionBar` so the mobile shell overlap can be tested.
   It reserves its own bottom inset below 768px and builds no Home page.
+- `?reference=catalog` — the Catalog A reference surface: a reference-only note
+  followed by the real production shell — `SiteHeader`, `CatalogPage`,
+  `NewsletterBand`, `SiteFooter` and `MobileActionBar`. It owns the mobile bottom
+  inset and builds no Home page and no catalog data.
 
 Links are built from `import.meta.env.BASE_URL`, so they resolve under the
 GitHub Pages base without hardcoding the repository name, and no SPA fallback is
@@ -1298,8 +1384,20 @@ functional suppression directives.
 
 ## Current visual status
 
-**Global Shell E / SiteFooter — technically complete; user visual PASS is still
-required.** `?reference=footer` reports zero horizontal document overflow, zero
+**Catalog A / Page Foundation & Layout — technically complete; user visual PASS
+is still required.** `?reference=catalog` renders the real shell around the real
+`CatalogPage` and reports zero horizontal document overflow, zero runtime errors
+and zero failed requests at 1920 / 1440 / 1280 / 1024 / 768 / 430 / 390 / 375 / 320. Content width follows the accepted Container everywhere. The sidebar is
+250px with a 32px gap from 1024px up, giving 1094px of results width at 1440px
+against roughly 1090px in the normalized raster; below 1024px the page is a
+single column ordered heading → sidebar → results. Breadcrumbs stay on one line
+at every width. The page contains exactly one `<main>`, one `<h1>` and one
+focusable element — the `Главная` breadcrumb anchor — with zero `href="#"` and
+zero fake catalog links. The reference owns the mobile bottom inset, and the last
+footer content clears `MobileActionBar` by about 57px at 430 / 390 / 375 / 320.
+
+**Global Shell E / SiteFooter — technically complete and usable; final visual
+polish deferred to integrated page review.** `?reference=footer` reports zero horizontal document overflow, zero
 runtime errors and zero failed requests at 1920 / 1440 / 1280 / 1024 / 768 / 430 /
 390 / 375 / 320, and so do the base index and every earlier reference surface. The
 footer surface is 264px tall at 1280px and above. Layout is five columns from
@@ -1585,11 +1683,14 @@ none of them blocks the closed milestone.
 
 ## Next approved step
 
-**User visual review of Global Shell E / SiteFooter.** The slice is technically
-complete; only the user can grant the visual PASS. Two questions ride with it:
-confirmation of the support phone number, which the five rasters disagree on, and
-a decision on the missing social and payment brand assets, which were omitted
-rather than reconstructed.
+**User visual review of Catalog A / Page Foundation & Layout.** The slice is
+technically complete; only the user can grant the visual PASS. Two questions ride
+with it: breadcrumbs are absent from `Catalog.png` and were built from the
+`Second_level_category.png` house style, and the sort control is a
+non-interactive indicator until the grid it sorts exists.
+
+Footer questions stay open for its deferred polish pass: the support phone
+conflict, social destination wiring, and app-store badges.
 
 **Outstanding external configuration, separate from this slice:** set the
 repository secret `DADATA_TOKEN` (and a local `.env.local` with
@@ -1598,9 +1699,10 @@ verification of the Location Foundation. Until then the deployed Header falls
 back to `Выберите город` and the network features are disabled gracefully. That
 gate is configuration-dependent and does not block visual shell work.
 
-Do not begin page implementation before SiteFooter receives explicit user visual
-PASS. Do not reopen or redesign the accepted Header, BrandLogo, Media Foundation,
-Location visuals, NewsletterBand or closed Components. Do not add router, state or
+Do not begin Catalog B filters or Catalog C product grid and pagination before
+Catalog A receives explicit user visual PASS. Do not reopen or redesign the
+accepted Header, BrandLogo, Media Foundation, Location visuals, NewsletterBand,
+SiteFooter or closed Components. Do not add router, state or
 data architecture, do not add a footer CMS/config layer, backend or persistence,
 and do not add dependencies unless a concrete requirement proves necessary.
 Accepted system decisions win over incidental raster differences.
