@@ -5,6 +5,7 @@
 
   &__content {
     --newsletter-band-tail: var(--color-brand-purple-500);
+    --newsletter-band-zone: 0;
 
     position: relative;
     display: flex;
@@ -15,9 +16,18 @@
     min-width: 0;
     padding: h.fluid(28, 22) h.fluid(32, 20);
     overflow: hidden;
+    background-repeat: no-repeat;
+    background-position:
+      0 0,
+      100% 0,
+      0 0;
+    background-size:
+      100% 100%,
+      var(--newsletter-band-zone) 100%,
+      100% 100%;
     background-image:
       radial-gradient(120% 150% at 6% -30%, var(--alpha-white-16), transparent 58%),
-      radial-gradient(80% 130% at 92% 130%, var(--alpha-white-12), transparent 60%),
+      linear-gradient(to right, transparent, var(--color-brand-purple-200)),
       linear-gradient(
         102deg,
         var(--color-brand-purple-800) 0%,
@@ -106,19 +116,21 @@
 
   &__art {
     position: absolute;
-    right: 0;
-    bottom: -14px;
+    right: -12px;
+    bottom: -10px;
     display: none;
-    width: h.fluid-between(204, 156, 768, 1440);
-    height: calc(100% + 14px);
+    width: h.fluid-between(228, 170, 768, 1440);
+    height: calc(100% + 10px);
     object-fit: contain;
     object-position: right bottom;
+    filter: drop-shadow(0 10px 18px var(--alpha-purple-24));
     pointer-events: none;
   }
 
   @include h.media-up(768px) {
     &__content {
-      --newsletter-band-tail: var(--color-brand-purple-400);
+      --newsletter-band-tail: var(--color-brand-purple-300);
+      --newsletter-band-zone: #{h.fluid-between(560, 170, 768, 1440)};
 
       padding-inline-end: h.fluid-between(224, 176, 768, 1440);
     }
