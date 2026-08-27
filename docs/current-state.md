@@ -16,6 +16,11 @@ Accepted:
 - Global Shell A / Container
 - Global Shell B / SiteHeader + MobileActionBar
 - Global Shell C / BrandLogo + favicon
+- **Global Shell D / NewsletterBand — user visual PASS on 2026-08-27, closed.**
+  The PASS covers the accepted state: the violet-to-lavender promotional
+  surface, white inverse copy, the mail motif, the grouped email CTA cluster,
+  the bright right decorative zone, the revised gift artwork, the mobile
+  composition with the gift hidden, and the unchanged form contract.
 - Media Foundation / Picture pipeline + Icon policy
 - Location Foundation / CitySelector — visual gate, user visual PASS on
   2026-08-27, including the requested danger-red service/geolocation failure
@@ -29,17 +34,92 @@ Open external integration:
 
 Active visual slice:
 
-- **Global Shell D / NewsletterBand — rich promotional polish applied;
-  technically complete, user visual PASS is still required.**
+- **Global Shell E / SiteFooter — technically complete, user visual PASS is
+  still required.**
 
-### Global Shell D — NewsletterBand
+### Global Shell E — SiteFooter
 
 **Active slice. User visual PASS is still required.**
 
+`src/components/shell/` owns `SiteFooter`, the canonical global shell footer,
+with its styles in `footer.scss`. There is no `src/components/footer/`,
+`src/features/footer/`, provider, context, service or config store: the footer is
+static shell structure at this milestone.
+
+**Public API is exactly `homeHref?: string`**, defaulting to
+`import.meta.env.BASE_URL` like `SiteHeader`. It exists only because the brand
+lockup is a real home link. There is no `columns`, `links`, `contacts`,
+`socials`, `payments`, `copyright`, `variant`, `theme`, `compact`,
+`showNewsletter`, `legalLinks` or `companyInfo` prop, and no footer CMS model,
+site-settings service or JSON data layer.
+
+**Anatomy.** `<footer class="site-footer">` → accepted `Container` → a
+`site-footer__main` grid and a `site-footer__bottom` row separated by a
+`--role-border-soft` hairline. The grid holds five blocks: the brand block
+(`BrandLogo` inside a home anchor, plus the tagline), three heading-plus-list
+groups — `Покупателям`, `Компания`, `Помощь` — and a contacts block with the
+support phone and email. The bottom row carries the copyright, the legal labels
+and the payment marks. Surface is the accepted `--role-surface-footer`.
+
+**Raster synthesis.** Home, Shops, About, Blog and Catalog footers were compared.
+Home and Blog agree almost exactly and carry the most repeated system, so the
+canonical footer is theirs. Repeated and implemented: the light surface, the
+Container alignment, the brand-plus-tagline column, the three named groups, the
+icon-led phone and email contacts, the hairline plus bottom row, the copyright,
+the legal labels and the payment marks. Shops is the structural outlier — five
+columns, no brand block, an address, an app-download block — and was treated as
+incidental. Its address, the app-download block and the store badges are
+single-raster traits and were **not** implemented; no QR block exists, because no
+footer raster shows one.
+
+**Link policy.** No router exists, so footer navigation labels and legal labels
+render as **non-interactive text**, not fake links. There is no `href="#"`, no
+link pointing at the repository root merely to be clickable, and no no-op click
+handler. Only three real anchors exist: the brand home link, `tel:+78001001010`
+and `mailto:info@goodcall.ru`. Route wiring — and the `<nav>` landmarks that
+should accompany it — is deferred to page-family implementation.
+
+**Contact conflict, open.** The email `info@goodcall.ru` is unanimous across all
+five rasters. The phone is **not**: Home shows `8 800 100-10-47`, Blog
+`8 800 100-10-67`, About and Catalog `8 800 100-10-10`, and Shops
+`8 (800) 123-45-67`. The most repeated readable value, `8 800 100-10-10`, is
+implemented and is a single constant in `SiteFooter.tsx`. It needs user
+confirmation. No address, legal entity or support hours beyond the repeated
+9:00-21:00 window were fabricated.
+
+**Assets.** `BrandLogo` is reused unchanged inside a footer-owned anchor, and the
+existing `src/assets/commerce/payment-mir.svg` is the payment mark. The `phone`
+and `mail` glyphs come from the accepted `Icon` registry. **Two asset gaps are
+open**: the social row (VK / Telegram / YouTube / Instagram) repeats in 4 of 5
+rasters but no authored brand marks exist in the repository and third-party logos
+must not be reconstructed, and the additional payment marks (VISA, Mastercard,
+Apple Pay, Google Pay) are likewise absent. Both are omitted rather than faked.
+
+**Responsive direction** is CSS only. One column below 560px, two from 560px,
+three from 768px with the contacts block spanning two cells, and the five-column
+desktop layout from 1200px. No accordion: no raster shows a mobile footer, so
+plain stacking was chosen.
+
+**MobileActionBar.** Ownership is unchanged — the bar stays fixed below 768px and
+production CSS still adds no global body padding, so a page or shell integration
+reserves the bottom inset itself. `?reference=footer` does exactly that with
+reference-owned padding, and at 430 / 390 / 375 / 320 the last footer content
+sits about 57px above the bar when scrolled to the bottom. No footer-owned
+clearance was hardcoded and `MobileActionBar` was not modified.
+
+`?reference=footer` renders a reference-only intro, then the real production
+`NewsletterBand` and `SiteFooter`, plus `MobileActionBar` for the mobile overlap
+test. **`SiteFooter` never contains `NewsletterBand`**; footer styles do not
+reach into `.newsletter-band*` and newsletter styles were not modified.
+
+### Global Shell D — NewsletterBand
+
+**Closed. User visual PASS received on 2026-08-27.**
+
 `src/components/shell/` owns `NewsletterBand`, the canonical pre-footer
 newsletter region, with its styles in `newsletter.scss`. It is shell, not page
-content and not the Footer: **Footer remains unimplemented** and NewsletterBand
-ends where Footer begins. The closed Components `NewsletterCard` is a different,
+content and not the Footer: the two are separate shell components and
+NewsletterBand ends where `SiteFooter` begins. The closed Components `NewsletterCard` is a different,
 card-shaped section-05 component and is unchanged; no `src/components/newsletter/`,
 `src/features/newsletter/`, provider, service or form context exists.
 
@@ -115,7 +195,7 @@ about 300px of inner width while an inline input-plus-button needs about 382px.
 `?reference=newsletter` renders the real production `NewsletterBand` at full
 width on a neutral surface, passes a real `onSubscribe`, and shows the last
 submitted address in a reference-only `aria-live="polite"` status **outside** the
-component. It is not a Home page and implements no Footer or page module.
+component. It is not a Home page and implements no page module.
 
 ### Location Foundation — CitySelector
 
@@ -456,7 +536,7 @@ implemented.
 `?reference=header` renders the real production `SiteHeader` and
 `MobileActionBar` above a neutral reference-only body, and passes a real local
 `onScanRequest` callback so the QR button can be exercised without fake
-behaviour. It renders no NewsletterBand; Footer and every page family remain
+behaviour. It renders no NewsletterBand and no footer; every page family remains
 unimplemented. No dependency was added.
 
 ### Global Shell A — Container
@@ -615,9 +695,10 @@ Independent audits themselves remain optional. See the AUDIT.md section of
 - Canonical layout primitive: `src/components/layout/` — `Container`, with its
   styles in `layout.scss`.
 - Canonical global shell: `src/components/shell/` — `SiteHeader` and
-  `MobileActionBar`, with their styles in `header.scss`, and `NewsletterBand`,
-  the canonical pre-footer newsletter region, with its styles in
-  `newsletter.scss`.
+  `MobileActionBar`, with their styles in `header.scss`, `NewsletterBand`, the
+  canonical pre-footer newsletter region, with its styles in `newsletter.scss`,
+  and `SiteFooter`, the canonical shell footer, with its styles in
+  `footer.scss`.
 - Canonical brand lockup: `src/components/brand/` — `BrandLogo`, with its styles
   in `brand.scss` and the accepted brand mark in `src/assets/brand/`. The same
   SVG is the document favicon source.
@@ -653,6 +734,8 @@ Independent audits themselves remain optional. See the AUDIT.md section of
 - Global Shell NewsletterBand reference surface:
   `src/app/NewsletterReference.tsx`, with its reference-only styles in
   `NewsletterReference.scss`.
+- Global Shell SiteFooter reference surface: `src/app/FooterReference.tsx`, with
+  its reference-only styles in `FooterReference.scss`.
 
 There is no router, no data layer, and no feature architecture. The reference
 surfaces are development comparison pages, not product UI.
@@ -1158,8 +1241,12 @@ The base page no longer hosts the Foundations surface. A query-string check in
 - `?reference=newsletter` — the Global Shell NewsletterBand reference surface:
   the real production `NewsletterBand` at realistic full width on a neutral
   reference-only page, with a reference-owned `aria-live` status outside the
-  component reporting the last submitted address. It builds no Home page, no
-  Footer and no page content module.
+  component reporting the last submitted address. It builds no Home page and no
+  page content module.
+- `?reference=footer` — the Global Shell SiteFooter reference surface: a
+  reference-only intro followed by the real production `NewsletterBand` and
+  `SiteFooter`, plus `MobileActionBar` so the mobile shell overlap can be tested.
+  It reserves its own bottom inset below 768px and builds no Home page.
 
 Links are built from `import.meta.env.BASE_URL`, so they resolve under the
 GitHub Pages base without hardcoding the repository name, and no SPA fallback is
@@ -1184,6 +1271,28 @@ comments section of `AGENTS.md` for the governed file set and the rule on
 functional suppression directives.
 
 ## Current visual status
+
+**Global Shell E / SiteFooter — technically complete; user visual PASS is still
+required.** `?reference=footer` reports zero horizontal document overflow, zero
+runtime errors and zero failed requests at 1920 / 1440 / 1280 / 1024 / 768 / 430 /
+390 / 375 / 320, and so do the base index and every earlier reference surface. The
+footer surface is 255.4px tall at 1280px and above against roughly 224px in the
+normalized Home raster — the difference is the omitted social row. Layout is five
+columns from 1200px, three from 768px with the contacts block spanning two cells,
+two from 560px and one below that. The composition holds exactly one `<footer>`
+and one `<main>`; heading order runs h1 (reference) then h2 for the newsletter and
+each footer group. Measured contrast on the footer surface is 4.64:1 for muted
+legal and tagline text, 9.89:1 for group items and 17.77:1 for group headings; the
+decorative contact tile glyph measures 4.35:1 against its tile. The footer holds
+exactly three anchors — the brand home link, `tel:+78001001010` and
+`mailto:info@goodcall.ru` — with zero `href="#"` and zero no-op handlers, and
+keyboard focus runs brand, phone, email in visual order with the accepted 2px
+ring. With `MobileActionBar` present and the page scrolled to the bottom, the last
+footer content sits about 57px above the bar at 430 / 390 / 375 / 320; at 768px
+the bar is not displayed.
+
+**Global Shell D / NewsletterBand — user visual PASS received on 2026-08-27 and
+closed.**
 
 **Global Shell D / NewsletterBand rich promotional polish — technically
 complete; user visual PASS is still required.** The earlier flat brand-soft
@@ -1466,9 +1575,11 @@ none of them blocks the closed milestone.
 
 ## Next approved step
 
-**User visual review of the Global Shell D / NewsletterBand rich promotional
-polish.** The slice is technically complete; only the user can grant the visual
-PASS.
+**User visual review of Global Shell E / SiteFooter.** The slice is technically
+complete; only the user can grant the visual PASS. Two questions ride with it:
+confirmation of the support phone number, which the five rasters disagree on, and
+a decision on the missing social and payment brand assets, which were omitted
+rather than reconstructed.
 
 **Outstanding external configuration, separate from this slice:** set the
 repository secret `DADATA_TOKEN` (and a local `.env.local` with
@@ -1477,13 +1588,12 @@ verification of the Location Foundation. Until then the deployed Header falls
 back to `Выберите город` and the network features are disabled gracefully. That
 gate is configuration-dependent and does not block visual shell work.
 
-Do not begin Footer or page implementation before NewsletterBand receives
-explicit user visual PASS. Do not reopen or redesign the accepted Header,
-BrandLogo, Media Foundation, Location visuals or closed Components. Do not add
-router, state or data architecture, do not add a subscription backend,
-newsletter service or persistence, and do not add dependencies unless a concrete
-requirement proves necessary. Accepted system decisions win over incidental
-raster differences.
+Do not begin page implementation before SiteFooter receives explicit user visual
+PASS. Do not reopen or redesign the accepted Header, BrandLogo, Media Foundation,
+Location visuals, NewsletterBand or closed Components. Do not add router, state or
+data architecture, do not add a footer CMS/config layer, backend or persistence,
+and do not add dependencies unless a concrete requirement proves necessary.
+Accepted system decisions win over incidental raster differences.
 
 ## Normative repository docs
 

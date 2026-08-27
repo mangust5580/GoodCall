@@ -1,0 +1,41 @@
+@use '../styles/helpers' as h;
+
+.footer-reference {
+  min-height: 100dvh;
+  background-color: var(--role-surface-page);
+
+  @include h.media-max(768px) {
+    padding-block-end: calc(104px + env(safe-area-inset-bottom, 0px));
+    background-color: var(--role-surface-footer);
+  }
+
+  &__body {
+    padding-block: 40px 48px;
+  }
+
+  &__inner {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    align-items: flex-start;
+  }
+
+  &__title {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--role-text-primary);
+  }
+
+  &__note {
+    max-width: 720px;
+    margin: 0;
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--role-text-secondary);
+  }
+
+  &__back {
+    font-size: 15px;
+  }
+}

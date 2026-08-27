@@ -1,4 +1,5 @@
 import { ComponentsReference } from './ComponentsReference';
+import { FooterReference } from './FooterReference';
 import { FoundationsColorReference } from './FoundationsColorReference';
 import { HeaderReference } from './HeaderReference';
 import { LayoutReference } from './LayoutReference';
@@ -35,6 +36,10 @@ export function App() {
 
   if (reference === 'newsletter') {
     return <NewsletterReference />;
+  }
+
+  if (reference === 'footer') {
+    return <FooterReference />;
   }
 
   return <ReferenceIndex />;

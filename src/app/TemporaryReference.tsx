@@ -29,6 +29,9 @@ export function ReferenceIndex() {
         <li>
           <a href={referenceUrl('newsletter')}>Newsletter reference</a>
         </li>
+        <li>
+          <a href={referenceUrl('footer')}>Footer reference</a>
+        </li>
       </ul>
     </main>
   );
