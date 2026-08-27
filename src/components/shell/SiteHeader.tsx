@@ -1,3 +1,4 @@
+import useEmblaCarousel from 'embla-carousel-react';
 import { useSyncExternalStore } from 'react';
 
 import brandMark from '../../assets/shell/brand-mark.svg';
@@ -41,6 +42,17 @@ function readNarrowViewport(): boolean {
   return window.matchMedia(NARROW_VIEWPORT_QUERY).matches;
 }
 
+const CATEGORY_CAROUSEL_OPTIONS = {
+  align: 'start',
+  containScroll: 'trimSnaps',
+  loop: false,
+  dragFree: false,
+  skipSnaps: false,
+  breakpoints: {
+    '(min-width: 768px)': { active: false },
+  },
+} as const;
+
 const CANONICAL_CATEGORIES: readonly { readonly label: string; readonly icon: IconName }[] = [
   { label: 'Смартфоны', icon: 'smartphone' },
   { label: 'Планшеты', icon: 'tablet' },
@@ -81,6 +93,7 @@ export function SiteHeader({
 }: SiteHeaderProps) {
   const base = import.meta.env.BASE_URL;
   const narrow = useSyncExternalStore(subscribeToNarrowViewport, readNarrowViewport, () => false);
+  const [categoryViewportRef] = useEmblaCarousel(CATEGORY_CAROUSEL_OPTIONS);
   const home = homeHref ?? base;
   const catalog = catalogHref ?? base;
   const categoryItems =
@@ -153,22 +166,24 @@ export function SiteHeader({
 
       <nav aria-label="Категории товаров" className="site-header__categories">
         <Container className="site-header__categories-inner">
-          <ul className="site-header__category-list">
-            {categoryItems.map((category) => (
-              <li key={category.label}>
-                <a className="site-header__category" href={category.href}>
-                  {category.icon ? <Icon name={category.icon} /> : null}
-                  <span className="site-header__category-label">{category.label}</span>
+          <div className="site-header__category-viewport" ref={categoryViewportRef}>
+            <ul className="site-header__category-list">
+              {categoryItems.map((category) => (
+                <li className="site-header__category-item" key={category.label}>
+                  <a className="site-header__category" href={category.href}>
+                    {category.icon ? <Icon name={category.icon} /> : null}
+                    <span className="site-header__category-label">{category.label}</span>
+                  </a>
+                </li>
+              ))}
+              <li className="site-header__category-item">
+                <a className="site-header__category site-header__category--all" href={catalog}>
+                  <Icon name="menu" />
+                  <span className="site-header__category-label">Ещё</span>
                 </a>
               </li>
-            ))}
-            <li>
-              <a className="site-header__category site-header__category--all" href={catalog}>
-                <Icon name="menu" />
-                <span className="site-header__category-label">Ещё</span>
-              </a>
-            </li>
-          </ul>
+            </ul>
+          </div>
         </Container>
       </nav>
     </header>

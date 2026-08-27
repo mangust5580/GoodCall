@@ -93,20 +93,44 @@ purple block, search takes its own full-width row and gains the QR action, and
 category navigation switches to a horizontally scrollable icon-over-label row. No
 hamburger drawer, overlay, mega-menu or mobile menu was invented.
 
-Below 768px the category row is presented as a **native CSS carousel**, with no
-carousel dependency, no JavaScript scroll state, no autoplay, loop, dots or drag
-handling. It keeps native horizontal touch scrolling and adds `scroll-snap-type:
-x proximity` with `scroll-snap-align: start` on each category item. The native
-scrollbar is hidden **for this scroller only** — `scrollbar-width: none` plus a
-`::-webkit-scrollbar` rule on `.site-header__category-list`; page scrollbars are
-untouched. The scroller is full-bleed at mobile: it takes the Container gutter as
-`padding-inline` with a matching negative `margin-inline`, and a `mask-image`
-linear gradient dissolves items into that gutter at both ends. The continuation
-cue is therefore the partially dissolved next item, and because the padding
-equals the fade width, the first and last items rest fully opaque at the
-Container inner edge. `scroll-padding-inline: 96px` is deliberately kept at every
-width so keyboard focus scrolls a focused category link well inside the opaque
-region instead of resting under the fade.
+Below 768px the category row is a **drag/swipe carousel driven by Embla**. The
+earlier CSS-only scroll/snap version was replaced after user visual review: it
+was technically correct but did not read as interactive, and horizontal scrolling
+alone was not discoverable enough. `SiteHeader` calls `useEmblaCarousel` directly
+with `align: 'start'`, `containScroll: 'trimSnaps'`, `loop: false`,
+`dragFree: false`, `skipSnaps: false` and
+`breakpoints: { '(min-width: 768px)': { active: false } }`.
+
+Embla is therefore **active only below 768px**. At 768px and above the category
+row stays the ordinary horizontal navigation row it already was — the native
+`overflow-x: auto` scroller with its hidden scrollbar and
+`scroll-padding-inline: 96px` now lives in a `media-up(768px)` block, so nothing
+above the mobile band changed. There is never more than one scrolling mechanism
+active: at mobile the list is `overflow-x: visible` and only Embla translates it.
+
+DOM stays semantic — `<nav aria-label="Категории товаров">` → `Container` → an
+Embla viewport `<div>` → the `<ul>` as Embla's container → `<li>` slides holding
+real `<a>` links. No slide divs, no carousel ARIA, no "slide N of M"
+announcements, no dots, arrows, autoplay or loop. The mobile viewport uses
+`overflow: hidden` and `touch-action: pan-y pinch-zoom`, so vertical page
+scrolling still works when the gesture starts on the strip. The mask/edge-fade,
+negative-margin full-bleed geometry and CSS scroll-snap from the previous
+revision were all removed; the continuation cue is now the partially visible next
+category, and drag is the primary affordance. Embla's default `watchFocus`
+handles keyboard focus, which scrolls focused links into view instantly.
+
+`options.duration` is deliberately **not** set for reduced motion: Embla's
+drag-release settle uses its own internal drag constant rather than
+`options.duration`, and its focus scrolling already runs at duration 0. With no
+dots, arrows or other programmatic scrolling in this strip there is no
+`duration`-governed animation to suppress, so a
+`(prefers-reduced-motion: reduce)` breakpoint would have been a no-op.
+
+No shared carousel abstraction was created. There is no `Carousel`,
+`CarouselSlide`, `CarouselDots`, `CarouselArrows` or `useGoodCallCarousel`;
+extraction is deferred until a second real consumer establishes the common
+contract. Future promotional/banner carousels may reuse Embla but none is
+implemented.
 
 `?reference=header` renders the real production `SiteHeader` and
 `MobileActionBar` above a neutral reference-only body, and passes a real local
@@ -826,11 +850,15 @@ is 180.58px at 1280px and above, 248.58px at 1024–768px and 233.19px across
 because the four actions moved out. The **61px** `MobileActionBar` appears only
 below 768px and never coexists with the top action group; its links carry a 60px
 `min-height` and 8px vertical padding above `env(safe-area-inset-bottom, 0px)`,
-so the labels are no longer attached to the viewport bottom edge. At 1920 / 1440
-/ 1280 / 1024 / 768 the header renders pixel-identical to the accepted direction;
-only the mobile band changed. Tab reaches every category link in DOM order and
-each focused link stays at least 94% inside the opaque strip at
-430 / 390 / 375 / 360 / 320 and 99% at 1024 / 768. The compact search keeps the
+so the labels are no longer attached to the viewport bottom edge. It also casts a
+local upward separation shadow, `box-shadow: 0 -8px 24px var(--alpha-black-12)`,
+because the user reported the fixed bar merging into page text; the top divider,
+height, safe-area declaration and `z-index: 20` are unchanged, and no global
+elevation system was introduced. At 1920 / 1440 / 1280 / 1024 / 768 the header
+renders pixel-identical to the accepted direction; only the mobile band changed.
+Tab reaches every category link in DOM order and each focused link stays at least
+98% inside the category viewport at 430 / 390 / 375 / 360 / 320 and 99% at
+1024 / 768. The compact search keeps the
 accessible label `Поиск по каталогу`; every action, category and utility
 destination is a real anchor, and the only header `<button>`s are the search
 submit and — on mobile only, with a real callback — the QR action.
@@ -931,7 +959,7 @@ None. No router is installed.
 ## Current dependencies
 
 Runtime: `react`, `react-dom`, `radix-ui`, `@daypicker/react`, `@maskito/core`,
-`@maskito/react`.
+`@maskito/react`, `embla-carousel-react`.
 
 Dev: `vite`, `@vitejs/plugin-react`, `typescript`, `@types/react`,
 `@types/react-dom`, `@types/node`, `sass-embedded`, `postcss`, `autoprefixer`,
@@ -939,9 +967,17 @@ Dev: `vite`, `@vitejs/plugin-react`, `typescript`, `@types/react`,
 `eslint-plugin-react`, `eslint-plugin-react-hooks`, `eslint-plugin-react-refresh`,
 `eslint-plugin-jsx-a11y`, `prettier`, `stylelint`, `stylelint-config-standard-scss`.
 
+`embla-carousel-react` resolves to **8.6.0** and is user-approved. It has exactly
+one current consumer — the mobile category navigation in `SiteHeader` — and the
+supplied page designs also contain future promotional/banner slider evidence. No
+Embla plugin is installed (`embla-carousel-autoplay`, `-auto-scroll`,
+`-wheel-gestures` and the rest are absent), and the v9 release candidate is not
+in the tree; only `embla-carousel-react`, `embla-carousel` and
+`embla-carousel-reactive-utils`, all 8.6.0.
+
 Nothing else is installed. In particular there is no router, no Supabase, no
 data-fetching, state, form, schema, search/autocomplete, phone validation,
-mocking, or E2E library.
+mocking, or E2E library, and no other carousel/slider library.
 
 ## Scripts
 

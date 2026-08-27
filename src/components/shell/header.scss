@@ -203,14 +203,19 @@
     margin: 0;
     padding-block: 10px;
     padding-inline: 0;
-    overflow-x: auto;
     list-style: none;
-    scroll-padding-inline: 96px;
-    scrollbar-width: none;
-    overscroll-behavior-x: contain;
+  }
 
-    &::-webkit-scrollbar {
-      display: none;
+  @include h.media-up(768px) {
+    &__category-list {
+      overflow-x: auto;
+      scroll-padding-inline: 96px;
+      scrollbar-width: none;
+      overscroll-behavior-x: contain;
+
+      &::-webkit-scrollbar {
+        display: none;
+      }
     }
   }
 
@@ -314,26 +319,21 @@
       display: inline;
     }
 
+    &__category-viewport {
+      overflow: hidden;
+      touch-action: pan-y pinch-zoom;
+    }
+
     &__category-list {
       --control-icon-size: 22px;
-      --header-category-edge: #{h.fluid(32, 16)};
 
       justify-content: flex-start;
-      margin-inline: calc(-1 * var(--header-category-edge));
       padding-block: 8px;
-      padding-inline: var(--header-category-edge);
-      scroll-snap-type: x proximity;
-      mask-image: linear-gradient(
-        to right,
-        transparent 0,
-        #000 var(--header-category-edge),
-        #000 calc(100% - var(--header-category-edge)),
-        transparent 100%
-      );
+    }
 
-      > li {
-        scroll-snap-align: start;
-      }
+    &__category-item {
+      flex: 0 0 auto;
+      min-width: 0;
     }
 
     &__category {
@@ -360,6 +360,7 @@
   padding-block-end: env(safe-area-inset-bottom, 0px);
   background-color: var(--role-surface-card);
   border-top: var(--control-border-width) solid var(--role-border-default);
+  box-shadow: 0 -8px 24px var(--alpha-black-12);
 
   @include h.media-max(768px) {
     display: block;
