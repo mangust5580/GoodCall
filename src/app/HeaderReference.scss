@@ -9,7 +9,7 @@
     padding-block: 40px 64px;
 
     @include h.media-max(768px) {
-      padding-block-end: calc(96px + env(safe-area-inset-bottom, 0px));
+      padding-block-end: calc(104px + env(safe-area-inset-bottom, 0px));
     }
   }
 

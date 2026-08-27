@@ -93,6 +93,21 @@ purple block, search takes its own full-width row and gains the QR action, and
 category navigation switches to a horizontally scrollable icon-over-label row. No
 hamburger drawer, overlay, mega-menu or mobile menu was invented.
 
+Below 768px the category row is presented as a **native CSS carousel**, with no
+carousel dependency, no JavaScript scroll state, no autoplay, loop, dots or drag
+handling. It keeps native horizontal touch scrolling and adds `scroll-snap-type:
+x proximity` with `scroll-snap-align: start` on each category item. The native
+scrollbar is hidden **for this scroller only** — `scrollbar-width: none` plus a
+`::-webkit-scrollbar` rule on `.site-header__category-list`; page scrollbars are
+untouched. The scroller is full-bleed at mobile: it takes the Container gutter as
+`padding-inline` with a matching negative `margin-inline`, and a `mask-image`
+linear gradient dissolves items into that gutter at both ends. The continuation
+cue is therefore the partially dissolved next item, and because the padding
+equals the fade width, the first and last items rest fully opaque at the
+Container inner edge. `scroll-padding-inline: 96px` is deliberately kept at every
+width so keyboard focus scrolls a focused category link well inside the opaque
+region instead of resting under the fade.
+
 `?reference=header` renders the real production `SiteHeader` and
 `MobileActionBar` above a neutral reference-only body, and passes a real local
 `onScanRequest` callback so the QR button can be exercised without fake
@@ -808,8 +823,14 @@ the mobile correction now awaits PASS.
 header rows sharing identical Container inner edges at every width. Header height
 is 180.58px at 1280px and above, 248.58px at 1024–768px and 233.19px across
 430–320 — shorter than before the correction despite the added search row,
-because the four actions moved out. The 55px `MobileActionBar` appears only below
-768px and never coexists with the top action group. The compact search keeps the
+because the four actions moved out. The **61px** `MobileActionBar` appears only
+below 768px and never coexists with the top action group; its links carry a 60px
+`min-height` and 8px vertical padding above `env(safe-area-inset-bottom, 0px)`,
+so the labels are no longer attached to the viewport bottom edge. At 1920 / 1440
+/ 1280 / 1024 / 768 the header renders pixel-identical to the accepted direction;
+only the mobile band changed. Tab reaches every category link in DOM order and
+each focused link stays at least 94% inside the opaque strip at
+430 / 390 / 375 / 360 / 320 and 99% at 1024 / 768. The compact search keeps the
 accessible label `Поиск по каталогу`; every action, category and utility
 destination is a real anchor, and the only header `<button>`s are the search
 submit and — on mobile only, with a real callback — the QR action.

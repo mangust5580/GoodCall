@@ -206,7 +206,12 @@
     overflow-x: auto;
     list-style: none;
     scroll-padding-inline: 96px;
+    scrollbar-width: none;
     overscroll-behavior-x: contain;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
   }
 
   &__category {
@@ -311,16 +316,31 @@
 
     &__category-list {
       --control-icon-size: 22px;
+      --header-category-edge: #{h.fluid(32, 16)};
 
       justify-content: flex-start;
+      margin-inline: calc(-1 * var(--header-category-edge));
       padding-block: 8px;
+      padding-inline: var(--header-category-edge);
+      scroll-snap-type: x proximity;
+      mask-image: linear-gradient(
+        to right,
+        transparent 0,
+        #000 var(--header-category-edge),
+        #000 calc(100% - var(--header-category-edge)),
+        transparent 100%
+      );
+
+      > li {
+        scroll-snap-align: start;
+      }
     }
 
     &__category {
       flex-direction: column;
       gap: 4px;
       justify-content: flex-start;
-      min-width: 62px;
+      min-width: 64px;
       padding: 6px;
       font-size: 11px;
       line-height: 1.2;
@@ -365,8 +385,8 @@
     gap: 4px;
     align-items: center;
     justify-content: center;
-    min-height: 54px;
-    padding: 6px 2px;
+    min-height: 60px;
+    padding: 8px 2px;
     border-radius: var(--control-radius-sm);
     font-size: 11px;
     line-height: 1.2;
