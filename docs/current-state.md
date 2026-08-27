@@ -29,8 +29,8 @@ Open external integration:
 
 Active visual slice:
 
-- **Global Shell D / NewsletterBand — technically complete; user visual PASS is
-  still required.**
+- **Global Shell D / NewsletterBand — rich promotional polish applied;
+  technically complete, user visual PASS is still required.**
 
 ### Global Shell D — NewsletterBand
 
@@ -50,30 +50,32 @@ card-shaped section-05 component and is unchanged; no `src/components/newsletter
 the GoodCall-specific shell component.
 
 **Anatomy.** `<section class="newsletter-band" aria-labelledby>` → accepted
-`Container` → `newsletter-band__content`, which is both the brand-soft rounded
-surface and the flex row. Inside it: a copy block (`<h2>` + `<p>`) and a real
-`<form>` holding a visually hidden `<label>`, a native `type="email"` input
-carrying `.ui-input`, and the accepted `Button` as the submit control. No wrapper
+`Container` → `newsletter-band__content`, which is both the violet promotional
+surface and the flex row. Inside it: a lead group (the mail motif tile plus the
+`<h2>` + `<p>` copy block), a real `<form>` styled as one white CTA cluster
+holding a visually hidden `<label>`, a native `type="email"` input carrying
+`.ui-input` and the accepted `Button`, and a decorative gift `<img>`. No wrapper
 exists without a layout or semantic purpose and there is no clickable `div`.
 
 **Raster synthesis.** The Home, Shops, About, Blog and Catalog page rasters were
 compared and normalized into one band. Repeated: the copy
 `Будьте в курсе новинок и акций` (4/5 verbatim), the `Подписаться` button (5/5),
 a white email field beside a brand-purple submit control, a copy-left /
-form-right desktop row, and placement directly above the footer. Normalized: the
-surface is `--role-surface-brand-soft`, the only fill that repeats exactly
-(Home and Catalog measure #f2edfd–#f5f0fd against the accepted #f3ecff) — Blog,
-About and Shops each paint a different, non-repeating purple, so no purple
-system exists to encode. The description uses `--role-text-secondary` rather than
-the raster's muted grey, which would measure 3.95:1 on brand-soft and fail AA.
-The submit control keeps the accepted pill Button rather than the raster's
-rounded rectangle, because Components is closed and user-accepted. Omitted: the
-leading envelope icon (2/5, and no envelope `IconName` exists), the Shops
-full-bleed dark variant and its black button, and any privacy/consent copy or
-policy link — no raster shows one, and no destination route exists to invent.
-The gift/envelope illustration repeats in all five rasters but is **deferred**:
-no authored PNG/JPG source exists, rasters may not be copied into the repository,
-and no asset may be invented.
+form-right desktop row, decorative gift/envelope artwork at the right edge (5/5),
+and placement directly above the footer.
+
+**The first implementation used the flat light `--role-surface-brand-soft`
+treatment. The user judged it too plain, and explicitly selected the richer
+promotional direction instead**: a deep-violet-to-lavender gradient surface,
+white copy, a compact mail motif at the left, a visually grouped white email
+field plus purple CTA, and the decorative violet gift artwork finishing the right
+edge. The rasters paint three mutually different purples, so the gradient is
+Newsletter-local and built only from accepted `--color-brand-purple-*`
+primitives; no Foundations token was added for it. The submit control keeps the
+accepted pill Button rather than the raster's rounded rectangle, because
+Components is closed and user-accepted. Still omitted: the Shops black button,
+and any privacy/consent copy or policy link — no raster shows one, and no
+destination route exists to invent.
 
 **Form semantics.** A plain uncontrolled form. Submission is read with
 `FormData`, `event.preventDefault()` stops navigation, the value is trimmed and
@@ -84,11 +86,31 @@ newsletter/marketing SDK, `localStorage`, cookie, loading state, retry,
 analytics, validation schema, form library or React form state. No success or
 failure UI exists inside the production component.
 
+**Surface and artwork.** `newsletter-band__content` paints two restrained white
+radial glows over a `102deg` linear gradient running
+`--color-brand-purple-800` → `-700` → `-600` → `-500` → a tail stop. The tail is
+a Newsletter-local custom property: `--color-brand-purple-400` only from 768px
+up, where the gift reserve keeps copy out of the light zone, and
+`--color-brand-purple-500` below that, so white body copy stays at or above
+4.98:1 at every tested width. There is no animation, particle field, filter stack
+or noise. `src/assets/marketing/newsletter-gift.svg` is imported as an ordinary
+asset URL and rendered as a decorative `<img alt="" aria-hidden="true">`
+absolutely positioned bottom-right with `object-fit: contain`, so it always fits
+the band and crops only into the 14px below it. It is not an `Icon`, not a
+`Picture`, and not registered in the icon registry.
+
+**Mail motif.** The typed `Icon` registry gained one glyph, `mail`, in the
+existing 24×24 stroke style, backed by `src/assets/icons/mail.svg`; `IconName`
+and the SCSS `$icon-names` list were updated together. It is consumed through the
+accepted `Icon` inside a 52px translucent white tile (44px below 560px) and adds
+no accessible text.
+
 **Responsive direction** is CSS only, with no JS viewport detection. The content
-row wraps intrinsically, so the form drops below the copy when the two no longer
-fit; one real breakpoint at 560px stacks the input and the button and makes both
-full width, because 375px leaves 301px of inner width while an inline
-input-plus-button needs about 382px.
+row wraps intrinsically: copy and form share one row at 1280px and above, the
+form takes its own row at 1024px and 768px, and the gift is hidden below 768px.
+One real breakpoint at 560px stacks the input and the button full width inside
+the white cluster and moves the mail tile above the copy, because 375px leaves
+about 300px of inner width while an inline input-plus-button needs about 382px.
 
 `?reference=newsletter` renders the real production `NewsletterBand` at full
 width on a neutral surface, passes a real `onSubscribe`, and shows the last
@@ -620,7 +642,8 @@ Independent audits themselves remain optional. See the AUDIT.md section of
 - Reusable utility and feedback components: `src/components/feedback/`, with
   their styles in `feedback-components.scss`.
 - Commerce brand and store assets for section 07: `src/assets/commerce/`.
-- Content and marketing assets for section 05: `src/assets/marketing/`.
+- Content and marketing assets for section 05, plus the decorative
+  `newsletter-gift.svg` consumed by `NewsletterBand`: `src/assets/marketing/`.
 - Components A, B, C, D, E and F reference surface:
   `src/app/ComponentsReference.tsx`.
 - Global Shell Container reference surface: `src/app/LayoutReference.tsx`, with
@@ -1162,22 +1185,27 @@ functional suppression directives.
 
 ## Current visual status
 
-**Global Shell D / NewsletterBand — technically complete; user visual PASS is
-still required.** `?reference=newsletter` reports zero horizontal document
+**Global Shell D / NewsletterBand rich promotional polish — technically
+complete; user visual PASS is still required.** The earlier flat brand-soft
+treatment was judged too plain by the user; the band now uses the selected violet
+promotional direction. `?reference=newsletter` reports zero horizontal document
 overflow and zero runtime errors at 1920 / 1440 / 1280 / 1024 / 768 / 430 / 390 /
 375 / 320. The band surface shares the accepted Container inner edges at every
-width (272–1648 at 1920px, 32–1408 at 1440px, 16–304 at 320px). The surface is
-107.75px tall at 1280px and above, against roughly 104–106px in the normalized
-Home raster. Copy and form sit inline down to about 1080px, the form drops to its
-own row below that, and the input and button stack full width below 560px. Form
-verification: empty submit and the invalid values `foo`, `foo@` and
-`@example.com` produce **0** submissions; `user@example.com` produces exactly one
-per attempt from both a button click and Enter; a whitespace-padded address is
-delivered trimmed; page navigations stay at the single initial load, so nothing
-reloads on submit. The email input carries the accessible name
-`Электронная почта` from a visually hidden real `<label>`, the section is named
-by its `<h2>`, and both controls show the accepted 2px brand focus ring in
-visual order.
+width, and measures 116.25px at 1440px and above, 138px at 1280px, 191.73px at
+1024px, 208.97px at 768px and 346.31px at 390px. The gift artwork is visible from
+768px up and hidden below it; copy and form share one row at 1280px and above and
+separate below that; the controls stack full width below 560px. Measured white
+copy contrast over the painted gradient at each text run's darkest-to-lightest
+extent stays between 4.98:1 and 10.5:1, so body copy holds AA at every width.
+Form verification is unchanged and re-run: empty submit and the invalid values
+`foo`, `foo@` and `@example.com` produce **0** submissions; `user@example.com`
+produces exactly one per attempt from both a button click and Enter; a
+whitespace-padded address is delivered trimmed; page navigations stay at the
+single initial load, so nothing reloads on submit. The email input carries the
+accessible name `Электронная почта` from a visually hidden real `<label>`, the
+section is named by its `<h2>`, the gift is `alt=""` plus `aria-hidden`, the mail
+tile adds no accessible text, and both controls show the accepted 2px brand focus
+ring in visual order.
 
 **Location Foundation / CitySelector — user visual PASS received on 2026-08-27,
 with one explicit correction applied: service-unavailable and geolocation-failure
@@ -1438,8 +1466,9 @@ none of them blocks the closed milestone.
 
 ## Next approved step
 
-**User visual review of Global Shell D / NewsletterBand.** The slice is
-technically complete; only the user can grant the visual PASS.
+**User visual review of the Global Shell D / NewsletterBand rich promotional
+polish.** The slice is technically complete; only the user can grant the visual
+PASS.
 
 **Outstanding external configuration, separate from this slice:** set the
 repository secret `DADATA_TOKEN` (and a local `.env.local` with

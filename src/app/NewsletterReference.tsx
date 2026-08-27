@@ -16,8 +16,8 @@ export function NewsletterReference() {
         <p className="newsletter-reference__note">
           Temporary development reference for the canonical GoodCall pre-footer newsletter region.
           The band below this block is the real production <code>NewsletterBand</code>: one
-          full-width section whose brand-soft surface and content both align to the accepted
-          Container.
+          full-width section whose violet promotional surface and content both align to the accepted
+          Container. The gift artwork is decorative and hidden from assistive technology.
         </p>
         <p className="newsletter-reference__note">
           It is a real form with a native <code>type=&quot;email&quot;</code> input, a visually

@@ -25,6 +25,7 @@ export type IconName =
   | 'settings'
   | 'tools'
   | 'log-out'
+  | 'mail'
   | 'edit'
   | 'store'
   | 'smartphone'

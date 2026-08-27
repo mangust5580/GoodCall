@@ -1,8 +1,9 @@
 import { useId } from 'react';
 import type { FormEvent } from 'react';
 
+import newsletterGift from '../../assets/marketing/newsletter-gift.svg';
 import { Container } from '../layout';
-import { Button } from '../ui';
+import { Button, Icon } from '../ui';
 
 export interface NewsletterBandProps {
   readonly onSubscribe?: (email: string) => void;
@@ -28,13 +29,18 @@ export function NewsletterBand({ onSubscribe }: NewsletterBandProps) {
     <section aria-labelledby={titleId} className="newsletter-band">
       <Container>
         <div className="newsletter-band__content">
-          <div className="newsletter-band__copy">
-            <h2 className="newsletter-band__title" id={titleId}>
-              Будьте в курсе новинок и акций
-            </h2>
-            <p className="newsletter-band__description">
-              Подпишитесь на наши новости и получайте эксклюзивные предложения
-            </p>
+          <div className="newsletter-band__lead">
+            <span className="newsletter-band__motif">
+              <Icon name="mail" />
+            </span>
+            <div className="newsletter-band__copy">
+              <h2 className="newsletter-band__title" id={titleId}>
+                Будьте в курсе новинок и акций
+              </h2>
+              <p className="newsletter-band__description">
+                Подпишитесь на наши новости и получайте эксклюзивные предложения
+              </p>
+            </div>
           </div>
           <form className="newsletter-band__form" onSubmit={handleSubmit}>
             <label className="ui-visually-hidden" htmlFor={emailId}>
@@ -54,6 +60,7 @@ export function NewsletterBand({ onSubscribe }: NewsletterBandProps) {
               Подписаться
             </Button>
           </form>
+          <img alt="" aria-hidden="true" className="newsletter-band__art" src={newsletterGift} />
         </div>
       </Container>
     </section>
