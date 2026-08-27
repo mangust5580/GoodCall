@@ -11,15 +11,52 @@ Operational handoff. This is not a history log.
 
 ## Current milestone
 
-**Global Shell — open. Global Shell A / Container is accepted; Global Shell B /
-Header is technically implemented and awaits user visual PASS.**
+**Global Shell — open. Global Shell A / Container and Global Shell B / Header are
+accepted and closed. Global Shell C / BrandLogo + favicon is the active slice and
+awaits user visual PASS.**
+
+### Global Shell C — BrandLogo and favicon
+
+**Active slice. User visual PASS is still required.** Technically complete; the
+visual gate is the user's and was not self-closed.
+
+`src/components/brand/` owns `BrandLogo`, the accepted GoodCall lockup — the
+purple brand mark followed by the `GOODCALL` wordmark — extracted verbatim from
+the Header. Its only prop is `className`. It renders a neutral `<span>` wrapper,
+so **navigation ownership stays with the consumer**: `SiteHeader` keeps its own
+`site-header__brand` anchor, `href` and focus treatment and simply places
+`<BrandLogo />` inside it. There are deliberately no `href`, `as`, `variant`,
+`size`, `compact`, `theme`, `inverse`, `showWordmark`, `markOnly` or `onClick`
+props — no evidence calls for them, and the only current consumer is the Header.
+
+`brand.scss` owns the default lockup treatment and exposes it through
+fallback-valued custom properties (`--brand-logo-gap`, `--brand-logo-mark-width`,
+`--brand-logo-mark-height`, `--brand-logo-name-size`). The Header sets only the
+four values its mobile composition needs, on `.site-header__brand` below 768px.
+No React size variants were added to reproduce responsive CSS, and no new
+Foundations token or typography scale was introduced.
+
+The canonical brand asset moved from `src/assets/shell/brand-mark.svg` to
+`src/assets/brand/brand-mark.svg`, byte-identical — no geometry, colour or
+rasterization change. That **one** file is the single source for both the
+`BrandLogo` mark and the document favicon; there is no separate `favicon.svg`
+copy. `index.html` declares
+`<link rel="icon" type="image/svg+xml" href="/src/assets/brand/brand-mark.svg" />`
+and Vite's HTML asset pipeline rewrites it to the hashed emitted asset under the
+configured Pages base. No `public/` directory was created, no runtime JavaScript
+injects the icon, and no `favicon.ico`, apple-touch-icon, Android icon,
+webmanifest, mask-icon, `browserconfig.xml`, `theme-color` or PWA metadata was
+added.
 
 ### Global Shell B — SiteHeader and MobileActionBar
 
-**Header remains the active visual gate. User visual PASS is still required.**
-The desktop direction was reviewed and accepted by the user; the mobile
-correction is technically complete and awaits PASS. The visual gate is the
-user's and was not self-closed.
+**User visual PASS received on 2026-08-27. Global Shell B is accepted and
+closed.** The PASS covers the canonical desktop Header, the normalized mobile
+Header, `MobileActionBar`, the Embla-powered mobile category carousel, the
+category/store/QR affordance presentation, the bottom-bar separation shadow and
+the current GoodCall brand mark and wordmark treatment. Header is not reopened;
+the later `BrandLogo` extraction was a no-regression refactor that left the
+accepted rendering byte-for-byte identical.
 
 `src/components/shell/` owns one canonical, reusable `SiteHeader`. It deliberately
 **normalizes** the recurring header evidence across the supplied Home, Shops,
@@ -294,8 +331,10 @@ Independent audits themselves remain optional. See the AUDIT.md section of
 - Canonical layout primitive: `src/components/layout/` — `Container`, with its
   styles in `layout.scss`.
 - Canonical global shell: `src/components/shell/` — `SiteHeader` and
-  `MobileActionBar`, with their styles in `header.scss` and the brand lockup
-  asset in `src/assets/shell/`.
+  `MobileActionBar`, with their styles in `header.scss`.
+- Canonical brand lockup: `src/components/brand/` — `BrandLogo`, with its styles
+  in `brand.scss` and the accepted brand mark in `src/assets/brand/`. The same
+  SVG is the document favicon source.
 - Reusable controls and form fields: `src/components/ui/`, with the shared
   control system in `controls.scss`.
 - Reusable product presentation components: `src/components/product/`, with their
@@ -838,9 +877,18 @@ functional suppression directives.
 
 ## Current visual status
 
-**Global Shell B / SiteHeader + MobileActionBar — technically complete, user
-visual PASS still required.** The desktop direction was reviewed and accepted;
-the mobile correction now awaits PASS.
+**Global Shell C / BrandLogo + favicon — technically complete, user visual PASS
+still required.** The extraction is a no-regression refactor: the brand anchor,
+mark, wordmark, gap, font and Header height are identical at
+1920 / 1440 / 1280 / 1024 / 768 / 430 / 390 / 375 / 360 / 320, and a 2x-DPR pixel
+comparison of both the brand region and the whole Header reports **0 differing
+pixels** at every one of those widths. The favicon resolves to
+`/GoodCall/assets/brand-mark-<hash>.svg`, loads with HTTP 200, and is
+byte-identical to the accepted source; the previous default-favicon 404 on the
+base reference index is gone.
+
+**Global Shell B / SiteHeader + MobileActionBar — user visual PASS received on
+2026-08-27, accepted and closed.**
 
 `?reference=header` measures zero horizontal document overflow at
 1920 / 1440 / 1280 / 1024 / 768 / 430 / 390 / 375 / 360 / 320, with all three
@@ -864,8 +912,11 @@ destination is a real anchor, and the only header `<button>`s are the search
 submit and — on mobile only, with a real callback — the QR action.
 
 **The current reconstructed GoodCall brand mark is visually accepted by the
-user** and is intentionally unchanged. `src/assets/shell/brand-mark.svg` was not
-redrawn or replaced.
+user** and is intentionally unchanged. The asset moved to
+`src/assets/brand/brand-mark.svg` byte-identically; it was not redrawn or
+replaced. The Header's brand anchor still exposes the accessible name
+`GOODCALL` from its visible wordmark, the mark stays decorative with `alt=""`,
+and no ARIA was added.
 
 **Global Shell A / Container — visually accepted by the user on 2026-08-24.**
 `?reference=layout` measures 1440px maximum outer width, centred at 1920px, and
@@ -1031,11 +1082,11 @@ none of them blocks the closed milestone.
   `typescript-eslint@8.67` requires `<6.1.0`. Revisit when it supports 7.
 - No `public/` directory exists. Add one only when a genuine stable public asset
   is needed.
-- **Brand/Logo extraction + favicon reuse — deferred until after Header mobile
-  correction PASS.** The accepted brand mark stays local to the header; no
-  `BrandLogo`/`Logo` component exists, no favicon files exist, and
-  `index.html` favicon metadata is untouched. This is an approved future task,
-  not part of the current slice.
+- Logo size/mark-only/inverse/monochrome variants, a generic image primitive, and
+  the wider favicon ecosystem (`favicon.ico`, apple-touch-icon, Android icons,
+  webmanifest, mask-icon, `browserconfig.xml`, `theme-color`, PWA metadata) are
+  all deferred. `BrandLogo` and the single SVG favicon cover every current
+  requirement; add more only when a concrete one appears.
 
 ## Active open questions
 
@@ -1043,16 +1094,16 @@ None.
 
 ## Next approved step
 
-**User visual review of the corrected Global Shell B / SiteHeader +
-MobileActionBar**, using the `?reference=header` screenshots, followed by any
-correction the review calls for. Header is technically complete and waits on that
-gate.
+**User visual review of Global Shell C / BrandLogo + favicon**, using the
+`?reference=header` no-regression screenshots and the browser-tab favicon,
+followed by any correction the review calls for. The slice is technically
+complete and waits on that gate.
 
-Do not begin Logo/favicon, Newsletter or Footer implementation before Header
-receives explicit user visual PASS. Do not add router, state or data
-architecture, and do not add dependencies unless a concrete shell requirement
-proves necessary. Accepted system decisions win over incidental raster
-differences.
+Do not begin Newsletter or Footer implementation before BrandLogo + favicon
+receive explicit user visual PASS. Do not reopen or redesign the accepted Header.
+Do not add router, state or data architecture, and do not add dependencies unless
+a concrete shell requirement proves necessary. Accepted system decisions win over
+incidental raster differences.
 
 ## Normative repository docs
 

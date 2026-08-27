@@ -1,7 +1,7 @@
 import useEmblaCarousel from 'embla-carousel-react';
 import { useSyncExternalStore } from 'react';
 
-import brandMark from '../../assets/shell/brand-mark.svg';
+import { BrandLogo } from '../brand';
 import { Container } from '../layout';
 import { Icon, SearchField } from '../ui';
 import type { IconName } from '../ui';
@@ -123,8 +123,7 @@ export function SiteHeader({
       <div className="site-header__main">
         <Container className="site-header__main-inner">
           <a className="site-header__brand" href={home}>
-            <img alt="" className="site-header__brand-mark" src={brandMark} />
-            <span className="site-header__brand-name">GOODCALL</span>
+            <BrandLogo />
           </a>
 
           <a className="site-header__catalog" href={catalog}>

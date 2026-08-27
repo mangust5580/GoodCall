@@ -3,7 +3,6 @@
 
 .site-header {
   --header-action-gap: 12px;
-  --header-brand-size: 20px;
   --header-category-gap: 20px;
 
   background-color: var(--role-surface-header);
@@ -70,7 +69,6 @@
   &__brand {
     display: inline-flex;
     grid-area: brand;
-    gap: 10px;
     align-items: center;
     color: var(--role-text-primary);
     text-decoration-line: none;
@@ -80,18 +78,6 @@
     }
 
     @include controls.control-focus;
-  }
-
-  &__brand-mark {
-    width: 26px;
-    height: 32px;
-  }
-
-  &__brand-name {
-    font-size: var(--header-brand-size);
-    font-weight: 800;
-    letter-spacing: 0.5px;
-    line-height: 1;
   }
 
   &__catalog {
@@ -266,7 +252,6 @@
   }
 
   @include h.media-max(768px) {
-    --header-brand-size: 17px;
     --header-category-gap: 8px;
 
     &__service,
@@ -295,13 +280,12 @@
     }
 
     &__brand {
-      gap: 8px;
-      min-width: 0;
-    }
+      --brand-logo-gap: 8px;
+      --brand-logo-mark-width: 21px;
+      --brand-logo-mark-height: 26px;
+      --brand-logo-name-size: 17px;
 
-    &__brand-mark {
-      width: 21px;
-      height: 26px;
+      min-width: 0;
     }
 
     &__catalog {
