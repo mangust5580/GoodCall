@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 180" fill="none">
+  <defs>
+    <linearGradient id="gift-front" x1="74" y1="78" x2="153" y2="184" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#9d70ff" />
+      <stop offset="1" stop-color="#5520c8" />
+    </linearGradient>
+    <linearGradient id="gift-side" x1="148" y1="67" x2="232" y2="170" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#b892ff" />
+      <stop offset="1" stop-color="#6b2be5" />
+    </linearGradient>
+    <linearGradient id="gift-top" x1="81" y1="45" x2="198" y2="116" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#d8c4ff" />
+      <stop offset="1" stop-color="#8652f4" />
+    </linearGradient>
+    <linearGradient id="gift-ribbon" x1="115" y1="53" x2="178" y2="171" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#f4ecff" />
+      <stop offset="1" stop-color="#c8a9ff" />
+    </linearGradient>
+    <linearGradient id="gift-bow-left" x1="65" y1="26" x2="130" y2="86" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#fbf8ff" />
+      <stop offset="1" stop-color="#b992ff" />
+    </linearGradient>
+    <linearGradient id="gift-bow-right" x1="128" y1="22" x2="202" y2="91" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#eee4ff" />
+      <stop offset="1" stop-color="#9f70ff" />
+    </linearGradient>
+  </defs>
+  <ellipse cx="151" cy="166" rx="82" ry="11" fill="#2b1159" opacity="0.16" />
+  <path d="M64 85 143 66l78 27-75 27-82-35Z" fill="url(#gift-top)" />
+  <path d="M64 85 146 120v53L67 137c-7-3-11-10-11-18V96c0-8 3-10 8-11Z" fill="url(#gift-front)" />
+  <path d="M146 120 221 93v55c0 8-5 16-13 19l-62 22v-69Z" fill="url(#gift-side)" />
+  <path d="M93 78 171 105v62l-30 11v-61L64 85l29-7Z" fill="url(#gift-ribbon)" />
+  <path d="M171 105 199 95v61l-28 10v-61Z" fill="#8a54f4" opacity="0.48" />
+  <path d="M88 94 117 83l80 27-28 11-81-27Z" fill="#ffffff" opacity="0.26" />
+  <path d="M68 99 136 127v9L68 107v-8Z" fill="#ffffff" opacity="0.16" />
+  <path d="M163 130 207 114v9l-44 16v-9Z" fill="#ffffff" opacity="0.14" />
+  <path d="M85 44c18-20 47-11 56 17-25 15-55 10-70-8 3-3 8-7 14-9Z" fill="url(#gift-bow-left)" />
+  <path d="M168 34c22-10 45 8 45 33-24 11-53 5-68-14 5-8 13-15 23-19Z" fill="url(#gift-bow-right)" />
+  <path d="M121 55c13-10 33-8 45 5-2 10-12 19-25 20-13 1-24-6-29-17 2-3 5-6 9-8Z" fill="url(#gift-ribbon)" />
+  <path d="M136 57c-6-24 1-43 18-51 11 17 9 40-7 58l-11-7Z" fill="#c9adff" opacity="0.86" />
+  <path d="M130 64c-15-18-34-25-52-17 11 18 33 29 56 25l-4-8Z" fill="#ffffff" opacity="0.3" />
+  <path d="M158 59c16-15 36-17 52-6-14 15-37 22-58 13l6-7Z" fill="#ffffff" opacity="0.22" />
+  <path d="M133 75 168 64l26 9-35 13-26-11Z" fill="#f7f1ff" opacity="0.38" />
+  <path d="M221 93v55c0 8-5 16-13 19l-22 8c14-21 21-51 21-73l14-9Z" fill="#3f169d" opacity="0.18" />
+  <path d="M67 137c-7-3-11-10-11-18V96c0-6 2-9 5-10 4 32 21 61 49 77l-43-26Z" fill="#3a1494" opacity="0.14" />
+</svg>
