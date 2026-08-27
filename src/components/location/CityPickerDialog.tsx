@@ -264,6 +264,10 @@ function CityPickerContent({ client, configured, onSelect }: CityPickerContentPr
           : LOADING_STATE;
   const statusMessage = searchStatusMessage(search);
   const visibleNotice = notice === statusMessage ? '' : notice;
+  const statusClassName =
+    search.kind === 'error'
+      ? 'city-picker__status city-picker__status--error'
+      : 'city-picker__status';
 
   return (
     <>
@@ -297,7 +301,7 @@ function CityPickerContent({ client, configured, onSelect }: CityPickerContentPr
       />
 
       <div className="city-picker__results">
-        <p aria-live="polite" className="city-picker__status" role="status">
+        <p aria-live="polite" className={statusClassName} role="status">
           {statusMessage}
         </p>
 

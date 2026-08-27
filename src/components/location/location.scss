@@ -134,7 +134,7 @@
     margin: 0;
     font-size: 13px;
     line-height: 1.45;
-    color: var(--role-text-secondary);
+    color: var(--role-state-danger);
     overflow-wrap: anywhere;
 
     &:empty {
@@ -158,6 +158,10 @@
 
     &:empty {
       display: none;
+    }
+
+    &--error {
+      color: var(--role-state-danger);
     }
   }
 

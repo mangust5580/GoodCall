@@ -13,8 +13,9 @@ Operational handoff. This is not a history log.
 
 **Global Shell — closed.** Global Shell A / Container, B / Header and C /
 BrandLogo + favicon are all accepted, and Media Foundation is closed.
-**Location Foundation / CitySelector is the active slice and awaits user
-visual/functional PASS.**
+**Location Foundation / CitySelector received user visual PASS on 2026-08-27,
+with the service-error colour correction applied. Its live DaData functional
+gate is separate and still open.**
 
 ### Location Foundation — CitySelector
 
@@ -96,16 +97,27 @@ the injection seam the deterministic reference uses. Nothing else in the accepte
 Header changed, and a 2x-DPR comparison of the whole Header with Москва seeded
 reports **0 differing pixels** at 1440 / 1024 / 768 / 390 / 375 / 320.
 
-**Missing or unreachable service is a normal recoverable state, not an error
-state.** Opening the picker never shows an availability message on its own: with
-no token and an untouched query the dialog shows only its title, the auto-detect
+**Opening the picker never shows an availability message on its own:** with no
+token and an untouched query the dialog shows only its title, the auto-detect
 button, the search field and the six popular cities. Availability feedback
 appears **only after a concrete attempt** — clicking `Определить автоматически`,
-clicking a popular city, or typing a query of at least 2 characters. It is
-styled with `--role-text-secondary` (the action notice) and `--role-text-muted`
-(the search status), never with the danger role, because an unavailable lookup
-is neither a destructive action nor invalid user input. No configuration detail
-such as `VITE_DADATA_TOKEN` is ever shown to a user.
+clicking a popular city, or typing a query of at least 2 characters. No
+configuration detail such as `VITE_DADATA_TOKEN` is ever shown to a user.
+
+**Accepted status severity rule.** Genuine service and action failures are
+emphasised; informational search states are not:
+
+| State               | Copy                                                | Role                  |
+| ------------------- | --------------------------------------------------- | --------------------- |
+| Service unavailable | `Поиск города временно недоступен`                  | `--role-state-danger` |
+| Geolocation failure | `Не удалось определить город. Найдите его вручную.` | `--role-state-danger` |
+| Loading             | `Идёт поиск городов`                                | `--role-text-muted`   |
+| No result           | `Город не найден. Проверьте написание.`             | `--role-text-muted`   |
+
+Severity follows the `SearchState` discriminant, not the message text: the
+action notice is always a failure and carries the danger role, while the search
+status adds `city-picker__status--error` only for its `error` kind. There is no
+Alert component, status framework or new token.
 
 Two message channels stay distinct: the **notice** carries the result of a
 specific action, the **search status** carries loading / no-result / unavailable
@@ -1060,8 +1072,10 @@ functional suppression directives.
 
 ## Current visual status
 
-**Location Foundation / CitySelector — technically complete, user
-visual/functional PASS still required.** With Москва seeded into
+**Location Foundation / CitySelector — user visual PASS received on 2026-08-27,
+with one explicit correction applied: service-unavailable and geolocation-failure
+messages use the danger role, while loading and no-result search states stay
+muted. The live DaData functional gate remains separate and open.** With Москва seeded into
 `goodcall.city.v1`, the Header is **pixel-identical to the accepted Header** —
 0 differing pixels at 2x DPR at 1440 / 1024 / 768 / 390 / 375 / 320, with
 Header height unchanged at 180.58 / 248.58 / 248.58 / 233.19 / 233.19 / 233.19px.
@@ -1073,10 +1087,11 @@ above `MobileActionBar` (`z-index: 20`). The picker reuses the accepted
 transparent dialog overlay, matching `feedback-dialog__overlay`, because
 Foundations still defers overlay/backdrop opacity — no new elevation or backdrop
 token was invented. The unavailable-service states were reproduced and then
-corrected: the initial open was already clean, the action notice was restyled
-from the danger role to `--role-text-secondary`, and a duplicate identical
-availability message was removed. The Header is unchanged by that correction —
-0 differing pixels again at all six widths.
+corrected: the initial open was already clean and stays clean, a duplicate
+identical availability message was removed, and — after user review — genuine
+service and action failures are emphasised with the danger role again while
+loading and no-result search states stay muted. The Header is unchanged by both
+corrections — 0 differing pixels again at all six widths.
 
 **Live DaData verification has still not been performed.** No local
 `VITE_DADATA_TOKEN` is available (no `.env.local`, no environment variable), the
@@ -1316,10 +1331,10 @@ none of them blocks the closed milestone.
 
 ## Next approved step
 
-**User visual/functional review of the Location Foundation slice**, using
-`?reference=location` for the detection, confirmation, picker, search, empty and
-error states, and `?reference=header` with Москва seeded for the Header
-regression. The slice is technically complete and waits on that gate.
+**Live DaData functional verification of the Location Foundation slice.** The
+visual gate is closed: user visual PASS was received on 2026-08-27 and the one
+requested correction — danger-red service and geolocation failures — is applied.
+Do not reopen the accepted Location visuals.
 
 **Outstanding external configuration:** set the repository secret
 `DADATA_TOKEN` (and a local `.env.local` with `VITE_DADATA_TOKEN` for local
