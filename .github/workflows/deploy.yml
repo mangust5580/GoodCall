@@ -36,6 +36,8 @@ jobs:
 
       - name: Build
         run: npm run build
+        env:
+          VITE_DADATA_TOKEN: ${{ secrets.DADATA_TOKEN }}
 
       - name: Configure Pages
         uses: actions/configure-pages@v6

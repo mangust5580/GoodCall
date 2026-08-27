@@ -2,6 +2,7 @@ import { ComponentsReference } from './ComponentsReference';
 import { FoundationsColorReference } from './FoundationsColorReference';
 import { HeaderReference } from './HeaderReference';
 import { LayoutReference } from './LayoutReference';
+import { LocationReference } from './LocationReference';
 import { ReferenceIndex } from './TemporaryReference';
 
 function currentReference(): string | null {
@@ -25,6 +26,10 @@ export function App() {
 
   if (reference === 'header') {
     return <HeaderReference />;
+  }
+
+  if (reference === 'location') {
+    return <LocationReference />;
   }
 
   return <ReferenceIndex />;

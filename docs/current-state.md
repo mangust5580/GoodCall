@@ -11,15 +11,103 @@ Operational handoff. This is not a history log.
 
 ## Current milestone
 
-**Global Shell — closed. Global Shell A / Container, B / Header and C / BrandLogo
+**Global Shell — closed.** Global Shell A / Container, B / Header and C /
+BrandLogo + favicon are all accepted, and Media Foundation is closed.
+**Location Foundation / CitySelector is the active slice and awaits user
+visual/functional PASS.**
 
-- favicon are all accepted. Media Foundation is the active slice and awaits user
-  visual PASS.**
+### Location Foundation — CitySelector
+
+**Active slice. User visual/functional PASS is still required.**
+
+`src/components/location/` owns the whole capability: `CityLocationControl`
+(header trigger, confirmation, orchestration), `CityPickerDialog`,
+`dadataCityClient`, `cityStorage`, `types` and `location.scss`. There is **no
+location Context, Provider, store or global API client**; the selected city has
+exactly one production consumer, the Header location control.
+
+**Provider: DaData Suggestions API**, called with native `fetch` — no DaData UI
+widget, no `@dadata/*` package, no second IP or geocoding provider, and no
+backend proxy. Three endpoints are used:
+
+- `GET  …/4_1/rs/iplocate/address` — city by the requester's IP. No `ip` field is
+  sent; DaData resolves the caller's own address, so no public IP is discovered
+  or fabricated.
+- `POST …/4_1/rs/suggest/address` — city search, sent with
+  `from_bound`/`to_bound` `city` and `count: 10`.
+- `POST …/4_1/rs/geolocate/address` — reverse geocoding, `{ lat, lon, count }`.
+
+Only the browser-facing Suggestions API token is used, as
+`Authorization: Token …`. The Standardization/Clean API and any secret key are
+out of scope.
+
+**Environment.** The token is read from `VITE_DADATA_TOKEN` only. `.env.example`
+is committed and holds the bare key with no value; `.env*` stays gitignored. The
+Pages deploy workflow passes `VITE_DADATA_TOKEN: ${{ secrets.DADATA_TOKEN }}` to
+its build step — `DADATA_TOKEN` is the only secret name involved. A `VITE_*`
+value is browser-visible after build, which is acceptable for this token class
+and only for this token class.
+
+**Minimal city contract.** `CityOption` is exactly
+`{ fiasId, name, region }` — three non-empty strings. No coordinates, timezone,
+delivery zone, store, price, IP or raw DaData JSON. External JSON is mapped and
+validated at the adapter boundary; UI and shell code never see a DaData shape.
+
+**Mapping.** `city_fias_id` → `fiasId`, `city` → `name`,
+`region_with_type` (falling back to `region`) → `region`. Federal cities are a
+real second shape: for Москва and Санкт-Петербург DaData returns `city` and
+`city_fias_id` as `null` and carries the city in `region_*` with
+`region_type: "г"`, so the mapper falls back to `region_fias_id`/`region` for
+that case. Everything else — non-`RU`, and streets, houses or settlements in
+search results — maps to no result. The picker suppresses a redundant
+`Москва / Москва` caption.
+
+**Persistence.** Only a confirmed or manually chosen city is written, to
+`goodcall.city.v1`, as the minimal object. Parsing is defensive: malformed or
+incomplete values are ignored and the key is removed, then normal detection
+resumes. A valid stored city wins over IP detection and makes the page issue
+zero IP requests. IP addresses, coordinates, search queries, the token and
+unconfirmed candidates are never stored or logged.
+
+**Flow.** IP detection runs only when there is no valid stored city and a token
+is configured; its result is a _candidate_ that is never persisted on its own.
+It appears as a non-modal anchored Radix Popover — `Ваш город — Москва?` with
+`Да` and `Выбрать другой` — which does not take focus and does not shift Header
+layout. `Да` persists; `Выбрать другой` opens the picker. Dismissing persists
+nothing, and a `null`/foreign/failed lookup falls back to `Выберите город`
+rather than silently defaulting to Moscow.
+
+**Browser geolocation is requested only by the picker's
+`Определить автоматически` action** — never on page load, and
+`navigator.permissions` is never touched. Coordinates go to DaData reverse
+geocoding and are never stored.
+
+**Search** trims input, needs at least 2 characters, debounces ~280ms without a
+library, cancels superseded requests with `AbortController`, and ignores any
+response that no longer matches the current query. Popular cities are display
+shortcuts resolved through the same city search, cached in memory for the
+mount only; no FIAS registry or city dataset is bundled.
+
+**Header.** The static `<p class="site-header__location">` became a real
+`<button>` with the same map-pin icon, utility-row typography, 6px gap and white
+focus ring. `locationLabel` had no consumers and was removed rather than kept as
+dead API. `SiteHeader` gained only `cityLookupClient` / `cityLookupConfigured`,
+the injection seam the deterministic reference uses. Nothing else in the accepted
+Header changed, and a 2x-DPR comparison of the whole Header with Москва seeded
+reports **0 differing pixels** at 1440 / 1024 / 768 / 390 / 375 / 320.
+
+**Missing token** is not a crash: the Header shows `Выберите город`, the trigger
+still opens the picker, and network-backed actions report
+`Поиск города временно недоступен`.
+
+This slice implements **no** delivery calculation, store filtering, regional
+pricing, warehouse, city-specific catalog, street/house selection, settlement or
+foreign-city support, map, analytics or cookie.
 
 ### Media Foundation — Picture pipeline and Icon policy
 
-**Active slice. User visual PASS is still required.** Technically complete; the
-visual gate is the user's and was not self-closed.
+**Closed.** Media Foundation / Picture pipeline + Icon policy — user visual PASS
+received on 2026-08-27; accepted and closed.
 
 **Icon is the canonical entry point for UI SVG glyphs.** Every UI, action,
 navigation and status glyph — search, cart, heart, compare, menu, phone, map-pin,
@@ -397,6 +485,9 @@ Independent audits themselves remain optional. See the AUDIT.md section of
   SVG is the document favicon source.
 - Canonical media primitive: `src/components/media/` — `Picture`, the local
   responsive raster renderer. It needs no stylesheet of its own.
+- Location capability: `src/components/location/` — `CityLocationControl`,
+  `CityPickerDialog`, the DaData adapter, the `goodcall.city.v1` storage helper
+  and `location.scss`. It owns the Header city control and nothing else.
 - Authored raster sources: `src/assets/**/*.{png,jpg,jpeg}`. Generated
   AVIF/WebP/fallback candidates exist only in `dist/assets/`.
 - Reusable controls and form fields: `src/components/ui/`, with the shared
@@ -916,6 +1007,12 @@ The base page no longer hosts the Foundations surface. A query-string check in
   production `SiteHeader` and `MobileActionBar` around a neutral reference-only
   body that reserves bottom space for the fixed bar below 768px. It is not a Home
   page, and it implements no hero, catalog, breadcrumbs, footer or newsletter.
+- `?reference=location` — the Location Foundation reference surface: the real
+  production `SiteHeader` and `CityLocationControl` driven by an in-memory fake
+  `CityLookupClient` owned by the reference file, so the flow is deterministic
+  and needs no token or network. It also exposes controls to reset
+  `goodcall.city.v1`, simulate a recoverable API failure and simulate a missing
+  token. `?reference=header` keeps the real production lookup client.
 
 Links are built from `import.meta.env.BASE_URL`, so they resolve under the
 GitHub Pages base without hardcoding the repository name, and no SPA fallback is
@@ -941,8 +1038,25 @@ functional suppression directives.
 
 ## Current visual status
 
-**Media Foundation / Picture pipeline + Icon policy — technically complete, user
-visual PASS still required.** The `CommerceLocationCard` migration is a media
+**Location Foundation / CitySelector — technically complete, user
+visual/functional PASS still required.** With Москва seeded into
+`goodcall.city.v1`, the Header is **pixel-identical to the accepted Header** —
+0 differing pixels at 2x DPR at 1440 / 1024 / 768 / 390 / 375 / 320, with
+Header height unchanged at 180.58 / 248.58 / 248.58 / 233.19 / 233.19 / 233.19px.
+The only change is the interactive and focus behaviour of the city control.
+`?reference=location` and every earlier reference surface report zero horizontal
+document overflow and zero runtime errors at all six widths. The confirmation
+popover and the picker both fit at 320px, and the picker (`z-index: 30`) layers
+above `MobileActionBar` (`z-index: 20`). The picker reuses the accepted
+transparent dialog overlay, matching `feedback-dialog__overlay`, because
+Foundations still defers overlay/backdrop opacity — no new elevation or backdrop
+token was invented. **Live DaData verification has not been performed:** no
+`DADATA_TOKEN` is configured locally, and `dadata.ru`/`suggestions.dadata.ru` are
+unreachable from the build environment, so the adapter was verified against
+recorded DaData response shapes instead.
+
+**Media Foundation / Picture pipeline + Icon policy — user visual PASS received
+on 2026-08-27, accepted and closed.** The `CommerceLocationCard` migration is a media
 delivery refactor only: card and image-slot geometry are identical at
 1440 / 1024 / 768 / 390 / 320, and the remaining difference is codec-level
 (mean absolute error ≈ 1/255, RMSE ≈ 2.5, 0.03–0.08% of pixels differing at a
@@ -1163,21 +1277,29 @@ none of them blocks the closed milestone.
 
 ## Active open questions
 
-None.
+- Live DaData behaviour is unverified. No `DADATA_TOKEN` is configured and the
+  DaData hosts are unreachable from the build environment, so the adapter was
+  verified against recorded response shapes rather than the live service.
 
 ## Next approved step
 
-**User visual review of the Media Foundation slice**, using the migrated
-`CommerceLocationCard` before/after screenshots from `?reference=components` and
-the generated Picture build output, followed by any correction the review calls
-for. The slice is technically complete and waits on that gate.
+**User visual/functional review of the Location Foundation slice**, using
+`?reference=location` for the detection, confirmation, picker, search, empty and
+error states, and `?reference=header` with Москва seeded for the Header
+regression. The slice is technically complete and waits on that gate.
 
-Do not begin Newsletter, Footer or page implementation before the media
-foundation receives explicit user visual PASS. Do not reopen or redesign the
-accepted Header, BrandLogo or closed Components.
-Do not add router, state or data architecture, and do not add dependencies unless
-a concrete shell requirement proves necessary. Accepted system decisions win over
-incidental raster differences.
+**Outstanding external configuration:** set the repository secret
+`DADATA_TOKEN` (and a local `.env.local` with `VITE_DADATA_TOKEN` for local
+work), then re-run live DaData and Pages verification. Until then the deployed
+Header falls back to `Выберите город` and the network features are disabled
+gracefully.
+
+Do not begin Newsletter, Footer or page implementation before Location Foundation
+receives explicit user visual/functional PASS. Do not reopen or redesign the
+accepted Header, BrandLogo, Media Foundation or closed Components. Do not add
+router, state or data architecture, do not promote the city into a global context
+or store, and do not add dependencies unless a concrete requirement proves
+necessary. Accepted system decisions win over incidental raster differences.
 
 ## Normative repository docs
 

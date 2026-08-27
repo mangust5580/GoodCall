@@ -3,6 +3,8 @@ import { useSyncExternalStore } from 'react';
 
 import { BrandLogo } from '../brand';
 import { Container } from '../layout';
+import { CityLocationControl } from '../location';
+import type { CityLookupClient } from '../location';
 import { Icon, SearchField } from '../ui';
 import type { IconName } from '../ui';
 import { shellActions } from './shellActions';
@@ -19,7 +21,8 @@ export interface SiteHeaderProps extends Omit<ShellActionInput, 'fallbackHref'> 
   readonly catalogHref?: string;
   readonly storesHref?: string;
   readonly supportHref?: string;
-  readonly locationLabel?: string;
+  readonly cityLookupClient?: CityLookupClient;
+  readonly cityLookupConfigured?: boolean;
   readonly categories?: readonly SiteHeaderCategory[];
   readonly searchPlaceholder?: string;
   readonly onSearchSubmit?: (value: string) => void;
@@ -84,7 +87,8 @@ export function SiteHeader({
   catalogHref,
   storesHref,
   supportHref,
-  locationLabel = 'Москва',
+  cityLookupClient,
+  cityLookupConfigured,
   categories,
   searchPlaceholder,
   onSearchSubmit,
@@ -104,10 +108,7 @@ export function SiteHeader({
     <header className="site-header">
       <div className="site-header__utility">
         <Container className="site-header__utility-inner">
-          <p className="site-header__location">
-            <Icon name="map-pin" />
-            {locationLabel}
-          </p>
+          <CityLocationControl client={cityLookupClient} configured={cityLookupConfigured} />
           <p className="site-header__service">Доставка по всей России</p>
           <a className="site-header__utility-link site-header__stores" href={storesHref ?? base}>
             <Icon name="store" />
