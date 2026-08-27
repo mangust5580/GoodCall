@@ -96,9 +96,31 @@ the injection seam the deterministic reference uses. Nothing else in the accepte
 Header changed, and a 2x-DPR comparison of the whole Header with Москва seeded
 reports **0 differing pixels** at 1440 / 1024 / 768 / 390 / 375 / 320.
 
-**Missing token** is not a crash: the Header shows `Выберите город`, the trigger
-still opens the picker, and network-backed actions report
-`Поиск города временно недоступен`.
+**Missing or unreachable service is a normal recoverable state, not an error
+state.** Opening the picker never shows an availability message on its own: with
+no token and an untouched query the dialog shows only its title, the auto-detect
+button, the search field and the six popular cities. Availability feedback
+appears **only after a concrete attempt** — clicking `Определить автоматически`,
+clicking a popular city, or typing a query of at least 2 characters. It is
+styled with `--role-text-secondary` (the action notice) and `--role-text-muted`
+(the search status), never with the danger role, because an unavailable lookup
+is neither a destructive action nor invalid user input. No configuration detail
+such as `VITE_DADATA_TOKEN` is ever shown to a user.
+
+Two message channels stay distinct: the **notice** carries the result of a
+specific action, the **search status** carries loading / no-result / unavailable
+for the active query. When both would carry the same text the notice yields, so
+the same sentence is never shown or announced twice; genuinely different
+messages still coexist.
+
+With no token the Header shows `Выберите город` unless a valid city is already
+persisted, the trigger still opens the picker, a query under 2 characters
+produces no message at all, and **browser geolocation permission is never
+requested** — auto-detect reports unavailability without touching
+`navigator.geolocation`, because the reverse-geocoding backend cannot be used.
+No offline FIAS registry, bundled city dataset, fake identifier or fallback
+provider was added: a selectable city must still resolve through the real lookup
+client, so an unresolvable popular city is reported rather than invented.
 
 This slice implements **no** delivery calculation, store filtering, regional
 pricing, warehouse, city-specific catalog, street/house selection, settlement or
@@ -1050,10 +1072,19 @@ popover and the picker both fit at 320px, and the picker (`z-index: 30`) layers
 above `MobileActionBar` (`z-index: 20`). The picker reuses the accepted
 transparent dialog overlay, matching `feedback-dialog__overlay`, because
 Foundations still defers overlay/backdrop opacity — no new elevation or backdrop
-token was invented. **Live DaData verification has not been performed:** no
-`DADATA_TOKEN` is configured locally, and `dadata.ru`/`suggestions.dadata.ru` are
-unreachable from the build environment, so the adapter was verified against
-recorded DaData response shapes instead.
+token was invented. The unavailable-service states were reproduced and then
+corrected: the initial open was already clean, the action notice was restyled
+from the danger role to `--role-text-secondary`, and a duplicate identical
+availability message was removed. The Header is unchanged by that correction —
+0 differing pixels again at all six widths.
+
+**Live DaData verification has still not been performed.** No local
+`VITE_DADATA_TOKEN` is available (no `.env.local`, no environment variable), the
+GitHub secret `DADATA_TOKEN` could not be checked because `gh` is not installed,
+and `dadata.ru`/`suggestions.dadata.ru` remain unreachable from this build
+environment. The adapter was therefore verified against recorded DaData response
+shapes, and live search, live IP detection and live reverse geocoding remain
+untested.
 
 **Media Foundation / Picture pipeline + Icon policy — user visual PASS received
 on 2026-08-27, accepted and closed.** The `CommerceLocationCard` migration is a media
@@ -1277,9 +1308,11 @@ none of them blocks the closed milestone.
 
 ## Active open questions
 
-- Live DaData behaviour is unverified. No `DADATA_TOKEN` is configured and the
-  DaData hosts are unreachable from the build environment, so the adapter was
-  verified against recorded response shapes rather than the live service.
+- Live DaData behaviour is unverified. No local token is available, GitHub secret
+  presence is unverifiable without `gh`, and the DaData hosts are unreachable
+  from this build environment, so the adapter was verified against recorded
+  response shapes rather than the live service. Live search, live IP detection,
+  live reverse geocoding and live Pages behaviour all remain open.
 
 ## Next approved step
 

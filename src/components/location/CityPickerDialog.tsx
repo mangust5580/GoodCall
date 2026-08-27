@@ -263,6 +263,7 @@ function CityPickerContent({ client, configured, onSelect }: CityPickerContentPr
           ? snapshot.state
           : LOADING_STATE;
   const statusMessage = searchStatusMessage(search);
+  const visibleNotice = notice === statusMessage ? '' : notice;
 
   return (
     <>
@@ -283,7 +284,9 @@ function CityPickerContent({ client, configured, onSelect }: CityPickerContentPr
         Определить автоматически
       </Button>
 
-      {notice === '' ? null : <p className="city-picker__notice">{notice}</p>}
+      <p aria-live="polite" className="city-picker__notice" role="status">
+        {visibleNotice}
+      </p>
 
       <SearchField
         label="Поиск города"

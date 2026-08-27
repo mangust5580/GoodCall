@@ -134,8 +134,12 @@
     margin: 0;
     font-size: 13px;
     line-height: 1.45;
-    color: var(--role-state-danger);
+    color: var(--role-text-secondary);
     overflow-wrap: anywhere;
+
+    &:empty {
+      display: none;
+    }
   }
 
   &__results {
