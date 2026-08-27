@@ -1,7 +1,11 @@
+import { Picture } from '../media';
+import type { PictureSource } from '../media';
 import { Icon } from '../ui';
 
+const IMAGE_SLOT_SIZES = '(max-width: 359px) 188px, (max-width: 767px) 258px, 326px';
+
 interface CommerceLocationCardProps {
-  readonly imageSrc: string;
+  readonly image: PictureSource;
   readonly imageAlt: string;
   readonly title: string;
   readonly address: string;
@@ -11,7 +15,7 @@ interface CommerceLocationCardProps {
 }
 
 export function CommerceLocationCard({
-  imageSrc,
+  image,
   imageAlt,
   title,
   address,
@@ -21,7 +25,12 @@ export function CommerceLocationCard({
 }: CommerceLocationCardProps) {
   return (
     <article className="commerce-location-card">
-      <img alt={imageAlt} className="commerce-location-card__image" src={imageSrc} />
+      <Picture
+        alt={imageAlt}
+        className="commerce-location-card__image"
+        sizes={IMAGE_SLOT_SIZES}
+        source={image}
+      />
       <h3 className="commerce-location-card__title">{title}</h3>
       <ul className="commerce-location-card__rows">
         <li className="commerce-location-card__row">

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import type { ReactNode } from 'react';
 
 import paymentMir from '../assets/commerce/payment-mir.svg';
-import storeEuropeisky from '../assets/commerce/store-europeisky.webp';
+import storeEuropeisky from '../assets/commerce/store-europeisky.png?w=200;260;310&picture';
 import brandTech from '../assets/marketing/brand-tech.svg';
 import promoSaleBags from '../assets/marketing/promo-sale-bags.svg';
 import productEarbuds from '../assets/products/product-earbuds.svg';
@@ -729,8 +729,8 @@ export function ComponentsReference() {
           <CommerceLocationCard
             address="Москва, пл. Киевского вокзала, 2"
             hours="Ежедневно 10:00 – 22:00"
+            image={storeEuropeisky}
             imageAlt="Витрина магазина GOODCALL в торговом центре"
-            imageSrc={storeEuropeisky}
             phone="+7 (499) 123-45-67"
             title="GOODCALL, ТЦ «Европейский»"
           />

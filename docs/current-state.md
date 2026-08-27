@@ -11,14 +11,74 @@ Operational handoff. This is not a history log.
 
 ## Current milestone
 
-**Global Shell — open. Global Shell A / Container and Global Shell B / Header are
-accepted and closed. Global Shell C / BrandLogo + favicon is the active slice and
-awaits user visual PASS.**
+**Global Shell — closed. Global Shell A / Container, B / Header and C / BrandLogo
 
-### Global Shell C — BrandLogo and favicon
+- favicon are all accepted. Media Foundation is the active slice and awaits user
+  visual PASS.**
+
+### Media Foundation — Picture pipeline and Icon policy
 
 **Active slice. User visual PASS is still required.** Technically complete; the
 visual gate is the user's and was not self-closed.
+
+**Icon is the canonical entry point for UI SVG glyphs.** Every UI, action,
+navigation and status glyph — search, cart, heart, compare, menu, phone, map-pin,
+clock, category glyphs, chevrons, close, plus/minus and the rest — is consumed as
+`<Icon name="…" />`. Production code never imports a file from
+`src/assets/icons/` directly; the only reference to that directory is the Icon's
+own `mask-image` registry loop in `controls.scss`. The accepted renderer — typed
+`IconName` + CSS mask + `currentColor` — **stays as it is**. No SVG sprite, no
+SVGR, no icon library.
+
+**Not every SVG is an Icon.** Brand artwork, payment and partner logos,
+multicolour marks and marketing/content/product illustrations are assets, not
+glyphs, and keep ordinary imports: `src/assets/brand/brand-mark.svg`,
+`src/assets/commerce/payment-mir.svg`, `src/assets/marketing/*.svg` and
+`src/assets/products/product-*.svg`.
+
+The `IconName` union and the SCSS `$icon-names` list still duplicate the registry.
+That is a known maintainability concern and is **deliberately deferred** — it is
+not worth a codegen script, AST parsing, sprite parser or custom Vite plugin, and
+nothing in the current stack removes it for free.
+
+**Raster policy.** Authored raster sources are **PNG / JPG / JPEG only**. AVIF and
+WebP are _generated build output_, never authored source, and are never committed
+or hand-maintained as `foo.avif` / `foo.webp` / `foo.jpg` triplets. A PNG source
+keeps a PNG fallback and a JPG/JPEG source keeps a JPEG fallback, so transparent
+artwork can never silently degrade to JPEG — `vite.config.ts` throws at build
+time if a `?picture` import is not PNG/JPG/JPEG. SVG is outside this pipeline.
+
+`vite-imagetools@12.0.0` (a dev/build-only dependency) performs the transform at build
+time; there is no runtime image library and no runtime image processing. It is
+**opt-in per import**, never global: only imports whose query ends in `&picture`
+are transformed, and `defaultDirectives` returns empty directives for everything
+else, so the favicon SVG, icon SVGs, the brand mark and ordinary asset imports are
+untouched.
+
+`src/components/media/` owns `Picture`, the canonical local responsive raster
+primitive. It renders `<picture>` with one `<source>` per generated format
+(AVIF, then WebP, then the original-format fallback) plus an `<img>` carrying the
+generated intrinsic `width`/`height`. `alt` and `sizes` are required, `loading`
+defaults to `lazy` and `decoding` to `async`, and `className` applies to the
+`<img>`. **Widths and `sizes` are consumer-owned** — widths are chosen at the
+import site from the real rendered slot and the source's native size, and there is
+no global width matrix.
+
+**A generic `Image` primitive is intentionally deferred** until a real
+external/dynamic/single-source consumer proves its API. Plain single-source URLs
+stay native `<img>`.
+
+`CommerceLocationCard` is the first real `Picture` consumer. Its former
+`imageSrc: string` prop became `image: PictureSource`; the card owns its own
+`sizes` because it owns the slot CSS, and its only caller — the Components
+reference — was migrated in the same change. The legacy authored WebP was
+normalized to PNG in the same slice, so **no authored WebP or AVIF remains in
+`src/`**.
+
+### Global Shell C — BrandLogo and favicon
+
+**User visual PASS received on 2026-08-27. Global Shell C is accepted and
+closed.**
 
 `src/components/brand/` owns `BrandLogo`, the accepted GoodCall lockup — the
 purple brand mark followed by the `GOODCALL` wordmark — extracted verbatim from
@@ -335,6 +395,10 @@ Independent audits themselves remain optional. See the AUDIT.md section of
 - Canonical brand lockup: `src/components/brand/` — `BrandLogo`, with its styles
   in `brand.scss` and the accepted brand mark in `src/assets/brand/`. The same
   SVG is the document favicon source.
+- Canonical media primitive: `src/components/media/` — `Picture`, the local
+  responsive raster renderer. It needs no stylesheet of its own.
+- Authored raster sources: `src/assets/**/*.{png,jpg,jpeg}`. Generated
+  AVIF/WebP/fallback candidates exist only in `dist/assets/`.
 - Reusable controls and form fields: `src/components/ui/`, with the shared
   control system in `controls.scss`.
 - Reusable product presentation components: `src/components/product/`, with their
@@ -877,8 +941,17 @@ functional suppression directives.
 
 ## Current visual status
 
-**Global Shell C / BrandLogo + favicon — technically complete, user visual PASS
-still required.** The extraction is a no-regression refactor: the brand anchor,
+**Media Foundation / Picture pipeline + Icon policy — technically complete, user
+visual PASS still required.** The `CommerceLocationCard` migration is a media
+delivery refactor only: card and image-slot geometry are identical at
+1440 / 1024 / 768 / 390 / 320, and the remaining difference is codec-level
+(mean absolute error ≈ 1/255, RMSE ≈ 2.5, 0.03–0.08% of pixels differing at a
+perceptual threshold) — not visually meaningful. The build emits AVIF, WebP and
+PNG candidates at 200 / 260 / 310 and Chromium selects the AVIF candidate at every
+tested viewport.
+
+**Global Shell C / BrandLogo + favicon — user visual PASS received on 2026-08-27,
+accepted and closed.** The extraction was a no-regression refactor: the brand anchor,
 mark, wordmark, gap, font and Header height are identical at
 1920 / 1440 / 1280 / 1024 / 768 / 430 / 390 / 375 / 360 / 320, and a 2x-DPR pixel
 comparison of both the brand region and the whole Header reports **0 differing
@@ -1094,13 +1167,14 @@ None.
 
 ## Next approved step
 
-**User visual review of Global Shell C / BrandLogo + favicon**, using the
-`?reference=header` no-regression screenshots and the browser-tab favicon,
-followed by any correction the review calls for. The slice is technically
-complete and waits on that gate.
+**User visual review of the Media Foundation slice**, using the migrated
+`CommerceLocationCard` before/after screenshots from `?reference=components` and
+the generated Picture build output, followed by any correction the review calls
+for. The slice is technically complete and waits on that gate.
 
-Do not begin Newsletter or Footer implementation before BrandLogo + favicon
-receive explicit user visual PASS. Do not reopen or redesign the accepted Header.
+Do not begin Newsletter, Footer or page implementation before the media
+foundation receives explicit user visual PASS. Do not reopen or redesign the
+accepted Header, BrandLogo or closed Components.
 Do not add router, state or data architecture, and do not add dependencies unless
 a concrete shell requirement proves necessary. Accepted system decisions win over
 incidental raster differences.
