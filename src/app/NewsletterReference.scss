@@ -1,0 +1,41 @@
+.newsletter-reference {
+  min-height: 100dvh;
+  padding-block: 40px 64px;
+  background-color: var(--role-surface-page);
+
+  &__inner {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    align-items: flex-start;
+  }
+
+  &__title {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--role-text-primary);
+  }
+
+  &__note {
+    max-width: 720px;
+    margin: 0;
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--role-text-secondary);
+  }
+
+  &__status {
+    margin: 0;
+    padding: 10px 14px;
+    background-color: var(--role-surface-page-soft);
+    border: 1px solid var(--role-border-soft);
+    border-radius: 8px;
+    font-size: 14px;
+    color: var(--role-text-muted);
+  }
+
+  &__back {
+    font-size: 15px;
+  }
+}

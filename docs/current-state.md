@@ -11,15 +11,95 @@ Operational handoff. This is not a history log.
 
 ## Current milestone
 
-**Global Shell — closed.** Global Shell A / Container, B / Header and C /
-BrandLogo + favicon are all accepted, and Media Foundation is closed.
-**Location Foundation / CitySelector received user visual PASS on 2026-08-27,
-with the service-error colour correction applied. Its live DaData functional
-gate is separate and still open.**
+Accepted:
+
+- Global Shell A / Container
+- Global Shell B / SiteHeader + MobileActionBar
+- Global Shell C / BrandLogo + favicon
+- Media Foundation / Picture pipeline + Icon policy
+- Location Foundation / CitySelector — visual gate, user visual PASS on
+  2026-08-27, including the requested danger-red service/geolocation failure
+  correction
+
+Open external integration:
+
+- Location live DaData functional verification, pending `DADATA_TOKEN`
+  configuration. It is a separate configuration-dependent gate and does not
+  block visual shell work.
+
+Active visual slice:
+
+- **Global Shell D / NewsletterBand — technically complete; user visual PASS is
+  still required.**
+
+### Global Shell D — NewsletterBand
+
+**Active slice. User visual PASS is still required.**
+
+`src/components/shell/` owns `NewsletterBand`, the canonical pre-footer
+newsletter region, with its styles in `newsletter.scss`. It is shell, not page
+content and not the Footer: **Footer remains unimplemented** and NewsletterBand
+ends where Footer begins. The closed Components `NewsletterCard` is a different,
+card-shaped section-05 component and is unchanged; no `src/components/newsletter/`,
+`src/features/newsletter/`, provider, service or form context exists.
+
+**Public API is exactly `onSubscribe?: (email: string) => void`.** There is no
+`title`, `description`, `theme`, `variant`, `compact`, `layout`, `background`,
+`buttonLabel`, `showLegal`, `legalText`, `successMessage`, `errorMessage`,
+`loading`, `campaignId` or `source` prop. The canonical Russian copy lives inside
+the GoodCall-specific shell component.
+
+**Anatomy.** `<section class="newsletter-band" aria-labelledby>` → accepted
+`Container` → `newsletter-band__content`, which is both the brand-soft rounded
+surface and the flex row. Inside it: a copy block (`<h2>` + `<p>`) and a real
+`<form>` holding a visually hidden `<label>`, a native `type="email"` input
+carrying `.ui-input`, and the accepted `Button` as the submit control. No wrapper
+exists without a layout or semantic purpose and there is no clickable `div`.
+
+**Raster synthesis.** The Home, Shops, About, Blog and Catalog page rasters were
+compared and normalized into one band. Repeated: the copy
+`Будьте в курсе новинок и акций` (4/5 verbatim), the `Подписаться` button (5/5),
+a white email field beside a brand-purple submit control, a copy-left /
+form-right desktop row, and placement directly above the footer. Normalized: the
+surface is `--role-surface-brand-soft`, the only fill that repeats exactly
+(Home and Catalog measure #f2edfd–#f5f0fd against the accepted #f3ecff) — Blog,
+About and Shops each paint a different, non-repeating purple, so no purple
+system exists to encode. The description uses `--role-text-secondary` rather than
+the raster's muted grey, which would measure 3.95:1 on brand-soft and fail AA.
+The submit control keeps the accepted pill Button rather than the raster's
+rounded rectangle, because Components is closed and user-accepted. Omitted: the
+leading envelope icon (2/5, and no envelope `IconName` exists), the Shops
+full-bleed dark variant and its black button, and any privacy/consent copy or
+policy link — no raster shows one, and no destination route exists to invent.
+The gift/envelope illustration repeats in all five rasters but is **deferred**:
+no authored PNG/JPG source exists, rasters may not be copied into the repository,
+and no asset may be invented.
+
+**Form semantics.** A plain uncontrolled form. Submission is read with
+`FormData`, `event.preventDefault()` stops navigation, the value is trimmed and
+handed to `onSubscribe`. Browser-native validation gates submission —
+`type="email"`, `required`, `autocomplete="email"`, `inputMode="email"`, and
+`noValidate` is never set. There is **no** backend, `fetch`, endpoint,
+newsletter/marketing SDK, `localStorage`, cookie, loading state, retry,
+analytics, validation schema, form library or React form state. No success or
+failure UI exists inside the production component.
+
+**Responsive direction** is CSS only, with no JS viewport detection. The content
+row wraps intrinsically, so the form drops below the copy when the two no longer
+fit; one real breakpoint at 560px stacks the input and the button and makes both
+full width, because 375px leaves 301px of inner width while an inline
+input-plus-button needs about 382px.
+
+`?reference=newsletter` renders the real production `NewsletterBand` at full
+width on a neutral surface, passes a real `onSubscribe`, and shows the last
+submitted address in a reference-only `aria-live="polite"` status **outside** the
+component. It is not a Home page and implements no Footer or page module.
 
 ### Location Foundation — CitySelector
 
-**Active slice. User visual/functional PASS is still required.**
+**Visual gate accepted. User visual PASS received on 2026-08-27, including the
+danger-red service/geolocation failure correction. Live DaData functional
+verification remains open and pending `DADATA_TOKEN`.**
 
 `src/components/location/` owns the whole capability: `CityLocationControl`
 (header trigger, confirmation, orchestration), `CityPickerDialog`,
@@ -354,8 +434,8 @@ implemented.
 `?reference=header` renders the real production `SiteHeader` and
 `MobileActionBar` above a neutral reference-only body, and passes a real local
 `onScanRequest` callback so the QR button can be exercised without fake
-behaviour. Footer, NewsletterBand and every page family remain unimplemented. No
-dependency was added.
+behaviour. It renders no NewsletterBand; Footer and every page family remain
+unimplemented. No dependency was added.
 
 ### Global Shell A — Container
 
@@ -513,7 +593,9 @@ Independent audits themselves remain optional. See the AUDIT.md section of
 - Canonical layout primitive: `src/components/layout/` — `Container`, with its
   styles in `layout.scss`.
 - Canonical global shell: `src/components/shell/` — `SiteHeader` and
-  `MobileActionBar`, with their styles in `header.scss`.
+  `MobileActionBar`, with their styles in `header.scss`, and `NewsletterBand`,
+  the canonical pre-footer newsletter region, with its styles in
+  `newsletter.scss`.
 - Canonical brand lockup: `src/components/brand/` — `BrandLogo`, with its styles
   in `brand.scss` and the accepted brand mark in `src/assets/brand/`. The same
   SVG is the document favicon source.
@@ -545,6 +627,9 @@ Independent audits themselves remain optional. See the AUDIT.md section of
   its reference-only styles in `LayoutReference.scss`.
 - Global Shell Header reference surface: `src/app/HeaderReference.tsx`, with its
   reference-only styles in `HeaderReference.scss`.
+- Global Shell NewsletterBand reference surface:
+  `src/app/NewsletterReference.tsx`, with its reference-only styles in
+  `NewsletterReference.scss`.
 
 There is no router, no data layer, and no feature architecture. The reference
 surfaces are development comparison pages, not product UI.
@@ -1047,6 +1132,11 @@ The base page no longer hosts the Foundations surface. A query-string check in
   and needs no token or network. It also exposes controls to reset
   `goodcall.city.v1`, simulate a recoverable API failure and simulate a missing
   token. `?reference=header` keeps the real production lookup client.
+- `?reference=newsletter` — the Global Shell NewsletterBand reference surface:
+  the real production `NewsletterBand` at realistic full width on a neutral
+  reference-only page, with a reference-owned `aria-live` status outside the
+  component reporting the last submitted address. It builds no Home page, no
+  Footer and no page content module.
 
 Links are built from `import.meta.env.BASE_URL`, so they resolve under the
 GitHub Pages base without hardcoding the repository name, and no SPA fallback is
@@ -1071,6 +1161,23 @@ comments section of `AGENTS.md` for the governed file set and the rule on
 functional suppression directives.
 
 ## Current visual status
+
+**Global Shell D / NewsletterBand — technically complete; user visual PASS is
+still required.** `?reference=newsletter` reports zero horizontal document
+overflow and zero runtime errors at 1920 / 1440 / 1280 / 1024 / 768 / 430 / 390 /
+375 / 320. The band surface shares the accepted Container inner edges at every
+width (272–1648 at 1920px, 32–1408 at 1440px, 16–304 at 320px). The surface is
+107.75px tall at 1280px and above, against roughly 104–106px in the normalized
+Home raster. Copy and form sit inline down to about 1080px, the form drops to its
+own row below that, and the input and button stack full width below 560px. Form
+verification: empty submit and the invalid values `foo`, `foo@` and
+`@example.com` produce **0** submissions; `user@example.com` produces exactly one
+per attempt from both a button click and Enter; a whitespace-padded address is
+delivered trimmed; page navigations stay at the single initial load, so nothing
+reloads on submit. The email input carries the accessible name
+`Электронная почта` from a visually hidden real `<label>`, the section is named
+by its `<h2>`, and both controls show the accepted 2px brand focus ring in
+visual order.
 
 **Location Foundation / CitySelector — user visual PASS received on 2026-08-27,
 with one explicit correction applied: service-unavailable and geolocation-failure
@@ -1331,23 +1438,23 @@ none of them blocks the closed milestone.
 
 ## Next approved step
 
-**Live DaData functional verification of the Location Foundation slice.** The
-visual gate is closed: user visual PASS was received on 2026-08-27 and the one
-requested correction — danger-red service and geolocation failures — is applied.
-Do not reopen the accepted Location visuals.
+**User visual review of Global Shell D / NewsletterBand.** The slice is
+technically complete; only the user can grant the visual PASS.
 
-**Outstanding external configuration:** set the repository secret
-`DADATA_TOKEN` (and a local `.env.local` with `VITE_DADATA_TOKEN` for local
-work), then re-run live DaData and Pages verification. Until then the deployed
-Header falls back to `Выберите город` and the network features are disabled
-gracefully.
+**Outstanding external configuration, separate from this slice:** set the
+repository secret `DADATA_TOKEN` (and a local `.env.local` with
+`VITE_DADATA_TOKEN` for local work), then re-run live DaData and Pages
+verification of the Location Foundation. Until then the deployed Header falls
+back to `Выберите город` and the network features are disabled gracefully. That
+gate is configuration-dependent and does not block visual shell work.
 
-Do not begin Newsletter, Footer or page implementation before Location Foundation
-receives explicit user visual/functional PASS. Do not reopen or redesign the
-accepted Header, BrandLogo, Media Foundation or closed Components. Do not add
-router, state or data architecture, do not promote the city into a global context
-or store, and do not add dependencies unless a concrete requirement proves
-necessary. Accepted system decisions win over incidental raster differences.
+Do not begin Footer or page implementation before NewsletterBand receives
+explicit user visual PASS. Do not reopen or redesign the accepted Header,
+BrandLogo, Media Foundation, Location visuals or closed Components. Do not add
+router, state or data architecture, do not add a subscription backend,
+newsletter service or persistence, and do not add dependencies unless a concrete
+requirement proves necessary. Accepted system decisions win over incidental
+raster differences.
 
 ## Normative repository docs
 

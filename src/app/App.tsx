@@ -3,6 +3,7 @@ import { FoundationsColorReference } from './FoundationsColorReference';
 import { HeaderReference } from './HeaderReference';
 import { LayoutReference } from './LayoutReference';
 import { LocationReference } from './LocationReference';
+import { NewsletterReference } from './NewsletterReference';
 import { ReferenceIndex } from './TemporaryReference';
 
 function currentReference(): string | null {
@@ -30,6 +31,10 @@ export function App() {
 
   if (reference === 'location') {
     return <LocationReference />;
+  }
+
+  if (reference === 'newsletter') {
+    return <NewsletterReference />;
   }
 
   return <ReferenceIndex />;
