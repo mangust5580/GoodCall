@@ -204,25 +204,15 @@ $catalog-swatches: (
   }
 
   &__sort {
-    margin: 0;
-    font-size: 15px;
-    line-height: 1.4;
-    color: var(--role-text-muted);
+    flex: none;
+    width: auto;
+    min-width: 230px;
   }
 
-  &__sort-value {
-    color: var(--role-text-primary);
-    font-weight: 600;
-  }
-
-  &__reserved {
-    border: 1px dashed var(--role-border-strong);
-    border-radius: 16px;
-    background-color: var(--role-surface-page-soft);
-
-    &--products {
-      min-height: 320px;
-    }
+  &__pagination {
+    display: flex;
+    justify-content: center;
+    margin-top: 12px;
   }
 
   @include h.media-up(1024px) {
@@ -240,12 +230,22 @@ $catalog-swatches: (
     &__filter-bar {
       display: none;
     }
+  }
+}
 
-    &__reserved {
-      &--products {
-        min-height: 520px;
-      }
-    }
+.catalog-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(228px, 1fr));
+  gap: 20px;
+  min-width: 0;
+
+  p:has(> .product-price) {
+    flex: 1 1 100%;
+  }
+
+  &__promo {
+    grid-column: 1 / -1;
+    min-width: 0;
   }
 }
 

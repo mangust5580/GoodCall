@@ -1,10 +1,22 @@
+import { Select } from 'radix-ui';
 import { useState } from 'react';
 
 import { Container } from '../../components/layout';
+import { Icon, Pagination } from '../../components/ui';
 import { CatalogFilterDialog } from './CatalogFilterDialog';
 import { CatalogFilters } from './CatalogFilters';
+import { CatalogProductGrid } from './CatalogProductGrid';
 import { DEFAULT_CATALOG_FILTER_STATE } from './catalogFilterState';
 import type { CatalogFilterState } from './catalogFilterState';
+import {
+  CATALOG_PAGE_COUNT,
+  CATALOG_PRODUCTS,
+  CATALOG_SORT_OPTIONS,
+  DEFAULT_CATALOG_SORT,
+  catalogPageProducts,
+  sortCatalogProducts,
+} from './catalogProductFixtures';
+import type { CatalogSortValue } from './catalogProductFixtures';
 
 export interface CatalogPageProps {
   readonly resultCount?: number;
@@ -17,8 +29,8 @@ interface QuickFilter {
 
 const CATEGORY_TITLE = 'Смартфоны';
 const DEFAULT_RESULT_COUNT = 2546;
-const CURRENT_SORT = 'Сначала популярные';
 const DEFAULT_QUICK_FILTER = 'all';
+const SORT_LABEL = 'Сортировка';
 
 const QUICK_FILTERS: readonly QuickFilter[] = [
   { value: 'all', label: 'Все смартфоны' },
@@ -36,6 +48,10 @@ export function CatalogPage({ resultCount = DEFAULT_RESULT_COUNT }: CatalogPageP
   const home = import.meta.env.BASE_URL;
   const [filters, setFilters] = useState<CatalogFilterState>(DEFAULT_CATALOG_FILTER_STATE);
   const [quickFilter, setQuickFilter] = useState(DEFAULT_QUICK_FILTER);
+  const [sort, setSort] = useState<CatalogSortValue>(DEFAULT_CATALOG_SORT);
+  const [page, setPage] = useState(1);
+
+  const visibleProducts = catalogPageProducts(sortCatalogProducts(CATALOG_PRODUCTS, sort), page);
 
   return (
     <main className="catalog-page">
@@ -60,9 +76,45 @@ export function CatalogPage({ resultCount = DEFAULT_RESULT_COUNT }: CatalogPageP
               <h1 className="catalog-page__title">{CATEGORY_TITLE}</h1>
               <p className="catalog-page__count">{countFormatter.format(resultCount)} товаров</p>
             </div>
-            <p className="catalog-page__sort">
-              Сортировка: <span className="catalog-page__sort-value">{CURRENT_SORT}</span>
-            </p>
+
+            <Select.Root
+              onValueChange={(value: CatalogSortValue) => {
+                setSort(value);
+                setPage(1);
+              }}
+              value={sort}
+            >
+              <Select.Trigger
+                aria-label={SORT_LABEL}
+                className="ui-input ui-input--select-trigger catalog-page__sort"
+              >
+                <Select.Value />
+                <Select.Icon asChild>
+                  <Icon className="ui-input__select-icon" name="chevron-down" />
+                </Select.Icon>
+              </Select.Trigger>
+              <Select.Portal>
+                <Select.Content
+                  align="end"
+                  className="ui-floating-surface ui-select-content"
+                  collisionPadding={16}
+                  position="popper"
+                  sideOffset={8}
+                >
+                  <Select.Viewport className="ui-select-content__viewport">
+                    {CATALOG_SORT_OPTIONS.map((option) => (
+                      <Select.Item
+                        className="ui-select-content__item"
+                        key={option.value}
+                        value={option.value}
+                      >
+                        <Select.ItemText>{option.label}</Select.ItemText>
+                      </Select.Item>
+                    ))}
+                  </Select.Viewport>
+                </Select.Content>
+              </Select.Portal>
+            </Select.Root>
           </header>
 
           <aside aria-label="Фильтры каталога" className="catalog-page__sidebar">
@@ -97,7 +149,16 @@ export function CatalogPage({ resultCount = DEFAULT_RESULT_COUNT }: CatalogPageP
               })}
             </div>
 
-            <div className="catalog-page__reserved catalog-page__reserved--products" />
+            <CatalogProductGrid products={visibleProducts} />
+
+            <div className="catalog-page__pagination">
+              <Pagination
+                label="Страницы каталога"
+                onChange={setPage}
+                page={page}
+                pageCount={CATALOG_PAGE_COUNT}
+              />
+            </div>
           </section>
         </div>
       </Container>

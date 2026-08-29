@@ -25,6 +25,12 @@ Accepted:
   closed.** Breadcrumbs, title/count geometry, the 250px desktop sidebar, the
   32px sidebar/results gap, heading and sort placement, single-column mobile
   page geometry and shell integration are all accepted.
+- **Catalog B / Filters + Mobile Filter Dialog — user visual PASS on
+  2026-08-29, closed.** The desktop filter panel, the evidenced filter
+  inventory, the quick-filter preset row, the mobile `Фильтры` trigger with its
+  active count, and the Radix bottom-sheet dialog with its draft/apply/reset
+  model are all accepted. The `Серия` and `Диагональ` taxonomy is raster fixture
+  copy, not a future domain contract, and is not to be reworked.
 - Media Foundation / Picture pipeline + Icon policy
 - Location Foundation / CitySelector — visual gate, user visual PASS on
   2026-08-27, including the requested danger-red service/geolocation failure
@@ -47,8 +53,8 @@ Technically complete, final polish deferred:
 
 Active visual slice:
 
-- **Catalog B / Filters + Mobile Filter Dialog — technically complete, user
-  visual PASS is still required.**
+- **Catalog C / Product Grid + Pagination + Sorting — technically complete,
+  user visual PASS is still required.**
 
 ### Catalog A — Page Foundation & Layout
 
@@ -108,15 +114,9 @@ that sorts nothing would be exactly the fake interactivity this project forbids.
 The raster's quick-filter chip row and its two view-mode toggles are likewise
 deferred.
 
-**Reserved region.** The results area holds a neutral dashed placeholder
-(520px tall from 1024px, 320px below) purely so the column width, the gap and
-the collapse can be reviewed. It carries no copy, no controls and no data, and
-disappears when Catalog C fills it. The sidebar placeholder was replaced by the
-real Catalog B filter panel.
-
-**Deferred:** Catalog C — product grid, pagination, sort behaviour and
-view-mode controls. `ProductCard` and `Pagination` already exist and were
-deliberately **not** pulled forward.
+**Reserved regions are gone.** The sidebar placeholder became the Catalog B
+filter panel and the results placeholder became the Catalog C product grid; no
+dashed region remains on the page.
 
 **Routing.** No router was added. The milestone is exposed through the existing
 `?reference=catalog` development mechanism, so GitHub Pages direct entry keeps
@@ -125,7 +125,11 @@ see the task audit for the assessment.
 
 ### Catalog B — Filters + Mobile Filter Dialog
 
-**Active slice. User visual PASS is still required.**
+**User visual PASS received on 2026-08-29, closed.** The accepted state covers
+the desktop filter panel, the evidenced filter inventory, the quick-filter
+preset row, the mobile trigger and active count, and the dialog's
+draft/apply/reset behaviour. The `Серия` and `Диагональ` taxonomy is raster
+fixture copy, not a domain contract.
 
 **Ownership.** Everything lives under `src/pages/catalog/`: `CatalogFilters`
 (the panel), `CatalogFilterDialog` (the mobile sheet), `catalogFilterState`
@@ -217,9 +221,102 @@ quick-filter preset sits outside the sidebar and outside the dialog, so it is
 deliberately excluded from the count. Nothing about the count touches
 `resultCount`.
 
-**Deferred:** Catalog C — product grid, pagination, sort behaviour and
-view-mode controls. The sort row stays the non-interactive
-`Сортировка: Сначала популярные` indicator; no `SelectField` was added.
+Catalog C replaced the sort indicator with a real control and filled the
+results region; the filter state itself is unchanged and still never touches
+products or the result count.
+
+### Catalog C — Product Grid + Pagination + Sorting
+
+**Active slice. User visual PASS is still required.**
+
+**Ownership.** `src/pages/catalog/` gains `catalogProductFixtures.ts` (product
+shape, 16 specimen products, sort options and comparators, page constants) and
+`CatalogProductGrid.tsx` (the grid, the in-grid promo and the local card state).
+There is no `src/data/`, `src/api/`, `src/services/`, `src/repositories/`,
+`src/features/products/`, `ProductRepository`, `CatalogApi`, `ProductService`,
+`ProductProvider` or `CatalogProvider`. The fixtures are page-local specimen
+content for visual review, not a product or domain model: the shape carries only
+what `ProductCard`, the comparators and the pager need, and models no SKU,
+inventory, seller, variant, spec or delivery concept.
+
+**Public API is still exactly `resultCount?: number`.**
+
+**Fixtures.** 16 deterministic smartphones. The 12 the raster shows are
+transcribed from `Catalog.png` — titles, colours, current prices, ratings and
+badges; four more extend the pool so page changes show different products. All
+of them share the existing synthetic `product-phone.svg`; no branded photography
+was downloaded and no new artwork was created. Review counts and the illegible
+old prices are coherent specimen values, because that line renders unreliably in
+the raster.
+
+**`2 546 товаров` stays specimen copy** and is never derived from fixture length,
+sorting or pagination.
+
+**ProductCard reuse.** The accepted card renders every result; no
+`CatalogProductCard` exists. Exercised props: `title`, `imageSrc`, `imageAlt`,
+`price`, `oldPrice` (10 of 16), `badge` (15 of 16, through the accepted `Chip` —
+`brand` for `Новинка`, `danger` for discounts), `rating`, `reviewCount`,
+`favoritePressed`/`onFavoriteToggle`, `onAddToCart`, and
+`quantity`/`onQuantityChange` once a card is added. `availability` is
+deliberately unused: the raster's catalog card shows none, and its bordered
+padded box does not fit a 259px column beside the price.
+
+**Grid.** `repeat(auto-fill, minmax(228px, 1fr))` with a 20px gap, so the column
+count follows usable card width instead of a fixed desktop number: 4 columns at
+259px from 1440 (the raster's own 4 columns at ~258px), 3 at 1280, 2 from 1024
+and 768, 1 below roughly 500px. The single mobile column is a measured decision,
+not a default — at 390px two columns give a 172px card whose 140px content box
+cannot hold the accepted 94px price plus the 44px cart action on one line, and
+whose titles wrap to four lines. One Catalog-scoped layout rule makes the price
+block span the card footer so every card stacks price above action, which is
+both consistent across a row and what the raster shows at that card width.
+
+**In-grid promo.** Implemented with the accepted `PromoBanner`, spanning all
+columns after the eighth card, reproducing the raster's row-2/row-3 break. It
+carries no `actionLabel`, because no route exists and a dead CTA would be fake
+interactivity. No campaign architecture and no marketing artwork were added; the
+surface is the component's accepted `--gradient-cta` rather than the raster's
+black.
+
+**Sorting** is real and local over the fixtures: `Сначала популярные` (default,
+popularity descending), `Сначала дешевле`, `Сначала дороже`, `По рейтингу`, each
+with a stable id fallback. Changing sort resets the page to 1. The accepted
+`SelectField` could not take the toolbar role — `SelectFieldProps` exposes no
+`labelVisuallyHidden`, `FieldShell` always renders a visible `<label>`, and
+`.ui-field` is a column flex, so the raster's compact single-line trigger is not
+expressible without editing a closed primitive. A Catalog-local Radix `Select`
+reuses the accepted `.ui-input--select-trigger` and `.ui-select-content` styling
+with `aria-label="Сортировка"`; global `SelectField` was not altered.
+
+**Pagination** uses the accepted component. `pageCount` is 65 — the figure
+`Catalog.png` shows — and, like `2 546 товаров`, it is specimen copy rather than
+a computed total; it is never derived from the fixture array. Twelve cards per
+page, and each page deterministically rotates the 16-item pool so page changes
+visibly change results without claiming thousands of local products.
+
+**Filters stay UI-only.** Sidebar filters and quick presets still change only
+their own selection state; they never reorder, filter or count products. Sorting
+and pagination do act on the fixtures, because Catalog C explicitly owns those
+presentation behaviours. That asymmetry is deliberate and holds until a real
+catalogue and facet contract exists.
+
+**View-mode controls were omitted.** The raster's two toolbar buttons are grid
+_density_ variants (a 2x3 block and a 3x3 dot grid), not grid-versus-list, so
+mapping them onto `ProductCard` `vertical`/`horizontal` would misrepresent the
+evidence; and the accepted icon set has no grid, list or dot-grid glyph, so
+implementing them would reopen the accepted Icon policy.
+
+**Observed accepted-component deviations from `Catalog.png`**, recorded rather
+than fixed, because each belongs to a closed component: `ProductCard` renders the
+rating above the title (`__info` is `column-reverse` in vertical layout) while
+the raster shows title first; the add-to-cart affordance is a 44px icon button
+while the raster shows a full-width labelled `В корзину`; `Chip` badges are soft
+tints while the raster uses solid violet and red. None is a correctness defect.
+
+**Deferred:** routing and product detail pages; the multi-category filter/facet
+architecture; the final Footer polish pass. The raster shows a tighter last-row →
+`NewsletterBand` transition than the accepted page padding produces — recorded
+for that integrated review, not changed here.
 
 ### Global Shell E — SiteFooter
 
@@ -1461,12 +1558,12 @@ The base page no longer hosts the Foundations surface. A query-string check in
   reference-only intro followed by the real production `NewsletterBand` and
   `SiteFooter`, plus `MobileActionBar` so the mobile shell overlap can be tested.
   It reserves its own bottom inset below 768px and builds no Home page.
-- `?reference=catalog` — the Catalog A + B reference surface: a reference-only
-  note followed by the real production shell — `SiteHeader`, `CatalogPage`,
+- `?reference=catalog` — the Catalog reference surface: a reference-only note
+  followed by the real production shell — `SiteHeader`, `CatalogPage`,
   `NewsletterBand`, `SiteFooter` and `MobileActionBar`. It owns the mobile bottom
-  inset and builds no Home page and no catalog data. It seeds no filter state:
-  the page opens in its own defaults, which are the state `Catalog.png` shows.
-  No `?reference=catalog-filters` surface was added.
+  inset and builds no Home page. It seeds no filter, sort or page state: the page
+  opens in its own defaults, which are the state `Catalog.png` shows. No
+  `?reference=catalog-filters` or `?reference=catalog-c` surface was added.
 
 Links are built from `import.meta.env.BASE_URL`, so they resolve under the
 GitHub Pages base without hardcoding the repository name, and no SPA fallback is
@@ -1492,26 +1589,31 @@ functional suppression directives.
 
 ## Current visual status
 
-**Catalog B / Filters + Mobile Filter Dialog — technically complete; user
+**Catalog C / Product Grid + Pagination + Sorting — technically complete; user
 visual PASS is still required.** `?reference=catalog` renders the real shell
 around the real `CatalogPage` and reports zero horizontal document overflow,
 zero runtime errors and zero failed requests at 1920 / 1440 / 1280 / 1024 / 768 /
-430 / 390 / 375 / 320. The accepted Catalog A geometry is unchanged: the sidebar
-measures exactly 250px with a 32px gap at 1920 / 1440 / 1280 / 1024, and content
-width still follows the accepted Container. Below 1024px the sidebar is
-`display: none` and none of its 35 controls is rendered or focusable; the
-`Фильтры` trigger is a real `<button type="button">` and the results region
-follows the heading and toolbar directly. The mobile sheet reports
-`role="dialog"`, an accessible title, a named close button, trapped focus,
-`overflow: hidden` on `<body>` while open, a scrollable body, zero horizontal
-overflow at 320px, and z-index 30 against `MobileActionBar` at 20; Escape closes
-it, discards the draft and returns focus to the trigger. Accessible names verify
-as `Apple 256`, `Оценка 4,5 и выше`, `Чёрный`, `Показать ещё бренды`
-(`aria-expanded`), `Цена от` / `Цена до` sliders and `Все смартфоны`
-(`aria-pressed`). There are no duplicate ids, no `href="#"` and no colour-only
-state. The price range accepts keyboard, pointer drag and manual numeric commit,
-cannot be inverted from either field, and resets to 3 000 / 250 000. Through all
-of it `2 546 товаров` never changes.
+430 / 390 / 375 / 320. The results grid resolves to 4 columns of 259px at 1920
+and 1440, 3 of 298px at 1280, 2 of 333px at 1024, 2 of 351px at 768 and a single
+column of 394 / 356 / 341 / 288px at 430 / 390 / 375 / 320, always with a 20px
+gap and the promo band spanning every column. Sorting is verified deterministic —
+default popularity, ascending 19 990 → 65 990, descending 109 990 → 28 990,
+rating 4,8 → 4,5 — and changing it resets page 3 to page 1. Pagination is
+verified across first, middle and last: previous is disabled on page 1, next on
+page 65, the slot row reads `1 … 62 63 64 65` at the end, and every page change
+swaps the visible fixtures. The results region is a labelled `<section>` holding
+twelve `<article>` cards; accessible names verify as `Сортировка` (combobox),
+`Добавить в избранное: …`, `Добавить в корзину: …`,
+`Рейтинг 4.8 из 5, 1 284 отзыва` and `Страницы каталога` with
+`aria-current="page"`. The grid contains zero anchors, zero `href="#"` and zero
+product routes, and there are no duplicate ids. Favorite and cart state stay on
+their own card, never reach the Header counters and never touch `localStorage`.
+Catalog B still behaves: the desktop filters and the mobile dialog work, and
+selecting filters or a quick preset leaves the grid, the page and
+`2 546 товаров` untouched.
+
+**Catalog B / Filters + Mobile Filter Dialog — user visual PASS received on
+2026-08-29 and closed.**
 
 **Catalog A / Page Foundation & Layout — user visual PASS received on
 2026-08-29 and closed.**
@@ -1802,6 +1904,13 @@ none of them blocks the closed milestone.
 - Options behind the brand and colour `Показать ещё` buttons are fixtures. The
   raster shows only the collapsed lists, so the hidden values are specimen data
   until a real catalogue source exists.
+- The smartphone filter and product fixtures are **not** the future universal
+  category contract. GoodCall will hold many technical categories with different
+  filter inventories, and the trigger for designing common-versus-category-
+  specific filter and facet architecture is a second real category with a
+  different inventory — not a refactor of the current specimen data.
+- Routing remains a separate milestone after Catalog C. No product or category
+  routes exist, so cards and the in-grid promo carry no links.
 - Live DaData behaviour is unverified. No local token is available, GitHub secret
   presence is unverifiable without `gh`, and the DaData hosts are unreachable
   from this build environment, so the adapter was verified against recorded
@@ -1810,16 +1919,17 @@ none of them blocks the closed milestone.
 
 ## Next approved step
 
-**User visual review of Catalog B / Filters + Mobile Filter Dialog.** The slice
-is technically complete; only the user can grant the visual PASS. Three
-questions ride with it. `Catalog.png` pairs the `Серия` heading with
-`Только со скидкой` / `Сначала от 1%` and the `Диагональ` heading with
-`Быстрая доставка` / `Доставка сегодня`; both pairings are implemented verbatim
-and the copy correction is the user's call. The accepted `RangeSlider` renders
-its own fields, so the price inputs read `3 000` / `250 000` rather than the
-raster's `от 3 000` / `до 250 000`. And the mobile sheet wording
-(`Сбросить` / `Показать`) has no raster evidence, because `Catalog.png` is a
-desktop composition.
+**User visual review of Catalog C / Product Grid + Pagination + Sorting.** The
+slice is technically complete; only the user can grant the visual PASS. Four
+questions ride with it. The accepted `ProductCard` renders the rating above the
+title and offers a 44px icon-only cart action, where `Catalog.png` shows title
+first and a full-width `В корзину` button — both are closed-component
+decisions, recorded rather than overridden. The raster's two toolbar buttons are
+grid-density variants and the accepted icon set has no matching glyph, so
+view-mode controls were omitted. `pageCount` is the raster's 65 and, like
+`2 546 товаров`, is specimen copy rather than a computed total. And the in-grid
+promo uses the accepted `PromoBanner` — violet gradient, no CTA — where the
+raster shows a black band with a `Смотреть подборку` button.
 
 Footer questions stay open for its deferred polish pass: the support phone
 conflict, social destination wiring, and app-store badges.
@@ -1831,14 +1941,14 @@ verification of the Location Foundation. Until then the deployed Header falls
 back to `Выберите город` and the network features are disabled gracefully. That
 gate is configuration-dependent and does not block visual shell work.
 
-Do not begin Catalog C product grid, pagination, sorting behaviour or view-mode
-controls before Catalog B receives explicit user visual PASS. Do not reopen or
-redesign the
-accepted Header, BrandLogo, Media Foundation, Location visuals, NewsletterBand,
-SiteFooter or closed Components. Do not add router, state or
-data architecture, do not add a footer CMS/config layer, backend or persistence,
-and do not add dependencies unless a concrete requirement proves necessary.
-Accepted system decisions win over incidental raster differences.
+Do not begin routing or a second page family before Catalog C receives explicit
+user visual PASS. Do not reopen or redesign the accepted Header, BrandLogo,
+Media Foundation, Location visuals, NewsletterBand, SiteFooter, ProductCard,
+Pagination or closed Components. Do not turn the Catalog fixtures into a product
+or category domain model, do not add router, state or data architecture, do not
+add a footer CMS/config layer, backend or persistence, and do not add
+dependencies unless a concrete requirement proves necessary. Accepted system
+decisions win over incidental raster differences.
 
 ## Normative repository docs
 
