@@ -21,6 +21,10 @@ Accepted:
   surface, white inverse copy, the mail motif, the grouped email CTA cluster,
   the bright right decorative zone, the revised gift artwork, the mobile
   composition with the gift hidden, and the unchanged form contract.
+- **Catalog A / Page Foundation & Layout — user visual PASS on 2026-08-29,
+  closed.** Breadcrumbs, title/count geometry, the 250px desktop sidebar, the
+  32px sidebar/results gap, heading and sort placement, single-column mobile
+  page geometry and shell integration are all accepted.
 - Media Foundation / Picture pipeline + Icon policy
 - Location Foundation / CitySelector — visual gate, user visual PASS on
   2026-08-27, including the requested danger-red service/geolocation failure
@@ -43,12 +47,16 @@ Technically complete, final polish deferred:
 
 Active visual slice:
 
-- **Catalog A / Page Foundation & Layout — technically complete, user visual
-  PASS is still required.**
+- **Catalog B / Filters + Mobile Filter Dialog — technically complete, user
+  visual PASS is still required.**
 
 ### Catalog A — Page Foundation & Layout
 
-**Active slice. User visual PASS is still required.**
+**User visual PASS received on 2026-08-29, closed.** The PASS covers the
+accepted state: breadcrumbs stay, the title/count geometry, the 250px desktop
+sidebar, the 32px sidebar/results gap, the heading and sort placement, the
+single-column mobile page geometry, and the shell integration. Do not reopen
+these decisions unless a later slice exposes a correctness problem.
 
 `src/pages/catalog/` owns `CatalogPage` and `catalog.scss`, the first real
 GoodCall page family. **Public API is exactly `resultCount?: number`**
@@ -100,20 +108,118 @@ that sorts nothing would be exactly the fake interactivity this project forbids.
 The raster's quick-filter chip row and its two view-mode toggles are likewise
 deferred.
 
-**Reserved regions.** The sidebar and results areas hold neutral dashed
-placeholders (520px tall from 1024px, 160/320px below) purely so column widths,
-the gap and the collapse can be reviewed. They carry no copy, no controls and no
-data, and disappear when Catalog B and C fill them.
+**Reserved region.** The results area holds a neutral dashed placeholder
+(520px tall from 1024px, 320px below) purely so the column width, the gap and
+the collapse can be reviewed. It carries no copy, no controls and no data, and
+disappears when Catalog C fills it. The sidebar placeholder was replaced by the
+real Catalog B filter panel.
 
-**Deferred:** Catalog B — filters and real mobile filter behaviour.
-Catalog C — product grid, pagination and sort behaviour. `ProductCard`,
-`Pagination`, `RangeSlider`, `Checkbox` and `Chip` already exist and were
+**Deferred:** Catalog C — product grid, pagination, sort behaviour and
+view-mode controls. `ProductCard` and `Pagination` already exist and were
 deliberately **not** pulled forward.
 
 **Routing.** No router was added. The milestone is exposed through the existing
 `?reference=catalog` development mechanism, so GitHub Pages direct entry keeps
 working without a history fallback. Routing remains a separate decision gate;
 see the task audit for the assessment.
+
+### Catalog B — Filters + Mobile Filter Dialog
+
+**Active slice. User visual PASS is still required.**
+
+**Ownership.** Everything lives under `src/pages/catalog/`: `CatalogFilters`
+(the panel), `CatalogFilterDialog` (the mobile sheet), `catalogFilterState`
+(state shape, defaults, active count, list toggle) and `catalog.scss`. There is
+no `src/features/filters/`, `FilterProvider`, `FilterContext`, `CatalogStore`,
+`catalogFilterService` or `catalogFilterSchema`. The filter state has exactly
+one consumer — `CatalogPage` — so it is plain `useState` in that page, passed
+down as props. `catalogFilterState.ts` exists because
+`react-refresh/only-export-components` forbids exporting non-component values
+from a component module; it is a page-local module, not a domain layer.
+
+**Public API is unchanged: `resultCount?: number`.** No `filters`,
+`filterOptions`, `onFiltersChange`, `products`, `sort`, `pagination` or
+`category` prop was added. `resultCount` is forwarded to the panel as
+`totalCount` so the `Все бренды` count and the page count stay one number.
+
+**Filter inventory** follows `Catalog.png` exactly, in raster order: brand
+checkboxes with counts and `Показать ещё`; `Серия`; `Диагональ`; `Рейтинг`
+(4,5 / 4 / 3 / 2 / 1 `и выше`, with a half star on the first row); `Цена, ₽`;
+`Память`; `Цвет` swatches with `Показать ещё`; and `Сбросить фильтры`.
+`Catalog.png` pairs the `Серия` heading with `Только со скидкой` /
+`Сначала от 1%` and the `Диагональ` heading with `Быстрая доставка` /
+`Доставка сегодня`. Those pairings are semantically inconsistent in the raster
+itself. Headings and option labels are implemented verbatim rather than
+"corrected", no options were invented to reconcile them, and the copy decision
+belongs to the user at visual review. Options behind the two `Показать ещё`
+buttons are fixtures — the raster shows only the collapsed lists.
+
+**Reuse.** The accepted `Checkbox` carries every option row, with the count
+inside its `label` ReactNode so it stays part of the accessible name
+(`Apple 256`). The accepted `RangeSlider` owns the price control whole —
+3 000 to 250 000 ₽, step 1 000, `ru-RU` grouping. The accepted `Button` drives
+the dialog footer. No closed UI primitive was modified. The only contextual
+override is `.catalog-filters__row .ui-choice { display: grid }`, which lets the
+existing label span fill the row so counts can sit at its right edge.
+
+**Quick filters** are a real single-select preset row above the results
+boundary: `Все смартфоны` (default), `Новинки`, `Хиты продаж`, `Со скидкой`,
+`До 15 000 ₽`, `15 000 – 30 000 ₽`, `30 000 ₽ и выше`. They are native
+`<button type="button">` elements with `aria-pressed`, inside a `role="group"`
+labelled `Быстрые фильтры`. The accepted global `Chip` is a non-interactive
+`<span>` and was deliberately **not** mutated to make one page's row clickable;
+no `InteractiveChip` was created for a single consumer.
+
+**State is UI-only.** Selections, the price pair, the preset, the expansion
+flags and the dialog draft live in component state. There is no URL sync, no
+`localStorage`, no context, no store, no request, no filtering engine and no
+analytics. **`2 546 товаров` never reacts to a filter**, no `Найдено …` line
+exists, and there is no loading, empty or no-results state. Catalog C and the
+data slice own real results.
+
+**Desktop.** From 1024px the accepted geometry is untouched — 250px sidebar,
+32px gap, heading in the results column. The desktop grid now uses
+`grid-template: 'sidebar heading' auto / 'sidebar results' 1fr`, so the tall
+filter panel no longer inflates the heading row and the quick-filter row sits
+directly under the `<h1>`. The panel is a Catalog-local card (20px padding,
+16px radius, `--role-border-soft` hairlines between groups); no second global
+card system and no global filter tokens were added. Groups are real
+`<fieldset>`/`<legend>` pairs — the brand legend is visually hidden because the
+raster's card title covers it — and legends float so the group hairline is not
+cut by the legend slot. Price is an `<h3>` plus the accepted `RangeSlider`.
+
+**Mobile.** Below 1024px the sidebar leaves the document flow entirely
+(`display: none`, so none of its 35 controls stays focusable) and a real
+`Фильтры` trigger appears above the quick-filter row, carrying the active-filter
+count as a badge when it is above zero. The trigger opens a Catalog-local Radix
+`Dialog` bottom sheet — `Dialog.Root` / `Trigger` / `Portal` / `Overlay` /
+`Content` / `Title` / `Close` — layered at `--control-floating-z-index` (30)
+above `MobileActionBar` (20), capped at `100dvh - 24px`, with the filter body
+scrolling under a sticky footer that carries `env(safe-area-inset-bottom)`. No
+generic `Drawer` was created for one consumer and no new dependency was added.
+The overlay uses `--alpha-black-36`; the accepted Location and Feedback dialogs
+have transparent overlays, and the scrim is a deliberate local addition because
+a sheet anchored to one edge needs it to read as modal.
+
+**Apply semantics are a real draft model.** Opening the sheet copies the applied
+state into a draft; the controls edit the draft; `Сбросить` returns the draft to
+defaults without closing; `Показать` commits the draft and closes; Escape, the
+close button and an overlay dismiss discard it. Desktop edits apply immediately
+and `Сбросить фильтры` at the panel foot resets them. Mobile wording is not
+raster-evidenced — `Catalog.png` is a desktop composition with no mobile frame —
+so `Сбросить` / `Показать` were chosen for GoodCall consistency.
+
+**Active-filter count** is UI-only: one per selected checkbox option across
+every group plus one if the price pair differs from `[3000, 250000]`. The
+default `Все бренды` row is the derived "no brand selected" state, so it never
+counts; ticking a brand unticks it and ticking it clears the brand list. The
+quick-filter preset sits outside the sidebar and outside the dialog, so it is
+deliberately excluded from the count. Nothing about the count touches
+`resultCount`.
+
+**Deferred:** Catalog C — product grid, pagination, sort behaviour and
+view-mode controls. The sort row stays the non-interactive
+`Сортировка: Сначала популярные` indicator; no `SelectField` was added.
 
 ### Global Shell E — SiteFooter
 
@@ -1355,10 +1461,12 @@ The base page no longer hosts the Foundations surface. A query-string check in
   reference-only intro followed by the real production `NewsletterBand` and
   `SiteFooter`, plus `MobileActionBar` so the mobile shell overlap can be tested.
   It reserves its own bottom inset below 768px and builds no Home page.
-- `?reference=catalog` — the Catalog A reference surface: a reference-only note
-  followed by the real production shell — `SiteHeader`, `CatalogPage`,
+- `?reference=catalog` — the Catalog A + B reference surface: a reference-only
+  note followed by the real production shell — `SiteHeader`, `CatalogPage`,
   `NewsletterBand`, `SiteFooter` and `MobileActionBar`. It owns the mobile bottom
-  inset and builds no Home page and no catalog data.
+  inset and builds no Home page and no catalog data. It seeds no filter state:
+  the page opens in its own defaults, which are the state `Catalog.png` shows.
+  No `?reference=catalog-filters` surface was added.
 
 Links are built from `import.meta.env.BASE_URL`, so they resolve under the
 GitHub Pages base without hardcoding the repository name, and no SPA fallback is
@@ -1384,17 +1492,29 @@ functional suppression directives.
 
 ## Current visual status
 
-**Catalog A / Page Foundation & Layout — technically complete; user visual PASS
-is still required.** `?reference=catalog` renders the real shell around the real
-`CatalogPage` and reports zero horizontal document overflow, zero runtime errors
-and zero failed requests at 1920 / 1440 / 1280 / 1024 / 768 / 430 / 390 / 375 / 320. Content width follows the accepted Container everywhere. The sidebar is
-250px with a 32px gap from 1024px up, giving 1094px of results width at 1440px
-against roughly 1090px in the normalized raster; below 1024px the page is a
-single column ordered heading → sidebar → results. Breadcrumbs stay on one line
-at every width. The page contains exactly one `<main>`, one `<h1>` and one
-focusable element — the `Главная` breadcrumb anchor — with zero `href="#"` and
-zero fake catalog links. The reference owns the mobile bottom inset, and the last
-footer content clears `MobileActionBar` by about 57px at 430 / 390 / 375 / 320.
+**Catalog B / Filters + Mobile Filter Dialog — technically complete; user
+visual PASS is still required.** `?reference=catalog` renders the real shell
+around the real `CatalogPage` and reports zero horizontal document overflow,
+zero runtime errors and zero failed requests at 1920 / 1440 / 1280 / 1024 / 768 /
+430 / 390 / 375 / 320. The accepted Catalog A geometry is unchanged: the sidebar
+measures exactly 250px with a 32px gap at 1920 / 1440 / 1280 / 1024, and content
+width still follows the accepted Container. Below 1024px the sidebar is
+`display: none` and none of its 35 controls is rendered or focusable; the
+`Фильтры` trigger is a real `<button type="button">` and the results region
+follows the heading and toolbar directly. The mobile sheet reports
+`role="dialog"`, an accessible title, a named close button, trapped focus,
+`overflow: hidden` on `<body>` while open, a scrollable body, zero horizontal
+overflow at 320px, and z-index 30 against `MobileActionBar` at 20; Escape closes
+it, discards the draft and returns focus to the trigger. Accessible names verify
+as `Apple 256`, `Оценка 4,5 и выше`, `Чёрный`, `Показать ещё бренды`
+(`aria-expanded`), `Цена от` / `Цена до` sliders and `Все смартфоны`
+(`aria-pressed`). There are no duplicate ids, no `href="#"` and no colour-only
+state. The price range accepts keyboard, pointer drag and manual numeric commit,
+cannot be inverted from either field, and resets to 3 000 / 250 000. Through all
+of it `2 546 товаров` never changes.
+
+**Catalog A / Page Foundation & Layout — user visual PASS received on
+2026-08-29 and closed.**
 
 **Global Shell E / SiteFooter — technically complete and usable; final visual
 polish deferred to integrated page review.** `?reference=footer` reports zero horizontal document overflow, zero
@@ -1675,6 +1795,13 @@ none of them blocks the closed milestone.
 
 ## Active open questions
 
+- `Catalog.png` pairs the `Серия` and `Диагональ` filter headings with options
+  that do not match them (`Только со скидкой` / `Сначала от 1%` and
+  `Быстрая доставка` / `Доставка сегодня`). Both are implemented verbatim; the
+  copy correction is a user decision, not an agent one.
+- Options behind the brand and colour `Показать ещё` buttons are fixtures. The
+  raster shows only the collapsed lists, so the hidden values are specimen data
+  until a real catalogue source exists.
 - Live DaData behaviour is unverified. No local token is available, GitHub secret
   presence is unverifiable without `gh`, and the DaData hosts are unreachable
   from this build environment, so the adapter was verified against recorded
@@ -1683,11 +1810,16 @@ none of them blocks the closed milestone.
 
 ## Next approved step
 
-**User visual review of Catalog A / Page Foundation & Layout.** The slice is
-technically complete; only the user can grant the visual PASS. Two questions ride
-with it: breadcrumbs are absent from `Catalog.png` and were built from the
-`Second_level_category.png` house style, and the sort control is a
-non-interactive indicator until the grid it sorts exists.
+**User visual review of Catalog B / Filters + Mobile Filter Dialog.** The slice
+is technically complete; only the user can grant the visual PASS. Three
+questions ride with it. `Catalog.png` pairs the `Серия` heading with
+`Только со скидкой` / `Сначала от 1%` and the `Диагональ` heading with
+`Быстрая доставка` / `Доставка сегодня`; both pairings are implemented verbatim
+and the copy correction is the user's call. The accepted `RangeSlider` renders
+its own fields, so the price inputs read `3 000` / `250 000` rather than the
+raster's `от 3 000` / `до 250 000`. And the mobile sheet wording
+(`Сбросить` / `Показать`) has no raster evidence, because `Catalog.png` is a
+desktop composition.
 
 Footer questions stay open for its deferred polish pass: the support phone
 conflict, social destination wiring, and app-store badges.
@@ -1699,8 +1831,9 @@ verification of the Location Foundation. Until then the deployed Header falls
 back to `Выберите город` and the network features are disabled gracefully. That
 gate is configuration-dependent and does not block visual shell work.
 
-Do not begin Catalog B filters or Catalog C product grid and pagination before
-Catalog A receives explicit user visual PASS. Do not reopen or redesign the
+Do not begin Catalog C product grid, pagination, sorting behaviour or view-mode
+controls before Catalog B receives explicit user visual PASS. Do not reopen or
+redesign the
 accepted Header, BrandLogo, Media Foundation, Location visuals, NewsletterBand,
 SiteFooter or closed Components. Do not add router, state or
 data architecture, do not add a footer CMS/config layer, backend or persistence,
