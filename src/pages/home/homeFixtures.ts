@@ -2,12 +2,6 @@ import type { IconName } from '../../components/ui';
 
 export type HomeArtwork = 'phone' | 'laptop' | 'earbuds';
 
-export interface HomeCategoryLink {
-  readonly label: string;
-  readonly icon: IconName;
-  readonly highlighted?: boolean;
-}
-
 export interface HomeHeroOffer {
   readonly id: string;
   readonly title: string;
@@ -52,21 +46,6 @@ export interface HomeArticle {
   readonly excerpt: string;
   readonly date: string;
 }
-
-export const HOME_CATEGORY_LINKS: readonly HomeCategoryLink[] = [
-  { label: 'Смартфоны', icon: 'smartphone' },
-  { label: 'Ноутбуки', icon: 'laptop' },
-  { label: 'Планшеты', icon: 'tablet' },
-  { label: 'Аксессуары', icon: 'accessories' },
-  { label: 'Умные часы', icon: 'watch' },
-  { label: 'Наушники', icon: 'headphones' },
-  { label: 'Аудиотехника', icon: 'headphones' },
-  { label: 'ТВ и видео', icon: 'tv' },
-  { label: 'Игры и консоли', icon: 'gamepad' },
-  { label: 'Умный дом', icon: 'appliance' },
-  { label: 'Распродажа', icon: 'bonus', highlighted: true },
-  { label: 'Бренды', icon: 'store' },
-];
 
 export const HOME_HERO_OFFERS: readonly HomeHeroOffer[] = [
   {

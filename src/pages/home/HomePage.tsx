@@ -12,7 +12,6 @@ import { Icon } from '../../components/ui';
 import {
   HOME_ARTICLES,
   HOME_BENEFITS,
-  HOME_CATEGORY_LINKS,
   HOME_CATEGORY_PROMOS,
   HOME_CATEGORY_TILES,
   HOME_CINEMA_POINTS,
@@ -50,25 +49,6 @@ export function HomePage({ smartphonesPath }: HomePageProps) {
     <main className="home-page">
       <Container className="home-page__inner">
         <section className="home-hero">
-          <nav aria-label="Категории каталога" className="home-hero__rail">
-            <ul className="home-rail__list">
-              {HOME_CATEGORY_LINKS.map((category) => (
-                <li className="home-rail__item" key={category.label}>
-                  {categoryLink(
-                    category.label,
-                    <>
-                      <Icon className="home-rail__icon" name={category.icon} />
-                      <span className="home-rail__label">{category.label}</span>
-                    </>,
-                    category.highlighted === true
-                      ? 'home-rail__entry home-rail__entry--highlighted'
-                      : 'home-rail__entry',
-                  )}
-                </li>
-              ))}
-            </ul>
-          </nav>
-
           <div className="home-banner">
             <div className="home-banner__content">
               <h1 className="home-banner__title">

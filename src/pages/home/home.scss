@@ -1,6 +1,5 @@
 @use '../../styles/helpers' as h;
 
-$home-rail-width: 250px;
 $home-offers-width: 280px;
 $home-sale-badge-surface: #dc2626;
 
@@ -17,28 +16,12 @@ $home-sale-badge-surface: #dc2626;
 
 .home-hero {
   display: grid;
-  grid-template-columns: $home-rail-width minmax(0, 1fr) $home-offers-width;
+  grid-template-columns: minmax(0, 1fr) $home-offers-width;
   gap: 20px;
   align-items: stretch;
 
-  @include h.media-max(1180px) {
-    grid-template-columns: minmax(0, 1fr) $home-offers-width;
-
-    &__rail {
-      grid-column: 1 / -1;
-    }
-  }
-
-  @include h.media-max(760px) {
+  @include h.media-max(900px) {
     grid-template-columns: minmax(0, 1fr);
-  }
-
-  &__rail {
-    min-width: 0;
-    padding: 12px;
-    background-color: var(--role-surface-card);
-    border: 1px solid var(--role-border-soft);
-    border-radius: 16px;
   }
 
   &__offers {
@@ -50,77 +33,19 @@ $home-sale-badge-surface: #dc2626;
     padding: 0;
     list-style: none;
 
-    @include h.media-max(1180px) {
+    @include h.media-max(900px) {
       grid-template-rows: none;
-      grid-template-columns: minmax(0, 1fr);
+      grid-template-columns: repeat(3, minmax(0, 1fr));
     }
 
-    @include h.media-max(560px) {
+    @include h.media-max(760px) {
+      grid-template-columns: minmax(0, 1fr);
       gap: 12px;
     }
 
     > li {
       min-width: 0;
     }
-  }
-}
-
-.home-rail {
-  &__list {
-    display: flex;
-    flex-direction: column;
-    margin: 0;
-    padding: 0;
-    list-style: none;
-
-    @include h.media-max(1180px) {
-      flex-flow: row wrap;
-      gap: 6px;
-    }
-  }
-
-  &__item {
-    min-width: 0;
-  }
-
-  &__entry {
-    display: flex;
-    gap: 12px;
-    align-items: center;
-    padding: 8px 12px;
-    border-radius: 10px;
-    font-size: 15px;
-    line-height: 1.3;
-    color: var(--role-text-secondary);
-    text-decoration-line: none;
-
-    &--available {
-      color: var(--role-text-primary);
-
-      &:hover {
-        background-color: var(--role-surface-brand-soft);
-        color: var(--role-text-link);
-      }
-
-      &:focus-visible {
-        outline: 2px solid var(--role-border-focus);
-        outline-offset: 2px;
-      }
-    }
-
-    &--highlighted {
-      color: var(--role-text-link);
-      font-weight: 600;
-    }
-  }
-
-  &__icon {
-    flex: none;
-    color: var(--role-text-muted);
-  }
-
-  &__label {
-    min-width: 0;
   }
 }
 
@@ -136,7 +61,7 @@ $home-sale-badge-surface: #dc2626;
   background-color: var(--color-base-rich-text);
   border-radius: 20px;
 
-  @include h.media-max(1180px) {
+  @include h.media-max(900px) {
     min-height: 320px;
   }
 

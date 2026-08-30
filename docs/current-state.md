@@ -93,8 +93,8 @@ the route hand Home the one destination that exists.
 
 **Section inventory, in raster order:**
 
-1. Hero — a three-column band: a 250px category rail, the dark discount banner,
-   and a 280px column of three compact offer cards. Home-owned.
+1. Hero — a two-column band: the dominant dark discount banner and a 280px
+   column of three compact offer cards. Home-owned.
 2. Benefits strip — four icon/title/note items. Home-owned.
 3. Promo pair — the light `Новинки от GOODCALL` card and the dark
    `Чёрная пятница` card. Home-owned.
@@ -141,17 +141,22 @@ repository, service, store or query layer.
   soft brand surface, and the cinema band uses a brand gradient. Product cards
   follow the accepted Catalog precedent: descriptive `alt` on the shared
   synthetic art.
-- Categories appear twice on Home — in the accepted `SiteHeader` category row
-  and again in the hero rail, because `Home.png` shows the categories only as a
-  hero rail and has no header category row. `SiteHeader` is accepted and was not
-  reopened, so the duplication stands for the visual review to settle.
+  **Category navigation is normalized system-first.** The accepted `SiteHeader`
+  horizontal category row is the single top-level category navigation. The
+  `Home.png` hero's vertical category rail is intentionally omitted, because it
+  duplicated that row immediately below it, and the main hero banner expands into
+  the freed space. `Популярные категории` stays as a separate Home discovery and
+  merchandising section, distinct in role from Header navigation: the Header row is
+  compact global navigation, the section is visual discovery placed below the
+  promotional content. The two category inventories remain separately owned; they
+  are not merged into a shared category model.
 
 **Responsive.** Verified at 1440, 1280, 1024, 768, 430, 390 and 320 with zero
-horizontal document overflow and no clipped text. The hero drops to two columns
-at 1180px with the rail spanning full width as a wrapped list, then to one
-column at 760px. Benefits go 4/2/1, the promo pair and article grid collapse to
-one column, and below 560px the promo artwork becomes a decorative backdrop so
-headings always keep full width.
+horizontal document overflow and no clipped text. The hero is banner plus offer
+column down to 900px; below that the banner spans full width with the three
+offers in a row, and below 760px the offers stack. Benefits go 4/2/1, the promo
+pair and article grid collapse to one column, and below 560px the promo artwork
+becomes a decorative backdrop so headings always keep full width.
 
 ### Catalog A — Page Foundation & Layout
 
@@ -1815,9 +1820,10 @@ functional suppression directives.
 visual PASS is still required.** `#/` renders the real Home page with zero
 runtime errors, zero horizontal document overflow and no clipped text at 1440,
 1280, 1024, 768, 430, 390 and 320. Measured against `Home.png` mapped to the
-1440 design space, the section order matches exactly and the hero columns
-(250/806/280 against 246/770/273), hero height (474), promo pair (300),
-category trio (195) and cinema band (298) all match. The page is taller than the
+1440 design space, the section order matches exactly and the hero height (474),
+promo pair (300), category trio (195) and cinema band (298) all match. The hero
+is two columns rather than the raster's three: the banner is 1076px wide and the
+280px offer column is unchanged. The page is taller than the
 raster overall, mostly because the accepted `NewsletterBand` (196 against 109)
 and `SiteFooter` (265 against 202) are larger than the raster's variants and the
 accepted `SiteHeader` carries a category row the raster does not. Omitted
@@ -2265,11 +2271,14 @@ none of them blocks the closed milestone.
 `Home.png`.** The slice is technically complete; only the user can grant the
 visual PASS. Screenshots exist at 1440, 1280, 1024, 768, 430, 390 and 320.
 
-Questions that ride with the review, all recorded in the Home A section:
+The category-duplication question raised at the first review is settled: the
+Home hero's vertical category rail is removed, the accepted `SiteHeader`
+horizontal row is the single top-level category navigation, the hero expands
+into the freed space, and `Популярные категории` stays as a Home discovery
+section.
 
-- Categories appear twice — the accepted `SiteHeader` category row and the
-  Home hero rail. `Home.png` shows only the rail. Resolving it is a Header
-  decision, not a Home one.
+Questions that still ride with the review, all recorded in the Home A section:
+
 - Section affordances and CTAs are omitted rather than faked, because their
   destinations do not exist.
 - The raster's photography, movie-poster wall and article images have no source
