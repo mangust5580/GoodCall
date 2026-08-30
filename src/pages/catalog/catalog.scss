@@ -359,9 +359,11 @@ $catalog-swatches: (
     min-width: 0;
   }
 
-  &__rating-value {
+  &__rating-marker {
+    display: inline-flex;
     flex: none;
-    min-width: 22px;
+    align-items: center;
+    min-width: 38px;
     font-size: 14px;
     font-weight: 600;
     font-variant-numeric: tabular-nums;

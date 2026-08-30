@@ -112,10 +112,10 @@ function OptionLabel({ label, count }: { readonly label: string; readonly count?
 function RatingLabel({ option }: { readonly option: CatalogRatingOption }) {
   return (
     <span className="catalog-filters__rating">
-      <span aria-hidden="true" className="catalog-filters__rating-value">
+      <span aria-hidden="true" className="catalog-filters__rating-marker">
+        <Icon className="catalog-filters__rating-star" name="star" />
         {option.label}
       </span>
-      <Icon className="catalog-filters__rating-star" name="star" />
       <span aria-hidden="true" className="catalog-filters__rating-text">
         и выше
       </span>

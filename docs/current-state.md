@@ -340,17 +340,19 @@ filter or count products. Sorting and pagination do act on the fixtures, because
 Catalog C explicitly owns those presentation behaviours. That asymmetry is
 deliberate and holds until a real catalogue and facet contract exists.
 
-**Rating rows read as thresholds.** Each row is
-`checkbox | number | one star | и выше`: the value sits in a fixed 22px
-tabular-numeral slot at `--role-text-primary`, followed by a single 16px
-`--role-state-warning` star and a muted `и выше`. The five-star fill strip is
-gone — it encoded the threshold a second time and made the group the noisiest
-part of the panel — and with it the half-star clip and the `__stars` / `__star`
-/ `__star-half` rules. The thresholds stay the accepted Catalog B set the raster
-evidences — `4,5`, `4`, `3`, `2`, `1` — and were not renumbered to a `5`-topped
-scale, because that inventory is closed raster fixture copy. The star is
-`aria-hidden` decoration and each checkbox carries the full `Рейтинг N и выше`
-accessible name, so nothing is conveyed by the star or by colour alone.
+**Rating rows use compact `★N` threshold markers.** Each row is
+`checkbox | ★4,5 | и выше`: a single 16px `--role-state-warning` star and the
+value sit inside one `catalog-filters__rating-marker` inline-flex unit with no
+gap between them, so they read as one rating marker rather than two fragments.
+The number is 14px semibold tabular at `--role-text-primary`; the marker has a
+38px `min-width` — the smallest that fits `★4,5` — so the muted `и выше`
+qualifier lines up across all five rows, 8px after the marker. No separate
+numeric column, no pill, background or border. The thresholds stay the accepted
+Catalog B set the raster evidences — `4,5`, `4`, `3`, `2`, `1` — and were not
+renumbered to a `5`-topped scale, because that inventory is closed raster fixture
+copy. The star is `aria-hidden` decoration and each checkbox carries the full
+`Рейтинг N и выше` accessible name, so nothing is conveyed by the star or by
+colour alone.
 
 **Brand search** is a local substring filter over the brand options, using the
 accepted `SearchField` with `labelVisuallyHidden` so the real `Поиск бренда`
