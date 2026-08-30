@@ -35,6 +35,9 @@ export function ReferenceIndex() {
         <li>
           <a href={referenceUrl('catalog')}>Catalog reference</a>
         </li>
+        <li>
+          <a href={referenceUrl('home')}>Home reference</a>
+        </li>
       </ul>
     </main>
   );

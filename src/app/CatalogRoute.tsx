@@ -1,16 +1,11 @@
-import { MobileActionBar, NewsletterBand, SiteFooter, SiteHeader } from '../components/shell';
 import { CatalogPage } from '../pages/catalog';
-
-import './CatalogRoute.scss';
+import { ProductionShell } from './ProductionShell';
+import { HOME_PATH, hashHref } from './routes';
 
 export function CatalogRoute() {
   return (
-    <div className="catalog-route">
-      <SiteHeader cartCount={2} comparisonCount={3} favoritesCount={12} />
-      <CatalogPage />
-      <NewsletterBand />
-      <SiteFooter />
-      <MobileActionBar cartCount={2} comparisonCount={3} favoritesCount={12} />
-    </div>
+    <ProductionShell>
+      <CatalogPage homeHref={hashHref(HOME_PATH)} />
+    </ProductionShell>
   );
 }

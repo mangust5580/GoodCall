@@ -64,7 +64,94 @@ Technically complete:
 
 - **Routing Foundation — technically complete.** Production path routing is
   owned by React Router using a GitHub Pages-safe hash strategy. See the
-  Routing section below.
+  Current routes section below.
+
+Active visual slice:
+
+- **Home A / Page Structure & Section Inventory — technically complete; user
+  visual PASS is required before deeper Home section work.** `#/` now renders
+  the real Home page instead of redirecting to Catalog. Home A owns page
+  structure, section inventory, band geometry and responsive behaviour from
+  `Home.png`; section depth, promotional artwork and section-level destinations
+  are deliberately still open. See the Home section below.
+
+### Home A — Page Structure & Section Inventory
+
+**Active slice. User visual PASS is still required.**
+
+Primary evidence: `Home.png`, 1920x3840. It is the only Home raster; no mobile
+or responsive Home raster exists, so responsive behaviour is derived from the
+accepted system. The raster maps to the 1440 design space at 1.3333x: its
+content spans x 72–1846, i.e. a 1332px content width, which the accepted 1440px
+`Container` (1376px inner at 1440) carries without a second container system.
+
+**Ownership.** `src/pages/home/` holds `HomePage.tsx`, `homeFixtures.ts`,
+`home.scss` and `index.ts`. `src/app/HomeRoute.tsx` composes it inside
+`ProductionShell`, and `?reference=home` renders `HomeReference` for visual
+review. Public API is exactly `smartphonesPath?: string` — the seam that lets
+the route hand Home the one destination that exists.
+
+**Section inventory, in raster order:**
+
+1. Hero — a three-column band: a 250px category rail, the dark discount banner,
+   and a 280px column of three compact offer cards. Home-owned.
+2. Benefits strip — four icon/title/note items. Home-owned.
+3. Promo pair — the light `Новинки от GOODCALL` card and the dark
+   `Чёрная пятница` card. Home-owned.
+4. Category trio — `Аксессуары`, `Умные часы`, `Наушники и аудиотехника`.
+   Home-owned.
+5. `Популярные категории` — eight circular icon tiles. Home-owned.
+6. `Популярные товары` — five cards rendered by the accepted `ProductCard`.
+7. Cinema promo — a dark full-width-in-container band with a three-point
+   checklist. Home-owned.
+8. `Последние статьи` — three article cards. Home-owned.
+9. `NewsletterBand` and 10. `SiteFooter` — the accepted shell components.
+
+Every section sits inside the accepted `Container`; none is full-bleed. Measured
+at 1440 the hero is 474px tall with 250/806/280 columns, the promo pair 300px,
+the category trio 195px and the cinema band 298px, all matching the raster's
+design-space heights.
+
+**Reuse.** `Container`, `Icon`, `ProductCard`, `SiteHeader`, `NewsletterBand`,
+`SiteFooter`, `MobileActionBar`, the existing colour roles, the `fluid()` and
+media helpers, and the `ui-button` control classes. No component was forked. No
+`Section`, `SectionHeader`, `CardGrid`, `HomeSection`, `Stack`, `Box` or `Grid`
+abstraction was introduced: one raster is not evidence for a generic primitive,
+and every Home section is markup in `HomePage` plus `home.scss`.
+
+**Fixtures.** `homeFixtures.ts` is deterministic local presentation content —
+category labels, three offer cards, four benefits, three category promos, eight
+tiles, five products, three articles and three cinema points. It is not a data
+or domain contract, imports nothing from Catalog, and has no `HomeData`,
+repository, service, store or query layer.
+
+**Deliberately deferred, and visible against the raster:**
+
+- Section-level affordances (`Смотреть все`, `Читать все статьи`), the hero CTA
+  `Смотреть все акции`, the promo CTAs and the three `Выбрать` buttons are
+  **omitted**, because none of their destinations exists. This follows the
+  accepted Catalog decision to drop the raster's `Смотреть подборку` button for
+  the same reason. They return as real links when their routes exist.
+- The hero carousel dots are omitted: a slider is deep section work and dots
+  without one would be a fake control.
+- Artwork. The repository has three synthetic product SVGs plus
+  `brand-tech.svg` and `promo-sale-bags.svg`; the raster's product photography,
+  the movie-poster wall and the article photos do not exist as assets. Home
+  promo art is therefore decorative (`alt=""`), the article thumbnails use a
+  soft brand surface, and the cinema band uses a brand gradient. Product cards
+  follow the accepted Catalog precedent: descriptive `alt` on the shared
+  synthetic art.
+- Categories appear twice on Home — in the accepted `SiteHeader` category row
+  and again in the hero rail, because `Home.png` shows the categories only as a
+  hero rail and has no header category row. `SiteHeader` is accepted and was not
+  reopened, so the duplication stands for the visual review to settle.
+
+**Responsive.** Verified at 1440, 1280, 1024, 768, 430, 390 and 320 with zero
+horizontal document overflow and no clipped text. The hero drops to two columns
+at 1180px with the rail spanning full width as a wrapped list, then to one
+column at 760px. Benefits go 4/2/1, the promo pair and article grid collapse to
+one column, and below 560px the promo artwork becomes a decorative backdrop so
+headings always keep full width.
 
 ### Catalog A — Page Foundation & Layout
 
@@ -1688,6 +1775,9 @@ so reference surfaces are unaffected by routing; the bare base URL now belongs t
   reference-only intro followed by the real production `NewsletterBand` and
   `SiteFooter`, plus `MobileActionBar` so the mobile shell overlap can be tested.
   It reserves its own bottom inset below 768px and builds no Home page.
+- `?reference=home` — the Home reference surface: a reference-only note
+  followed by the real production shell around the real `HomePage`. It builds no
+  production route and shows no reference copy on `#/`.
 - `?reference=catalog` — the Catalog reference surface: a reference-only note
   followed by the real production shell — `SiteHeader`, `CatalogPage`,
   `NewsletterBand`, `SiteFooter` and `MobileActionBar`. It owns the mobile bottom
@@ -1720,6 +1810,23 @@ comments section of `AGENTS.md` for the governed file set and the rule on
 functional suppression directives.
 
 ## Current visual status
+
+**Home A / Page Structure & Section Inventory — technically complete; user
+visual PASS is still required.** `#/` renders the real Home page with zero
+runtime errors, zero horizontal document overflow and no clipped text at 1440,
+1280, 1024, 768, 430, 390 and 320. Measured against `Home.png` mapped to the
+1440 design space, the section order matches exactly and the hero columns
+(250/806/280 against 246/770/273), hero height (474), promo pair (300),
+category trio (195) and cinema band (298) all match. The page is taller than the
+raster overall, mostly because the accepted `NewsletterBand` (196 against 109)
+and `SiteFooter` (265 against 202) are larger than the raster's variants and the
+accepted `SiteHeader` carries a category row the raster does not. Omitted
+section affordances, missing artwork and the duplicated category navigation are
+the known visual gaps listed in the Home A section.
+
+**Catalog — pixel-identical to its accepted PASS state.** Restoring the
+`Главная` breadcrumb link makes the production Catalog route match the accepted
+Catalog C state exactly: 0 differing pixels at both 1440x2252 and 390x6685.
 
 **Routing Foundation — visually neutral, verified.** At 1440 and 390 the
 production `#/catalog/smartphones` route and `?reference=catalog` with only the
@@ -1975,35 +2082,36 @@ router owns only the fragment. The base path still lives solely in
 
 ### Route inventory
 
-- `#/catalog/smartphones` — the production Catalog route, the only real page
-  route. Direct-entry shape:
+- `#/` — the production Home route. The temporary redirect to Catalog is gone.
+- `#/catalog/smartphones` — the production Catalog route. Direct-entry shape:
   <https://mangust5580.github.io/GoodCall/#/catalog/smartphones>
-- `#/` — **temporary.** Redirects to `#/catalog/smartphones` with
-  `<Navigate replace>`, so it adds no history entry. Catalog is not the
-  permanent homepage: Home A must replace this index route.
 - `*` — a compact in-router fallback: one `<h1>Страница не найдена</h1>`, one
-  line of copy and one real `<Link>` to the Catalog route. It is deliberately
-  not a designed 404 page and not a global error architecture; `404.png` will
-  supply the real design later.
+  line of copy and one real `<Link>` to Home. It is deliberately not a designed
+  404 page and not a global error architecture; `404.png` will supply the real
+  design later.
+
+Route paths live in `src/app/routes.ts` as `HOME_PATH` and
+`CATALOG_SMARTPHONES_PATH`, with `hashHref()` for the `href` seams that plain
+anchors need.
 
 ### Ownership
 
-`src/app/ProductionRouter.tsx` holds the `HashRouter`, the three routes, the
-route path constant and the local fallback component, with
-`ProductionRouter.scss` beside it. `src/app/CatalogRoute.tsx` composes the
-production Catalog shell — `SiteHeader`, `CatalogPage`, `NewsletterBand`,
-`SiteFooter`, `MobileActionBar` — with `CatalogRoute.scss` owning the page
-background and the mobile bottom inset. Global shell regions stay outside
-`CatalogPage`.
+`src/app/ProductionRouter.tsx` holds the `HashRouter`, the three routes and the
+local fallback component, with `ProductionRouter.scss` beside it.
+`src/app/HomeRoute.tsx` and `src/app/CatalogRoute.tsx` are the page seams.
 
-There is no `AppShell` or `PageShell`. `CatalogRoute` and `CatalogReference`
-share a small amount of shell composition and that duplication is tolerated on
-purpose: Home will be the second real production page and is the correct trigger
-for extracting a shared wrapper, if duplication then proves it.
+`src/app/ProductionShell.tsx` owns the shared production composition —
+`SiteHeader`, the route's page, `NewsletterBand`, `SiteFooter`,
+`MobileActionBar` — with `ProductionShell.scss` owning the page background and
+the mobile bottom inset. It was extracted once Home became the second real
+production consumer and both routes proved literally identical composition,
+props and wrapper styling; it takes only `children` and has no options, variants
+or configuration. There is still no `AppShell`, `PageShell`, `AppLayout`,
+`LayoutProvider` or route registry. Global shell regions stay outside the page
+components.
 
-The Header action counts passed by `CatalogRoute` (`2`, `3`, `12`) are specimen
-shell values, like `2 546 товаров`. No cart, favourites or comparison state
-exists yet.
+The Header action counts (`2`, `3`, `12`) are specimen shell values, like
+`2 546 товаров`. No cart, favourites or comparison state exists yet.
 
 ### Reference precedence
 
@@ -2022,20 +2130,17 @@ never jumps into the production router.
 
 ### Deliberately not routed
 
-- **Breadcrumbs.** `Главная` and `Каталог` are non-interactive text because
-  neither destination exists; `Смартфоны` keeps `aria-current="page"`. `Главная`
-  becomes a real router link when Home A lands. No `/catalog` landing route was
+- **Breadcrumbs.** `Главная` now links to the real `#/` Home route through the
+  narrow `homeHref` seam on `CatalogPage`, so the page stays router-free.
+  `Каталог` remains non-interactive text until a real Catalog landing exists;
+  `Смартфоны` keeps `aria-current="page"`. No `/catalog` landing route was
   invented to make a breadcrumb clickable.
-- **Header destinations.** Nothing was newly wired. Utility links, actions,
-  the catalog entry and every category link keep the existing consumer-injected
-  fallback to the app base, so no unavailable destination received a fake route
-  and no category label became semantically false. Wiring `Смартфоны` alone
-  would have meant either duplicating the canonical category list into the route
-  or widening the accepted `SiteHeader` API, and pointing `catalogHref` at the
-  smartphone route would have sent `Планшеты`, `Ноутбуки` and the rest there
-  too. Each Header destination gets a real route when its page exists. While the
-  temporary `#/` redirect stands, those base-fallback links land on Catalog;
-  that ends with Home A.
+- **Header and Footer brand links** now point at `#/`, because Home is real.
+  Everything else in the Header is still deliberately unwired: the utility
+  links, the four actions, `Каталог товаров`, `Ещё` and all nine category links
+  keep the existing consumer-injected fallback to the app base. No unavailable
+  destination received a fake route and no category label became semantically
+  false. Each gets a real route when its page exists.
 - **`ProductCard`.** Cards remain non-links. No `/product/:slug` route, no
   `Link` wrapper, no slug fixture routing.
 - **URL state.** Catalog filters, sorting, quick filters and pagination stay
@@ -2156,27 +2261,37 @@ none of them blocks the closed milestone.
 
 ## Next approved step
 
-**Home A / Page Structure & Section Inventory.** `Home.png` is the next
-design-backed page family and the primary visual evidence for it. Home A must
-also replace the temporary `#/` → `#/catalog/smartphones` redirect with the real
-index route, and it is the point at which `Главная` in the Catalog breadcrumbs
-becomes a real router link.
+**User visual review of Home A / Page Structure & Section Inventory against
+`Home.png`.** The slice is technically complete; only the user can grant the
+visual PASS. Screenshots exist at 1440, 1280, 1024, 768, 430, 390 and 320.
 
-Home is the second real production page, so it is also the correct trigger to
-reconsider two deferred questions, if and only if real duplication proves them:
-extracting shared shell composition out of `CatalogRoute`, and wiring the Header
-destinations that Home actually supplies.
+Questions that ride with the review, all recorded in the Home A section:
+
+- Categories appear twice — the accepted `SiteHeader` category row and the
+  Home hero rail. `Home.png` shows only the rail. Resolving it is a Header
+  decision, not a Home one.
+- Section affordances and CTAs are omitted rather than faked, because their
+  destinations do not exist.
+- The raster's photography, movie-poster wall and article images have no source
+  assets; Home uses the existing synthetic art and soft brand surfaces instead.
+- The page is taller than the raster, mostly because the accepted
+  `NewsletterBand` and `SiteFooter` are larger than the raster's variants.
+
+After the PASS, the next Home milestone is deeper section work driven by the
+gaps above — most likely the hero promotional slider, the real section
+destinations, and the artwork decision.
 
 **Deferred until after Home:**
 
-- Supabase / Catalog + Home data foundation. Home supplies the second real data
-  consumer; until then the Catalog fixtures stay deterministic and page-local.
-  No Supabase dependency, client, schema, SQL, env key or table exists.
+- Supabase / Catalog + Home data foundation. Home now supplies the second real
+  page, and the data foundation follows once its content requirements are
+  settled. No Supabase dependency, client, schema, SQL, env key or table exists.
 - Product detail route and `ProductCard` links, until a real Product Detail and
   data contract exists.
 - URL/query state synchronization for Catalog filters, sorting, quick filters
   and pagination.
 - A designed 404 page from `404.png`, replacing the compact in-router fallback.
+- The remaining Header destinations, each until its own page exists.
 - `SiteFooter` final visual polish at the integrated page review near the end of
   the project: the support phone conflict, social destination wiring, and
   app-store badges.
@@ -2192,11 +2307,11 @@ Do not reopen or redesign the accepted Catalog family, Header, BrandLogo, Media
 Foundation, Location visuals, NewsletterBand, SiteFooter, ProductCard,
 Pagination or closed Components — the single bounded `ProductCard` reopen is
 spent, and `NewsletterBand` stays exactly as its PASS accepted it. Do not turn
-the Catalog fixtures into a product or category domain model, do not add state or
-data architecture, do not create routes for pages that do not exist, do not add a
-footer CMS/config layer, backend or persistence, and do not add dependencies
-unless a concrete requirement proves necessary. Accepted system decisions win
-over incidental raster differences.
+the Home or Catalog fixtures into a product or category domain model, do not add
+state or data architecture, do not create routes for pages that do not exist, do
+not add a footer CMS/config layer, backend or persistence, and do not add
+dependencies unless a concrete requirement proves necessary. Accepted system
+decisions win over incidental raster differences.
 
 ## Normative repository docs
 

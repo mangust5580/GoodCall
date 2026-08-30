@@ -20,6 +20,7 @@ import type { CatalogSortValue } from './catalogProductFixtures';
 
 export interface CatalogPageProps {
   readonly resultCount?: number;
+  readonly homeHref?: string;
 }
 
 interface QuickFilter {
@@ -44,7 +45,7 @@ const QUICK_FILTERS: readonly QuickFilter[] = [
 
 const countFormatter = new Intl.NumberFormat('ru-RU');
 
-export function CatalogPage({ resultCount = DEFAULT_RESULT_COUNT }: CatalogPageProps) {
+export function CatalogPage({ resultCount = DEFAULT_RESULT_COUNT, homeHref }: CatalogPageProps) {
   const [filters, setFilters] = useState<CatalogFilterState>(DEFAULT_CATALOG_FILTER_STATE);
   const [quickFilter, setQuickFilter] = useState(DEFAULT_QUICK_FILTER);
   const [sort, setSort] = useState<CatalogSortValue>(DEFAULT_CATALOG_SORT);
@@ -57,7 +58,15 @@ export function CatalogPage({ resultCount = DEFAULT_RESULT_COUNT }: CatalogPageP
       <Container>
         <nav aria-label="Хлебные крошки" className="catalog-page__breadcrumbs">
           <ol className="catalog-page__crumbs">
-            <li className="catalog-page__crumb">Главная</li>
+            <li className="catalog-page__crumb">
+              {homeHref === undefined ? (
+                'Главная'
+              ) : (
+                <a className="catalog-page__crumb-link" href={homeHref}>
+                  Главная
+                </a>
+              )}
+            </li>
             <li className="catalog-page__crumb">Каталог</li>
             <li aria-current="page" className="catalog-page__crumb">
               {CATEGORY_TITLE}

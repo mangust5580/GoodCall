@@ -3,6 +3,7 @@ import { ComponentsReference } from './ComponentsReference';
 import { FooterReference } from './FooterReference';
 import { FoundationsColorReference } from './FoundationsColorReference';
 import { HeaderReference } from './HeaderReference';
+import { HomeReference } from './HomeReference';
 import { LayoutReference } from './LayoutReference';
 import { LocationReference } from './LocationReference';
 import { NewsletterReference } from './NewsletterReference';
@@ -50,6 +51,10 @@ export function App() {
 
   if (reference === 'catalog') {
     return <CatalogReference />;
+  }
+
+  if (reference === 'home') {
+    return <HomeReference />;
   }
 
   return <ReferenceIndex />;

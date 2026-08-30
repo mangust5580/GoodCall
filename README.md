@@ -45,7 +45,8 @@ npm run dev
 .github/workflows/   CI and GitHub Pages deployment
 docs/                current-state.md — operational handoff
 src/
-  app/               application ownership (App, production router, routes)
+  app/               application ownership (App, production router, routes, shell)
+  pages/             real page families (home, catalog)
   styles/            global.scss — shared styling entry
     helpers/         generic SCSS helpers (fluid, media mixins)
   main.tsx           React entry point
@@ -110,7 +111,8 @@ Repository **Settings → Pages → Source** must be set to **GitHub Actions**.
 
 Pages serves static files with no SPA rewrite, so production routing uses React
 Router's `HashRouter`: the route lives in the fragment and direct entry and
-refresh work without a `404.html` fallback. The live Catalog route is
+refresh work without a `404.html` fallback. The live site is
+<https://mangust5580.github.io/GoodCall/#/>, with Catalog at
 <https://mangust5580.github.io/GoodCall/#/catalog/smartphones>. The router needs
 no basename, because the base path stays in the URL path. Development reference
 surfaces keep their own `?reference=` query addresses, starting at

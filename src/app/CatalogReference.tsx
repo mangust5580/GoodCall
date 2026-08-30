@@ -22,8 +22,8 @@ export function CatalogReference() {
         </a>
       </p>
 
-      <SiteHeader cartCount={2} comparisonCount={3} favoritesCount={12} />
-      <CatalogPage />
+      <SiteHeader cartCount={2} comparisonCount={3} favoritesCount={12} homeHref={index} />
+      <CatalogPage homeHref={index} />
       <NewsletterBand />
       <SiteFooter homeHref={index} />
       <MobileActionBar cartCount={2} comparisonCount={3} favoritesCount={12} />
