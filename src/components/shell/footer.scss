@@ -3,6 +3,8 @@
 
 .site-footer {
   background-color: var(--role-surface-footer);
+  border-top: var(--control-border-width) solid var(--role-border-default);
+  box-shadow: 0 -10px 24px -20px var(--alpha-black-24);
 
   &__main {
     display: grid;

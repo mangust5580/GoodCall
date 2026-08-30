@@ -7,6 +7,8 @@ import { ProductRating } from './ProductRating';
 
 export type ProductCardLayout = 'vertical' | 'horizontal';
 
+const CART_ACTION_TEXT = 'В корзину';
+
 interface ProductCardProps {
   readonly title: string;
   readonly imageSrc: string;
@@ -44,6 +46,7 @@ export function ProductCard({
   onAddToCart,
   disabled = false,
 }: ProductCardProps) {
+  const labelledCart = layout === 'vertical';
   const stepper =
     quantity === undefined || onQuantityChange === undefined ? null : (
       <QuantityStepper
@@ -57,9 +60,11 @@ export function ProductCard({
       <AddToCartButton
         className="product-card__cart"
         disabled={disabled}
-        label={`Добавить в корзину: ${title}`}
+        label={labelledCart ? `${CART_ACTION_TEXT}: ${title}` : `Добавить в корзину: ${title}`}
         onClick={onAddToCart}
-      />
+      >
+        {labelledCart ? CART_ACTION_TEXT : undefined}
+      </AddToCartButton>
     );
   const hasActions = availability !== undefined || stepper !== null || cartButton !== null;
 

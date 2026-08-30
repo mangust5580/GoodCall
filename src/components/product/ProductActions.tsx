@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react';
+
 import { Icon } from '../ui';
 
 interface FavoriteButtonProps {
@@ -40,6 +42,7 @@ export function FavoriteButton({
 interface AddToCartButtonProps {
   readonly label: string;
   readonly onClick: () => void;
+  readonly children?: ReactNode;
   readonly disabled?: boolean;
   readonly className?: string;
 }
@@ -47,10 +50,15 @@ interface AddToCartButtonProps {
 export function AddToCartButton({
   label,
   onClick,
+  children,
   disabled = false,
   className,
 }: AddToCartButtonProps) {
   const classes = ['product-action', 'product-action--cart'];
+
+  if (children !== undefined) {
+    classes.push('product-action--cart-labelled');
+  }
 
   if (className) {
     classes.push(className);
@@ -65,6 +73,7 @@ export function AddToCartButton({
       type="button"
     >
       <Icon name="cart" />
+      {children}
     </button>
   );
 }

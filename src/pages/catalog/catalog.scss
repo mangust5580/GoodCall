@@ -239,13 +239,34 @@ $catalog-swatches: (
   gap: 20px;
   min-width: 0;
 
-  p:has(> .product-price) {
-    flex: 1 1 100%;
-  }
-
   &__promo {
     grid-column: 1 / -1;
     min-width: 0;
+
+    .promo-banner {
+      min-height: 160px;
+      background-color: var(--color-base-rich-text);
+      background-image: none;
+    }
+  }
+}
+
+.catalog-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 10px;
+  border-radius: var(--control-radius-sm);
+  font-size: var(--control-label-size);
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--role-text-inverse);
+
+  &--new {
+    background-color: var(--color-brand-purple-600);
+  }
+
+  &--sale {
+    background-color: var(--role-state-danger);
   }
 }
 

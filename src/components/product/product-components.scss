@@ -4,7 +4,7 @@
   --product-card-radius: 16px;
   --product-card-padding: 16px;
   --product-card-gap: 12px;
-  --product-media-height: 128px;
+  --product-media-height: 148px;
   --product-action-size: 44px;
   --product-action-radius: 12px;
 }
@@ -56,6 +56,16 @@
     &:hover:not(:disabled) {
       background-color: var(--color-brand-purple-700);
     }
+  }
+
+  &--cart-labelled {
+    gap: var(--control-gap);
+    width: auto;
+    padding: 0 16px;
+    font: inherit;
+    font-size: var(--control-font-size);
+    font-weight: 600;
+    line-height: 1.2;
   }
 }
 
@@ -177,6 +187,10 @@
     min-width: 0;
   }
 
+  &--vertical &__body {
+    flex: 1 1 auto;
+  }
+
   &--horizontal &__body {
     flex: 1 1 240px;
   }
@@ -186,10 +200,6 @@
     flex-direction: column;
     gap: 8px;
     min-width: 0;
-  }
-
-  &--vertical &__info {
-    flex-direction: column-reverse;
   }
 
   &__title {
@@ -208,9 +218,17 @@
   }
 
   &--vertical &__footer {
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  &--vertical &__prices {
+    justify-content: flex-end;
+  }
+
+  &--vertical .product-price-old {
+    order: -1;
+    margin-inline-end: auto;
   }
 
   &--horizontal &__footer {
@@ -233,6 +251,15 @@
     flex-wrap: wrap;
     gap: 12px;
     align-items: center;
+  }
+
+  &--vertical &__actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  &--vertical &__actions .ui-stepper {
+    justify-content: space-between;
   }
 }
 

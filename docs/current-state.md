@@ -53,8 +53,12 @@ Technically complete, final polish deferred:
 
 Active visual slice:
 
-- **Catalog C / Product Grid + Pagination + Sorting — technically complete,
-  user visual PASS is still required.**
+- **Catalog C / Product Grid + Pagination + Sorting — technically complete, one
+  bounded user-requested visual correction applied on 2026-08-30, user visual
+  PASS is still required.** The correction covers three concrete pieces of user
+  feedback: the `Catalog.png` product-card treatment is preferred to the shipped
+  card; the Footer blended into the content above it; and the in-grid Catalog
+  promo read as the same purple promotional surface as `NewsletterBand`.
 
 ### Catalog A — Page Foundation & Layout
 
@@ -254,12 +258,19 @@ sorting or pagination.
 
 **ProductCard reuse.** The accepted card renders every result; no
 `CatalogProductCard` exists. Exercised props: `title`, `imageSrc`, `imageAlt`,
-`price`, `oldPrice` (10 of 16), `badge` (15 of 16, through the accepted `Chip` —
-`brand` for `Новинка`, `danger` for discounts), `rating`, `reviewCount`,
+`price`, `oldPrice` (10 of 16), `badge` (15 of 16), `rating`, `reviewCount`,
 `favoritePressed`/`onFavoriteToggle`, `onAddToCart`, and
 `quantity`/`onQuantityChange` once a card is added. `availability` is
 deliberately unused: the raster's catalog card shows none, and its bordered
 padded box does not fit a 259px column beside the price.
+
+**Catalog-local badge presentation.** `badge` takes a `ReactNode`, so the
+raster's solid violet `Новинка` and solid red discount badges render through a
+Catalog-owned `.catalog-badge` span on existing tokens
+(`--color-brand-purple-600`, `--role-state-danger`, `--control-radius-sm`,
+`--control-label-size`). Global `Chip` keeps its accepted soft-tint design and
+was not reopened, and no global `Badge` component was introduced — a second real
+non-Catalog consumer would be the trigger for that, not this one.
 
 **Grid.** `repeat(auto-fill, minmax(228px, 1fr))` with a 20px gap, so the column
 count follows usable card width instead of a fixed desktop number: 4 columns at
@@ -267,16 +278,25 @@ count follows usable card width instead of a fixed desktop number: 4 columns at
 and 768, 1 below roughly 500px. The single mobile column is a measured decision,
 not a default — at 390px two columns give a 172px card whose 140px content box
 cannot hold the accepted 94px price plus the 44px cart action on one line, and
-whose titles wrap to four lines. One Catalog-scoped layout rule makes the price
-block span the card footer so every card stacks price above action, which is
-both consistent across a row and what the raster shows at that card width.
+whose titles wrap to four lines. The price-above-action stack that used to need
+a Catalog-scoped layout rule is now the canonical vertical card anatomy, so that
+page-level override is gone.
 
 **In-grid promo.** Implemented with the accepted `PromoBanner`, spanning all
 columns after the eighth card, reproducing the raster's row-2/row-3 break. It
 carries no `actionLabel`, because no route exists and a dead CTA would be fake
-interactivity. No campaign architecture and no marketing artwork were added; the
-surface is the component's accepted `--gradient-cta` rather than the raster's
-black.
+interactivity. No campaign architecture and no marketing artwork were added.
+
+**Promo surface separation.** `PromoBanner` exposes no surface or variant prop,
+so the Catalog promo is darkened by one contextual rule scoped inside
+`.catalog-grid__promo` in `catalog.scss`: `--color-base-rich-text` with
+`background-image: none`, plus a 160px `min-height` so the band keeps the
+raster's full-width break role between product rows. The shared `PromoBanner`
+API and its `--gradient-cta` default are untouched, and the Components reference
+banners are unchanged. White inverse copy on `#12131a` clears WCAG AA
+comfortably. The resulting page hierarchy is product results → dark Catalog
+campaign promo → pagination → page whitespace → the violet `NewsletterBand`,
+which is what the user asked for; `NewsletterBand` itself was not touched.
 
 **Sorting** is real and local over the fixtures: `Сначала популярные` (default,
 popularity descending), `Сначала дешевле`, `Сначала дороже`, `По рейтингу`, each
@@ -306,17 +326,40 @@ mapping them onto `ProductCard` `vertical`/`horizontal` would misrepresent the
 evidence; and the accepted icon set has no grid, list or dot-grid glyph, so
 implementing them would reopen the accepted Icon policy.
 
-**Observed accepted-component deviations from `Catalog.png`**, recorded rather
-than fixed, because each belongs to a closed component: `ProductCard` renders the
-rating above the title (`__info` is `column-reverse` in vertical layout) while
-the raster shows title first; the add-to-cart affordance is a 44px icon button
-while the raster shows a full-width labelled `В корзину`; `Chip` badges are soft
-tints while the raster uses solid violet and red. None is a correctness defect.
+**Bounded `ProductCard` reopen (2026-08-30).** Those deviations were recorded
+rather than fixed while the Components reference was the card's only consumer.
+The real Catalog turned them into a repeated visual mismatch across every result
+row, and the user preferred the raster treatment, so the shared card was reopened
+once, deliberately and canonically. Consumers at the time: `ComponentsReference`
+vertical (reference-only), `ComponentsReference` horizontal (reference-only), and
+`CatalogProductGrid` vertical (real page). Both vertical consumers accept the
+corrected anatomy, so it became canonical rather than a Catalog prop, and no
+`CatalogProductCard` and no duplicated card markup exist.
+
+**Canonical vertical anatomy** is now image → title → rating → price row → cart
+action. The `column-reverse` on `__info` is gone. In vertical layout `__footer`
+is a stretch column, the price row puts the struck old price at the start and the
+dominant current price at the end, `__body` grows so the action bottom-aligns
+across a row, `__actions` is a stretch column so a shown `QuantityStepper` and
+the cart button each fill the card width, and `--product-media-height` is 148px
+(the raster's ~138px image inside a ~164px media band, normalised to the 259px
+card). Horizontal layout is untouched and still renders price-then-old-price with
+the icon-only cart beside the stepper.
+
+**Cart CTA.** The vertical card renders the raster's labelled `В корзину` at full
+card width. `AddToCartButton` gained one optional `children` slot; passing it adds
+`product-action--cart-labelled` and nothing else, so `MiniProductCard` and the
+horizontal card keep the accepted 44px icon-only affordance with no call-site
+change. No `variant`, `compact` or `dense` prop was introduced, because the
+difference is layout-owned: `ProductCard` decides from its own `layout` and the
+width comes from `.product-card--vertical .product-card__actions`. The visible
+label is inside the accessible name (`В корзину: <title>`), so the CTA stays
+product-specific and satisfies label-in-name.
 
 **Deferred:** routing and product detail pages; the multi-category filter/facet
-architecture; the final Footer polish pass. The raster shows a tighter last-row →
-`NewsletterBand` transition than the accepted page padding produces — recorded
-for that integrated review, not changed here.
+architecture; the final Footer polish pass. Two raster details stay unmatched by
+choice: the promo's `Смотреть подборку` button (no route exists) and its full
+product-cluster photography (only the synthetic `product-phone.svg` exists).
 
 ### Global Shell E — SiteFooter
 
@@ -327,6 +370,18 @@ integrated page review near the end of the project.**
 with its styles in `footer.scss`. There is no `src/components/footer/`,
 `src/features/footer/`, provider, context, service or config store: the footer is
 static shell structure at this milestone.
+
+**Top separation (2026-08-30).** Integrated Catalog review showed the footer
+blending into the content above it, because `--role-surface-footer` (`#fafafc`)
+sits almost invisibly against the white page. `.site-footer` now carries a
+`--control-border-width` top border in `--role-border-default` plus a very soft
+upward `0 -10px 24px -20px var(--alpha-black-24)` shadow. Existing semantic
+tokens only; no new shadow system, no new surface, no gradient, no radius and no
+floating-card effect. Footer content, columns, socials, contacts, payments,
+legal row and link semantics are unchanged, the footer still reads quieter than
+`NewsletterBand`, and the shadow points up from the footer's own top edge so it
+never overlays the fixed `MobileActionBar`. The rest of the Footer polish pass
+stays deferred to the end-of-project integrated review.
 
 **Public API is exactly `homeHref?: string`**, defaulting to
 `import.meta.env.BASE_URL` like `SiteHeader`. It exists only because the brand
@@ -1919,17 +1974,18 @@ none of them blocks the closed milestone.
 
 ## Next approved step
 
-**User visual review of Catalog C / Product Grid + Pagination + Sorting.** The
-slice is technically complete; only the user can grant the visual PASS. Four
-questions ride with it. The accepted `ProductCard` renders the rating above the
-title and offers a 44px icon-only cart action, where `Catalog.png` shows title
-first and a full-width `В корзину` button — both are closed-component
-decisions, recorded rather than overridden. The raster's two toolbar buttons are
-grid-density variants and the accepted icon set has no matching glyph, so
-view-mode controls were omitted. `pageCount` is the raster's 65 and, like
-`2 546 товаров`, is specimen copy rather than a computed total. And the in-grid
-promo uses the accepted `PromoBanner` — violet gradient, no CTA — where the
-raster shows a black band with a `Смотреть подборку` button.
+**User visual review of Catalog C / Product Grid + Pagination + Sorting after
+its bounded visual correction.** The slice is technically complete; only the user
+can grant the visual PASS. The three pieces of feedback that drove the correction
+are addressed: the vertical `ProductCard` now follows the raster hierarchy with a
+full-width labelled `В корзину`, the in-grid promo is a dark near-black band that
+no longer competes with the violet `NewsletterBand`, and the Footer has a subtle
+top separation. Questions that still ride with the review: the raster's two
+toolbar buttons are grid-density variants and the accepted icon set has no
+matching glyph, so view-mode controls were omitted; `pageCount` is the raster's
+65 and, like `2 546 товаров`, is specimen copy rather than a computed total; and
+the promo carries neither the raster's `Смотреть подборку` button (no route
+exists) nor its product-cluster photography (no such asset exists).
 
 Footer questions stay open for its deferred polish pass: the support phone
 conflict, social destination wiring, and app-store badges.
@@ -1944,7 +2000,8 @@ gate is configuration-dependent and does not block visual shell work.
 Do not begin routing or a second page family before Catalog C receives explicit
 user visual PASS. Do not reopen or redesign the accepted Header, BrandLogo,
 Media Foundation, Location visuals, NewsletterBand, SiteFooter, ProductCard,
-Pagination or closed Components. Do not turn the Catalog fixtures into a product
+Pagination or closed Components — the single bounded `ProductCard` reopen is
+spent, and `NewsletterBand` stays exactly as its PASS accepted it. Do not turn the Catalog fixtures into a product
 or category domain model, do not add router, state or data architecture, do not
 add a footer CMS/config layer, backend or persistence, and do not add
 dependencies unless a concrete requirement proves necessary. Accepted system

@@ -3,7 +3,6 @@ import { Fragment, useState } from 'react';
 import productPhone from '../../assets/products/product-phone.svg';
 import { PromoBanner } from '../../components/content';
 import { ProductCard } from '../../components/product';
-import { Chip } from '../../components/ui';
 import type { CatalogProduct } from './catalogProductFixtures';
 
 interface CatalogProductGridProps {
@@ -65,9 +64,11 @@ export function CatalogProductGrid({ products }: CatalogProductGridProps) {
           <ProductCard
             badge={
               product.badge === undefined ? undefined : (
-                <Chip variant={product.discounted === true ? 'danger' : 'brand'}>
+                <span
+                  className={`catalog-badge catalog-badge--${product.discounted === true ? 'sale' : 'new'}`}
+                >
                   {product.badge}
-                </Chip>
+                </span>
               )
             }
             favoritePressed={favorites.includes(product.id)}
