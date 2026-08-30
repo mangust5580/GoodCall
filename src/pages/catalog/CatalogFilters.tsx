@@ -24,7 +24,6 @@ interface CatalogColourOption {
 
 interface CatalogRatingOption {
   readonly value: string;
-  readonly rating: number;
   readonly label: string;
 }
 
@@ -56,11 +55,11 @@ const DIAGONAL_OPTIONS: readonly CatalogFilterOption[] = [
 ];
 
 const RATING_OPTIONS: readonly CatalogRatingOption[] = [
-  { value: '4.5', rating: 4.5, label: '4,5' },
-  { value: '4', rating: 4, label: '4' },
-  { value: '3', rating: 3, label: '3' },
-  { value: '2', rating: 2, label: '2' },
-  { value: '1', rating: 1, label: '1' },
+  { value: '4.5', label: '4,5' },
+  { value: '4', label: '4' },
+  { value: '3', label: '3' },
+  { value: '2', label: '2' },
+  { value: '1', label: '1' },
 ];
 
 const MEMORY_OPTIONS: readonly CatalogFilterOption[] = [
@@ -116,21 +115,9 @@ function RatingLabel({ option }: { readonly option: CatalogRatingOption }) {
       <span aria-hidden="true" className="catalog-filters__rating-value">
         {option.label}
       </span>
-      <span aria-hidden="true" className="catalog-filters__stars">
-        {[1, 2, 3, 4, 5].map((position) => {
-          const filled = option.rating >= position;
-          const half = !filled && option.rating > position - 1;
-          const starClass = filled
-            ? 'catalog-filters__star catalog-filters__star--on'
-            : 'catalog-filters__star';
-
-          return (
-            <span className={starClass} key={position}>
-              <Icon name="star" />
-              {half ? <Icon className="catalog-filters__star-half" name="star" /> : null}
-            </span>
-          );
-        })}
+      <Icon className="catalog-filters__rating-star" name="star" />
+      <span aria-hidden="true" className="catalog-filters__rating-text">
+        и выше
       </span>
       <span className="ui-visually-hidden">{`Рейтинг ${option.label} и выше`}</span>
     </span>

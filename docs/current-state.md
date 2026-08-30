@@ -54,7 +54,7 @@ Technically complete, final polish deferred:
 Active visual slice:
 
 - **Catalog C / Product Grid + Pagination + Sorting — technically complete with
-  final filter-usability polish applied; user visual PASS is still required.**
+  final filter visual polish applied; user visual PASS is still required.**
   The 2026-08-30 corrections cover four concrete pieces of user feedback: the
   `Catalog.png` product-card treatment is preferred to the shipped card; the
   Footer blended into the content above it; the in-grid Catalog promo read as the
@@ -340,19 +340,27 @@ filter or count products. Sorting and pagination do act on the fixtures, because
 Catalog C explicitly owns those presentation behaviours. That asymmetry is
 deliberate and holds until a real catalogue and facet contract exists.
 
-**Rating rows carry explicit numerals.** Each row is
-`checkbox | number | stars`, with the value in a fixed 22px tabular-numeral slot
-before the star strip, so the threshold is read rather than counted. The
-thresholds stay the accepted Catalog B set the raster evidences — `4,5`, `4`,
-`3`, `2`, `1` — and were not renumbered to a `5`-topped scale, because that
-inventory is closed raster fixture copy. The repeated visible `и выше` is gone;
-the stars are `aria-hidden` decoration and each checkbox carries the full
-`Рейтинг N и выше` accessible name, so nothing is conveyed by star count or
-colour alone.
+**Rating rows read as thresholds.** Each row is
+`checkbox | number | one star | и выше`: the value sits in a fixed 22px
+tabular-numeral slot at `--role-text-primary`, followed by a single 16px
+`--role-state-warning` star and a muted `и выше`. The five-star fill strip is
+gone — it encoded the threshold a second time and made the group the noisiest
+part of the panel — and with it the half-star clip and the `__stars` / `__star`
+/ `__star-half` rules. The thresholds stay the accepted Catalog B set the raster
+evidences — `4,5`, `4`, `3`, `2`, `1` — and were not renumbered to a `5`-topped
+scale, because that inventory is closed raster fixture copy. The star is
+`aria-hidden` decoration and each checkbox carries the full `Рейтинг N и выше`
+accessible name, so nothing is conveyed by the star or by colour alone.
 
 **Brand search** is a local substring filter over the brand options, using the
 accepted `SearchField` with `labelVisuallyHidden` so the real `Поиск бренда`
-label exists without competing with the group heading. The query is trimmed and
+label exists without competing with the group heading. Its icons render at 18px
+rather than the component's default 34px, which reads as oversized in the compact
+field: `.catalog-filters__brand-search` sets `--control-icon-size: 18px` and
+applies it to the nested `.ui-icon`, whose size the shared
+`.ui-search-actions__icon` rule would otherwise hard-code. The clear control
+keeps its full 34px target and its `Очистить поиск` name; only the glyph shrinks.
+`SearchField`, the `Icon` primitive and the Header search are untouched. The query is trimmed and
 lower-cased and matched case-insensitively against every brand — including the
 ones behind `Показать ещё` — with no debounce, fuzzy matching, transliteration or
 request of any kind. While a query is active the collapse affordance is hidden

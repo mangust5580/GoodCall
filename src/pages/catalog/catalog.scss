@@ -354,7 +354,7 @@ $catalog-swatches: (
 
   &__rating {
     display: flex;
-    gap: 10px;
+    gap: 8px;
     align-items: center;
     min-width: 0;
   }
@@ -368,41 +368,33 @@ $catalog-swatches: (
     color: var(--role-text-primary);
   }
 
-  &__stars {
-    display: inline-flex;
-    flex: none;
-    gap: 2px;
-    align-items: center;
-  }
-
-  &__star {
+  &__rating-star {
     --control-icon-size: 16px;
 
-    position: relative;
-    display: inline-flex;
-    color: var(--role-border-strong);
-
-    &--on {
-      color: var(--role-state-warning);
-    }
+    flex: none;
+    color: var(--role-state-warning);
   }
 
-  &__star-half {
-    position: absolute;
-    top: 0;
-    left: 0;
-    clip-path: inset(0 50% 0 0);
-    color: var(--role-state-warning);
+  &__rating-text {
+    font-size: 14px;
+    color: var(--role-text-muted);
   }
 
   &__brand-search {
     --control-height: 40px;
+    --control-icon-size: 18px;
 
     margin-bottom: 12px;
 
     .ui-input {
-      padding-right: 68px;
+      padding-right: 62px;
       font-size: 14px;
+    }
+
+    .ui-icon {
+      width: var(--control-icon-size);
+      height: var(--control-icon-size);
+      padding: 0;
     }
   }
 
