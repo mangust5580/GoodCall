@@ -259,14 +259,15 @@ $catalog-swatches: (
   font-size: var(--control-label-size);
   font-weight: 700;
   line-height: 1.2;
-  color: var(--role-text-inverse);
 
   &--new {
     background-color: var(--color-brand-purple-600);
+    color: var(--role-text-inverse);
   }
 
   &--sale {
     background-color: var(--role-state-danger);
+    color: var(--role-text-primary);
   }
 }
 
