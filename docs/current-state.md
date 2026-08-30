@@ -53,14 +53,14 @@ Technically complete, final polish deferred:
 
 Active visual slice:
 
-- **Catalog C / Product Grid + Pagination + Sorting — technically complete after
-  bounded visual corrections and the sale-badge visual/accessibility closeout,
-  all on 2026-08-30; user visual PASS is still required.** The corrections cover
-  three concrete pieces of user feedback: the `Catalog.png` product-card
-  treatment is preferred to the shipped card; the Footer blended into the content
-  above it; and the in-grid Catalog promo read as the same purple promotional
-  surface as `NewsletterBand`. The closeout then settled the sale badge, which
-  needed both AA contrast and the user's preferred white-on-red look.
+- **Catalog C / Product Grid + Pagination + Sorting — technically complete with
+  final filter-usability polish applied; user visual PASS is still required.**
+  The 2026-08-30 corrections cover four concrete pieces of user feedback: the
+  `Catalog.png` product-card treatment is preferred to the shipped card; the
+  Footer blended into the content above it; the in-grid Catalog promo read as the
+  same purple promotional surface as `NewsletterBand`; and the rating rows plus
+  the long brand list were hard to use. The sale badge was settled separately,
+  needing both AA contrast and the user's preferred white-on-red look.
 
 ### Catalog A — Page Foundation & Layout
 
@@ -334,11 +334,46 @@ a computed total; it is never derived from the fixture array. Twelve cards per
 page, and each page deterministically rotates the 16-item pool so page changes
 visibly change results without claiming thousands of local products.
 
-**Filters stay UI-only.** Sidebar filters and quick presets still change only
-their own selection state; they never reorder, filter or count products. Sorting
-and pagination do act on the fixtures, because Catalog C explicitly owns those
-presentation behaviours. That asymmetry is deliberate and holds until a real
-catalogue and facet contract exists.
+**Filters stay UI-only.** Sidebar filters, quick presets and the brand search
+still change only their own selection or presentation state; they never reorder,
+filter or count products. Sorting and pagination do act on the fixtures, because
+Catalog C explicitly owns those presentation behaviours. That asymmetry is
+deliberate and holds until a real catalogue and facet contract exists.
+
+**Rating rows carry explicit numerals.** Each row is
+`checkbox | number | stars`, with the value in a fixed 22px tabular-numeral slot
+before the star strip, so the threshold is read rather than counted. The
+thresholds stay the accepted Catalog B set the raster evidences — `4,5`, `4`,
+`3`, `2`, `1` — and were not renumbered to a `5`-topped scale, because that
+inventory is closed raster fixture copy. The repeated visible `и выше` is gone;
+the stars are `aria-hidden` decoration and each checkbox carries the full
+`Рейтинг N и выше` accessible name, so nothing is conveyed by star count or
+colour alone.
+
+**Brand search** is a local substring filter over the brand options, using the
+accepted `SearchField` with `labelVisuallyHidden` so the real `Поиск бренда`
+label exists without competing with the group heading. The query is trimmed and
+lower-cased and matched case-insensitively against every brand — including the
+ones behind `Показать ещё` — with no debounce, fuzzy matching, transliteration or
+request of any kind. While a query is active the collapse affordance is hidden
+and all matches show; `Все бренды` stays pinned at the top; brands already
+selected stay selected even when the query hides them; and clearing the query
+restores the previous collapsed or expanded state untouched. No match renders a
+muted `Бренды не найдены`, not an error state.
+
+The query lives in local `useState` inside `CatalogFilters`, not in
+`CatalogFilterState`. It is presentation state: it never reaches
+`countActiveCatalogFilters`, never becomes an applied filter, and is not
+persisted. The sidebar reset clears it alongside the selections because that
+control is inside the same component; the dialog's own `Сбросить` keeps its
+existing draft-only meaning. In the mobile dialog the query resets on reopen
+purely because Radix unmounts the content, so no extra lifecycle code exists.
+
+**No generic searchable-filter schema was introduced.** There is no
+`searchable`, `filterType`, `filterDefinition`, `facetSchema` or
+`FilterRenderer`. Brand search is implemented for the one proven long enumerated
+filter; generic category/filter/facet architecture stays deferred until a second
+real category proves the requirement.
 
 **View-mode controls were omitted.** The raster's two toolbar buttons are grid
 _density_ variants (a 2x3 block and a 3x3 dot grid), not grid-versus-list, so

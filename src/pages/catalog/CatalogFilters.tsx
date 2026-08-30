@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { ReactNode } from 'react';
 
-import { Checkbox, Icon, RangeSlider } from '../../components/ui';
+import { Checkbox, Icon, RangeSlider, SearchField } from '../../components/ui';
 import {
   CATALOG_PRICE_MAX,
   CATALOG_PRICE_MIN,
@@ -87,8 +87,15 @@ const COLOUR_EXTRA_OPTIONS: readonly CatalogColourOption[] = [
   { value: 'teal', label: 'Бирюзовый' },
 ];
 
+const ALL_BRAND_OPTIONS: readonly CatalogFilterOption[] = [
+  ...BRAND_OPTIONS,
+  ...BRAND_EXTRA_OPTIONS,
+];
+
 const SHOW_MORE_LABEL = 'Показать ещё';
 const SHOW_LESS_LABEL = 'Свернуть';
+const BRAND_SEARCH_LABEL = 'Поиск бренда';
+const BRAND_SEARCH_EMPTY_LABEL = 'Бренды не найдены';
 
 const countFormatter = new Intl.NumberFormat('ru-RU');
 
@@ -106,6 +113,9 @@ function OptionLabel({ label, count }: { readonly label: string; readonly count?
 function RatingLabel({ option }: { readonly option: CatalogRatingOption }) {
   return (
     <span className="catalog-filters__rating">
+      <span aria-hidden="true" className="catalog-filters__rating-value">
+        {option.label}
+      </span>
       <span aria-hidden="true" className="catalog-filters__stars">
         {[1, 2, 3, 4, 5].map((position) => {
           const filled = option.rating >= position;
@@ -122,10 +132,7 @@ function RatingLabel({ option }: { readonly option: CatalogRatingOption }) {
           );
         })}
       </span>
-      <span className="ui-visually-hidden">{`Оценка ${option.label} и выше`}</span>
-      <span aria-hidden="true" className="catalog-filters__rating-text">
-        и выше
-      </span>
+      <span className="ui-visually-hidden">{`Рейтинг ${option.label} и выше`}</span>
     </span>
   );
 }
@@ -165,6 +172,13 @@ export function CatalogFilters({
 }: CatalogFiltersProps) {
   const [brandsExpanded, setBrandsExpanded] = useState(false);
   const [coloursExpanded, setColoursExpanded] = useState(false);
+  const [brandQuery, setBrandQuery] = useState('');
+
+  const normalizedBrandQuery = brandQuery.trim().toLowerCase();
+  const brandSearchActive = normalizedBrandQuery.length > 0;
+  const matchingBrands = ALL_BRAND_OPTIONS.filter((option) =>
+    option.label.toLowerCase().includes(normalizedBrandQuery),
+  );
 
   const setList = (key: CatalogFilterListKey, next: readonly string[]): void => {
     onChange({ ...value, [key]: next });
@@ -218,6 +232,15 @@ export function CatalogFilters({
 
       <fieldset className="catalog-filters__group">
         <legend className="ui-visually-hidden">Бренд</legend>
+        <div className="catalog-filters__brand-search">
+          <SearchField
+            label={BRAND_SEARCH_LABEL}
+            labelVisuallyHidden
+            onValueChange={setBrandQuery}
+            placeholder={BRAND_SEARCH_LABEL}
+            value={brandQuery}
+          />
+        </div>
         <div className="catalog-filters__row">
           <Checkbox
             checked={value.brands.length === 0}
@@ -229,15 +252,25 @@ export function CatalogFilters({
             }}
           />
         </div>
-        {renderCheckboxGroup('brands', BRAND_OPTIONS)}
-        {brandsExpanded ? renderCheckboxGroup('brands', BRAND_EXTRA_OPTIONS) : null}
-        <ShowMoreButton
-          expanded={brandsExpanded}
-          groupLabel="бренды"
-          onToggle={() => {
-            setBrandsExpanded(!brandsExpanded);
-          }}
-        />
+        {brandSearchActive ? (
+          matchingBrands.length === 0 ? (
+            <p className="catalog-filters__empty">{BRAND_SEARCH_EMPTY_LABEL}</p>
+          ) : (
+            renderCheckboxGroup('brands', matchingBrands)
+          )
+        ) : (
+          <>
+            {renderCheckboxGroup('brands', BRAND_OPTIONS)}
+            {brandsExpanded ? renderCheckboxGroup('brands', BRAND_EXTRA_OPTIONS) : null}
+            <ShowMoreButton
+              expanded={brandsExpanded}
+              groupLabel="бренды"
+              onToggle={() => {
+                setBrandsExpanded(!brandsExpanded);
+              }}
+            />
+          </>
+        )}
       </fieldset>
 
       <fieldset className="catalog-filters__group">
@@ -308,6 +341,7 @@ export function CatalogFilters({
           <button
             className="catalog-filters__reset"
             onClick={() => {
+              setBrandQuery('');
               onChange(DEFAULT_CATALOG_FILTER_STATE);
             }}
             type="button"
