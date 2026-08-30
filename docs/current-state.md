@@ -54,13 +54,13 @@ Technically complete, final polish deferred:
 Active visual slice:
 
 - **Catalog C / Product Grid + Pagination + Sorting — technically complete after
-  a bounded visual correction and the sale-badge accessibility closeout, both on
-  2026-08-30; user visual PASS is still required.** The correction covers three
-  concrete pieces of user feedback: the `Catalog.png` product-card treatment is
-  preferred to the shipped card; the Footer blended into the content above it;
-  and the in-grid Catalog promo read as the same purple promotional surface as
-  `NewsletterBand`. The closeout then fixed the one known accessibility blocker,
-  the sale badge's text contrast.
+  bounded visual corrections and the sale-badge visual/accessibility closeout,
+  all on 2026-08-30; user visual PASS is still required.** The corrections cover
+  three concrete pieces of user feedback: the `Catalog.png` product-card
+  treatment is preferred to the shipped card; the Footer blended into the content
+  above it; and the in-grid Catalog promo read as the same purple promotional
+  surface as `NewsletterBand`. The closeout then settled the sale badge, which
+  needed both AA contrast and the user's preferred white-on-red look.
 
 ### Catalog A — Page Foundation & Layout
 
@@ -274,21 +274,23 @@ Catalog-owned `.catalog-badge` span on existing tokens
 was not reopened, and no global `Badge` component was introduced — a second real
 non-Catalog consumer would be the trigger for that, not this one.
 
-**Sale-badge contrast closeout.** Each badge variant owns its own foreground.
-`Новинка` keeps `--role-text-inverse` on `--color-brand-purple-600` at 6.75:1.
-The sale badge originally shipped `--role-text-inverse` on `--role-state-danger`,
-which is only 3.76:1 at the rendered 13px/700 — below AA, since that size is not
-WCAG large text. Foundations expose no darker danger role at all (`$status` has a
-single red, and `--role-state-danger-soft` is a light tint), so no darker surface
-token was available and inventing one would have meant a new global token for a
-single badge. The fix instead swaps the foreground to the accepted
-`--role-text-primary` (`#12131a`) on the unchanged `--role-state-danger`
-(`#ef4444`) for **4.92:1**. Global `--role-state-danger` semantics, `Chip`,
-`Button` and every other danger consumer are untouched, the badge still reads as
-the same red sale marker, and the dark-on-colour pairing already matches the
-`$catalog-swatches` convention in the same stylesheet, where `pink`, `gold`,
-`yellow` and `teal` all carry `#12131a`. Typography was deliberately not
-enlarged or emboldened to reach the threshold.
+**Sale-badge closeout.** Each badge variant owns its own colour pair. `Новинка`
+is `--role-text-inverse` on `--color-brand-purple-600` at 6.75:1. The sale badge
+is `--role-text-inverse` on the Catalog-local `$catalog-sale-badge-surface`
+(`#dc2626`) at **4.83:1** — white text, as the user requires, on a red deeper
+than `--role-state-danger`. White on `--role-state-danger` (`#ef4444`) is only
+3.76:1 at the rendered 13px/700, which is below AA because that size is not WCAG
+large text, so a darker surface was the only way to keep white text; the
+threshold was met by colour alone, with no change to font size, weight, padding,
+radius or placement.
+
+The darker red is Catalog-local because this is a sale-badge presentation
+requirement, not a proven global danger requirement. Foundations expose no red
+ramp — `$status` holds one red and `--role-state-danger-soft` is a light tint —
+and adding one for a single badge would mean a new global semantic token.
+`--role-state-danger` therefore still resolves to `#ef4444`, and `Chip` `danger`,
+`Button` `danger`, `ConfirmationDialog`, the Location error states and the
+pressed favourite are all untouched.
 
 **Grid.** `repeat(auto-fill, minmax(228px, 1fr))` with a 20px gap, so the column
 count follows usable card width instead of a fixed desktop number: 4 columns at

@@ -1,6 +1,7 @@
 @use 'sass:list';
 @use '../../styles/helpers' as h;
 
+$catalog-sale-badge-surface: #dc2626;
 $catalog-swatches: (
   'black': (
     #12131a,
@@ -266,8 +267,8 @@ $catalog-swatches: (
   }
 
   &--sale {
-    background-color: var(--role-state-danger);
-    color: var(--role-text-primary);
+    background-color: $catalog-sale-badge-surface;
+    color: var(--role-text-inverse);
   }
 }
 
