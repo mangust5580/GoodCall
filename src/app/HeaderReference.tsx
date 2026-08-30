@@ -2,11 +2,12 @@ import { useState } from 'react';
 
 import { Container } from '../components/layout';
 import { MobileActionBar, SiteHeader } from '../components/shell';
+import { referenceUrl } from './referenceUrl';
 
 import './HeaderReference.scss';
 
 export function HeaderReference() {
-  const base = import.meta.env.BASE_URL;
+  const index = referenceUrl('index');
   const [status, setStatus] = useState('');
 
   return (
@@ -41,13 +42,13 @@ export function HeaderReference() {
           </p>
           <p className="header-reference__note">
             This page body is reference-only. It is not a Home page, and no hero, catalog, footer or
-            newsletter is implemented. Header destinations are injected by the consumer; with no
-            router installed they resolve to the site root.
+            newsletter is implemented. Header destinations are injected by the consumer; the
+            production routes behind them do not exist yet, so they resolve to the app base.
           </p>
           <p aria-live="polite" className="header-reference__status">
             {status || 'Поиск ещё не отправлен'}
           </p>
-          <a className="header-reference__back" href={base}>
+          <a className="header-reference__back" href={index}>
             Back to reference index
           </a>
         </Container>

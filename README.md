@@ -45,7 +45,7 @@ npm run dev
 .github/workflows/   CI and GitHub Pages deployment
 docs/                current-state.md — operational handoff
 src/
-  app/               application ownership (App component)
+  app/               application ownership (App, production router, routes)
   styles/            global.scss — shared styling entry
     helpers/         generic SCSS helpers (fluid, media mixins)
   main.tsx           React entry point
@@ -103,11 +103,18 @@ The app is published as the GitHub Pages **project site** for
 `mangust5580/GoodCall`, so assets resolve under `/GoodCall/`.
 
 That base path is declared once, in `vite.config.ts`. Application code reads
-`import.meta.env.BASE_URL` instead of repeating the repository name — including
-any future router, which derives its basename from the same value.
+`import.meta.env.BASE_URL` instead of repeating the repository name.
 
 `.github/workflows/deploy.yml` builds and publishes on every push to `main`.
 Repository **Settings → Pages → Source** must be set to **GitHub Actions**.
+
+Pages serves static files with no SPA rewrite, so production routing uses React
+Router's `HashRouter`: the route lives in the fragment and direct entry and
+refresh work without a `404.html` fallback. The live Catalog route is
+<https://mangust5580.github.io/GoodCall/#/catalog/smartphones>. The router needs
+no basename, because the base path stays in the URL path. Development reference
+surfaces keep their own `?reference=` query addresses, starting at
+`?reference=index`. See `docs/current-state.md` for the route inventory.
 
 ## Raster reference boundary
 

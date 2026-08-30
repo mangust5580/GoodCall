@@ -1,0 +1,11 @@
+@use '../styles/helpers' as h;
+
+.catalog-route {
+  min-height: 100dvh;
+  background-color: var(--role-surface-page);
+
+  @include h.media-max(768px) {
+    padding-block-end: calc(104px + env(safe-area-inset-bottom, 0px));
+    background-color: var(--role-surface-footer);
+  }
+}

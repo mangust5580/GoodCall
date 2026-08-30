@@ -1,6 +1,6 @@
-import './TemporaryReference.scss';
+import { referenceUrl } from './referenceUrl';
 
-const referenceUrl = (name: string): string => `${import.meta.env.BASE_URL}?reference=${name}`;
+import './TemporaryReference.scss';
 
 export function ReferenceIndex() {
   return (

@@ -31,6 +31,15 @@ Accepted:
   active count, and the Radix bottom-sheet dialog with its draft/apply/reset
   model are all accepted. The `Серия` and `Диагональ` taxonomy is raster fixture
   copy, not a future domain contract, and is not to be reworked.
+- **Catalog C / Product Grid + Pagination + Sorting — user visual PASS on
+  2026-08-30, closed.** The accepted state includes the canonical `ProductCard`
+  correction, the dark in-grid promo, the Footer top separation, the `#DC2626`
+  sale badge with white text, the Brand local search, the compact
+  `★4,5 и выше` rating markers, the responsive mobile filter `Dialog`, and the
+  fixture sorting and pagination behaviour.
+- **Catalog page family — CLOSED.** Catalog A, B and C all hold explicit user
+  visual PASS. Do not reopen Catalog visuals; a routing regression is fixed in
+  routing integration, never by redesigning Catalog.
 - Media Foundation / Picture pipeline + Icon policy
 - Location Foundation / CitySelector — visual gate, user visual PASS on
   2026-08-27, including the requested danger-red service/geolocation failure
@@ -51,16 +60,11 @@ Technically complete, final polish deferred:
   rasters, social destination wiring until real URLs exist, and app-store badges
   until a real GoodCall application and store contract exists.
 
-Active visual slice:
+Technically complete:
 
-- **Catalog C / Product Grid + Pagination + Sorting — technically complete with
-  final filter visual polish applied; user visual PASS is still required.**
-  The 2026-08-30 corrections cover four concrete pieces of user feedback: the
-  `Catalog.png` product-card treatment is preferred to the shipped card; the
-  Footer blended into the content above it; the in-grid Catalog promo read as the
-  same purple promotional surface as `NewsletterBand`; and the rating rows plus
-  the long brand list were hard to use. The sale badge was settled separately,
-  needing both AA contrast and the user's preferred white-on-red look.
+- **Routing Foundation — technically complete.** Production path routing is
+  owned by React Router using a GitHub Pages-safe hash strategy. See the
+  Routing section below.
 
 ### Catalog A — Page Foundation & Layout
 
@@ -124,10 +128,10 @@ deferred.
 filter panel and the results placeholder became the Catalog C product grid; no
 dashed region remains on the page.
 
-**Routing.** No router was added. The milestone is exposed through the existing
-`?reference=catalog` development mechanism, so GitHub Pages direct entry keeps
-working without a history fallback. Routing remains a separate decision gate;
-see the task audit for the assessment.
+**Routing.** Catalog A added no router; the milestone was exposed through the
+`?reference=catalog` development surface. Routing Foundation later added the
+production `#/catalog/smartphones` route around the same `CatalogPage`. See the
+Current routes section.
 
 ### Catalog B — Filters + Mobile Filter Dialog
 
@@ -474,8 +478,8 @@ incidental. Its address, the app-download block and the store badges are
 single-raster traits and were **not** implemented; no QR block exists, because no
 footer raster shows one.
 
-**Link policy.** No router exists, so footer navigation labels and legal labels
-render as **non-interactive text**, not fake links. There is no `href="#"`, no
+**Link policy.** The pages behind the footer navigation and legal labels do not
+exist, so they render as **non-interactive text**, not fake links. There is no `href="#"`, no
 link pointing at the repository root merely to be clickable, and no no-op click
 handler. Only three real anchors exist: the brand home link, `tel:+78001001010`
 and `mailto:info@goodcall.ru`. Route wiring — and the `<nav>` landmarks that
@@ -881,8 +885,9 @@ reference-owned bottom padding, and production CSS adds no global body padding.
 `SiteHeader` is presentation-only. It accepts narrow explicit destination props,
 optional action counts, an optional search-submit callback and an optional
 category list. It owns **no** router, application state, cart/wishlist/comparison
-model, auth or session inference, and makes no network request. With no router
-installed, destination props default to `import.meta.env.BASE_URL`.
+model, auth or session inference, and makes no network request. Destination
+props default to `import.meta.env.BASE_URL`, and Routing Foundation deliberately
+left every Header destination on that fallback rather than inventing routes.
 
 Backwards-compatible extensions proved by these real consumers; nothing else
 changed in closed Components:
@@ -1168,8 +1173,9 @@ Independent audits themselves remain optional. See the AUDIT.md section of
   `catalog.scss`. Its reference surface is `src/app/CatalogReference.tsx`, with
   reference-only styles in `CatalogReference.scss`.
 
-There is no router, no data layer, and no feature architecture. The reference
-surfaces are development comparison pages, not product UI.
+There is no data layer and no feature architecture. The reference surfaces are
+development comparison pages, not product UI; `src/app/ProductionRouter.tsx` and
+`src/app/CatalogRoute.tsx` are the production routing layer beside them.
 
 ### Components A
 
@@ -1648,9 +1654,13 @@ that same value.
 ## Temporary reference pages
 
 The base page no longer hosts the Foundations surface. A query-string check in
-`App.tsx` selects the surface, with no router and no new dependency:
+`App.tsx` selects the surface. The check runs **before** the production router,
+so reference surfaces are unaffected by routing; the bare base URL now belongs to
+`ProductionRouter`:
 
-- base URL — temporary reference index, linking to the four surfaces below
+- `?reference=index` — the temporary reference index, linking to the surfaces
+  below. This is the explicit index address; an unrecognised `?reference=` value
+  lands here too
 - `?reference=foundations` — the Foundations colour reference
 - `?reference=components` — the Components A, B, C, D, E and F reference
   surface
@@ -1685,9 +1695,11 @@ The base page no longer hosts the Foundations surface. A query-string check in
   opens in its own defaults, which are the state `Catalog.png` shows. No
   `?reference=catalog-filters` or `?reference=catalog-c` surface was added.
 
-Links are built from `import.meta.env.BASE_URL`, so they resolve under the
-GitHub Pages base without hardcoding the repository name, and no SPA fallback is
-needed because the path never changes.
+Links are built by `src/app/referenceUrl.ts` from `import.meta.env.BASE_URL`, so
+they resolve under the GitHub Pages base without hardcoding the repository name,
+and no SPA fallback is needed because the path never changes. Every
+`Back to reference index` link, and the `SiteFooter` brand link inside the
+catalog and footer surfaces, points at `?reference=index`.
 
 These are temporary development surfaces, not production routes, and will be
 removed when the reference surfaces are no longer needed.
@@ -1709,8 +1721,18 @@ functional suppression directives.
 
 ## Current visual status
 
-**Catalog C / Product Grid + Pagination + Sorting — technically complete; user
-visual PASS is still required.** `?reference=catalog` renders the real shell
+**Routing Foundation — visually neutral, verified.** At 1440 and 390 the
+production `#/catalog/smartphones` route and `?reference=catalog` with only the
+reference-only note hidden render **pixel-identical** full pages (0 differing
+pixels of 1440x2252 and 390x6685). Against the accepted `HEAD` Catalog the only
+delta is the breadcrumb: 242 pixels at 1440 and 264 at 390, confined to the one
+`Главная` text line, where the colour moves from `--role-text-secondary` to the
+muted crumb colour because the crumb is no longer a link. Page height is
+unchanged. Header, `ProductCard`, filters, promo, `NewsletterBand`, `SiteFooter`
+and `MobileActionBar` are untouched.
+
+**Catalog C / Product Grid + Pagination + Sorting — user visual PASS received on
+2026-08-30, closed.** `?reference=catalog` renders the real shell
 around the real `CatalogPage` and reports zero horizontal document overflow,
 zero runtime errors and zero failed requests at 1920 / 1440 / 1280 / 1024 / 768 /
 430 / 390 / 375 / 320. The results grid resolves to 4 columns of 259px at 1920
@@ -1932,12 +1954,99 @@ font family, type scale, spacing or radius scale, so those were not invented.
 
 ## Current routes
 
-None. No router is installed.
+`react-router-dom` **7.18.3** owns production path routing. It is the only new
+runtime dependency; it pulls `react-router@7.18.3`, `cookie` and
+`set-cookie-parser` into the lockfile as its own dependencies.
+
+### Why hash routing
+
+Vite `base` is `/GoodCall/` and `.github/workflows/deploy.yml` publishes `./dist`
+to a GitHub Pages project site. Pages serves static files with no SPA rewrite and
+the repository carries no `404.html` fallback, so a clean path such as
+`/GoodCall/catalog/smartphones` would 404 on direct entry and on refresh. React
+Router's `HashRouter` keeps the route in the fragment, which the server never
+sees, so direct entry and refresh work on the current host. No 404 redirect hack
+was added and hosting was not changed. Revisit the strategy only if the
+deployment contract itself changes.
+
+`HashRouter` needs no `basename`: the Vite base stays in the URL path and the
+router owns only the fragment. The base path still lives solely in
+`vite.config.ts`.
+
+### Route inventory
+
+- `#/catalog/smartphones` — the production Catalog route, the only real page
+  route. Direct-entry shape:
+  <https://mangust5580.github.io/GoodCall/#/catalog/smartphones>
+- `#/` — **temporary.** Redirects to `#/catalog/smartphones` with
+  `<Navigate replace>`, so it adds no history entry. Catalog is not the
+  permanent homepage: Home A must replace this index route.
+- `*` — a compact in-router fallback: one `<h1>Страница не найдена</h1>`, one
+  line of copy and one real `<Link>` to the Catalog route. It is deliberately
+  not a designed 404 page and not a global error architecture; `404.png` will
+  supply the real design later.
+
+### Ownership
+
+`src/app/ProductionRouter.tsx` holds the `HashRouter`, the three routes, the
+route path constant and the local fallback component, with
+`ProductionRouter.scss` beside it. `src/app/CatalogRoute.tsx` composes the
+production Catalog shell — `SiteHeader`, `CatalogPage`, `NewsletterBand`,
+`SiteFooter`, `MobileActionBar` — with `CatalogRoute.scss` owning the page
+background and the mobile bottom inset. Global shell regions stay outside
+`CatalogPage`.
+
+There is no `AppShell` or `PageShell`. `CatalogRoute` and `CatalogReference`
+share a small amount of shell composition and that duplication is tolerated on
+purpose: Home will be the second real production page and is the correct trigger
+for extracting a shared wrapper, if duplication then proves it.
+
+The Header action counts passed by `CatalogRoute` (`2`, `3`, `12`) are specimen
+shell values, like `2 546 товаров`. No cart, favourites or comparison state
+exists yet.
+
+### Reference precedence
+
+`App.tsx` checks `?reference=` first and only renders `ProductionRouter` when the
+parameter is absent. Reference surfaces stay a query-string development concern
+and were not converted into router routes; there is no `#/reference/...` path and
+no route registry for them. An unrecognised `?reference=` value falls back to the
+reference index rather than to production.
+
+`?reference=index` is the explicit reference-index address, and every reference
+surface's `Back to reference index` link now points at it through
+`src/app/referenceUrl.ts` instead of the bare base URL, which production routing
+now owns. The `?reference=catalog` and `?reference=footer` surfaces also point
+their `SiteFooter` brand link at the reference index, so a reference surface
+never jumps into the production router.
+
+### Deliberately not routed
+
+- **Breadcrumbs.** `Главная` and `Каталог` are non-interactive text because
+  neither destination exists; `Смартфоны` keeps `aria-current="page"`. `Главная`
+  becomes a real router link when Home A lands. No `/catalog` landing route was
+  invented to make a breadcrumb clickable.
+- **Header destinations.** Nothing was newly wired. Utility links, actions,
+  the catalog entry and every category link keep the existing consumer-injected
+  fallback to the app base, so no unavailable destination received a fake route
+  and no category label became semantically false. Wiring `Смартфоны` alone
+  would have meant either duplicating the canonical category list into the route
+  or widening the accepted `SiteHeader` API, and pointing `catalogHref` at the
+  smartphone route would have sent `Планшеты`, `Ноутбуки` and the rest there
+  too. Each Header destination gets a real route when its page exists. While the
+  temporary `#/` redirect stands, those base-fallback links land on Catalog;
+  that ends with Home A.
+- **`ProductCard`.** Cards remain non-links. No `/product/:slug` route, no
+  `Link` wrapper, no slug fixture routing.
+- **URL state.** Catalog filters, sorting, quick filters and pagination stay
+  local UI state. No `?page=`, `?sort=` or `?brand=` synchronization was added;
+  that belongs with the real Catalog data and facet contract.
+- **Document titles.** No route-level title system was introduced.
 
 ## Current dependencies
 
 Runtime: `react`, `react-dom`, `radix-ui`, `@daypicker/react`, `@maskito/core`,
-`@maskito/react`, `embla-carousel-react`.
+`@maskito/react`, `embla-carousel-react`, `react-router-dom`.
 
 Dev: `vite`, `@vitejs/plugin-react`, `typescript`, `@types/react`,
 `@types/react-dom`, `@types/node`, `sass-embedded`, `postcss`, `autoprefixer`,
@@ -1953,9 +2062,16 @@ Embla plugin is installed (`embla-carousel-autoplay`, `-auto-scroll`,
 in the tree; only `embla-carousel-react`, `embla-carousel` and
 `embla-carousel-reactive-utils`, all 8.6.0.
 
-Nothing else is installed. In particular there is no router, no Supabase, no
-data-fetching, state, form, schema, search/autocomplete, phone validation,
-mocking, or E2E library, and no other carousel/slider library.
+`react-router-dom` resolves to **7.18.3** and is the routing dependency
+authorized by the Routing Foundation task. `react-router-dom@latest` is still the
+7.x line; `react-router` 8 exists but publishes no `react-router-dom` package.
+Only `react-router`, `cookie` and `set-cookie-parser` came with it. No
+`@react-router/*` framework package, data-router loader, route-generation
+library or query-state library is installed.
+
+Nothing else is installed. In particular there is no Supabase, no data-fetching,
+state, form, schema, search/autocomplete, phone validation, mocking, or E2E
+library, and no other carousel/slider or routing library.
 
 ## Scripts
 
@@ -2029,8 +2145,9 @@ none of them blocks the closed milestone.
   filter inventories, and the trigger for designing common-versus-category-
   specific filter and facet architecture is a second real category with a
   different inventory — not a refactor of the current specimen data.
-- Routing remains a separate milestone after Catalog C. No product or category
-  routes exist, so cards and the in-grid promo carry no links.
+- `#/catalog/smartphones` is the only real page route. No product route and no
+  second category route exists, so cards and the in-grid promo still carry no
+  links.
 - Live DaData behaviour is unverified. No local token is available, GitHub secret
   presence is unverifiable without `gh`, and the DaData hosts are unreachable
   from this build environment, so the adapter was verified against recorded
@@ -2039,38 +2156,47 @@ none of them blocks the closed milestone.
 
 ## Next approved step
 
-**User visual review of Catalog C / Product Grid + Pagination + Sorting after
-its bounded visual correction.** The slice is technically complete; only the user
-can grant the visual PASS. The three pieces of feedback that drove the correction
-are addressed: the vertical `ProductCard` now follows the raster hierarchy with a
-full-width labelled `В корзину`, the in-grid promo is a dark near-black band that
-no longer competes with the violet `NewsletterBand`, and the Footer has a subtle
-top separation. Questions that still ride with the review: the raster's two
-toolbar buttons are grid-density variants and the accepted icon set has no
-matching glyph, so view-mode controls were omitted; `pageCount` is the raster's
-65 and, like `2 546 товаров`, is specimen copy rather than a computed total; and
-the promo carries neither the raster's `Смотреть подборку` button (no route
-exists) nor its product-cluster photography (no such asset exists).
+**Home A / Page Structure & Section Inventory.** `Home.png` is the next
+design-backed page family and the primary visual evidence for it. Home A must
+also replace the temporary `#/` → `#/catalog/smartphones` redirect with the real
+index route, and it is the point at which `Главная` in the Catalog breadcrumbs
+becomes a real router link.
 
-Footer questions stay open for its deferred polish pass: the support phone
-conflict, social destination wiring, and app-store badges.
+Home is the second real production page, so it is also the correct trigger to
+reconsider two deferred questions, if and only if real duplication proves them:
+extracting shared shell composition out of `CatalogRoute`, and wiring the Header
+destinations that Home actually supplies.
 
-**Outstanding external configuration, separate from this slice:** set the
+**Deferred until after Home:**
+
+- Supabase / Catalog + Home data foundation. Home supplies the second real data
+  consumer; until then the Catalog fixtures stay deterministic and page-local.
+  No Supabase dependency, client, schema, SQL, env key or table exists.
+- Product detail route and `ProductCard` links, until a real Product Detail and
+  data contract exists.
+- URL/query state synchronization for Catalog filters, sorting, quick filters
+  and pagination.
+- A designed 404 page from `404.png`, replacing the compact in-router fallback.
+- `SiteFooter` final visual polish at the integrated page review near the end of
+  the project: the support phone conflict, social destination wiring, and
+  app-store badges.
+
+**Outstanding external configuration, independent of page work:** set the
 repository secret `DADATA_TOKEN` (and a local `.env.local` with
 `VITE_DADATA_TOKEN` for local work), then re-run live DaData and Pages
 verification of the Location Foundation. Until then the deployed Header falls
 back to `Выберите город` and the network features are disabled gracefully. That
-gate is configuration-dependent and does not block visual shell work.
+gate is configuration-dependent and does not block visual page work.
 
-Do not begin routing or a second page family before Catalog C receives explicit
-user visual PASS. Do not reopen or redesign the accepted Header, BrandLogo,
-Media Foundation, Location visuals, NewsletterBand, SiteFooter, ProductCard,
+Do not reopen or redesign the accepted Catalog family, Header, BrandLogo, Media
+Foundation, Location visuals, NewsletterBand, SiteFooter, ProductCard,
 Pagination or closed Components — the single bounded `ProductCard` reopen is
-spent, and `NewsletterBand` stays exactly as its PASS accepted it. Do not turn the Catalog fixtures into a product
-or category domain model, do not add router, state or data architecture, do not
-add a footer CMS/config layer, backend or persistence, and do not add
-dependencies unless a concrete requirement proves necessary. Accepted system
-decisions win over incidental raster differences.
+spent, and `NewsletterBand` stays exactly as its PASS accepted it. Do not turn
+the Catalog fixtures into a product or category domain model, do not add state or
+data architecture, do not create routes for pages that do not exist, do not add a
+footer CMS/config layer, backend or persistence, and do not add dependencies
+unless a concrete requirement proves necessary. Accepted system decisions win
+over incidental raster differences.
 
 ## Normative repository docs
 

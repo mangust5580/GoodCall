@@ -6,6 +6,7 @@ import { HeaderReference } from './HeaderReference';
 import { LayoutReference } from './LayoutReference';
 import { LocationReference } from './LocationReference';
 import { NewsletterReference } from './NewsletterReference';
+import { ProductionRouter } from './ProductionRouter';
 import { ReferenceIndex } from './TemporaryReference';
 
 function currentReference(): string | null {
@@ -14,6 +15,10 @@ function currentReference(): string | null {
 
 export function App() {
   const reference = currentReference();
+
+  if (reference === null) {
+    return <ProductionRouter />;
+  }
 
   if (reference === 'foundations') {
     return <FoundationsColorReference />;

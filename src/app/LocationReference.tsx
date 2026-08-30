@@ -5,6 +5,7 @@ import { CITY_STORAGE_KEY, clearStoredCity } from '../components/location';
 import type { CityLookupClient, CityOption } from '../components/location';
 import { MobileActionBar, SiteHeader } from '../components/shell';
 import { Button } from '../components/ui';
+import { referenceUrl } from './referenceUrl';
 
 import './LocationReference.scss';
 
@@ -90,7 +91,7 @@ function createFakeCityClient(failing: boolean): CityLookupClient {
 }
 
 export function LocationReference() {
-  const base = import.meta.env.BASE_URL;
+  const index = referenceUrl('index');
   const [failing, setFailing] = useState(false);
   const [configured, setConfigured] = useState(true);
   const [instance, setInstance] = useState(0);
@@ -163,7 +164,7 @@ export function LocationReference() {
             }.`}
           </p>
 
-          <a className="location-reference__back" href={base}>
+          <a className="location-reference__back" href={index}>
             Back to reference index
           </a>
         </Container>

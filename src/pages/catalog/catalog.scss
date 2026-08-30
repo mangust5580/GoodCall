@@ -84,20 +84,6 @@ $catalog-swatches: (
     }
   }
 
-  &__crumb-link {
-    color: var(--role-text-secondary);
-    text-decoration-line: none;
-
-    &:hover {
-      color: var(--role-text-link);
-    }
-
-    &:focus-visible {
-      outline: 2px solid var(--role-border-focus);
-      outline-offset: 2px;
-    }
-  }
-
   &__heading {
     display: flex;
     flex-flow: row wrap;

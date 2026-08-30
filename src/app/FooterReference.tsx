@@ -1,10 +1,11 @@
 import { Container } from '../components/layout';
 import { MobileActionBar, NewsletterBand, SiteFooter } from '../components/shell';
+import { referenceUrl } from './referenceUrl';
 
 import './FooterReference.scss';
 
 export function FooterReference() {
-  const base = import.meta.env.BASE_URL;
+  const index = referenceUrl('index');
 
   return (
     <div className="footer-reference">
@@ -18,25 +19,25 @@ export function FooterReference() {
             contain the newsletter band; the two stay independently reusable.
           </p>
           <p className="footer-reference__note">
-            No router exists yet, so footer navigation labels and legal labels render as
-            non-interactive text rather than fake links. Only genuinely actionable destinations are
-            anchors: the brand home link, the support phone and the support email. The VK, Telegram,
-            YouTube and RUTUBE marks are production visual content, but they stay non-interactive
-            until real GoodCall destinations exist, so they add no tab stops.
+            The pages behind the footer navigation and legal labels do not exist yet, so they render
+            as non-interactive text rather than fake links. Only genuinely actionable destinations
+            are anchors: the brand home link, the support phone and the support email. The VK,
+            Telegram, YouTube and RUTUBE marks are production visual content, but they stay
+            non-interactive until real GoodCall destinations exist, so they add no tab stops.
           </p>
           <p className="footer-reference__note">
             Below 768px the real production <code>MobileActionBar</code> is fixed to the bottom of
             the viewport, so this page reserves its own bottom inset — the same reference-owned
             clearance the header reference uses. Production CSS adds no global body padding.
           </p>
-          <a className="footer-reference__back" href={base}>
+          <a className="footer-reference__back" href={index}>
             Back to reference index
           </a>
         </Container>
       </main>
 
       <NewsletterBand />
-      <SiteFooter homeHref={base} />
+      <SiteFooter homeHref={index} />
       <MobileActionBar cartCount={2} comparisonCount={3} favoritesCount={12} />
     </div>
   );

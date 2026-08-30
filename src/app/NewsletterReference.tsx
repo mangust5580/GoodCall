@@ -2,11 +2,12 @@ import { useState } from 'react';
 
 import { Container } from '../components/layout';
 import { NewsletterBand } from '../components/shell';
+import { referenceUrl } from './referenceUrl';
 
 import './NewsletterReference.scss';
 
 export function NewsletterReference() {
-  const base = import.meta.env.BASE_URL;
+  const index = referenceUrl('index');
   const [lastEmail, setLastEmail] = useState('');
 
   return (
@@ -37,7 +38,7 @@ export function NewsletterReference() {
           The line above is reference-only confirmation that the form submitted. It lives outside{' '}
           <code>NewsletterBand</code> and is not part of the production component.
         </p>
-        <a className="newsletter-reference__back" href={base}>
+        <a className="newsletter-reference__back" href={index}>
           Back to reference index
         </a>
       </Container>

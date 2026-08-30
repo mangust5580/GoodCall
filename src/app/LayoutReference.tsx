@@ -1,4 +1,5 @@
 import { Container } from '../components/layout';
+import { referenceUrl } from './referenceUrl';
 
 import './LayoutReference.scss';
 
@@ -54,7 +55,7 @@ export function LayoutReference() {
 
       <section className="layout-reference__band">
         <Container>
-          <a className="layout-reference__back" href={import.meta.env.BASE_URL}>
+          <a className="layout-reference__back" href={referenceUrl('index')}>
             Back to reference index
           </a>
         </Container>
