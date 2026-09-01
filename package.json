@@ -17,6 +17,7 @@
     "@daypicker/react": "^10.0.1",
     "@maskito/core": "^5.4.0",
     "@maskito/react": "^5.4.0",
+    "@supabase/supabase-js": "^2.112.4",
     "embla-carousel-react": "^8.6.0",
     "radix-ui": "^1.6.7",
     "react": "^19.2.8",

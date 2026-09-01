@@ -47,6 +47,10 @@ Accepted:
 
 Open external integration:
 
+- Production Catalog live Supabase read verification depends on browser-public
+  GitHub Actions variables `VITE_SUPABASE_URL` and
+  `VITE_SUPABASE_PUBLISHABLE_KEY`. Missing or failed Supabase configuration falls
+  back to deterministic Catalog fixtures.
 - Location live DaData functional verification, pending `DADATA_TOKEN`
   configuration. It is a separate configuration-dependent gate and does not
   block visual shell work.
@@ -2119,6 +2123,46 @@ components.
 The Header action counts (`2`, `3`, `12`) are specimen shell values, like
 `2 546 товаров`. No cart, favourites or comparison state exists yet.
 
+### Catalog Supabase read path
+
+Supabase project `muiesujgtojpjpadrmom` is the current clean backend for the
+frontend. Its current public content schema is `categories`, `products` and
+`product_images`, with the public Storage bucket `catalog-media`.
+
+`src/lib/supabase/` is the only shared Supabase infrastructure boundary. It
+contains the typed browser client and the current database TypeScript contract.
+The client reads only `VITE_SUPABASE_URL` and
+`VITE_SUPABASE_PUBLISHABLE_KEY`, and is undefined when either value is missing.
+
+`src/pages/catalog/catalogProductData.ts` owns the Catalog-specific read mapper.
+The production `#/catalog/smartphones` route starts with the accepted local
+fixtures, then attempts a read-only Supabase query for the active `smartphones`
+category and active products ordered by `popularity_score` descending with a
+stable slug tie-breaker. Successful live data replaces only the product
+collection supplied to `CatalogPage`.
+
+Failure, missing configuration, unreachable Supabase, a missing category, an
+empty result or invalid mapped products leave the fixture collection in place.
+`?reference=catalog` still calls `CatalogPage` without remote data and remains
+network-independent and fixture-backed.
+
+Remote products map into the existing `CatalogProduct` presentation model:
+`products.slug` is the card id, `products.name` is the title, prices, rating,
+review count and popularity come from `products`, and the accepted badge
+presentation temporarily comes from matching fixture slugs. Future remote
+products without fixture presentation metadata render without an invented badge.
+
+`product_images` currently has no rows, so the Catalog still renders the
+accepted local synthetic phone artwork. When image rows exist, the primary image
+is the first ordered image for the product and its public URL is resolved through
+the Supabase Storage bucket API. The visible `2 546` result count, filter
+counts, quick filters, sort labels and 65-page pagination are specimen UI
+contracts, not current database row counts.
+
+Home Supabase integration is deferred to the next bounded milestone. There is no
+Home query, CMS contract, curated-product contract, auth, cart persistence,
+favourites persistence, real facets or backend write path.
+
 ### Reference precedence
 
 `App.tsx` checks `?reference=` first and only renders `ProductionRouter` when the
@@ -2157,7 +2201,8 @@ never jumps into the production router.
 ## Current dependencies
 
 Runtime: `react`, `react-dom`, `radix-ui`, `@daypicker/react`, `@maskito/core`,
-`@maskito/react`, `embla-carousel-react`, `react-router-dom`.
+`@maskito/react`, `embla-carousel-react`, `react-router-dom`,
+`@supabase/supabase-js`.
 
 Dev: `vite`, `@vitejs/plugin-react`, `typescript`, `@types/react`,
 `@types/react-dom`, `@types/node`, `sass-embedded`, `postcss`, `autoprefixer`,
@@ -2180,9 +2225,21 @@ Only `react-router`, `cookie` and `set-cookie-parser` came with it. No
 `@react-router/*` framework package, data-router loader, route-generation
 library or query-state library is installed.
 
-Nothing else is installed. In particular there is no Supabase, no data-fetching,
-state, form, schema, search/autocomplete, phone validation, mocking, or E2E
-library, and no other carousel/slider or routing library.
+`@supabase/supabase-js` resolves to **2.112.4** and is the only Supabase/client
+data dependency. It has one current production consumer: the smartphone Catalog
+read path.
+
+Nothing else is installed. In particular there is no async data-fetching state,
+form, schema, search/autocomplete, phone validation, mocking, or E2E library,
+and no other carousel/slider or routing library.
+
+Required deployment variables:
+
+```
+VITE_SUPABASE_URL
+VITE_SUPABASE_PUBLISHABLE_KEY
+DADATA_TOKEN
+```
 
 ## Scripts
 
@@ -2292,9 +2349,9 @@ destinations, and the artwork decision.
 
 **Deferred until after Home:**
 
-- Supabase / Catalog + Home data foundation. Home now supplies the second real
-  page, and the data foundation follows once its content requirements are
-  settled. No Supabase dependency, client, schema, SQL, env key or table exists.
+- Frontend Supabase Integration B / Home read path. The shared typed client now
+  exists, but Home data requirements, curated collections, campaign/banner
+  content, articles and category merchandising remain unimplemented.
 - Product detail route and `ProductCard` links, until a real Product Detail and
   data contract exists.
 - URL/query state synchronization for Catalog filters, sorting, quick filters

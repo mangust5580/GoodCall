@@ -73,7 +73,7 @@ export function CatalogProductGrid({ products }: CatalogProductGridProps) {
             }
             favoritePressed={favorites.includes(product.id)}
             imageAlt={product.imageAlt}
-            imageSrc={productPhone}
+            imageSrc={product.imageSrc ?? productPhone}
             oldPrice={
               product.oldPriceValue === undefined ? undefined : formatPrice(product.oldPriceValue)
             }

@@ -1,10 +1,11 @@
 export interface CatalogProduct {
   readonly id: string;
   readonly title: string;
+  readonly imageSrc?: string;
   readonly imageAlt: string;
   readonly priceValue: number;
   readonly oldPriceValue?: number;
-  readonly rating: number;
+  readonly rating?: number;
   readonly reviewCount: number;
   readonly badge?: string;
   readonly discounted?: boolean;
@@ -220,7 +221,7 @@ const SORT_COMPARATORS: Record<
   popular: (left, right) => right.popularity - left.popularity,
   cheap: (left, right) => left.priceValue - right.priceValue,
   expensive: (left, right) => right.priceValue - left.priceValue,
-  rating: (left, right) => right.rating - left.rating,
+  rating: (left, right) => (right.rating ?? 0) - (left.rating ?? 0),
 };
 
 export function sortCatalogProducts(

@@ -16,11 +16,12 @@ import {
   catalogPageProducts,
   sortCatalogProducts,
 } from './catalogProductFixtures';
-import type { CatalogSortValue } from './catalogProductFixtures';
+import type { CatalogProduct, CatalogSortValue } from './catalogProductFixtures';
 
 export interface CatalogPageProps {
   readonly resultCount?: number;
   readonly homeHref?: string;
+  readonly products?: readonly CatalogProduct[];
 }
 
 interface QuickFilter {
@@ -45,13 +46,17 @@ const QUICK_FILTERS: readonly QuickFilter[] = [
 
 const countFormatter = new Intl.NumberFormat('ru-RU');
 
-export function CatalogPage({ resultCount = DEFAULT_RESULT_COUNT, homeHref }: CatalogPageProps) {
+export function CatalogPage({
+  resultCount = DEFAULT_RESULT_COUNT,
+  homeHref,
+  products = CATALOG_PRODUCTS,
+}: CatalogPageProps) {
   const [filters, setFilters] = useState<CatalogFilterState>(DEFAULT_CATALOG_FILTER_STATE);
   const [quickFilter, setQuickFilter] = useState(DEFAULT_QUICK_FILTER);
   const [sort, setSort] = useState<CatalogSortValue>(DEFAULT_CATALOG_SORT);
   const [page, setPage] = useState(1);
 
-  const visibleProducts = catalogPageProducts(sortCatalogProducts(CATALOG_PRODUCTS, sort), page);
+  const visibleProducts = catalogPageProducts(sortCatalogProducts(products, sort), page);
 
   return (
     <main className="catalog-page">
