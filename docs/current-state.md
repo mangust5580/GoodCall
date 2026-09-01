@@ -47,10 +47,6 @@ Accepted:
 
 Open external integration:
 
-- Production Catalog live Supabase read verification depends on browser-public
-  GitHub Actions variables `VITE_SUPABASE_URL` and
-  `VITE_SUPABASE_PUBLISHABLE_KEY`. Missing or failed Supabase configuration falls
-  back to deterministic Catalog fixtures.
 - Location live DaData functional verification, pending `DADATA_TOKEN`
   configuration. It is a separate configuration-dependent gate and does not
   block visual shell work.
@@ -2159,9 +2155,51 @@ the Supabase Storage bucket API. The visible `2 546` result count, filter
 counts, quick filters, sort labels and 65-page pagination are specimen UI
 contracts, not current database row counts.
 
-Home Supabase integration is deferred to the next bounded milestone. There is no
-Home query, CMS contract, curated-product contract, auth, cart persistence,
-favourites persistence, real facets or backend write path.
+The Supabase GitHub Actions variables are configured. Pages rerun attempt 2 for
+Integration A succeeded, the compiled Pages artifact was verified to contain the
+Supabase project URL and publishable key, and the production Catalog live
+configuration gate is closed.
+
+### Home Supabase read path
+
+Supabase also exposes `home_popular_products(position, product_id)` for the Home
+popular-products curation. The table currently has five positions and points at
+active products.
+
+The production `#/` Home route starts with local fixtures, then attempts one
+atomic Home read after mount. A valid remote result replaces only
+`Популярные категории` and `Популярные товары`; if either section is missing,
+malformed, unreachable or unavailable, both targeted sections remain fixture
+backed.
+
+`Популярные категории` reads active `categories`, ordered by `sort_order`
+ascending and `slug` ascending. Database slugs, labels and order own the content;
+Home keeps the icon mapping locally by stable slug. Unknown category slugs are
+filtered rather than assigned invented icons.
+
+`Популярные товары` reads the five `home_popular_products` rows in backend
+position order, then resolves active products and primary images. Product slug,
+title, price, old price and category identity come from Supabase; Home-only
+badge tone/copy and fallback artwork are local presentation metadata keyed by
+the curated product slug.
+
+Current remote Home categories resolve to `Смартфоны`, `Ноутбуки`, `Планшеты`,
+`Умные часы`, `Наушники`, `Аксессуары`, `Игры и консоли`, `Телевизоры`.
+Current remote Home products resolve in curated order to
+`Apple iPhone 15 128 ГБ, Розовый`,
+`Samsung Galaxy S24 128 ГБ, Фиолетовый`,
+`Xiaomi Redmi Note 13 Pro 256 ГБ, Синий`, `Apple AirPods Pro 2 (USB-C)` and
+`Apple Watch Series 9 45 мм, Чёрный`.
+
+`product_images` still has no rows, and category merchandising media is still
+null, so Home continues to render local placeholder artwork. `?reference=home`
+calls `HomePage` without remote data and remains deterministic and
+network-independent. Hero, offers, benefits, promo pair, category promo trio,
+cinema, latest articles, NewsletterBand and Footer remain fixture/local. Home
+campaign, article and CMS contracts remain deferred.
+
+This integration does not grant Home visual PASS; visual review remains
+user-owned.
 
 ### Reference precedence
 
@@ -2226,8 +2264,8 @@ Only `react-router`, `cookie` and `set-cookie-parser` came with it. No
 library or query-state library is installed.
 
 `@supabase/supabase-js` resolves to **2.112.4** and is the only Supabase/client
-data dependency. It has one current production consumer: the smartphone Catalog
-read path.
+data dependency. Its current production consumers are the smartphone Catalog
+read path and the Home popular categories/products read path.
 
 Nothing else is installed. In particular there is no async data-fetching state,
 form, schema, search/autocomplete, phone validation, mocking, or E2E library,
@@ -2349,9 +2387,9 @@ destinations, and the artwork decision.
 
 **Deferred until after Home:**
 
-- Frontend Supabase Integration B / Home read path. The shared typed client now
-  exists, but Home data requirements, curated collections, campaign/banner
-  content, articles and category merchandising remain unimplemented.
+- Home campaign/banner, article and broader merchandising contracts. The shared
+  typed Supabase client exists, and Home popular categories/products are wired,
+  but campaign/offers/articles/cinema and deeper merchandising remain local.
 - Product detail route and `ProductCard` links, until a real Product Detail and
   data contract exists.
 - URL/query state synchronization for Catalog filters, sorting, quick filters

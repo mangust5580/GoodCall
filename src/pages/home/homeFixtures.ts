@@ -25,6 +25,7 @@ export interface HomeCategoryPromo {
 }
 
 export interface HomeCategoryTile {
+  readonly slug: string;
   readonly label: string;
   readonly icon: IconName;
 }
@@ -32,6 +33,7 @@ export interface HomeCategoryTile {
 export interface HomeProduct {
   readonly id: string;
   readonly title: string;
+  readonly imageSrc?: string;
   readonly imageAlt: string;
   readonly price: string;
   readonly oldPrice?: string;
@@ -103,14 +105,14 @@ export const HOME_CATEGORY_PROMOS: readonly HomeCategoryPromo[] = [
 ];
 
 export const HOME_CATEGORY_TILES: readonly HomeCategoryTile[] = [
-  { label: 'Смартфоны', icon: 'smartphone' },
-  { label: 'Ноутбуки', icon: 'laptop' },
-  { label: 'Планшеты', icon: 'tablet' },
-  { label: 'Умные часы', icon: 'watch' },
-  { label: 'Наушники', icon: 'headphones' },
-  { label: 'Аксессуары', icon: 'accessories' },
-  { label: 'Игры и консоли', icon: 'gamepad' },
-  { label: 'Телевизоры', icon: 'tv' },
+  { slug: 'smartphones', label: 'Смартфоны', icon: 'smartphone' },
+  { slug: 'laptops', label: 'Ноутбуки', icon: 'laptop' },
+  { slug: 'tablets', label: 'Планшеты', icon: 'tablet' },
+  { slug: 'smart-watches', label: 'Умные часы', icon: 'watch' },
+  { slug: 'headphones', label: 'Наушники', icon: 'headphones' },
+  { slug: 'accessories', label: 'Аксессуары', icon: 'accessories' },
+  { slug: 'gaming', label: 'Игры и консоли', icon: 'gamepad' },
+  { slug: 'televisions', label: 'Телевизоры', icon: 'tv' },
 ];
 
 export const HOME_PRODUCTS: readonly HomeProduct[] = [

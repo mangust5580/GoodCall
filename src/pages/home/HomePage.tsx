@@ -18,13 +18,15 @@ import {
   HOME_HERO_OFFERS,
   HOME_PRODUCTS,
 } from './homeFixtures';
-import type { HomeArtwork } from './homeFixtures';
+import type { HomeArtwork, HomeCategoryTile, HomeProduct } from './homeFixtures';
 
 export interface HomePageProps {
   readonly smartphonesPath?: string;
+  readonly categories?: readonly HomeCategoryTile[];
+  readonly products?: readonly HomeProduct[];
 }
 
-const SMARTPHONES_LABEL = 'Смартфоны';
+const SMARTPHONES_SLUG = 'smartphones';
 
 const ARTWORK: Readonly<Record<HomeArtwork, string>> = {
   phone: productPhone,
@@ -32,9 +34,13 @@ const ARTWORK: Readonly<Record<HomeArtwork, string>> = {
   earbuds: productEarbuds,
 };
 
-export function HomePage({ smartphonesPath }: HomePageProps) {
-  const categoryLink = (label: string, content: ReactNode, className: string) => {
-    if (label === SMARTPHONES_LABEL && smartphonesPath !== undefined) {
+export function HomePage({
+  smartphonesPath,
+  categories = HOME_CATEGORY_TILES,
+  products = HOME_PRODUCTS,
+}: HomePageProps) {
+  const categoryLink = (slug: string, content: ReactNode, className: string) => {
+    if (slug === SMARTPHONES_SLUG && smartphonesPath !== undefined) {
       return (
         <Link className={`${className} ${className}--available`} to={smartphonesPath}>
           {content}
@@ -139,10 +145,10 @@ export function HomePage({ smartphonesPath }: HomePageProps) {
             </h2>
           </header>
           <ul className="home-tiles">
-            {HOME_CATEGORY_TILES.map((tile) => (
-              <li key={tile.label}>
+            {categories.map((tile) => (
+              <li key={tile.slug}>
                 {categoryLink(
-                  tile.label,
+                  tile.slug,
                   <>
                     <span className="home-tile__glyph">
                       <Icon name={tile.icon} />
@@ -163,7 +169,7 @@ export function HomePage({ smartphonesPath }: HomePageProps) {
             </h2>
           </header>
           <div className="home-products">
-            {HOME_PRODUCTS.map((product) => (
+            {products.map((product) => (
               <ProductCard
                 badge={
                   product.badge === undefined ? undefined : (
@@ -173,7 +179,7 @@ export function HomePage({ smartphonesPath }: HomePageProps) {
                   )
                 }
                 imageAlt={product.imageAlt}
-                imageSrc={ARTWORK[product.image]}
+                imageSrc={product.imageSrc ?? ARTWORK[product.image]}
                 key={product.id}
                 oldPrice={product.oldPrice}
                 price={product.price}

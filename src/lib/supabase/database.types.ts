@@ -121,6 +121,29 @@ export type Database = {
           },
         ];
       };
+      home_popular_products: {
+        Row: {
+          position: number;
+          product_id: string;
+        };
+        Insert: {
+          position: number;
+          product_id: string;
+        };
+        Update: {
+          position?: number;
+          product_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'home_popular_products_product_id_fkey';
+            columns: ['product_id'];
+            isOneToOne: true;
+            referencedRelation: 'products';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
     };
     Views: { [_ in never]: never };
     Functions: { [_ in never]: never };
