@@ -214,14 +214,7 @@ export function HomePage({
 
         <div className="home-category-promos">
           {HOME_CATEGORY_PROMOS.map((promo) => (
-            <section
-              className={
-                promo.id === 'watches'
-                  ? 'home-category-promo home-category-promo--media'
-                  : 'home-category-promo'
-              }
-              key={promo.id}
-            >
+            <section className="home-category-promo" key={promo.id}>
               {promo.id === 'watches' ? (
                 <HomeMarketingPicture
                   alt=""
@@ -229,19 +222,18 @@ export function HomePage({
                   className="home-category-promo__media"
                   sizes={CATEGORY_PROMO_MEDIA_SIZES}
                 />
-              ) : null}
-              <div className="home-category-promo__content">
-                <h2 className="home-category-promo__title">{promo.title}</h2>
-                <p className="home-category-promo__description">{promo.description}</p>
-              </div>
-              {promo.id === 'watches' ? null : (
+              ) : (
                 <Picture
                   alt=""
-                  className="home-category-promo__art"
+                  className="home-category-promo__media"
                   sizes={CATEGORY_PROMO_MEDIA_SIZES}
                   source={ARTWORK[promo.image]}
                 />
               )}
+              <div className="home-category-promo__content">
+                <h2 className="home-category-promo__title">{promo.title}</h2>
+                <p className="home-category-promo__description">{promo.description}</p>
+              </div>
             </section>
           ))}
         </div>

@@ -3,6 +3,27 @@
 $home-offers-width: 280px;
 $home-sale-badge-surface: #dc2626;
 
+@mixin banner-media($width, $position: right center, $fade: 26%) {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-end: 0;
+  z-index: 0;
+  width: $width;
+  height: 100%;
+  object-fit: cover;
+  object-position: $position;
+  mask-image: linear-gradient(90deg, transparent 0%, #000 $fade, #000 100%);
+}
+
+@mixin banner-media-stacked($height, $fade: 24%) {
+  inset-block-start: auto;
+  inset-inline: 0;
+  width: 100%;
+  height: $height;
+  object-position: center bottom;
+  mask-image: linear-gradient(180deg, transparent 0%, #000 $fade, #000 100%);
+}
+
 .home-page {
   padding-block: h.fluid(24, 16) h.fluid(56, 36);
   background-color: var(--role-surface-page);
@@ -52,9 +73,7 @@ $home-sale-badge-surface: #dc2626;
 .home-banner {
   position: relative;
   display: flex;
-  gap: 24px;
   align-items: center;
-  justify-content: space-between;
   min-height: 474px;
   padding: h.fluid(48, 28);
   overflow: hidden;
@@ -66,19 +85,6 @@ $home-sale-badge-surface: #dc2626;
     display: contents;
   }
 
-  &::before {
-    position: absolute;
-    inset: 0;
-    z-index: 1;
-    content: '';
-    background: linear-gradient(
-      90deg,
-      rgb(16 16 24 / 94%) 0%,
-      rgb(16 16 24 / 78%) 43%,
-      rgb(16 16 24 / 16%) 100%
-    );
-  }
-
   @include h.media-max(900px) {
     min-height: 320px;
   }
@@ -87,23 +93,18 @@ $home-sale-badge-surface: #dc2626;
     min-height: 260px;
     padding-block-end: 150px;
     align-items: flex-start;
-
-    &::before {
-      background: linear-gradient(
-        180deg,
-        rgb(16 16 24 / 98%) 0%,
-        rgb(16 16 24 / 92%) 48%,
-        rgb(16 16 24 / 28%) 100%
-      );
-    }
   }
 
   &__content {
     position: relative;
     z-index: 2;
-    flex: 1 1 auto;
+    width: 100%;
     min-width: 0;
-    max-width: 560px;
+    max-width: min(480px, 50%);
+
+    @include h.media-max(560px) {
+      max-width: none;
+    }
   }
 
   &__title {
@@ -126,18 +127,10 @@ $home-sale-badge-surface: #dc2626;
   }
 
   &__media {
-    position: absolute;
-    inset: 0;
-    z-index: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: center;
+    @include banner-media(54%);
 
     @include h.media-max(560px) {
-      inset-block-start: auto;
-      height: 190px;
-      object-position: right bottom;
+      @include banner-media-stacked(190px);
     }
   }
 }
@@ -253,7 +246,7 @@ $home-sale-badge-surface: #dc2626;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 20px;
 
-  @include h.media-max(760px) {
+  @include h.media-max(900px) {
     grid-template-columns: minmax(0, 1fr);
   }
 }
@@ -261,9 +254,7 @@ $home-sale-badge-surface: #dc2626;
 .home-promo {
   position: relative;
   display: flex;
-  gap: 20px;
   align-items: center;
-  justify-content: space-between;
   min-height: 300px;
   padding: h.fluid(40, 24);
   overflow: hidden;
@@ -272,13 +263,6 @@ $home-sale-badge-surface: #dc2626;
 
   > picture {
     display: contents;
-  }
-
-  &::before {
-    position: absolute;
-    inset: 0;
-    z-index: 1;
-    content: '';
   }
 
   @include h.media-max(760px) {
@@ -292,54 +276,22 @@ $home-sale-badge-surface: #dc2626;
 
   &--light {
     background-color: var(--role-surface-hero);
-
-    &::before {
-      background: linear-gradient(
-        90deg,
-        rgb(247 244 255 / 96%) 0%,
-        rgb(247 244 255 / 88%) 52%,
-        rgb(247 244 255 / 10%) 100%
-      );
-
-      @include h.media-max(560px) {
-        background: linear-gradient(
-          180deg,
-          rgb(247 244 255 / 98%) 0%,
-          rgb(247 244 255 / 94%) 54%,
-          rgb(247 244 255 / 24%) 100%
-        );
-      }
-    }
   }
 
   &--dark {
     background-color: var(--color-base-rich-text);
-
-    &::before {
-      background: linear-gradient(
-        90deg,
-        rgb(16 16 24 / 94%) 0%,
-        rgb(16 16 24 / 78%) 52%,
-        rgb(16 16 24 / 12%) 100%
-      );
-
-      @include h.media-max(560px) {
-        background: linear-gradient(
-          180deg,
-          rgb(16 16 24 / 98%) 0%,
-          rgb(16 16 24 / 92%) 54%,
-          rgb(16 16 24 / 22%) 100%
-        );
-      }
-    }
   }
 
   &__content {
     position: relative;
     z-index: 2;
-    flex: 1 1 auto;
+    width: 100%;
     min-width: 0;
-    max-width: 340px;
+    max-width: min(290px, 54%);
+
+    @include h.media-max(560px) {
+      max-width: none;
+    }
   }
 
   &__title {
@@ -377,18 +329,10 @@ $home-sale-badge-surface: #dc2626;
   }
 
   &__media {
-    position: absolute;
-    inset: 0;
-    z-index: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: center;
+    @include banner-media(46%);
 
     @include h.media-max(560px) {
-      inset-block-start: auto;
-      height: 150px;
-      object-position: right bottom;
+      @include banner-media-stacked(150px);
     }
   }
 }
@@ -402,7 +346,7 @@ $home-sale-badge-surface: #dc2626;
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  @include h.media-max(680px) {
+  @include h.media-max(780px) {
     grid-template-columns: minmax(0, 1fr);
   }
 }
@@ -410,9 +354,7 @@ $home-sale-badge-surface: #dc2626;
 .home-category-promo {
   position: relative;
   display: flex;
-  gap: 16px;
   align-items: center;
-  justify-content: space-between;
   min-height: 195px;
   padding: h.fluid(28, 20);
   overflow: hidden;
@@ -420,24 +362,12 @@ $home-sale-badge-surface: #dc2626;
   border-radius: 18px;
   isolation: isolate;
 
-  &--media::before {
-    position: absolute;
-    inset: 0;
-    z-index: 1;
-    content: '';
-    background: linear-gradient(
-      90deg,
-      rgb(246 244 251 / 96%) 0%,
-      rgb(246 244 251 / 84%) 58%,
-      rgb(246 244 251 / 10%) 100%
-    );
-  }
-
   &__content {
     position: relative;
     z-index: 2;
-    flex: 1 1 auto;
+    width: 100%;
     min-width: 0;
+    max-width: 46%;
   }
 
   &__title {
@@ -455,35 +385,12 @@ $home-sale-badge-surface: #dc2626;
     color: var(--role-text-muted);
   }
 
-  &__art {
-    flex: 0 1 auto;
-    min-width: 0;
-    max-width: 36%;
-    width: h.fluid(120, 88);
-    height: auto;
-    object-fit: contain;
-
-    @include h.media-max(560px) {
-      position: absolute;
-      inset-block-end: -10px;
-      inset-inline-end: -10px;
-      max-width: 40%;
-      opacity: 0.5;
-    }
-  }
-
   picture {
     display: contents;
   }
 
   &__media {
-    position: absolute;
-    inset: 0;
-    z-index: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: center;
+    @include banner-media(48%, right center);
   }
 }
 
@@ -626,19 +533,6 @@ $home-sale-badge-surface: #dc2626;
     display: contents;
   }
 
-  &::before {
-    position: absolute;
-    inset: 0;
-    z-index: 1;
-    content: '';
-    background: linear-gradient(
-      90deg,
-      rgb(31 14 72 / 96%) 0%,
-      rgb(31 14 72 / 86%) 46%,
-      rgb(31 14 72 / 20%) 100%
-    );
-  }
-
   @include h.media-max(680px) {
     min-height: 220px;
   }
@@ -646,15 +540,6 @@ $home-sale-badge-surface: #dc2626;
   @include h.media-max(560px) {
     padding-block-end: 152px;
     align-items: flex-start;
-
-    &::before {
-      background: linear-gradient(
-        180deg,
-        rgb(31 14 72 / 98%) 0%,
-        rgb(31 14 72 / 92%) 56%,
-        rgb(31 14 72 / 24%) 100%
-      );
-    }
   }
 
   &__content {
@@ -665,18 +550,10 @@ $home-sale-badge-surface: #dc2626;
   }
 
   &__media {
-    position: absolute;
-    inset: 0;
-    z-index: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: center;
+    @include banner-media(62%);
 
     @include h.media-max(560px) {
-      inset-block-start: auto;
-      height: 170px;
-      object-position: right bottom;
+      @include banner-media-stacked(170px);
     }
   }
 

@@ -166,8 +166,19 @@ repository, service, store or query layer.
 horizontal document overflow and no clipped text. The hero is banner plus offer
 column down to 900px; below that the banner spans full width with the three
 offers in a row, and below 760px the offers stack. Benefits go 4/2/1, the promo
-pair and article grid collapse to one column, and below 560px the promo artwork
-becomes a decorative backdrop so headings always keep full width.
+pair collapses to one column below 900px, the category promo trio goes 3/2/1
+with its single column below 780px, and the article grid collapses to one
+column. Below 560px the hero, promo and cinema artwork moves to a bottom media
+band so headings always keep full width.
+
+**Promotional banners share one composition.** The hero, both promo banners, the
+three category promo cards and the cinema band all use the same text-left /
+visual-right pattern, owned by the `banner-media` and `banner-media-stacked`
+mixins in `home.scss`. Artwork is anchored to the card's right edge, bounded to
+a share of its width, and faded leftward with a `mask-image` gradient, so the
+text side carries no artwork behind it and needs no scrim overlay. The three
+category promo cards share a single `home-category-promo__media` slot; there is
+no separate contained `__art` image.
 
 ### Catalog A — Page Foundation & Layout
 
