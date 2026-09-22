@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 
 import {
+  HOME_ARTICLE_MEDIA,
   HOME_DEVICE_MEDIA,
   HOME_MARKETING_MEDIA,
 } from '../../assets/media/home/homeMarketingMedia';
@@ -35,6 +36,8 @@ const ARTWORK: Readonly<Record<HomeArtwork, PictureSource>> = {
   earbuds: HOME_DEVICE_MEDIA.earbuds,
   watch: HOME_DEVICE_MEDIA.watch,
   headphones: HOME_DEVICE_MEDIA.headphones,
+  laptop: HOME_DEVICE_MEDIA.laptop,
+  tablet: HOME_DEVICE_MEDIA.tablet,
 };
 
 const HERO_MEDIA_SIZES = '(max-width: 560px) 100vw, (max-width: 900px) calc(100vw - 32px), 1076px';
@@ -44,6 +47,14 @@ const CATEGORY_PROMO_MEDIA_SIZES =
 const CINEMA_MEDIA_SIZES = '(max-width: 1440px) calc(100vw - 32px), 1376px';
 const OFFER_MEDIA_SIZES = '(max-width: 760px) 72px, 56px';
 const PRODUCT_MEDIA_SIZES = '(max-width: 520px) 240px, 220px';
+const ARTICLE_MEDIA_SIZES =
+  '(max-width: 620px) calc(100vw - 32px), (max-width: 900px) calc((100vw - 52px) / 2), 432px';
+
+const ARTICLE_MEDIA: Readonly<Record<string, PictureSource>> = {
+  'iphone-15-review': HOME_ARTICLE_MEDIA.smartphoneReview,
+  'galaxy-s24-first-look': HOME_ARTICLE_MEDIA.flagshipPreview,
+  'how-to-pick-a-watch': HOME_ARTICLE_MEDIA.watchGuide,
+};
 
 interface HomeMarketingPictureProps {
   readonly asset: HomeMarketingAsset;
@@ -318,7 +329,12 @@ export function HomePage({
             {HOME_ARTICLES.map((article) => (
               <li key={article.id}>
                 <article className="home-article">
-                  <span className="home-article__media" />
+                  <Picture
+                    alt=""
+                    className="home-article__media"
+                    sizes={ARTICLE_MEDIA_SIZES}
+                    source={ARTICLE_MEDIA[article.id]}
+                  />
                   <div className="home-article__body">
                     <h3 className="home-article__title">{article.title}</h3>
                     <p className="home-article__excerpt">{article.excerpt}</p>

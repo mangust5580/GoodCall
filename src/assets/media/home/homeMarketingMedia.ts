@@ -2,9 +2,14 @@ import type { PictureSource } from '../../../components/media';
 
 import entertainmentDesktop from './derived/home-entertainment-streaming-desktop.png?w=720;1080;1440;1800&picture';
 import entertainmentMobile from './derived/home-entertainment-streaming-mobile.png?w=320;480;640;720&picture';
+import articleFlagshipPreview from './derived/home-article-flagship-preview-cover.png?w=320;480;640;900;1200&picture';
+import articleSmartphoneReview from './derived/home-article-smartphone-review-cover.png?w=320;480;640;900;1200&picture';
+import articleWatchGuide from './derived/home-article-watch-guide-cover.png?w=320;480;640;900;1200&picture';
 import deviceEarbuds from './derived/home-device-earbuds-card.png?w=160;240;320;480;640&picture';
 import deviceHeadphones from './derived/home-device-headphones-card.png?w=160;240;320;480;640&picture';
+import deviceLaptop from './derived/home-device-laptop-card.png?w=160;240;320;480;640&picture';
 import deviceSmartphone from './derived/home-device-smartphone-card.png?w=160;240;320;480;640&picture';
+import deviceTablet from './derived/home-device-tablet-card.png?w=160;240;320;480;640&picture';
 import deviceWatch from './derived/home-device-watch-card.png?w=160;240;320;480;640&picture';
 import heroDesktop from './derived/home-hero-main-promo-desktop.png?w=640;960;1280;1600&picture';
 import heroMobile from './derived/home-hero-main-promo-mobile.png?w=320;480;640;720&picture';
@@ -48,4 +53,12 @@ export const HOME_DEVICE_MEDIA = {
   earbuds: deviceEarbuds,
   watch: deviceWatch,
   headphones: deviceHeadphones,
+  laptop: deviceLaptop,
+  tablet: deviceTablet,
+} satisfies Record<string, PictureSource>;
+
+export const HOME_ARTICLE_MEDIA = {
+  smartphoneReview: articleSmartphoneReview,
+  flagshipPreview: articleFlagshipPreview,
+  watchGuide: articleWatchGuide,
 } satisfies Record<string, PictureSource>;

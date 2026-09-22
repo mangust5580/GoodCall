@@ -142,9 +142,16 @@ repository, service, store or query layer.
   `src/assets/media/home/homeMarketingMedia.ts` is the Home import manifest.
   Runtime rendering still uses the accepted `vite-imagetools` `?picture`
   pipeline for responsive AVIF/WebP source sets. These images are decorative
-  (`alt=""`) because the text content is real HTML. Product cards keep the
-  accepted synthetic product art; article thumbnails still use the soft brand
-  surface until article media has a real source.
+  (`alt=""`) because the text content is real HTML.
+
+  Two shared master sheets back the smaller Home slots and are cropped by the
+  generator rather than stored as one master per slot:
+  `home-device-library.png` supplies the six `HomeArtwork` device renders
+  (`smartphone`, `earbuds`, `watch`, `headphones`, `laptop`, `tablet`) consumed
+  by the hero offer list, the category promos and the Home product cards, and
+  `home-article-editorial.png` supplies the three `Последние статьи` cover
+  images. Article covers are wired through `HOME_ARTICLE_MEDIA`, so the soft
+  brand-surface placeholder is gone.
   **Category navigation is normalized system-first.** The accepted `SiteHeader`
   horizontal category row is the single top-level category navigation. The
   `Home.png` hero's vertical category rail is intentionally omitted, because it
@@ -2386,9 +2393,10 @@ Questions that still ride with the review, all recorded in the Home A section:
 
 - Section affordances and CTAs are omitted rather than faked, because their
   destinations do not exist.
-- Home campaign and entertainment artwork now uses original local raster assets,
-  but product cards still use the accepted synthetic product art and article
-  thumbnails still use soft brand surfaces until article media has a real source.
+- Home campaign, entertainment, device and article artwork all now use original
+  local raster assets. Catalog product photography is the remaining media gap and
+  stays on the accepted synthetic product art, blocked on licensing rather than
+  on the pipeline.
 - The page is taller than the raster, mostly because the accepted
   `NewsletterBand` and `SiteFooter` are larger than the raster's variants.
 

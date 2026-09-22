@@ -1,6 +1,6 @@
 import type { IconName } from '../../components/ui';
 
-export type HomeArtwork = 'smartphone' | 'earbuds' | 'watch' | 'headphones';
+export type HomeArtwork = 'smartphone' | 'earbuds' | 'watch' | 'headphones' | 'laptop' | 'tablet';
 
 export interface HomeHeroOffer {
   readonly id: string;

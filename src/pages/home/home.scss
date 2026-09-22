@@ -742,11 +742,16 @@ $home-sale-badge-surface: #dc2626;
   border: 1px solid var(--role-border-soft);
   border-radius: 16px;
 
+  > picture {
+    display: contents;
+  }
+
   &__media {
     display: block;
+    width: 100%;
     aspect-ratio: 4 / 1;
-    background-color: var(--role-surface-brand-soft);
-    background-image: var(--gradient-soft-card-glow);
+    object-fit: cover;
+    object-position: center;
   }
 
   &__body {

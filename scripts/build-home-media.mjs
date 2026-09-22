@@ -58,6 +58,8 @@ const assets = [
   },
   {
     id: 'home-device-smartphone',
+    source: 'home-device-library',
+    extract: { left: 6, top: 6, width: 406, height: 406 },
     variants: [
       {
         id: 'card',
@@ -70,6 +72,8 @@ const assets = [
   },
   {
     id: 'home-device-earbuds',
+    source: 'home-device-library',
+    extract: { left: 424, top: 6, width: 406, height: 406 },
     variants: [
       {
         id: 'card',
@@ -82,6 +86,8 @@ const assets = [
   },
   {
     id: 'home-device-watch',
+    source: 'home-device-library',
+    extract: { left: 842, top: 6, width: 406, height: 406 },
     variants: [
       {
         id: 'card',
@@ -94,6 +100,8 @@ const assets = [
   },
   {
     id: 'home-device-headphones',
+    source: 'home-device-library',
+    extract: { left: 6, top: 424, width: 406, height: 406 },
     variants: [
       {
         id: 'card',
@@ -104,14 +112,86 @@ const assets = [
       },
     ],
   },
+  {
+    id: 'home-device-laptop',
+    source: 'home-device-library',
+    extract: { left: 424, top: 424, width: 406, height: 406 },
+    variants: [
+      {
+        id: 'card',
+        width: 900,
+        height: 900,
+        position: 'center',
+        widths: [160, 240, 320, 480, 640],
+      },
+    ],
+  },
+  {
+    id: 'home-device-tablet',
+    source: 'home-device-library',
+    extract: { left: 842, top: 424, width: 406, height: 406 },
+    variants: [
+      {
+        id: 'card',
+        width: 900,
+        height: 900,
+        position: 'center',
+        widths: [160, 240, 320, 480, 640],
+      },
+    ],
+  },
+  {
+    id: 'home-article-smartphone-review',
+    source: 'home-article-editorial',
+    extract: { left: 0, top: 0, width: 724, height: 724 },
+    variants: [
+      {
+        id: 'cover',
+        width: 1200,
+        height: 300,
+        position: 'center',
+        widths: [320, 480, 640, 900, 1200],
+      },
+    ],
+  },
+  {
+    id: 'home-article-flagship-preview',
+    source: 'home-article-editorial',
+    extract: { left: 724, top: 0, width: 724, height: 724 },
+    variants: [
+      {
+        id: 'cover',
+        width: 1200,
+        height: 300,
+        position: 'center',
+        widths: [320, 480, 640, 900, 1200],
+      },
+    ],
+  },
+  {
+    id: 'home-article-watch-guide',
+    source: 'home-article-editorial',
+    extract: { left: 1448, top: 0, width: 724, height: 724 },
+    variants: [
+      {
+        id: 'cover',
+        width: 1200,
+        height: 300,
+        position: 'center',
+        widths: [320, 480, 640, 900, 1200],
+      },
+    ],
+  },
 ];
 
 const encodeVariant = async (asset, variant) => {
-  const sourcePath = path.join(mastersDir, `${asset.id}.png`);
+  const sourcePath = path.join(mastersDir, `${asset.source ?? asset.id}.png`);
   const outputBase = `${asset.id}-${variant.id}`;
   const outputPng = path.join(derivedDir, `${outputBase}.png`);
+  const source = sharp(sourcePath);
+  const base = asset.extract === undefined ? source : source.extract(asset.extract);
 
-  await sharp(sourcePath)
+  await base
     .resize({
       width: variant.width,
       height: variant.height,
