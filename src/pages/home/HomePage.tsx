@@ -1,11 +1,13 @@
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 
-import brandTech from '../../assets/marketing/brand-tech.svg';
-import promoSaleBags from '../../assets/marketing/promo-sale-bags.svg';
-import productEarbuds from '../../assets/products/product-earbuds.svg';
-import productLaptop from '../../assets/products/product-laptop.svg';
-import productPhone from '../../assets/products/product-phone.svg';
+import {
+  HOME_DEVICE_MEDIA,
+  HOME_MARKETING_MEDIA,
+} from '../../assets/media/home/homeMarketingMedia';
+import type { HomeMarketingAsset } from '../../assets/media/home/homeMarketingMedia';
+import { Picture } from '../../components/media';
+import type { PictureSource } from '../../components/media';
 import { Container } from '../../components/layout';
 import { ProductCard } from '../../components/product';
 import { Icon } from '../../components/ui';
@@ -28,11 +30,66 @@ export interface HomePageProps {
 
 const SMARTPHONES_SLUG = 'smartphones';
 
-const ARTWORK: Readonly<Record<HomeArtwork, string>> = {
-  phone: productPhone,
-  laptop: productLaptop,
-  earbuds: productEarbuds,
+const ARTWORK: Readonly<Record<HomeArtwork, PictureSource>> = {
+  smartphone: HOME_DEVICE_MEDIA.smartphone,
+  earbuds: HOME_DEVICE_MEDIA.earbuds,
+  watch: HOME_DEVICE_MEDIA.watch,
+  headphones: HOME_DEVICE_MEDIA.headphones,
 };
+
+const HERO_MEDIA_SIZES = '(max-width: 560px) 100vw, (max-width: 900px) calc(100vw - 32px), 1076px';
+const PROMO_MEDIA_SIZES = '(max-width: 760px) calc(100vw - 32px), 678px';
+const CATEGORY_PROMO_MEDIA_SIZES =
+  '(max-width: 680px) calc(100vw - 32px), (max-width: 1024px) calc((100vw - 64px) / 2), 432px';
+const CINEMA_MEDIA_SIZES = '(max-width: 1440px) calc(100vw - 32px), 1376px';
+const OFFER_MEDIA_SIZES = '(max-width: 760px) 72px, 56px';
+const PRODUCT_MEDIA_SIZES = '(max-width: 520px) 240px, 220px';
+
+interface HomeMarketingPictureProps {
+  readonly asset: HomeMarketingAsset;
+  readonly alt: string;
+  readonly className: string;
+  readonly sizes: string;
+  readonly loading?: 'eager' | 'lazy';
+  readonly fetchPriority?: 'high' | 'low' | 'auto';
+}
+
+function HomeMarketingPicture({
+  asset,
+  alt,
+  className,
+  sizes,
+  loading = 'lazy',
+  fetchPriority,
+}: HomeMarketingPictureProps) {
+  return (
+    <picture>
+      {Object.entries(asset.mobile.sources).map(([format, srcSet]) => (
+        <source
+          key={`mobile-${format}`}
+          media="(max-width: 560px)"
+          sizes={sizes}
+          srcSet={srcSet}
+          type={`image/${format}`}
+        />
+      ))}
+      {Object.entries(asset.desktop.sources).map(([format, srcSet]) => (
+        <source key={`desktop-${format}`} sizes={sizes} srcSet={srcSet} type={`image/${format}`} />
+      ))}
+      <img
+        alt={alt}
+        className={className}
+        decoding="async"
+        fetchPriority={fetchPriority}
+        height={asset.desktop.img.h}
+        loading={loading}
+        sizes={sizes}
+        src={asset.desktop.img.src}
+        width={asset.desktop.img.w}
+      />
+    </picture>
+  );
+}
 
 export function HomePage({
   smartphonesPath,
@@ -56,23 +113,31 @@ export function HomePage({
       <Container className="home-page__inner">
         <section className="home-hero">
           <div className="home-banner">
+            <HomeMarketingPicture
+              alt=""
+              asset={HOME_MARKETING_MEDIA.heroMainPromo}
+              className="home-banner__media"
+              fetchPriority="high"
+              loading="eager"
+              sizes={HERO_MEDIA_SIZES}
+            />
             <div className="home-banner__content">
               <h1 className="home-banner__title">
                 Большие скидки <span className="home-banner__accent">до 50%</span>
               </h1>
               <p className="home-banner__lead">На смартфоны и аксессуары</p>
             </div>
-            <img alt="" className="home-banner__art" src={productPhone} />
           </div>
 
           <ul className="home-hero__offers">
             {HOME_HERO_OFFERS.map((offer) => (
               <li key={offer.id}>
                 <article aria-label={offer.title} className="home-offer">
-                  <img
+                  <Picture
                     alt={offer.imageAlt}
                     className="home-offer__art"
-                    src={ARTWORK[offer.image]}
+                    sizes={OFFER_MEDIA_SIZES}
+                    source={ARTWORK[offer.image]}
                   />
                   <div className="home-offer__body">
                     <p className="home-offer__title">{offer.title}</p>
@@ -103,6 +168,12 @@ export function HomePage({
 
         <div className="home-promos">
           <section className="home-promo home-promo--light">
+            <HomeMarketingPicture
+              alt=""
+              asset={HOME_MARKETING_MEDIA.newArrivals}
+              className="home-promo__media"
+              sizes={PROMO_MEDIA_SIZES}
+            />
             <div className="home-promo__content">
               <h2 className="home-promo__title">
                 Новинки
@@ -112,28 +183,54 @@ export function HomePage({
                 Откройте для себя последние модели смартфонов и гаджетов
               </p>
             </div>
-            <img alt="" className="home-promo__art" src={brandTech} />
           </section>
 
           <section className="home-promo home-promo--dark">
+            <HomeMarketingPicture
+              alt=""
+              asset={HOME_MARKETING_MEDIA.blackFriday}
+              className="home-promo__media"
+              sizes={PROMO_MEDIA_SIZES}
+            />
             <div className="home-promo__content">
               <h2 className="home-promo__title">Чёрная пятница</h2>
               <p className="home-promo__description">
                 Самые выгодные предложения только один раз в году
               </p>
             </div>
-            <img alt="" className="home-promo__art" src={promoSaleBags} />
           </section>
         </div>
 
         <div className="home-category-promos">
           {HOME_CATEGORY_PROMOS.map((promo) => (
-            <section className="home-category-promo" key={promo.id}>
+            <section
+              className={
+                promo.id === 'watches'
+                  ? 'home-category-promo home-category-promo--media'
+                  : 'home-category-promo'
+              }
+              key={promo.id}
+            >
+              {promo.id === 'watches' ? (
+                <HomeMarketingPicture
+                  alt=""
+                  asset={HOME_MARKETING_MEDIA.wearableTech}
+                  className="home-category-promo__media"
+                  sizes={CATEGORY_PROMO_MEDIA_SIZES}
+                />
+              ) : null}
               <div className="home-category-promo__content">
                 <h2 className="home-category-promo__title">{promo.title}</h2>
                 <p className="home-category-promo__description">{promo.description}</p>
               </div>
-              <img alt="" className="home-category-promo__art" src={ARTWORK[promo.image]} />
+              {promo.id === 'watches' ? null : (
+                <Picture
+                  alt=""
+                  className="home-category-promo__art"
+                  sizes={CATEGORY_PROMO_MEDIA_SIZES}
+                  source={ARTWORK[promo.image]}
+                />
+              )}
             </section>
           ))}
         </div>
@@ -178,8 +275,10 @@ export function HomePage({
                     </span>
                   )
                 }
+                image={product.imageSrc === undefined ? ARTWORK[product.image] : undefined}
                 imageAlt={product.imageAlt}
-                imageSrc={product.imageSrc ?? ARTWORK[product.image]}
+                imageSizes={PRODUCT_MEDIA_SIZES}
+                imageSrc={product.imageSrc}
                 key={product.id}
                 oldPrice={product.oldPrice}
                 price={product.price}
@@ -190,6 +289,12 @@ export function HomePage({
         </section>
 
         <section className="home-cinema">
+          <HomeMarketingPicture
+            alt=""
+            asset={HOME_MARKETING_MEDIA.entertainmentStreaming}
+            className="home-cinema__media"
+            sizes={CINEMA_MEDIA_SIZES}
+          />
           <div className="home-cinema__content">
             <h2 className="home-cinema__title">Ваши любимые фильмы и сериалы всегда с вами</h2>
             <ul className="home-cinema__points">

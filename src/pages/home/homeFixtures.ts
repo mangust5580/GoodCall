@@ -1,6 +1,6 @@
 import type { IconName } from '../../components/ui';
 
-export type HomeArtwork = 'phone' | 'laptop' | 'earbuds';
+export type HomeArtwork = 'smartphone' | 'earbuds' | 'watch' | 'headphones';
 
 export interface HomeHeroOffer {
   readonly id: string;
@@ -56,7 +56,7 @@ export const HOME_HERO_OFFERS: readonly HomeHeroOffer[] = [
     spec: '128 ГБ, розовый',
     price: '64 990 ₽',
     imageAlt: 'Смартфон iPhone 15',
-    image: 'phone',
+    image: 'smartphone',
   },
   {
     id: 'galaxy-s24',
@@ -64,7 +64,7 @@ export const HOME_HERO_OFFERS: readonly HomeHeroOffer[] = [
     spec: '256 ГБ, фиолетовый',
     price: '69 990 ₽',
     imageAlt: 'Смартфон Samsung Galaxy S24',
-    image: 'phone',
+    image: 'smartphone',
   },
   {
     id: 'apple-watch-se',
@@ -72,7 +72,7 @@ export const HOME_HERO_OFFERS: readonly HomeHeroOffer[] = [
     spec: 'GPS, 40 мм',
     price: '19 990 ₽',
     imageAlt: 'Смарт-часы Apple Watch SE',
-    image: 'earbuds',
+    image: 'watch',
   },
 ];
 
@@ -94,13 +94,13 @@ export const HOME_CATEGORY_PROMOS: readonly HomeCategoryPromo[] = [
     id: 'watches',
     title: 'Умные часы нового поколения',
     description: 'Следите за здоровьем, спортом и делами',
-    image: 'phone',
+    image: 'watch',
   },
   {
     id: 'audio',
     title: 'Наушники и аудиотехника',
     description: 'Премиальный звук для каждого',
-    image: 'earbuds',
+    image: 'headphones',
   },
 ];
 
@@ -124,7 +124,7 @@ export const HOME_PRODUCTS: readonly HomeProduct[] = [
     oldPrice: '73 990 ₽',
     badge: '-12%',
     badgeTone: 'sale',
-    image: 'phone',
+    image: 'smartphone',
   },
   {
     id: 'galaxy-s24-256',
@@ -133,7 +133,7 @@ export const HOME_PRODUCTS: readonly HomeProduct[] = [
     price: '69 990 ₽',
     badge: 'Новинка',
     badgeTone: 'new',
-    image: 'phone',
+    image: 'smartphone',
   },
   {
     id: 'redmi-note-13-pro',
@@ -143,7 +143,7 @@ export const HOME_PRODUCTS: readonly HomeProduct[] = [
     oldPrice: '26 990 ₽',
     badge: '-10%',
     badgeTone: 'sale',
-    image: 'phone',
+    image: 'smartphone',
   },
   {
     id: 'airpods-pro-2',
@@ -160,7 +160,7 @@ export const HOME_PRODUCTS: readonly HomeProduct[] = [
     oldPrice: '52 990 ₽',
     badge: '-15%',
     badgeTone: 'sale',
-    image: 'earbuds',
+    image: 'watch',
   },
 ];
 

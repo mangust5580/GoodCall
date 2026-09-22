@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react';
 
+import { Picture } from '../media';
+import type { PictureSource } from '../media';
 import { QuantityStepper } from '../ui';
 
 import { AddToCartButton, FavoriteButton } from './ProductActions';
@@ -11,8 +13,10 @@ const CART_ACTION_TEXT = 'В корзину';
 
 interface ProductCardProps {
   readonly title: string;
-  readonly imageSrc: string;
+  readonly imageSrc?: string;
+  readonly image?: PictureSource;
   readonly imageAlt: string;
+  readonly imageSizes?: string;
   readonly price: string;
   readonly layout?: ProductCardLayout;
   readonly oldPrice?: string;
@@ -31,7 +35,9 @@ interface ProductCardProps {
 export function ProductCard({
   title,
   imageSrc,
+  image,
   imageAlt,
+  imageSizes = '240px',
   price,
   layout = 'vertical',
   oldPrice,
@@ -67,12 +73,18 @@ export function ProductCard({
       </AddToCartButton>
     );
   const hasActions = availability !== undefined || stepper !== null || cartButton !== null;
+  const productImage =
+    image === undefined ? (
+      <img alt={imageAlt} className="product-card__image" src={imageSrc} />
+    ) : (
+      <Picture alt={imageAlt} className="product-card__image" sizes={imageSizes} source={image} />
+    );
 
   return (
     <article className={`product-card product-card--${layout}`}>
       <div className="product-card__media">
         {badge === undefined ? null : <div className="product-card__badge">{badge}</div>}
-        <img alt={imageAlt} className="product-card__image" src={imageSrc} />
+        {productImage}
         {onFavoriteToggle === undefined ? null : (
           <FavoriteButton
             className="product-card__favorite"

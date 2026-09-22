@@ -39,7 +39,7 @@ const productPresentationBySlug = new Map<string, HomeProductPresentation>([
     {
       badge: '-12%',
       badgeTone: 'sale',
-      image: 'phone',
+      image: 'smartphone',
       imageAlt: 'Смартфон Apple iPhone 15',
     },
   ],
@@ -48,7 +48,7 @@ const productPresentationBySlug = new Map<string, HomeProductPresentation>([
     {
       badge: 'Новинка',
       badgeTone: 'new',
-      image: 'phone',
+      image: 'smartphone',
       imageAlt: 'Смартфон Samsung Galaxy S24',
     },
   ],
@@ -57,7 +57,7 @@ const productPresentationBySlug = new Map<string, HomeProductPresentation>([
     {
       badge: '-10%',
       badgeTone: 'sale',
-      image: 'phone',
+      image: 'smartphone',
       imageAlt: 'Смартфон Xiaomi Redmi Note 13 Pro',
     },
   ],
@@ -73,7 +73,7 @@ const productPresentationBySlug = new Map<string, HomeProductPresentation>([
     {
       badge: '-15%',
       badgeTone: 'sale',
-      image: 'earbuds',
+      image: 'watch',
       imageAlt: 'Смарт-часы Apple Watch Series 9',
     },
   ],

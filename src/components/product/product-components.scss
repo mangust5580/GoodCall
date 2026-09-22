@@ -168,6 +168,10 @@
     object-fit: contain;
   }
 
+  &__media picture {
+    display: contents;
+  }
+
   &__badge {
     position: absolute;
     top: 0;

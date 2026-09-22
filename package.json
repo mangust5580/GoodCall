@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "media": "npm run media:home",
+    "media:home": "node scripts/build-home-media.mjs",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "typecheck": "tsc -b",
@@ -41,6 +43,7 @@
     "postcss-pxtorem": "^6.1.0",
     "prettier": "^3.9.6",
     "sass-embedded": "^1.102.0",
+    "sharp": "^0.35.4",
     "stylelint": "^17.14.1",
     "stylelint-config-standard-scss": "^17.0.0",
     "typescript": "~6.0.2",

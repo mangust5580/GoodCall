@@ -134,13 +134,17 @@ repository, service, store or query layer.
   the same reason. They return as real links when their routes exist.
 - The hero carousel dots are omitted: a slider is deep section work and dots
   without one would be a fake control.
-- Artwork. The repository has three synthetic product SVGs plus
-  `brand-tech.svg` and `promo-sale-bags.svg`; the raster's product photography,
-  the movie-poster wall and the article photos do not exist as assets. Home
-  promo art is therefore decorative (`alt=""`), the article thumbnails use a
-  soft brand surface, and the cinema band uses a brand gradient. Product cards
-  follow the accepted Catalog precedent: descriptive `alt` on the shared
-  synthetic art.
+- Artwork. Home now has five original local marketing raster assets for the hero
+  discount banner, `Новинки от GOODCALL`, `Чёрная пятница`, the wearable-tech
+  promo, and the entertainment/streaming banner. Their master PNGs live under
+  `src/assets/media/home/masters/`, generated desktop/mobile crops and AVIF/WebP
+  derivatives live under `src/assets/media/home/derived/`, and
+  `src/assets/media/home/homeMarketingMedia.ts` is the Home import manifest.
+  Runtime rendering still uses the accepted `vite-imagetools` `?picture`
+  pipeline for responsive AVIF/WebP source sets. These images are decorative
+  (`alt=""`) because the text content is real HTML. Product cards keep the
+  accepted synthetic product art; article thumbnails still use the soft brand
+  surface until article media has a real source.
   **Category navigation is normalized system-first.** The accepted `SiteHeader`
   horizontal category row is the single top-level category navigation. The
   `Home.png` hero's vertical category rail is intentionally omitted, because it
@@ -2246,7 +2250,8 @@ Dev: `vite`, `@vitejs/plugin-react`, `typescript`, `@types/react`,
 `@types/react-dom`, `@types/node`, `sass-embedded`, `postcss`, `autoprefixer`,
 `postcss-pxtorem`, `eslint`, `@eslint/js`, `typescript-eslint`, `globals`,
 `eslint-plugin-react`, `eslint-plugin-react-hooks`, `eslint-plugin-react-refresh`,
-`eslint-plugin-jsx-a11y`, `prettier`, `stylelint`, `stylelint-config-standard-scss`.
+`eslint-plugin-jsx-a11y`, `prettier`, `stylelint`, `stylelint-config-standard-scss`,
+`vite-imagetools`, `sharp`.
 
 `embla-carousel-react` resolves to **8.6.0** and is user-approved. It has exactly
 one current consumer — the mobile category navigation in `SiteHeader` — and the
@@ -2267,6 +2272,10 @@ library or query-state library is installed.
 data dependency. Its current production consumers are the smartphone Catalog
 read path and the Home popular categories/products read path.
 
+`sharp` resolves to **0.35.4** and is a direct dev dependency for the local
+`npm run media:home` raster derivative generator. `vite-imagetools` also uses
+Sharp at build time for imported `?picture` source sets.
+
 Nothing else is installed. In particular there is no async data-fetching state,
 form, schema, search/autocomplete, phone validation, mocking, or E2E library,
 and no other carousel/slider or routing library.
@@ -2283,6 +2292,7 @@ DADATA_TOKEN
 
 ```
 npm run dev           # Vite dev server (user-owned; agents do not start it)
+npm run media:home    # regenerate Home marketing crops plus AVIF/WebP derivatives
 npm run build         # tsc -b && vite build
 npm run preview       # preview the production build
 npm run typecheck     # tsc -b
@@ -2376,14 +2386,15 @@ Questions that still ride with the review, all recorded in the Home A section:
 
 - Section affordances and CTAs are omitted rather than faked, because their
   destinations do not exist.
-- The raster's photography, movie-poster wall and article images have no source
-  assets; Home uses the existing synthetic art and soft brand surfaces instead.
+- Home campaign and entertainment artwork now uses original local raster assets,
+  but product cards still use the accepted synthetic product art and article
+  thumbnails still use soft brand surfaces until article media has a real source.
 - The page is taller than the raster, mostly because the accepted
   `NewsletterBand` and `SiteFooter` are larger than the raster's variants.
 
 After the PASS, the next Home milestone is deeper section work driven by the
 gaps above — most likely the hero promotional slider, the real section
-destinations, and the artwork decision.
+destinations, and article/media data contracts.
 
 **Deferred until after Home:**
 
