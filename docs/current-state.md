@@ -180,6 +180,44 @@ text side carries no artwork behind it and needs no scrim overlay. The three
 category promo cards share a single `home-category-promo__media` slot; there is
 no separate contained `__art` image.
 
+**Home raster media — current state.** Home marketing, device and article masters
+share one generic electronics language: graphite metal, dark and transparent
+glass, controlled studio shadows and a restrained violet rim light. The pipeline
+is master PNG → `npm run media:home` (`scripts/build-home-media.mjs`, sharp) →
+cropped PNG plus AVIF/WebP derivatives → `homeMarketingMedia.ts` →
+`vite-imagetools` `?picture`. The generator wipes and rebuilds `derived/`; two
+consecutive runs are byte-identical and produce exactly 189 derivative files.
+Seven masters remain: five marketing banners, `home-device-library.png` and
+`home-article-editorial.png`.
+
+- Devices: six transparent packshots cropped from `home-device-library.png` onto
+  one square `900x900` card contract, so the accepted `ProductCard` surface stays
+  the only visible product container.
+- Article covers: three native `2172x543` 4:1 strips in
+  `home-article-editorial.png`, cropped to `1200x300` with widths
+  `320/480/640/900/1200` and an article-only encode quality (WebP 88, AVIF 64).
+  They were regenerated from scratch and are **accepted provisionally** for the
+  current Home closeout.
+- Removed as confirmed orphans: the superseded per-device masters
+  `home-device-{smartphone,earbuds,watch,headphones}.png`, which the generator no
+  longer reads since the device library sheet replaced them.
+- Deliberately preserved: `assets/products/product-phone.svg` is the Catalog
+  `ProductCard` fallback for products without Supabase `product_images`;
+  `product-earbuds.svg`, `product-laptop.svg`, `marketing/brand-tech.svg`,
+  `marketing/promo-sale-bags.svg` and `commerce/store-europeisky.png` back
+  `?reference=components`; `marketing/newsletter-gift.svg` belongs to
+  `NewsletterBand`; icons, brand, payment and social vectors are shared UI.
+- `?reference=home` renders `HomePage` from fixtures and local media only; it
+  does not depend on Supabase or remote media.
+- Mobile overflow was measured in the DOM at 390 and 320 on `?reference=home`,
+  `#/`, `#/catalog/smartphones`, `?reference=catalog` and
+  `?reference=components`: `scrollWidth === clientWidth` everywhere, so the
+  earlier page-level overflow suspicion is cleared.
+
+No Home layout, banner composition, route, Supabase, Catalog, dependency or
+global design-system contract changed in the media work. Home visual PASS is
+still pending explicit user approval.
+
 ### Catalog A — Page Foundation & Layout
 
 **User visual PASS received on 2026-08-29, closed.** The PASS covers the
@@ -2390,9 +2428,11 @@ none of them blocks the closed milestone.
 
 ## Next approved step
 
-**User visual review of Home A / Page Structure & Section Inventory against
-`Home.png`.** The slice is technically complete; only the user can grant the
-visual PASS. Screenshots exist at 1440, 1280, 1024, 768, 430, 390 and 320.
+**User visual review of Home A against `Home.png`.** The slice and its raster
+media are technically finalized and published; only the user can grant the
+visual PASS. The review covers the unified Home raster family: hero quality,
+device consistency, catalog feel, article cohesion (covers accepted
+provisionally) and overall Home brand consistency.
 
 The category-duplication question raised at the first review is settled: the
 Home hero's vertical category rail is removed, the accepted `SiteHeader`
@@ -2405,9 +2445,9 @@ Questions that still ride with the review, all recorded in the Home A section:
 - Section affordances and CTAs are omitted rather than faked, because their
   destinations do not exist.
 - Home campaign, entertainment, device and article artwork all now use original
-  local raster assets. Catalog product photography is the remaining media gap and
-  stays on the accepted synthetic product art, blocked on licensing rather than
-  on the pipeline.
+  local raster assets with the graphite/glass/violet studio treatment. Catalog
+  product photography still relies on the preserved synthetic fallback until
+  licensed Supabase `product_images` exist.
 - The page is taller than the raster, mostly because the accepted
   `NewsletterBand` and `SiteFooter` are larger than the raster's variants.
 

@@ -106,7 +106,7 @@ const assets = [
       {
         id: 'card',
         width: 900,
-        height: 640,
+        height: 900,
         position: 'center',
         widths: [160, 240, 320, 480, 640],
       },
@@ -143,7 +143,7 @@ const assets = [
   {
     id: 'home-article-smartphone-review',
     source: 'home-article-editorial',
-    extract: { left: 0, top: 0, width: 724, height: 724 },
+    extract: { left: 0, top: 0, width: 2172, height: 543 },
     variants: [
       {
         id: 'cover',
@@ -151,13 +151,15 @@ const assets = [
         height: 300,
         position: 'center',
         widths: [320, 480, 640, 900, 1200],
+        webpQuality: 88,
+        avifQuality: 64,
       },
     ],
   },
   {
     id: 'home-article-flagship-preview',
     source: 'home-article-editorial',
-    extract: { left: 724, top: 0, width: 724, height: 724 },
+    extract: { left: 2172, top: 0, width: 2172, height: 543 },
     variants: [
       {
         id: 'cover',
@@ -165,13 +167,15 @@ const assets = [
         height: 300,
         position: 'center',
         widths: [320, 480, 640, 900, 1200],
+        webpQuality: 88,
+        avifQuality: 64,
       },
     ],
   },
   {
     id: 'home-article-watch-guide',
     source: 'home-article-editorial',
-    extract: { left: 1448, top: 0, width: 724, height: 724 },
+    extract: { left: 4344, top: 0, width: 2172, height: 543 },
     variants: [
       {
         id: 'cover',
@@ -179,6 +183,8 @@ const assets = [
         height: 300,
         position: 'center',
         widths: [320, 480, 640, 900, 1200],
+        webpQuality: 88,
+        avifQuality: 64,
       },
     ],
   },
@@ -205,12 +211,12 @@ const encodeVariant = async (asset, variant) => {
     variant.widths.map(async (width) => {
       await sharp(outputPng)
         .resize({ width, withoutEnlargement: true })
-        .webp({ quality: 82 })
+        .webp({ quality: variant.webpQuality ?? 82 })
         .toFile(path.join(derivedDir, `${outputBase}-${width}.webp`));
 
       await sharp(outputPng)
         .resize({ width, withoutEnlargement: true })
-        .avif({ quality: 58 })
+        .avif({ quality: variant.avifQuality ?? 58 })
         .toFile(path.join(derivedDir, `${outputBase}-${width}.avif`));
     }),
   );
