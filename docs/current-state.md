@@ -146,9 +146,25 @@ repository, service, store or query layer.
   Inactive slides are `inert`, and only the active slide's title renders as
   the page `h1`, so duplicated copy is never exposed twice. The hero geometry,
   artwork crop, offer column and benefits strip are pixel-identical to the
-  pre-slider build at 1440/1024/768/390/320. Autoplay, arrows, a generic
-  `Carousel` abstraction and remote campaign data are intentionally deferred.
-  `?reference=home` stays local and deterministic.
+  pre-slider build at 1440/1024/768/390/320. Arrows, a pause/play control, a
+  generic `Carousel` abstraction and remote campaign data are intentionally
+  deferred. `?reference=home` stays local and deterministic.
+- **Hero autoplay (Home B1).** `HomeHeroSlider` advances every
+  `AUTOPLAY_DELAY_MS` (6000 ms) by calling `scrollTo` with the next index from
+  Embla's `selectedScrollSnap()`, wrapping from the last slide to the first. A
+  single one-shot `setTimeout` effect owns the timer. Its dependencies are the
+  Embla API, the selected index and a derived `autoplayPaused` flag, so any
+  slide change (autoplay, dot, drag or swipe) and any pause change clears the
+  pending timeout and starts a fresh full delay. There is no interval and no
+  second reset path. Autoplay pauses while a mouse pointer hovers the hero,
+  while keyboard focus (`:focus-visible`) is anywhere inside it (moving between
+  dots does not resume it), while `document.hidden` is true, and during an
+  Embla pointer drag. `prefers-reduced-motion: reduce` disables autoplay
+  entirely and is re-read live through `matchMedia` change events.
+  Reduced-motion dot navigation still jumps instantly. There is no
+  `aria-live`, and focus is never moved. No autoplay plugin or other
+  dependency was added. The three slides still intentionally reuse the same
+  temporary media and copy.
 - Artwork. Home now has five original local marketing raster assets for the hero
   discount banner, `Новинки от GOODCALL`, `Чёрная пятница`, the wearable-tech
   promo, and the entertainment/streaming banner. Their master PNGs live under
@@ -2468,7 +2484,8 @@ Questions that still ride with the review, all recorded in the Home A section:
 
 - The hero is now a real three-slide Embla slider with dots, drag and swipe.
   Its slides temporarily repeat the same artwork and copy until real campaign
-  content exists. Autoplay is deferred.
+  content exists. It autoplays every 6 seconds, with hover, keyboard-focus,
+  hidden-tab and reduced-motion pauses.
 
 After the PASS, the next Home milestone is deeper section work driven by the
 gaps above — most likely distinct hero slide content, the real section

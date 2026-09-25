@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, useSyncExternalStore } from 'react';
+import type { FocusEvent, PointerEvent } from 'react';
 import useEmblaCarousel from 'embla-carousel-react';
 import type { UseEmblaCarouselType } from 'embla-carousel-react';
 
@@ -8,6 +9,10 @@ import { HomeMarketingPicture } from './HomeMarketingPicture';
 import type { HomeHeroMedia, HomeHeroSlide } from './homeFixtures';
 
 const HERO_MEDIA_SIZES = '(max-width: 560px) 100vw, (max-width: 900px) calc(100vw - 32px), 1076px';
+
+const AUTOPLAY_DELAY_MS = 6000;
+
+const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)';
 
 const HERO_CAROUSEL_OPTIONS = {
   align: 'start',
@@ -21,8 +26,30 @@ const HERO_MEDIA: Readonly<Record<HomeHeroMedia, HomeMarketingAsset>> = {
   heroMainPromo: HOME_MARKETING_MEDIA.heroMainPromo,
 };
 
-function prefersReducedMotion() {
-  return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+function subscribeToReducedMotion(onChange: () => void): () => void {
+  const query = window.matchMedia(REDUCED_MOTION_QUERY);
+
+  query.addEventListener('change', onChange);
+
+  return () => {
+    query.removeEventListener('change', onChange);
+  };
+}
+
+function readReducedMotion(): boolean {
+  return window.matchMedia(REDUCED_MOTION_QUERY).matches;
+}
+
+function subscribeToDocumentVisibility(onChange: () => void): () => void {
+  document.addEventListener('visibilitychange', onChange);
+
+  return () => {
+    document.removeEventListener('visibilitychange', onChange);
+  };
+}
+
+function readDocumentHidden(): boolean {
+  return document.hidden;
 }
 
 export interface HomeHeroSliderProps {
@@ -32,6 +59,21 @@ export interface HomeHeroSliderProps {
 export function HomeHeroSlider({ slides }: HomeHeroSliderProps) {
   const [viewportRef, emblaApi] = useEmblaCarousel(HERO_CAROUSEL_OPTIONS);
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [dragging, setDragging] = useState(false);
+  const [hovered, setHovered] = useState(false);
+  const [keyboardFocusWithin, setKeyboardFocusWithin] = useState(false);
+  const reducedMotion = useSyncExternalStore(
+    subscribeToReducedMotion,
+    readReducedMotion,
+    () => false,
+  );
+  const documentHidden = useSyncExternalStore(
+    subscribeToDocumentVisibility,
+    readDocumentHidden,
+    () => false,
+  );
+  const autoplayPaused =
+    reducedMotion || documentHidden || hovered || keyboardFocusWithin || dragging;
 
   useEffect(() => {
     if (emblaApi === undefined) {
@@ -42,23 +84,88 @@ export function HomeHeroSlider({ slides }: HomeHeroSliderProps) {
       setSelectedIndex(api.selectedScrollSnap());
     };
 
+    const startDrag = () => {
+      setDragging(true);
+    };
+
+    const endDrag = () => {
+      setDragging(false);
+    };
+
     syncSelected(emblaApi);
-    emblaApi.on('select', syncSelected).on('reInit', syncSelected);
+    emblaApi
+      .on('select', syncSelected)
+      .on('reInit', syncSelected)
+      .on('pointerDown', startDrag)
+      .on('pointerUp', endDrag);
 
     return () => {
-      emblaApi.off('select', syncSelected).off('reInit', syncSelected);
+      emblaApi
+        .off('select', syncSelected)
+        .off('reInit', syncSelected)
+        .off('pointerDown', startDrag)
+        .off('pointerUp', endDrag);
     };
   }, [emblaApi]);
 
+  useEffect(() => {
+    if (emblaApi === undefined || autoplayPaused) {
+      return;
+    }
+
+    const timeout = window.setTimeout(() => {
+      const nextIndex = emblaApi.selectedScrollSnap() + 1;
+
+      emblaApi.scrollTo(nextIndex < emblaApi.scrollSnapList().length ? nextIndex : 0);
+    }, AUTOPLAY_DELAY_MS);
+
+    return () => {
+      window.clearTimeout(timeout);
+    };
+  }, [emblaApi, autoplayPaused, selectedIndex]);
+
   const goToSlide = useCallback(
     (index: number) => {
-      emblaApi?.scrollTo(index, prefersReducedMotion());
+      emblaApi?.scrollTo(index, reducedMotion);
     },
-    [emblaApi],
+    [emblaApi, reducedMotion],
   );
 
+  const handlePointerEnter = (event: PointerEvent<HTMLElement>) => {
+    if (event.pointerType === 'mouse') {
+      setHovered(true);
+    }
+  };
+
+  const handlePointerLeave = () => {
+    setHovered(false);
+  };
+
+  const handleFocus = (event: FocusEvent<HTMLElement>) => {
+    if (event.target.matches(':focus-visible')) {
+      setKeyboardFocusWithin(true);
+    }
+  };
+
+  const handleBlur = (event: FocusEvent<HTMLElement>) => {
+    const nextFocus = event.relatedTarget;
+
+    if (nextFocus instanceof Node && event.currentTarget.contains(nextFocus)) {
+      return;
+    }
+
+    setKeyboardFocusWithin(false);
+  };
+
   return (
-    <section aria-label="Акции GoodCall" className="home-banner">
+    <section
+      aria-label="Акции GoodCall"
+      className="home-banner"
+      onBlur={handleBlur}
+      onFocus={handleFocus}
+      onPointerEnter={handlePointerEnter}
+      onPointerLeave={handlePointerLeave}
+    >
       <div className="home-banner__viewport" ref={viewportRef}>
         <div className="home-banner__track">
           {slides.map((slide, index) => {
