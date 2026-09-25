@@ -6,7 +6,6 @@ import {
   HOME_DEVICE_MEDIA,
   HOME_MARKETING_MEDIA,
 } from '../../assets/media/home/homeMarketingMedia';
-import type { HomeMarketingAsset } from '../../assets/media/home/homeMarketingMedia';
 import { Picture } from '../../components/media';
 import type { PictureSource } from '../../components/media';
 import { Container } from '../../components/layout';
@@ -19,9 +18,12 @@ import {
   HOME_CATEGORY_TILES,
   HOME_CINEMA_POINTS,
   HOME_HERO_OFFERS,
+  HOME_HERO_SLIDES,
   HOME_PRODUCTS,
 } from './homeFixtures';
 import type { HomeArtwork, HomeCategoryTile, HomeProduct } from './homeFixtures';
+import { HomeHeroSlider } from './HomeHeroSlider';
+import { HomeMarketingPicture } from './HomeMarketingPicture';
 
 export interface HomePageProps {
   readonly smartphonesPath?: string;
@@ -40,7 +42,6 @@ const ARTWORK: Readonly<Record<HomeArtwork, PictureSource>> = {
   tablet: HOME_DEVICE_MEDIA.tablet,
 };
 
-const HERO_MEDIA_SIZES = '(max-width: 560px) 100vw, (max-width: 900px) calc(100vw - 32px), 1076px';
 const PROMO_MEDIA_SIZES = '(max-width: 760px) calc(100vw - 32px), 678px';
 const CATEGORY_PROMO_MEDIA_SIZES =
   '(max-width: 680px) calc(100vw - 32px), (max-width: 1024px) calc((100vw - 64px) / 2), 432px';
@@ -55,52 +56,6 @@ const ARTICLE_MEDIA: Readonly<Record<string, PictureSource>> = {
   'galaxy-s24-first-look': HOME_ARTICLE_MEDIA.flagshipPreview,
   'how-to-pick-a-watch': HOME_ARTICLE_MEDIA.watchGuide,
 };
-
-interface HomeMarketingPictureProps {
-  readonly asset: HomeMarketingAsset;
-  readonly alt: string;
-  readonly className: string;
-  readonly sizes: string;
-  readonly loading?: 'eager' | 'lazy';
-  readonly fetchPriority?: 'high' | 'low' | 'auto';
-}
-
-function HomeMarketingPicture({
-  asset,
-  alt,
-  className,
-  sizes,
-  loading = 'lazy',
-  fetchPriority,
-}: HomeMarketingPictureProps) {
-  return (
-    <picture>
-      {Object.entries(asset.mobile.sources).map(([format, srcSet]) => (
-        <source
-          key={`mobile-${format}`}
-          media="(max-width: 560px)"
-          sizes={sizes}
-          srcSet={srcSet}
-          type={`image/${format}`}
-        />
-      ))}
-      {Object.entries(asset.desktop.sources).map(([format, srcSet]) => (
-        <source key={`desktop-${format}`} sizes={sizes} srcSet={srcSet} type={`image/${format}`} />
-      ))}
-      <img
-        alt={alt}
-        className={className}
-        decoding="async"
-        fetchPriority={fetchPriority}
-        height={asset.desktop.img.h}
-        loading={loading}
-        sizes={sizes}
-        src={asset.desktop.img.src}
-        width={asset.desktop.img.w}
-      />
-    </picture>
-  );
-}
 
 export function HomePage({
   smartphonesPath,
@@ -123,22 +78,7 @@ export function HomePage({
     <main className="home-page">
       <Container className="home-page__inner">
         <section className="home-hero">
-          <div className="home-banner">
-            <HomeMarketingPicture
-              alt=""
-              asset={HOME_MARKETING_MEDIA.heroMainPromo}
-              className="home-banner__media"
-              fetchPriority="high"
-              loading="eager"
-              sizes={HERO_MEDIA_SIZES}
-            />
-            <div className="home-banner__content">
-              <h1 className="home-banner__title">
-                Большие скидки <span className="home-banner__accent">до 50%</span>
-              </h1>
-              <p className="home-banner__lead">На смартфоны и аксессуары</p>
-            </div>
-          </div>
+          <HomeHeroSlider slides={HOME_HERO_SLIDES} />
 
           <ul className="home-hero__offers">
             {HOME_HERO_OFFERS.map((offer) => (

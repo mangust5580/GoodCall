@@ -2,6 +2,16 @@ import type { IconName } from '../../components/ui';
 
 export type HomeArtwork = 'smartphone' | 'earbuds' | 'watch' | 'headphones' | 'laptop' | 'tablet';
 
+export type HomeHeroMedia = 'heroMainPromo';
+
+export interface HomeHeroSlide {
+  readonly id: string;
+  readonly title: string;
+  readonly accent: string;
+  readonly lead: string;
+  readonly media: HomeHeroMedia;
+}
+
 export interface HomeHeroOffer {
   readonly id: string;
   readonly title: string;
@@ -48,6 +58,30 @@ export interface HomeArticle {
   readonly excerpt: string;
   readonly date: string;
 }
+
+export const HOME_HERO_SLIDES: readonly HomeHeroSlide[] = [
+  {
+    id: 'hero-1',
+    title: 'Большие скидки',
+    accent: 'до 50%',
+    lead: 'На смартфоны и аксессуары',
+    media: 'heroMainPromo',
+  },
+  {
+    id: 'hero-2',
+    title: 'Большие скидки',
+    accent: 'до 50%',
+    lead: 'На смартфоны и аксессуары',
+    media: 'heroMainPromo',
+  },
+  {
+    id: 'hero-3',
+    title: 'Большие скидки',
+    accent: 'до 50%',
+    lead: 'На смартфоны и аксессуары',
+    media: 'heroMainPromo',
+  },
+];
 
 export const HOME_HERO_OFFERS: readonly HomeHeroOffer[] = [
   {

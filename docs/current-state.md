@@ -132,8 +132,23 @@ repository, service, store or query layer.
   **omitted**, because none of their destinations exists. This follows the
   accepted Catalog decision to drop the raster's `Смотреть подборку` button for
   the same reason. They return as real links when their routes exist.
-- The hero carousel dots are omitted: a slider is deep section work and dots
-  without one would be a fake control.
+- **Hero promotional slider (Home B).** The main hero banner is a real Embla
+  slider owned by `HomeHeroSlider` (`src/pages/home/HomeHeroSlider.tsx`),
+  which uses `useEmblaCarousel` directly with `align: 'start'`, no loop and
+  no plugins. It renders the page-local `HOME_HERO_SLIDES` fixture. There are
+  three slides, all temporarily reusing the same `heroMainPromo` media object
+  and the same headline/lead. That is a presentation fixture, not a campaign
+  contract. Mouse drag and touch swipe change slides. Three bottom-centre dot
+  `<button>`s (`Перейти к слайду N`, `aria-current` on the active dot, system
+  focus ring) follow Embla's selected snap through `select`/`reInit`, and
+  jump without animation under `prefers-reduced-motion`. The slider is a
+  labelled `<section>`, and each slide is a `group` labelled `Слайд N из 3`.
+  Inactive slides are `inert`, and only the active slide's title renders as
+  the page `h1`, so duplicated copy is never exposed twice. The hero geometry,
+  artwork crop, offer column and benefits strip are pixel-identical to the
+  pre-slider build at 1440/1024/768/390/320. Autoplay, arrows, a generic
+  `Carousel` abstraction and remote campaign data are intentionally deferred.
+  `?reference=home` stays local and deterministic.
 - Artwork. Home now has five original local marketing raster assets for the hero
   discount banner, `Новинки от GOODCALL`, `Чёрная пятница`, the wearable-tech
   promo, and the entertainment/streaming banner. Their master PNGs live under
@@ -1112,8 +1127,8 @@ dots, arrows or other programmatic scrolling in this strip there is no
 No shared carousel abstraction was created. There is no `Carousel`,
 `CarouselSlide`, `CarouselDots`, `CarouselArrows` or `useGoodCallCarousel`;
 extraction is deferred until a second real consumer establishes the common
-contract. Future promotional/banner carousels may reuse Embla but none is
-implemented.
+contract. The Home hero slider is a second, Home-owned Embla consumer with
+its own markup. It did not justify a shared abstraction either.
 
 `?reference=header` renders the real production `SiteHeader` and
 `MobileActionBar` above a neutral reference-only body, and passes a real local
@@ -2310,8 +2325,8 @@ Dev: `vite`, `@vitejs/plugin-react`, `typescript`, `@types/react`,
 `vite-imagetools`, `sharp`.
 
 `embla-carousel-react` resolves to **8.6.0** and is user-approved. It has exactly
-one current consumer — the mobile category navigation in `SiteHeader` — and the
-supplied page designs also contain future promotional/banner slider evidence. No
+two current consumers, the mobile category navigation in `SiteHeader` and the
+Home `HomeHeroSlider`, each using `useEmblaCarousel` directly. No
 Embla plugin is installed (`embla-carousel-autoplay`, `-auto-scroll`,
 `-wheel-gestures` and the rest are absent), and the v9 release candidate is not
 in the tree; only `embla-carousel-react`, `embla-carousel` and
@@ -2451,8 +2466,12 @@ Questions that still ride with the review, all recorded in the Home A section:
 - The page is taller than the raster, mostly because the accepted
   `NewsletterBand` and `SiteFooter` are larger than the raster's variants.
 
+- The hero is now a real three-slide Embla slider with dots, drag and swipe.
+  Its slides temporarily repeat the same artwork and copy until real campaign
+  content exists. Autoplay is deferred.
+
 After the PASS, the next Home milestone is deeper section work driven by the
-gaps above — most likely the hero promotional slider, the real section
+gaps above — most likely distinct hero slide content, the real section
 destinations, and article/media data contracts.
 
 **Deferred until after Home:**
