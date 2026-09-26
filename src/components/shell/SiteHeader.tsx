@@ -29,20 +29,31 @@ export interface SiteHeaderProps extends Omit<ShellActionInput, 'fallbackHref'> 
   readonly onScanRequest?: () => void;
 }
 
-const NARROW_VIEWPORT_QUERY = '(max-width: 767.98px)';
+interface MediaQueryStore {
+  readonly subscribe: (onChange: () => void) => () => void;
+  readonly read: () => boolean;
+}
 
-function subscribeToNarrowViewport(onChange: () => void): () => void {
-  const query = window.matchMedia(NARROW_VIEWPORT_QUERY);
+function mediaQueryStore(query: string): MediaQueryStore {
+  return {
+    subscribe: (onChange) => {
+      const list = window.matchMedia(query);
 
-  query.addEventListener('change', onChange);
+      list.addEventListener('change', onChange);
 
-  return () => {
-    query.removeEventListener('change', onChange);
+      return () => {
+        list.removeEventListener('change', onChange);
+      };
+    },
+    read: () => window.matchMedia(query).matches,
   };
 }
 
-function readNarrowViewport(): boolean {
-  return window.matchMedia(NARROW_VIEWPORT_QUERY).matches;
+const narrowViewport = mediaQueryStore('(max-width: 767.98px)');
+const compactHeader = mediaQueryStore('(max-width: 1079.98px)');
+
+function readServerMediaQuery(): boolean {
+  return false;
 }
 
 const CATEGORY_CAROUSEL_OPTIONS = {
@@ -96,7 +107,16 @@ export function SiteHeader({
   ...actionInput
 }: SiteHeaderProps) {
   const base = import.meta.env.BASE_URL;
-  const narrow = useSyncExternalStore(subscribeToNarrowViewport, readNarrowViewport, () => false);
+  const narrow = useSyncExternalStore(
+    narrowViewport.subscribe,
+    narrowViewport.read,
+    readServerMediaQuery,
+  );
+  const compact = useSyncExternalStore(
+    compactHeader.subscribe,
+    compactHeader.read,
+    readServerMediaQuery,
+  );
   const [categoryViewportRef] = useEmblaCarousel(CATEGORY_CAROUSEL_OPTIONS);
   const home = homeHref ?? base;
   const catalog = catalogHref ?? base;
@@ -105,7 +125,7 @@ export function SiteHeader({
   const actions = shellActions({ fallbackHref: base, ...actionInput });
 
   return (
-    <header className="site-header">
+    <>
       <div className="site-header__utility">
         <Container className="site-header__utility-inner">
           <CityLocationControl client={cityLookupClient} configured={cityLookupConfigured} />
@@ -121,7 +141,7 @@ export function SiteHeader({
         </Container>
       </div>
 
-      <div className="site-header__main">
+      <header className="site-header">
         <Container className="site-header__main-inner">
           <a className="site-header__brand" href={home}>
             <BrandLogo />
@@ -140,7 +160,7 @@ export function SiteHeader({
               name="q"
               onSubmit={onSearchSubmit}
               placeholder={
-                searchPlaceholder ?? (narrow ? 'Поиск товаров' : 'Поиск среди 50 000+ товаров')
+                searchPlaceholder ?? (compact ? 'Поиск товаров' : 'Поиск среди 50 000+ товаров')
               }
               trailingAction={
                 narrow && onScanRequest
@@ -162,7 +182,7 @@ export function SiteHeader({
             ))}
           </ul>
         </Container>
-      </div>
+      </header>
 
       <nav aria-label="Категории товаров" className="site-header__categories">
         <Container className="site-header__categories-inner">
@@ -186,6 +206,6 @@ export function SiteHeader({
           </div>
         </Container>
       </nav>
-    </header>
+    </>
   );
 }

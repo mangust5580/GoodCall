@@ -1,5 +1,7 @@
 import paymentMir from '../../assets/commerce/payment-mir.svg';
+import paymentSberpay from '../../assets/commerce/payment-sberpay.svg';
 import paymentSbp from '../../assets/commerce/payment-sbp.svg';
+import paymentTpay from '../../assets/commerce/payment-tpay.svg';
 import socialRutube from '../../assets/social/rutube.svg';
 import socialTelegram from '../../assets/social/telegram.svg';
 import socialVk from '../../assets/social/vk.svg';
@@ -51,6 +53,8 @@ const SOCIAL_MARKS: readonly BrandMark[] = [
 const PAYMENT_MARKS: readonly PaymentMark[] = [
   { name: 'МИР', src: paymentMir, modifier: 'mir' },
   { name: 'СБП', src: paymentSbp, modifier: 'sbp' },
+  { name: 'SberPay', src: paymentSberpay, modifier: 'sberpay' },
+  { name: 'T-Pay', src: paymentTpay, modifier: 'tpay' },
 ];
 
 const LEGAL_ITEMS: readonly string[] = [
@@ -129,9 +133,9 @@ export function SiteFooter({ homeHref }: SiteFooterProps) {
               </li>
             ))}
           </ul>
-          <ul className="site-footer__payments">
+          <ul aria-label="Способы оплаты" className="site-footer__payments">
             {PAYMENT_MARKS.map((mark) => (
-              <li key={mark.name}>
+              <li className="site-footer__payment" key={mark.name}>
                 <img
                   alt={mark.name}
                   className={`site-footer__payment-mark site-footer__payment-mark--${mark.modifier}`}

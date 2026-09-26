@@ -38,6 +38,9 @@ export function ReferenceIndex() {
         <li>
           <a href={referenceUrl('home')}>Home reference</a>
         </li>
+        <li>
+          <a href={referenceUrl('product-details')}>Product Details reference</a>
+        </li>
       </ul>
     </main>
   );

@@ -176,11 +176,23 @@
   &__payments {
     display: flex;
     flex-flow: row wrap;
-    gap: 16px;
+    gap: 8px;
     align-items: center;
     margin: 0;
     padding: 0;
     list-style: none;
+  }
+
+  &__payment {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 56px;
+    height: 32px;
+    padding: 0 10px;
+    background-color: var(--role-surface-card);
+    border: var(--control-border-width) solid var(--role-border-default);
+    border-radius: var(--control-radius-sm);
   }
 
   &__payment-mark {
@@ -188,11 +200,19 @@
     width: auto;
 
     &--mir {
-      height: 18px;
+      height: 14px;
     }
 
     &--sbp {
-      height: 26px;
+      height: 22px;
+    }
+
+    &--sberpay {
+      height: 20px;
+    }
+
+    &--tpay {
+      height: 20px;
     }
   }
 

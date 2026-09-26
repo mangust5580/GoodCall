@@ -5,8 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "media": "npm run media:home",
+    "media": "npm run media:home && npm run media:product-details",
     "media:home": "node scripts/build-home-media.mjs",
+    "media:product-details": "node scripts/build-product-details-media.mjs",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "typecheck": "tsc -b",

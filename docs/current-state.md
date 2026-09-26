@@ -40,6 +40,12 @@ Accepted:
 - **Catalog page family — CLOSED.** Catalog A, B and C all hold explicit user
   visual PASS. Do not reopen Catalog visuals; a routing regression is fixed in
   routing integration, never by redesigning Catalog.
+- **Product Details visual milestone (A + B + B1) — user visual PASS on
+  2026-09-27, CLOSED.** Covers the primary surface, colour-aware gallery,
+  content/trust/payment tabs, review avatars, payment marks, the accepted footer
+  payment row and the compact sticky primary header. Reference-only at
+  `?reference=product-details`; production integration is the next milestone.
+  See the Product Details section below.
 - Media Foundation / Picture pipeline + Icon policy
 - Location Foundation / CitySelector — visual gate, user visual PASS on
   2026-08-27, including the requested danger-red service/geolocation failure
@@ -248,6 +254,205 @@ Seven masters remain: five marketing banners, `home-device-library.png` and
 No Home layout, banner composition, route, Supabase, Catalog, dependency or
 global design-system contract changed in the media work. Home visual PASS is
 still pending explicit user approval.
+
+### Product Details A + B — Primary Surface, Content, Trust & Payment
+
+**Status: user visual PASS on 2026-09-27; CLOSED and published.** Do not
+reopen accepted visuals. Evidence: `Product_details.png`. A covers the
+primary surface (breadcrumbs through the purchase panel and offer card). B adds
+the lower tabbed content and the key-specification card, above the raster's
+out-of-scope `Похожие товары` row.
+
+**Ownership.** `src/pages/product-details/` owns `ProductDetailsPage` (the
+page `<main>`, breadcrumbs and the three-region grid), `ProductGallery`,
+`ProductPurchasePanel`, `ProductOfferSummary`, `productDetailsFormat.ts`,
+`productDetailsFixtures.ts` and `product-details.scss`. B adds
+`ProductDetailsSections` (tabs, panels and the key-spec card),
+`ProductDescription`, `ProductSpecifications` (its `ProductSpecificationList`
+serves both the full and the key lists), `ProductReviews`,
+`ProductDeliveryPayment`, `ProductWarranty` and `ProductStars` (the half-star
+rating shared by the purchase panel and the reviews). The reference surface
+`src/app/ProductDetailsReference.tsx` composes the accepted shell around it,
+like Catalog and Home. There is no production route, no `ProductCard` link,
+no Supabase read, and no provider, context, store or product/variant/offer
+domain model.
+
+**Fixture.** `PRODUCT_DETAILS_FIXTURE` derives `baseTitle` (the title minus its
+verified `, Розовый` suffix) and reads price, old price, rating, review count
+and the `-6%` badge from the Catalog
+`iphone-15-128` entry (`Apple iPhone 15 128 ГБ, Розовый`, 79 990 / 84 990 ₽),
+which matches the live Supabase product. Home's differing iPhone 15 specimen
+was not used. Fixture-only presentation fields: `sku` `213475`, labels
+`Новинка`/`Хит продаж`, `installmentMonths` 36 (the monthly figure is
+`ceil(price / 36)` = 2 222 ₽), availability and delivery notes, three colours
+(Розовый, Чёрный, Голубой), two memory options (128/256 ГБ), five highlights,
+`bonusPoints` 800, a five-image gallery per colour, three service rows and the
+support phone, hours and chat note. B added:
+
+- `kind` (`delivery`/`warranty`) on each service row;
+- `paymentMethods` (Банковская карта with the МИР mark, СБП with the СБП mark,
+  SberPay and T-Pay with their official marks);
+- `description` (title, two paragraphs, five features);
+- `specificationGroups` (six groups, 21 rows; the 11 rows flagged `key` feed
+  the key-spec card);
+- three `reviews`;
+- `trust` (warranty, original products, exchange and return).
+
+The specifications are real published iPhone 15 values. The review cards are
+deterministic specimens. These are presentation specimens, not a backend
+schema.
+
+**Behaviour.**
+
+- Gallery: five real thumbnail buttons (`aria-current` plus a thicker purple
+  ring) and prev/next arrows that wrap, all driving one active index. The main
+  image alt names the photo position. Gallery image changes use a short
+  220ms fade/translate/scale animation, and thumbnails, arrows and swatches use
+  restrained 200–220ms ease-out state transitions. Under
+  `prefers-reduced-motion: reduce`, these non-essential transitions and the
+  image animation are removed, with instant state changes and no focus movement.
+- `FavoriteButton` toggles local `aria-pressed` only.
+- Colour and memory are native radio groups in `<fieldset>`/`<legend>`.
+  Colour keeps the selected label in the legend, e.g. `Цвет: Розовый`.
+  Swatches use 48px hit targets around 32px visual dots, a restrained
+  GoodCall-purple selected ring, a check mark inside the selected swatch and
+  related hover/focus/selected states, so selection is never colour-only.
+  No icon was added beside the colour label. The selected memory option shows a
+  thicker border. Colour selection is now shared by `ProductDetailsPage`,
+  `ProductPurchasePanel` and `ProductGallery`: pink, black and blue each use a
+  dedicated local five-image gallery set, and changing colour resets the gallery
+  to the first image. The same `selectedColourId` drives the `<h1>` and the
+  current breadcrumb label via `productDetailsTitle`: the fixture's `baseTitle`
+  (the Catalog title with its verified `, Розовый` suffix removed) plus the
+  selected colour label. Price, SKU, specs and memory options do not vary by
+  colour, because production variant pricing and backend contracts are
+  deferred.
+- `QuantityStepper` is local.
+- `В корзину` and `Купить в 1 клик` are real buttons with no cart or checkout
+  behaviour.
+- Lower sections reuse the accepted `Tabs` unchanged: `Описание`,
+  `Характеристики`, `Отзывы (1 976)` (the raster's three), plus task-directed
+  `Доставка и оплата` and `Гарантия`. Panels are `role="tabpanel"` with
+  `hidden` inactive panels, arrow-key roving and no URL sync. The page-scoped
+  tab strip does not wrap and scrolls horizontally below its width.
+- `Ключевые характеристики` is a persistent right-column `<dl>` card. Its
+  `Все характеристики` button selects and focuses the `Характеристики` tab.
+- The reviews shell shows the average, stars and count plus three static cards.
+  Each card header carries a decorative (`aria-hidden`) 38px circular local
+  generated photorealistic raster avatar. The avatar image is `alt=""`, the
+  `h3` author name remains the accessible identity, and deterministic initials
+  remain only as the local fallback concept. Reviewer names, dates, text and
+  ratings remain fixture-owned.
+  There is no distribution, submission, pagination or «Все отзывы» /
+  «Оставить отзыв» control, because the raster shows none and no destination
+  exists.
+- Payment is presentation only. Product Details shows four methods:
+  Банковская карта, СБП, SberPay and T-Pay. The offer card shows four
+  logo-only tiles, МИР, СБП, SberPay and T-Pay (accessible names «Банковская
+  карта МИР», «СБП», «SberPay», «T-Pay»), on one row except at the narrowest
+  widths. The delivery tab lists the four methods as equal 48px rows with visible labels
+  and a fixed 56 × 24px visual slot: МИР/СБП marks and the SberPay and T-Pay
+  marks (decorative, 21px tall). Installment stays in a separate box.
+- Payment brand assets: the owner-supplied final sources were two local SVGs
+  (the temporary source folder has since been removed). `sber-pay.svg` is the
+  SberPay compact mark
+  (gradient pill with the Sber check and «Pay»). It is
+  `src/assets/commerce/payment-sberpay.svg`: an Illustrator export (viewBox
+  1000.36 × 479.41) whose gradient is an embedded JPEG. The only change from the
+  source is trailing whitespace removed for the repository whitespace check,
+  verified pixel-identical in Chromium at 20–479px heights; no geometry, colour
+  or metadata cleanup was applied. `t-pay.svg` is byte-identical to the existing
+  `src/assets/commerce/payment-tpay.svg`, the T-Pay main logo. T-Bank's
+  guideline shows it with «T-Pay» text in method lists; the footer and offer
+  tiles use it logo-only by owner decision, while the delivery rows keep the
+  visible label beside the mark. No logo was drawn, traced, recoloured or edited.
+- The shared footer payment set is МИР, СБП, SberPay and T-Pay marks, all
+  logo-only from `src/assets/commerce/`, in one row down to 320px.
+- Mir Pay is intentionally omitted from the current UI. The final method set
+  must be reconciled with the real acquiring provider; no payment integration
+  or SDK exists.
+- Warranty and trust content stays presentation-level: the official 12-month
+  warranty (the same string as the offer card), «Только официальные поставки»
+  (the accepted Home benefit copy), and exchange/return «по условиям
+  законодательства о защите прав потребителей». The tab keeps exactly these
+  three trust cards and now adds one small decorative trust visual plus a compact
+  lead and support-phone row. No legal terms, day counts, service SLAs or return
+  policy text are invented.
+- There is no mobile sticky purchase bar, because `MobileActionBar` already
+  owns the bottom edge below 768px and a second fixed bar would overlap it.
+
+**Responsive.** Three columns (`1.2fr / 1fr / 340px`, 40px gap) from 1200px.
+From 768px: gallery and purchase side by side, with the offer card full width
+as a 2×2 section grid. Below 768px everything stacks. The lower section places
+the tab panel and the 340px key-spec card side by side from 1200px. Below that
+the key-spec card follows the panel, with a two-column list from 768px to
+1199px. No horizontal overflow at 1440/1024/768/390/320.
+
+**System-first normalizations (visible against the raster).**
+
+- The page stays on the accepted white page surface with bordered cards,
+  instead of the raster's grey page and shadowed cards.
+- CTAs use the accepted pill `Button` (primary/secondary), not rectangles.
+- Labels use the brand `Chip`; the raster's orange `Хит продаж` has no
+  accepted role.
+- Breadcrumbs keep the Catalog `›` treatment, duplicated page-locally because
+  the closed Catalog was not refactored. A shared `Breadcrumbs` extraction is
+  now justified and is a follow-up.
+- Availability text uses the success-Chip AA colour mix; raw `#22c55e` is about
+  2.3:1 on white.
+- The only image marks are МИР, СБП, SberPay and T-Pay, the repository-owned
+  assets. Other methods are text; VISA, Mastercard and Apple Pay are not shown.
+- Description media uses a dedicated improved wide original generated raster,
+  composed lower in the source so the existing horizontal media tile keeps the
+  phone top and camera area visible with dark graphite/violet headroom and no
+  local object-position override. The warranty tab uses one separate generated
+  trust visual. Icon usage remains restrained and only uses the existing
+  repository icon system:
+  delivery, pickup, warranty, original product, exchange/return, support,
+  payment fallbacks and description feature tiles carry icons; no icons were
+  added to the colour label, memory label, title, rating, review cards or key
+  specification rows.
+
+**Omitted instead of faked.** The raster's `+3` thumbnail, the
+`Видео`/`360°`/`Доп. фото` row and the installment underline affordance have
+no content or destination.
+
+**Product Details media.** Product Details now owns original generated synthetic
+local raster media under `src/assets/media/product-details/`: seventeen PNG
+masters, Sharp-derived PNG bases, AVIF/WebP responsive derivatives, and three
+static generated 256 × 256 WebP review avatars under
+`src/assets/media/product-details/reviews/`. The
+gallery is colour-aware local fixture behaviour: Розовый, Чёрный and Голубой
+each map to a dedicated five-image set with the same view family (front hero,
+rear camera, side profile, front/rear pair and camera/material detail). The
+black set reuses the current graphite/lavender gallery; pink and blue are fixed
+local generated masters, not runtime AI or CSS tinting. Description and warranty
+media remain independent editorial/supporting visuals and are not colour-aware;
+review avatars are deterministic fixture media and are not part of a user
+profile or upload contract. The Product Details media generator remains
+deterministic across consecutive runs and does not upscale the generated
+masters. The generated review-avatar source originals are session scratch only,
+not runtime dependencies. No official Apple imagery, marketplace photography,
+third-party product photography, real-person portrait photography, logos or
+baked text are used. These assets remain temporary generated media until the
+project owns licensed real product photography, if that remains the product
+direction. Gallery, description and warranty media use the existing `Picture` /
+`vite-imagetools` contract; review avatars use direct local WebP imports.
+`npm run media:product-details` regenerates the derived files deterministically.
+
+**Deferred.**
+
+- A production `#/product/:slug` route and `ProductCard` navigation.
+- Supabase product-by-slug, image and review reads.
+- A loading/error/not-found contract; the skeleton/loading-state system is a
+  later cross-page system milestone.
+- Variant pricing, cart, favourites and comparison.
+- A reviews backend, a payment provider (the displayed method set must be
+  reconciled with it), and a delivery estimator.
+- Licensed real product imagery and remote `product_images`.
+- `Похожие товары` (Product Details C).
+
+The Home latest-article cover visual debt is unrelated and untouched.
 
 ### Catalog A — Page Foundation & Layout
 
@@ -693,8 +898,14 @@ RUTUBE destinations yet, so the row is an informative
 handlers and no tab stops. It converts to links when real destinations exist; no
 social-links API was added now.
 
-**Payments are МИР + СБП only.** VISA, Mastercard, Apple Pay, Google Pay, SberPay
-and YooMoney are deliberately not shown.
+**Payments: МИР, СБП, SberPay, T-Pay.** Each sits in a uniform 32px bordered
+chip (`site-footer__payment`) on the card surface. МИР, СБП and SberPay use
+their repository-owned marks, and T-Pay uses the official `payment-tpay.svg`
+(20px). All four are logo-only, with the method name as image `alt`, by owner
+decision; T-Bank's guideline shows a logo + «T-Pay» text lockup for method
+lists. Mir Pay, VISA, Mastercard, Apple Pay, Google Pay and YooMoney are
+deliberately not shown. The row is labelled «Способы оплаты» and stays one
+278 × 32 line down to 320px.
 
 **App-store badges stay deferred.** No RuStore, App Store, Google Play or
 AppGallery badge exists, because GoodCall has no application and no real store
@@ -1053,6 +1264,34 @@ Anatomy — three full-width regions, each placing its content in the accepted
 - **CategoryNav** — `<nav aria-label="Категории товаров">` with the canonical
   compact category set and a trailing `Ещё` link to the catalog. Every canonical
   category now carries a typed line icon; no mega-menu or flyout exists.
+
+**Sticky primary header — user visual PASS on 2026-09-27, accepted.**
+
+- **Ownership:** `SiteHeader` renders a fragment in DOM order: the UtilityBar
+  `div.site-header__utility`, then `<header class="site-header">` (the primary
+  row and the only `banner` landmark), then the CategoryNav `<nav>`. The
+  `<header>` itself is sticky (`position: sticky; inset-block-start: 0;
+z-index: 10`, header surface, and a 1px `--role-border-soft` box-shadow line
+  that overlaps the category row's top border at rest). It uses the page wrapper
+  as its sticky parent. There is no `display: contents`.
+- **Scrolling:** UtilityBar and CategoryNav scroll away normally. There is no
+  scroll listener, JS scroll state, hide-on-scroll or collapse.
+- **Heights:**
+  - ≥1080px: one row, 88.4px, unchanged desktop design;
+  - 768–1079px: one row, 68px; 44px controls, short «Каталог» label, icon-only
+    actions with visually hidden labels and badges;
+  - <768px: 94px; brand line, then catalog + search with 44px controls;
+  - <360px: the catalog button becomes a 44px icon-only square, keeping its
+    accessible name, so the search placeholder fits.
+- **Search placeholder:** the short «Поиск товаров» is used below 1080px; the
+  QR scan action stays <768px only.
+- **Scroll padding:** `html:has(.site-header)` sets `scroll-padding-block-start`
+  to 96 / 76 / 102px (≥1080 / 768–1079 / <768), so keyboard focus and anchors
+  are not hidden under the row.
+- **Layering:** above page content (max z 3), below `MobileActionBar` (20)
+  and the floating/dialog layer (30).
+- Product Details tabs are not sticky; a future sticky tabs row must offset by
+  88.4 / 68 / 94px.
 
 **`MobileActionBar` is a separate mobile shell owner**, not a header
 subcomponent: `src/components/shell/MobileActionBar.tsx`, rendered by the page
@@ -1874,6 +2113,10 @@ so reference surfaces are unaffected by routing; the bare base URL now belongs t
 - `?reference=home` — the Home reference surface: a reference-only note
   followed by the real production shell around the real `HomePage`. It builds no
   production route and shows no reference copy on `#/`.
+- `?reference=product-details` — the Product Details A + B reference surface: a
+  reference-only note followed by the real production shell around
+  `ProductDetailsPage` with its deterministic local fixture. It makes no
+  network or Supabase request and has no production route yet.
 - `?reference=catalog` — the Catalog reference surface: a reference-only note
   followed by the real production shell — `SiteHeader`, `CatalogPage`,
   `NewsletterBand`, `SiteFooter` and `MobileActionBar`. It owns the mobile bottom
@@ -1968,11 +2211,11 @@ selecting filters or a quick preset leaves the grid, the page and
 polish deferred to integrated page review.** `?reference=footer` reports zero horizontal document overflow, zero
 runtime errors and zero failed requests at 1920 / 1440 / 1280 / 1024 / 768 / 430 /
 390 / 375 / 320, and so do the base index and every earlier reference surface. The
-footer surface is 264px tall at 1280px and above. Layout is five columns from
+footer surface is about 270px tall at 1280px and above (271px at 1440 with the payment chips). Layout is five columns from
 1200px, three from 768px with the contacts block spanning two cells, two from
 560px and one below that. The social row stays a single line of four official
-marks (178px wide) at every width down to 320px, and the МИР and СБП marks share
-one centred line everywhere. The composition holds exactly one `<footer>`
+marks (178px wide) at every width down to 320px, and the four payment chips share
+one line everywhere. The composition holds exactly one `<footer>`
 and one `<main>`; heading order runs h1 (reference) then h2 for the newsletter and
 each footer group. Measured contrast on the footer surface is 4.64:1 for muted
 legal and tagline text, 9.89:1 for group items and 17.77:1 for group headings; the
@@ -2458,6 +2701,12 @@ none of them blocks the closed milestone.
   live reverse geocoding and live Pages behaviour all remain open.
 
 ## Next approved step
+
+**Product Details Production Integration** (next milestone, not started):
+`#/product/:slug`, `ProductCard` linking, the Supabase product-by-slug read,
+the loading/error/not-found contract, and whatever backend/media variant
+contract real data requires. The Product Details visual milestone is CLOSED
+(user visual PASS 2026-09-27).
 
 **User visual review of Home A against `Home.png`.** The slice and its raster
 media are technically finalized and published; only the user can grant the

@@ -7,6 +7,7 @@ import { HomeReference } from './HomeReference';
 import { LayoutReference } from './LayoutReference';
 import { LocationReference } from './LocationReference';
 import { NewsletterReference } from './NewsletterReference';
+import { ProductDetailsReference } from './ProductDetailsReference';
 import { ProductionRouter } from './ProductionRouter';
 import { ReferenceIndex } from './TemporaryReference';
 
@@ -55,6 +56,10 @@ export function App() {
 
   if (reference === 'home') {
     return <HomeReference />;
+  }
+
+  if (reference === 'product-details') {
+    return <ProductDetailsReference />;
   }
 
   return <ReferenceIndex />;
