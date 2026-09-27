@@ -60,6 +60,9 @@ Accepted:
   (desktop and mobile results and no-results), CLOSED and published.**
   `#/search?q=…` is the production results route, and the Header search
   submits to it. See the Search A section below.
+- **Search B / Faceted Results Foundation — user visual PASS on 2026-09-28
+  (desktop), CLOSED and published.** Desktop faceted filters and enriched
+  result rows on `#/search?q=…` from 1024px. See the Search B section below.
 - **Home A / Page Structure & Section Inventory — user visual PASS on
   2026-09-27, CLOSED and published.** `#/` renders the accepted Home page with
   the three-slide hero, accepted side offer cards, revised article covers,
@@ -93,8 +96,111 @@ Technically complete:
 
 Active visual slice:
 
-- **No active visual slice is selected.** Home A, Cart A, Cart B, Search A and
-  the Product Details production integration are closed.
+- **No active visual slice is selected.** Home A, Cart A, Cart B, Search A,
+  Search B and the Product Details production integration are closed.
+
+### Search B — Faceted Results Foundation
+
+**Status: user visual PASS on 2026-09-28 for the current desktop result;
+CLOSED and published.** Do not reopen accepted visuals or behaviour. It builds
+on the closed Search A, which is unchanged. Evidence: `Search_result.png`, for
+information architecture only.
+
+Richer commerce information and actions (see Deferred) are future work, not
+part of Search B.
+
+**Scope.**
+
+- The corpus is still the 16 Catalog smartphones: live, or the fixture
+  fallback.
+- 12 results per page are retained, with no page-size selector.
+- Faceting is desktop-only from 1024px: a 272px filter card, a 24px gap and a
+  results panel (one card with divided rows and a pagination footer).
+- Below 1024px the page is the unchanged Search A layout, and no hidden
+  filters apply.
+
+**Facets.** All are derived in `src/pages/search/searchFacets.ts` from the
+product **title**, the one field identical across live and fixture data:
+
+- **Цена, ₽** — the accepted `RangeSlider`. Bounds come from the query's
+  matches, rounded to 1 000 ₽.
+- **Бренд** — the first title word; 13 values, matching the live
+  `products.brand` column for all 16 products.
+- **Цвет** — the text after the last comma; 12 names, shown as a named swatch
+  plus the text label.
+- **Встроенная память** — the number before `ГБ` (128 or 256).
+
+Options and counts come from the query's base matches. Selection is OR within
+a group and AND across groups.
+
+**Omitted:**
+
+- Category (only one real value);
+- RAM (in 4 of 16 titles);
+- availability (no data);
+- a brand search field (13 options).
+
+**State.**
+
+- `SearchPage` holds a draft and an applied `SearchFilterState` in local
+  state.
+- `Применить` commits the draft and returns to page 1; `Сбросить` clears both.
+  Each is genuinely disabled when there is nothing to do.
+- Filters are not in the URL. `SearchRoute` keys the page by query, so a new
+  search starts unfiltered.
+- The count, sort and 12-per-page pagination all operate on the filtered set.
+
+**Filtered-empty.** When the query has matches but the filters leave none, the
+sidebar and selections stay, and the results column shows `Ничего не найдено`,
+«По текущему запросу и выбранным фильтрам товаров нет.» and
+`Сбросить фильтры`. A query with zero base matches keeps the Search A empty
+state, with no sidebar.
+
+**Rows.** At 1024px and up, the Search-owned `SearchResultRow` replaces the
+horizontal `ProductCard`, whose shared source is unchanged. Each row is 176px
+and has:
+
+- a 136px media tile with the badge;
+- an 18px bold title (with the existing specimen title link);
+- a muted attributes line, `ОЗУ · память · цвет`, from the derived facets,
+  with missing parts omitted. RAM appears only when the title carries the
+  explicit `N/M ГБ` form (4 of 16); it is never inferred. Brand is omitted
+  because every title starts with it;
+- the accepted `ProductRating`;
+- a right-aligned price stack: the current price, the old price struck below,
+  and a derived `Выгода N ₽` line (old − current), shown only when the old
+  price exceeds the current price.
+
+No derived percentage is shown, because fixture badges carry their own `-N%`,
+which can differ from the rounded value. The badges are left unchanged.
+
+Availability, cart, favourite and compare remain deferred: there is no stock
+data, no shared cart state, and no favourites or comparison capability. No
+specs are invented. Below 1024px the Search A `ProductCard` rows are
+unchanged.
+
+**Disclosure.** Brand and colour show their first 6 options (count, then name
+order) plus any selected option. A native `button` with `aria-expanded` and
+`aria-controls` toggles `Показать ещё N` and `Скрыть`.
+
+**Ownership.** `src/pages/search/` gains `searchFacets.ts` (pure facet
+derivation and filtering, reusable by a later mobile presentation),
+`SearchFilters.tsx` and `SearchResultRow.tsx`. There is no global store, service or generic filter
+engine, and no dependency.
+
+**Deferred (future work, not Search B blockers):**
+
+- mobile Search filters and URL-synced filters;
+- Category facet, cross-category search and autocomplete;
+- a page-size selector;
+- a real `В корзину` (needs a shared cart, **Commerce A**), favourites and
+  comparison;
+- availability, stock and delivery availability (no data source);
+- richer first-class specs and real product imagery (`product_images` is
+  empty);
+- first-class brand, colour and storage data (brand exists in the DB but is
+  unmapped);
+- further row enrichment beyond the accepted scope.
 
 ### Search A — Results Page Foundation
 
@@ -2850,8 +2956,8 @@ router owns only the fragment. The base path still lives solely in
   <https://mangust5580.github.io/GoodCall/#/catalog/smartphones>
 - `#/cart` — the production Cart route: the Cart B populated state with a
   Cart-local seed, and the Cart A empty state after the last line is removed.
-- `#/search?q=…` — the production Search results route (Search A); optional
-  `sort` and `page` params.
+- `#/search?q=…` — the production Search results route (Search A, with Search B
+  desktop facets); optional `sort` and `page` params.
 - `#/product/:slug` — the production Product Details route, specimen-gated to
   `iphone-15-128`; every other slug renders the route's compact not-found state.
 - `*` — a compact in-router fallback: one `<h1>Страница не найдена</h1>`, one
@@ -3164,9 +3270,15 @@ none of them blocks the closed milestone.
 
 ## Next approved step
 
-**No next milestone is selected.** Home A, Cart A, Cart B and Search A are
-closed. Search B (filters/facets, autocomplete, cross-category scope) is not
-started and not scoped.
+**No next milestone is selected.** Home A, Cart A, Cart B, Search A and
+Search B are closed. The candidates are:
+
+- mobile Search filters;
+- **Commerce A — Shared Cart State**, the prerequisite for any real
+  `В корзину` outside `#/cart`.
+
+Neither is scoped. Autocomplete and cross-category search are not scoped
+either.
 
 Each of the following would need its own explicit scope, and none exists:
 

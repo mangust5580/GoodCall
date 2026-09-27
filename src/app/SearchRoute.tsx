@@ -82,6 +82,7 @@ export function SearchRoute() {
   return (
     <ProductionShell>
       <SearchPage
+        key={query}
         catalogHref={hashHref(CATALOG_SMARTPHONES_PATH)}
         homeHref={hashHref(HOME_PATH)}
         onPageChange={handlePageChange}

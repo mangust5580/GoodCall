@@ -1,11 +1,22 @@
+import { useState, useSyncExternalStore } from 'react';
 import { Select } from 'radix-ui';
 
 import productPhone from '../../assets/products/product-phone.svg';
 import { Container } from '../../components/layout';
 import { ProductCard } from '../../components/product';
-import { Chip, Icon, Pagination } from '../../components/ui';
+import { Button, Chip, Icon, Pagination } from '../../components/ui';
 import { CATALOG_SORT_OPTIONS, sortCatalogProducts } from '../catalog/catalogProductFixtures';
 import type { CatalogProduct, CatalogSortValue } from '../catalog/catalogProductFixtures';
+import {
+  EMPTY_SEARCH_FILTERS,
+  applySearchFilters,
+  buildSearchFacetOptions,
+  sameSearchFilters,
+  searchFiltersActive,
+} from './searchFacets';
+import type { SearchFilterState } from './searchFacets';
+import { SearchFilters } from './SearchFilters';
+import { SearchResultRow } from './SearchResultRow';
 import {
   formatFoundCount,
   formatSearchPrice,
@@ -27,6 +38,25 @@ export interface SearchPageProps {
 }
 
 const SORT_LABEL = 'Сортировка';
+const FACETS_QUERY = '(min-width: 1024px)';
+
+function subscribeToFacetsViewport(onChange: () => void): () => void {
+  const query = window.matchMedia(FACETS_QUERY);
+
+  query.addEventListener('change', onChange);
+
+  return () => {
+    query.removeEventListener('change', onChange);
+  };
+}
+
+function readFacetsViewport(): boolean {
+  return window.matchMedia(FACETS_QUERY).matches;
+}
+
+function readServerFacetsViewport(): boolean {
+  return false;
+}
 
 export function SearchPage({
   query,
@@ -39,11 +69,86 @@ export function SearchPage({
   homeHref,
   catalogHref,
 }: SearchPageProps) {
-  const matches = sortCatalogProducts(matchSearchProducts(products, query), sort);
+  const facetsViewport = useSyncExternalStore(
+    subscribeToFacetsViewport,
+    readFacetsViewport,
+    readServerFacetsViewport,
+  );
+  const [draftFilters, setDraftFilters] = useState<SearchFilterState>(EMPTY_SEARCH_FILTERS);
+  const [appliedFilters, setAppliedFilters] = useState<SearchFilterState>(EMPTY_SEARCH_FILTERS);
+  const baseMatches = matchSearchProducts(products, query);
+  const faceted = facetsViewport && baseMatches.length > 0;
+  const facetOptions = buildSearchFacetOptions(baseMatches);
+  const filtersApplied = faceted && searchFiltersActive(appliedFilters, facetOptions);
+  const filtered = faceted
+    ? applySearchFilters(baseMatches, appliedFilters, facetOptions)
+    : baseMatches;
+  const matches = sortCatalogProducts(filtered, sort);
   const pageCount = searchPageCount(matches.length);
   const currentPage = Math.min(page, pageCount);
   const visibleMatches = searchPageSlice(matches, currentPage);
   const hasQuery = query !== '';
+
+  const returnToFirstPage = () => {
+    if (page !== 1) {
+      onPageChange(1);
+    }
+  };
+
+  const applyFilters = () => {
+    setAppliedFilters(draftFilters);
+    returnToFirstPage();
+  };
+
+  const resetFilters = () => {
+    setDraftFilters(EMPTY_SEARCH_FILTERS);
+    setAppliedFilters(EMPTY_SEARCH_FILTERS);
+    returnToFirstPage();
+  };
+
+  const resultList = (
+    <>
+      <ul aria-label="Найденные товары" className="search-results">
+        {visibleMatches.map((product) => (
+          <li key={product.id}>
+            <ProductCard
+              badge={
+                product.badge === undefined ? undefined : (
+                  <Chip variant={product.discounted === true ? 'danger' : 'brand'}>
+                    {product.badge}
+                  </Chip>
+                )
+              }
+              href={productHref?.(product.id)}
+              imageAlt={product.imageAlt}
+              imageSrc={product.imageSrc ?? productPhone}
+              layout="horizontal"
+              oldPrice={
+                product.oldPriceValue === undefined
+                  ? undefined
+                  : formatSearchPrice(product.oldPriceValue)
+              }
+              price={formatSearchPrice(product.priceValue)}
+              rating={product.rating}
+              reviewCount={product.reviewCount}
+              title={product.title}
+            />
+          </li>
+        ))}
+      </ul>
+
+      {pageCount > 1 ? (
+        <div className="search-page__pagination">
+          <Pagination
+            label="Страницы результатов поиска"
+            onChange={onPageChange}
+            page={currentPage}
+            pageCount={pageCount}
+          />
+        </div>
+      ) : null}
+    </>
+  );
 
   return (
     <main className="search-page">
@@ -67,6 +172,7 @@ export function SearchPage({
             {matches.length > 0 ? (
               <p className="search-page__summary">
                 По запросу <span className="search-page__query">«{query}»</span>{' '}
+                {filtersApplied ? 'с выбранными фильтрами ' : null}
                 {formatFoundCount(matches.length)}
               </p>
             ) : null}
@@ -108,48 +214,66 @@ export function SearchPage({
           ) : null}
         </header>
 
-        {matches.length > 0 ? (
-          <>
-            <ul aria-label="Найденные товары" className="search-results">
-              {visibleMatches.map((product) => (
-                <li key={product.id}>
-                  <ProductCard
-                    badge={
-                      product.badge === undefined ? undefined : (
-                        <Chip variant={product.discounted === true ? 'danger' : 'brand'}>
-                          {product.badge}
-                        </Chip>
-                      )
-                    }
-                    href={productHref?.(product.id)}
-                    imageAlt={product.imageAlt}
-                    imageSrc={product.imageSrc ?? productPhone}
-                    layout="horizontal"
-                    oldPrice={
-                      product.oldPriceValue === undefined
-                        ? undefined
-                        : formatSearchPrice(product.oldPriceValue)
-                    }
-                    price={formatSearchPrice(product.priceValue)}
-                    rating={product.rating}
-                    reviewCount={product.reviewCount}
-                    title={product.title}
-                  />
-                </li>
-              ))}
-            </ul>
+        {faceted ? (
+          <div className="search-workspace">
+            <SearchFilters
+              applyDisabled={sameSearchFilters(draftFilters, appliedFilters, facetOptions)}
+              draft={draftFilters}
+              onApply={applyFilters}
+              onDraftChange={setDraftFilters}
+              onReset={resetFilters}
+              options={facetOptions}
+              resetDisabled={
+                !searchFiltersActive(draftFilters, facetOptions) &&
+                !searchFiltersActive(appliedFilters, facetOptions)
+              }
+            />
 
-            {pageCount > 1 ? (
-              <div className="search-page__pagination">
-                <Pagination
-                  label="Страницы результатов поиска"
-                  onChange={onPageChange}
-                  page={currentPage}
-                  pageCount={pageCount}
-                />
-              </div>
-            ) : null}
-          </>
+            <div className="search-workspace__results">
+              {matches.length > 0 ? (
+                <>
+                  <ul aria-label="Найденные товары" className="search-rows">
+                    {visibleMatches.map((product) => (
+                      <li key={product.id}>
+                        <SearchResultRow href={productHref?.(product.id)} product={product} />
+                      </li>
+                    ))}
+                  </ul>
+
+                  {pageCount > 1 ? (
+                    <div className="search-workspace__pagination">
+                      <Pagination
+                        label="Страницы результатов поиска"
+                        onChange={onPageChange}
+                        page={currentPage}
+                        pageCount={pageCount}
+                      />
+                    </div>
+                  ) : null}
+                </>
+              ) : (
+                <section
+                  aria-labelledby="search-filtered-empty-title"
+                  className="search-filtered-empty"
+                >
+                  <span className="search-empty__visual">
+                    <Icon className="search-empty__icon" name="search" />
+                  </span>
+                  <h2 className="search-empty__title" id="search-filtered-empty-title">
+                    Ничего не найдено
+                  </h2>
+                  <p className="search-empty__message">
+                    По текущему запросу и выбранным фильтрам товаров нет.
+                  </p>
+                  <Button className="search-filtered-empty__reset" onClick={resetFilters}>
+                    Сбросить фильтры
+                  </Button>
+                </section>
+              )}
+            </div>
+          </div>
+        ) : matches.length > 0 ? (
+          resultList
         ) : (
           <section aria-labelledby="search-empty-title" className="search-empty">
             <span className="search-empty__visual">

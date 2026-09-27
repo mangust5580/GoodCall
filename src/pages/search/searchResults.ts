@@ -70,6 +70,10 @@ export function searchPageSlice(
   return products.slice(start, start + SEARCH_RESULTS_PER_PAGE);
 }
 
+export function searchSavings(price: number, oldPrice: number | undefined): number | undefined {
+  return oldPrice !== undefined && oldPrice > price ? oldPrice - price : undefined;
+}
+
 export function formatSearchPrice(value: number): string {
   return priceFormatter.format(value);
 }
