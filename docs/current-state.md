@@ -384,8 +384,9 @@ the route hand Home the one destination that exists.
 
 **Section inventory, in raster order:**
 
-1. Hero — a two-column band: the dominant dark discount banner and a 280px
-   column of three compact offer cards. Home-owned.
+1. Hero — a two-column band: the dominant dark hero banner (a three-slide
+   `HomeHeroSlider`, see below) and a 280px column of three compact offer cards
+   with small lavender product scenes. Home-owned.
 2. Benefits strip — four icon/title/note items, rendered by the shared
    `BenefitsStrip` (`src/components/content/`) from Home's `HOME_BENEFITS`.
 3. Promo pair — the light `Новинки от GOODCALL` card and the dark
@@ -547,8 +548,7 @@ three `home-article-*` masters.
   earlier page-level overflow suspicion is cleared.
 
 No Home layout, banner composition, route, Supabase, Catalog, dependency or
-global design-system contract changed in the media work. Home visual PASS is
-still pending explicit user approval.
+global design-system contract changed in the media work.
 
 ### Product Details A + B — Primary Surface, Content, Trust & Payment
 
