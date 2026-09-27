@@ -6,7 +6,14 @@ import { CatalogRoute } from './CatalogRoute';
 import { HomeRoute } from './HomeRoute';
 import { ProductDetailsRoute } from './ProductDetailsRoute';
 import { RouteScrollReset } from './RouteScrollReset';
-import { CART_PATH, CATALOG_SMARTPHONES_PATH, HOME_PATH, PRODUCT_PATH } from './routes';
+import { SearchRoute } from './SearchRoute';
+import {
+  CART_PATH,
+  CATALOG_SMARTPHONES_PATH,
+  HOME_PATH,
+  PRODUCT_PATH,
+  SEARCH_PATH,
+} from './routes';
 
 import './ProductionRouter.scss';
 
@@ -33,6 +40,7 @@ export function ProductionRouter() {
         <Route element={<CatalogRoute />} path={CATALOG_SMARTPHONES_PATH} />
         <Route element={<ProductDetailsRoute />} path={PRODUCT_PATH} />
         <Route element={<CartRoute />} path={CART_PATH} />
+        <Route element={<SearchRoute />} path={SEARCH_PATH} />
         <Route element={<RouteNotFound />} path="*" />
       </Routes>
     </HashRouter>

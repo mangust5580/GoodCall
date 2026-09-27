@@ -56,6 +56,10 @@ Accepted:
 - **Cart B / Populated Cart — user visual/UX PASS on 2026-09-27 (desktop and
   mobile), CLOSED and published.** `#/cart` opens on a populated Cart-local
   seed and falls back to the Cart A empty state. See the Cart B section below.
+- **Search A / Results Page Foundation — user visual/UX PASS on 2026-09-27
+  (desktop and mobile results and no-results), CLOSED and published.**
+  `#/search?q=…` is the production results route, and the Header search
+  submits to it. See the Search A section below.
 - Media Foundation / Picture pipeline + Icon policy
 - Location Foundation / CitySelector — visual gate, user visual PASS on
   2026-08-27, including the requested danger-red service/geolocation failure
@@ -90,6 +94,106 @@ Active visual slice:
   structure, section inventory, band geometry and responsive behaviour from
   `Home.png`; section depth, promotional artwork and section-level destinations
   are deliberately still open. See the Home section below.
+
+### Search A — Results Page Foundation
+
+**Status: user visual/UX PASS on 2026-09-27; CLOSED and published.** Do not
+reopen accepted visuals or behaviour.
+
+The PASS covers:
+
+- desktop and mobile results;
+- desktop and mobile no-results;
+- the current Header search presentation.
+
+Evidence: `Search_result.png`, anatomy only. Its older-generation shell is
+obsolete evidence.
+
+**Route and URL ownership.**
+
+- `SEARCH_PATH` (`/search`) and `searchPath(query)` live in `routes.ts`.
+- The URL shape is `#/search?q=<query>[&sort=<cheap|expensive|rating>][&page=<n>]`.
+- The URL owns the query, sort and page. There is no query-state framework:
+  `SearchRoute` uses `useSearchParams` directly.
+- Defaults are omitted from the URL (`sort=popular`, `page=1`).
+- A sort change deletes `page`.
+- Invalid `sort` or `page` values fall back to popular / 1.
+- An out-of-range page clamps to the last page.
+- Direct entry, reload and Back/Forward all work. `RouteScrollReset` is
+  unchanged, so query-only changes do not scroll.
+
+**Header wiring.**
+
+- `ProductionShell` passes `onSearchSubmit` to the existing `SiteHeader`
+  seam. It is one `SearchField`, shared by desktop and mobile.
+- Submission trims the value and pushes `searchPath(query)` through
+  `useNavigate`. Enter and the `Выполнить поиск` button both submit.
+- Blank or whitespace input is a no-op: no navigation, focus stays.
+- Wiring the seam turns the field's static magnifier into the accepted
+  `SearchField` submit button (a 20px glyph in a 34px button, as on
+  `?reference=header`). The earlier static glyph drew at 34px because its mask
+  ignores the 7px padding. `SiteHeader` CSS is unchanged.
+
+**Data.**
+
+- `SearchRoute` reuses Catalog's unchanged `fetchCatalogProducts()` once per
+  mount (the smartphones category), with `CATALOG_PRODUCTS` as the fixture
+  fallback — the same philosophy as Catalog.
+- The search scope is therefore the current Catalog (16 live smartphones or
+  16 fixtures). Other categories are not searchable, because their mapping and
+  imagery do not exist.
+- No backend schema, query or endpoint was added.
+- Results are derived synchronously from the corpus and the URL query, so
+  stale results never survive a query change.
+
+**Matching.**
+
+- The query is trimmed and internal whitespace collapsed.
+- Matching is a case-insensitive (`ru-RU` locale) substring test on the
+  product title only.
+- There is no fuzzy, stemming, transliteration, synonym or relevance ranking.
+
+**Results.**
+
+- Breadcrumbs `Главная › Поиск`.
+- `h1` `Результаты поиска`, with the summary `По запросу «q» найдено N товаров`.
+- The Catalog sort vocabulary and comparators: `Сначала популярные` (default,
+  by `popularity_score`), `Сначала дешевле`, `Сначала дороже`, `По рейтингу`.
+  They are shown through a Search-local copy of Catalog's Radix `Select`
+  markup.
+- A `<ul>` of accepted `ProductCard layout="horizontal"`, 12 per page, using
+  the accepted `Pagination`.
+- From 768px, a Search-owned contextual override in `search.scss` (nested
+  under `.search-results`) makes each card one compact row: 112×88 media,
+  title and rating in the main area, and prices right-aligned with the price
+  above the old price.
+- Below 768px the accepted stacked card is unchanged.
+- The shared `ProductCard` source was not modified.
+- Cards carry no add-to-cart or favourite actions (the Home/Cart precedent).
+- Titles link only through `productDetailsHref` after a live read, so only
+  the `iphone-15-128` specimen links.
+- Badges use `Chip`.
+
+**No results / no query.**
+
+- A search-icon disc, then `Ничего не найдено` (or `Введите запрос` when `q`
+  is absent), with the query quoted.
+- Real links: `Перейти в каталог` and `На главную`.
+- No sort or pagination is shown.
+
+**Ownership.** `src/pages/search/` holds `SearchPage.tsx`, `searchResults.ts`,
+`search.scss` and `index.ts`. `src/app/SearchRoute.tsx` is the route seam. No
+Catalog file changed.
+
+**Deferred.**
+
+- filters and facets, the category scope selector;
+- autocomplete, suggestions, history, analytics;
+- fuzzy, semantic or relevance search, and a search backend;
+- cross-category search;
+- global cart and favourites state;
+- Product Details beyond the specimen;
+- a shared `Breadcrumbs` component (now four page-local copies).
 
 ### Cart B — Populated Cart
 
@@ -934,7 +1038,7 @@ products or the result count.
 
 ### Catalog C — Product Grid + Pagination + Sorting
 
-**Active slice. User visual PASS is still required.**
+**User visual PASS received on 2026-08-30, closed.**
 
 **Ownership.** `src/pages/catalog/` gains `catalogProductFixtures.ts` (product
 shape, 16 specimen products, sort options and comparators, page constants) and
@@ -2736,6 +2840,8 @@ router owns only the fragment. The base path still lives solely in
   <https://mangust5580.github.io/GoodCall/#/catalog/smartphones>
 - `#/cart` — the production Cart route: the Cart B populated state with a
   Cart-local seed, and the Cart A empty state after the last line is removed.
+- `#/search?q=…` — the production Search results route (Search A); optional
+  `sort` and `page` params.
 - `#/product/:slug` — the production Product Details route, specimen-gated to
   `iphone-15-128`; every other slug renders the route's compact not-found state.
 - `*` — a compact in-router fallback: one `<h1>Страница не найдена</h1>`, one
@@ -2744,15 +2850,18 @@ router owns only the fragment. The base path still lives solely in
   design later.
 
 Route paths live in `src/app/routes.ts` as `HOME_PATH`,
-`CATALOG_SMARTPHONES_PATH`, `PRODUCT_PATH` and `CART_PATH`. `hashHref()` and
-`productDetailsHref()` serve the `href` seams that plain anchors need.
+`CATALOG_SMARTPHONES_PATH`, `PRODUCT_PATH`, `CART_PATH` and `SEARCH_PATH`.
+`hashHref()`, `productDetailsHref()` and `searchPath()` serve the `href` and
+navigation seams.
 
 ### Ownership
 
-`src/app/ProductionRouter.tsx` holds the `HashRouter`, the five routes and the
+`src/app/ProductionRouter.tsx` holds the `HashRouter`, the six routes and the
 local fallback component, with `ProductionRouter.scss` beside it.
 `src/app/HomeRoute.tsx`, `src/app/CatalogRoute.tsx`,
-`src/app/ProductDetailsRoute.tsx` and `src/app/CartRoute.tsx` are the page seams.
+`src/app/ProductDetailsRoute.tsx`, `src/app/CartRoute.tsx` and
+`src/app/SearchRoute.tsx` are the page seams. `ProductionShell` wires the
+Header search submission to `#/search?q=…`.
 
 `src/app/ProductionShell.tsx` owns the shared production composition —
 `SiteHeader`, the route's page, `NewsletterBand`, `SiteFooter`,
@@ -2900,7 +3009,8 @@ never jumps into the production router.
 - **Header and Footer brand links** now point at `#/`, because Home is real.
   Everything else in the Header is still deliberately unwired: the utility
   links, three of the four actions (`Корзина` now links to `#/cart` in both
-  `SiteHeader` and `MobileActionBar`), `Каталог товаров`, `Ещё` and all nine category links
+  `SiteHeader` and `MobileActionBar`; the Header search submits to
+  `#/search?q=…`), `Каталог товаров`, `Ещё` and all nine category links
   keep the existing consumer-injected fallback to the app base. No unavailable
   destination received a fake route and no category label became semantically
   false. Each gets a real route when its page exists.
@@ -3047,7 +3157,9 @@ none of them blocks the closed milestone.
 
 ## Next approved step
 
-**No next Cart milestone is selected.** Cart A and Cart B are closed.
+**No next milestone is selected.** Cart A, Cart B and Search A are closed.
+Search B (filters/facets, autocomplete, cross-category scope) is not started
+and not scoped.
 
 Each of the following would need its own explicit scope, and none exists:
 
