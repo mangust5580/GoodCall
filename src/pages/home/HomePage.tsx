@@ -48,7 +48,7 @@ const PROMO_MEDIA_SIZES = '(max-width: 760px) calc(100vw - 32px), 678px';
 const CATEGORY_PROMO_MEDIA_SIZES =
   '(max-width: 680px) calc(100vw - 32px), (max-width: 1024px) calc((100vw - 64px) / 2), 432px';
 const CINEMA_MEDIA_SIZES = '(max-width: 1440px) calc(100vw - 32px), 1376px';
-const OFFER_MEDIA_SIZES = '(max-width: 760px) 72px, 56px';
+const OFFER_MEDIA_SIZES = '(max-width: 759px) 96px, 128px';
 const PRODUCT_MEDIA_SIZES = '(max-width: 520px) 240px, 220px';
 const ARTICLE_MEDIA_SIZES =
   '(max-width: 620px) calc(100vw - 32px), (max-width: 900px) calc((100vw - 52px) / 2), 432px';
@@ -86,13 +86,15 @@ export function HomePage({
           <ul className="home-hero__offers">
             {HOME_HERO_OFFERS.map((offer) => (
               <li key={offer.id}>
-                <article aria-label={offer.title} className="home-offer">
-                  <Picture
-                    alt={offer.imageAlt}
-                    className="home-offer__art"
-                    sizes={OFFER_MEDIA_SIZES}
-                    source={ARTWORK[offer.image]}
-                  />
+                <article aria-label={offer.title} className={`home-offer home-offer--${offer.id}`}>
+                  <span className="home-offer__scene">
+                    <Picture
+                      alt={offer.imageAlt}
+                      className="home-offer__art"
+                      sizes={OFFER_MEDIA_SIZES}
+                      source={ARTWORK[offer.image]}
+                    />
+                  </span>
                   <div className="home-offer__body">
                     <p className="home-offer__title">{offer.title}</p>
                     <p className="home-offer__spec">{offer.spec}</p>
@@ -260,7 +262,10 @@ export function HomePage({
                   <div className="home-article__body">
                     <h3 className="home-article__title">{article.title}</h3>
                     <p className="home-article__excerpt">{article.excerpt}</p>
-                    <p className="home-article__date">{article.date}</p>
+                    <p className="home-article__date">
+                      <Icon className="home-article__date-icon" name="calendar" />
+                      {article.date}
+                    </p>
                   </div>
                 </article>
               </li>

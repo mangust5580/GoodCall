@@ -3,7 +3,7 @@ import type { IconName } from '../../components/ui';
 
 export type HomeArtwork = 'smartphone' | 'earbuds' | 'watch' | 'headphones' | 'laptop' | 'tablet';
 
-export type HomeHeroMedia = 'heroMainPromo';
+export type HomeHeroMedia = 'heroMainPromo' | 'heroLaptop01' | 'heroAudio02';
 
 export interface HomeHeroSlide {
   readonly id: string;
@@ -64,17 +64,17 @@ export const HOME_HERO_SLIDES: readonly HomeHeroSlide[] = [
   },
   {
     id: 'hero-2',
-    title: 'Большие скидки',
-    accent: 'до 50%',
-    lead: 'На смартфоны и аксессуары',
-    media: 'heroMainPromo',
+    title: 'Новые возможности',
+    accent: 'для работы и творчества',
+    lead: 'Ноутбуки для любых задач',
+    media: 'heroLaptop01',
   },
   {
     id: 'hero-3',
-    title: 'Большие скидки',
-    accent: 'до 50%',
-    lead: 'На смартфоны и аксессуары',
-    media: 'heroMainPromo',
+    title: 'Погрузитесь',
+    accent: 'в мир звука',
+    lead: 'Наушники и аудиотехника',
+    media: 'heroAudio02',
   },
 ];
 

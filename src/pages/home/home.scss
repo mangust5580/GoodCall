@@ -197,23 +197,93 @@ $home-sale-badge-surface: #dc2626;
 }
 
 .home-offer {
+  --home-offer-glow-x: 50%;
+  --home-offer-glow-y: 38%;
+  --home-offer-art-scale: 1;
+  --home-offer-art-shift: 0%;
+
   display: flex;
   gap: 14px;
   align-items: center;
   height: 100%;
-  padding: 16px;
-  background-color: var(--role-surface-card-soft);
+  padding: 10px 16px 10px 10px;
+  background-color: var(--role-surface-card);
+  border: 1px solid var(--role-border-soft);
   border-radius: 16px;
 
   picture {
     display: contents;
   }
 
+  &--iphone-15 {
+    --home-offer-glow-x: 34%;
+    --home-offer-glow-y: 32%;
+    --home-offer-art-scale: 1.12;
+    --home-offer-art-shift: -3%;
+  }
+
+  &--galaxy-s24 {
+    --home-offer-glow-x: 68%;
+    --home-offer-glow-y: 30%;
+    --home-offer-art-scale: 1.06;
+    --home-offer-art-shift: 4%;
+  }
+
+  &--apple-watch-se {
+    --home-offer-glow-x: 50%;
+    --home-offer-glow-y: 58%;
+    --home-offer-art-scale: 1.2;
+  }
+
+  &__scene {
+    position: relative;
+    display: flex;
+    flex: 0 0 40%;
+    align-items: center;
+    align-self: stretch;
+    justify-content: center;
+    max-width: 128px;
+    min-height: 84px;
+    overflow: hidden;
+    background:
+      radial-gradient(
+        circle at var(--home-offer-glow-x) var(--home-offer-glow-y),
+        color-mix(in srgb, var(--color-brand-purple-600) 14%, transparent),
+        transparent 64%
+      ),
+      linear-gradient(160deg, var(--role-surface-brand-soft), var(--role-surface-card-soft));
+    border-radius: 12px;
+
+    &::after {
+      position: absolute;
+      inset: auto 18% 10%;
+      height: 12%;
+      content: '';
+      background: radial-gradient(
+        closest-side,
+        color-mix(in srgb, var(--color-base-rich-text) 16%, transparent),
+        transparent
+      );
+      pointer-events: none;
+    }
+
+    @include h.media-max(760px) {
+      flex-basis: 96px;
+      align-self: center;
+      height: 96px;
+      min-height: 0;
+    }
+  }
+
   &__art {
-    flex: none;
-    width: 56px;
-    height: 72px;
+    position: relative;
+    z-index: 1;
+    display: block;
+    width: 100%;
+    height: 100%;
+    max-height: 112px;
     object-fit: contain;
+    transform: translateX(var(--home-offer-art-shift)) scale(var(--home-offer-art-scale));
   }
 
   &__body {
@@ -629,6 +699,7 @@ $home-sale-badge-surface: #dc2626;
   &__media {
     display: block;
     width: 100%;
+    height: auto;
     aspect-ratio: 4 / 1;
     object-fit: cover;
     object-position: center;
@@ -654,9 +725,16 @@ $home-sale-badge-surface: #dc2626;
   }
 
   &__date {
+    display: flex;
+    gap: 6px;
+    align-items: center;
     margin: 16px 0 0;
     font-size: 13px;
     line-height: 1.3;
     color: var(--role-text-subtle);
+  }
+
+  &__date-icon {
+    --control-icon-size: 14px;
   }
 }

@@ -24,6 +24,8 @@ type HeroCarouselApi = NonNullable<UseEmblaCarouselType[1]>;
 
 const HERO_MEDIA: Readonly<Record<HomeHeroMedia, HomeMarketingAsset>> = {
   heroMainPromo: HOME_MARKETING_MEDIA.heroMainPromo,
+  heroLaptop01: HOME_MARKETING_MEDIA.heroLaptop01,
+  heroAudio02: HOME_MARKETING_MEDIA.heroAudio02,
 };
 
 function subscribeToReducedMotion(onChange: () => void): () => void {
@@ -174,6 +176,7 @@ export function HomeHeroSlider({ slides }: HomeHeroSliderProps) {
 
             return (
               <div
+                aria-hidden={!active}
                 aria-label={`Слайд ${index + 1} из ${slides.length}`}
                 className="home-banner__slide"
                 inert={!active}

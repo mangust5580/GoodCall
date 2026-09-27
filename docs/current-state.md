@@ -60,6 +60,11 @@ Accepted:
   (desktop and mobile results and no-results), CLOSED and published.**
   `#/search?q=…` is the production results route, and the Header search
   submits to it. See the Search A section below.
+- **Home A / Page Structure & Section Inventory — user visual PASS on
+  2026-09-27, CLOSED and published.** `#/` renders the accepted Home page with
+  the three-slide hero, accepted side offer cards, revised article covers,
+  accepted Newsletter/Footer integration and the deferred non-faked
+  destinations. See the Home section below.
 - Media Foundation / Picture pipeline + Icon policy
 - Location Foundation / CitySelector — visual gate, user visual PASS on
   2026-08-27, including the requested danger-red service/geolocation failure
@@ -88,12 +93,8 @@ Technically complete:
 
 Active visual slice:
 
-- **Home A / Page Structure & Section Inventory — technically complete; user
-  visual PASS is required before deeper Home section work.** `#/` now renders
-  the real Home page instead of redirecting to Catalog. Home A owns page
-  structure, section inventory, band geometry and responsive behaviour from
-  `Home.png`; section depth, promotional artwork and section-level destinations
-  are deliberately still open. See the Home section below.
+- **No active visual slice is selected.** Home A, Cart A, Cart B, Search A and
+  the Product Details production integration are closed.
 
 ### Search A — Results Page Foundation
 
@@ -366,7 +367,8 @@ cart state.
 
 ### Home A — Page Structure & Section Inventory
 
-**Active slice. User visual PASS is still required.**
+**Status: user visual PASS on 2026-09-27; CLOSED and published.** Do not reopen
+accepted Home visuals or behaviour.
 
 Primary evidence: `Home.png`, 1920x3840. It is the only Home raster; no mobile
 or responsive Home raster exists, so responsive behaviour is derived from the
@@ -416,31 +418,31 @@ tiles, five products, three articles and three cinema points. It is not a data
 or domain contract, imports nothing from Catalog, and has no `HomeData`,
 repository, service, store or query layer.
 
-**Deliberately deferred, and visible against the raster:**
+**Deliberately deferred:**
 
 - Section-level affordances (`Смотреть все`, `Читать все статьи`), the hero CTA
   `Смотреть все акции`, the promo CTAs and the three `Выбрать` buttons are
   **omitted**, because none of their destinations exists. This follows the
   accepted Catalog decision to drop the raster's `Смотреть подборку` button for
   the same reason. They return as real links when their routes exist.
-- **Hero promotional slider (Home B).** The main hero banner is a real Embla
-  slider owned by `HomeHeroSlider` (`src/pages/home/HomeHeroSlider.tsx`),
-  which uses `useEmblaCarousel` directly with `align: 'start'`, no loop and
-  no plugins. It renders the page-local `HOME_HERO_SLIDES` fixture. There are
-  three slides, all temporarily reusing the same `heroMainPromo` media object
-  and the same headline/lead. That is a presentation fixture, not a campaign
-  contract. Mouse drag and touch swipe change slides. Three bottom-centre dot
-  `<button>`s (`Перейти к слайду N`, `aria-current` on the active dot, system
-  focus ring) follow Embla's selected snap through `select`/`reInit`, and
+- **Hero promotional slider.** The main hero banner is a real Embla slider owned
+  by `HomeHeroSlider` (`src/pages/home/HomeHeroSlider.tsx`), which uses
+  `useEmblaCarousel` directly with `align: 'start'`, no loop and no plugins. It
+  renders the page-local `HOME_HERO_SLIDES` fixture with exactly three slides:
+  the accepted smartphone discount hero unchanged, the selected laptop campaign
+  as slide 2, and the selected audio campaign as slide 3. Mouse drag and touch
+  swipe change slides. Three bottom-centre dot `<button>`s expose
+  `aria-current`, keep the system focus ring, use `Перейти к слайду N`
+  accessible names, follow Embla's selected snap through `select`/`reInit`, and
   jump without animation under `prefers-reduced-motion`. The slider is a
   labelled `<section>`, and each slide is a `group` labelled `Слайд N из 3`.
-  Inactive slides are `inert`, and only the active slide's title renders as
-  the page `h1`, so duplicated copy is never exposed twice. The hero geometry,
-  artwork crop, offer column and benefits strip are pixel-identical to the
-  pre-slider build at 1440/1024/768/390/320. Arrows, a pause/play control, a
-  generic `Carousel` abstraction and remote campaign data are intentionally
-  deferred. `?reference=home` stays local and deterministic.
-- **Hero autoplay (Home B1).** `HomeHeroSlider` advances every
+  Inactive slides are `inert` and `aria-hidden`, and only the active slide's
+  title renders as the page `h1`, so duplicated slide content is not exposed to
+  screen readers. The hero geometry, offer column, pagination placement and
+  stable height are preserved across the three slides. Arrows, a pause/play
+  control, a generic `Carousel` abstraction and remote campaign data are
+  intentionally deferred. `?reference=home` stays local and deterministic.
+- **Hero autoplay.** `HomeHeroSlider` advances every
   `AUTOPLAY_DELAY_MS` (6000 ms) by calling `scrollTo` with the next index from
   Embla's `selectedScrollSnap()`, wrapping from the last slide to the first. A
   single one-shot `setTimeout` effect owns the timer. Its dependencies are the
@@ -454,11 +456,11 @@ repository, service, store or query layer.
   entirely and is re-read live through `matchMedia` change events.
   Reduced-motion dot navigation still jumps instantly. There is no
   `aria-live`, and focus is never moved. No autoplay plugin or other
-  dependency was added. The three slides still intentionally reuse the same
-  temporary media and copy.
-- Artwork. Home now has five original local marketing raster assets for the hero
-  discount banner, `Новинки от GOODCALL`, `Чёрная пятница`, the wearable-tech
-  promo, and the entertainment/streaming banner. Their master PNGs live under
+  dependency was added.
+- Artwork. Home now has seven original local marketing raster assets for the
+  hero discount banner, hero laptop banner, hero audio banner, new-arrivals
+  banner, `Чёрная пятница`, the wearable-tech promo, and the
+  entertainment/streaming banner. Their master PNGs live under
   `src/assets/media/home/masters/`, generated desktop/mobile crops and AVIF/WebP
   derivatives live under `src/assets/media/home/derived/`, and
   `src/assets/media/home/homeMarketingMedia.ts` is the Home import manifest.
@@ -466,14 +468,14 @@ repository, service, store or query layer.
   pipeline for responsive AVIF/WebP source sets. These images are decorative
   (`alt=""`) because the text content is real HTML.
 
-  Two shared master sheets back the smaller Home slots and are cropped by the
+  A shared master sheet backs the smaller device slots and is cropped by the
   generator rather than stored as one master per slot:
   `home-device-library.png` supplies the six `HomeArtwork` device renders
-  (`smartphone`, `earbuds`, `watch`, `headphones`, `laptop`, `tablet`) consumed
-  by the hero offer list, the category promos and the Home product cards, and
-  `home-article-editorial.png` supplies the three `Последние статьи` cover
-  images. Article covers are wired through `HOME_ARTICLE_MEDIA`, so the soft
-  brand-surface placeholder is gone.
+  (`smartphone`, `earbuds`, `watch`, `headphones`, `laptop`, `tablet`), consumed
+  by the hero offer list, the category promos and the Home product cards.
+  The three `Последние статьи` covers each have their own master, built from a
+  user-approved 1200×300 editorial image, and are wired through
+  `HOME_ARTICLE_MEDIA`.
   **Category navigation is normalized system-first.** The accepted `SiteHeader`
   horizontal category row is the single top-level category navigation. The
   `Home.png` hero's vertical category rail is intentionally omitted, because it
@@ -507,19 +509,27 @@ share one generic electronics language: graphite metal, dark and transparent
 glass, controlled studio shadows and a restrained violet rim light. The pipeline
 is master PNG → `npm run media:home` (`scripts/build-home-media.mjs`, sharp) →
 cropped PNG plus AVIF/WebP derivatives → `homeMarketingMedia.ts` →
-`vite-imagetools` `?picture`. The generator wipes and rebuilds `derived/`; two
-consecutive runs are byte-identical and produce exactly 189 derivative files.
-Seven masters remain: five marketing banners, `home-device-library.png` and
-`home-article-editorial.png`.
+`vite-imagetools` `?picture`. A full generator run wipes and rebuilds
+`derived/`; scoped runs can regenerate named assets without touching unrelated
+derivatives. A full current run produces exactly 225 derivative files. Eleven
+masters remain: seven marketing banners, `home-device-library.png` and the
+three `home-article-*` masters.
 
 - Devices: six transparent packshots cropped from `home-device-library.png` onto
   one square `900x900` card contract, so the accepted `ProductCard` surface stays
   the only visible product container.
-- Article covers: three native `2172x543` 4:1 strips in
-  `home-article-editorial.png`, cropped to `1200x300` with widths
-  `320/480/640/900/1200` and an article-only encode quality (WebP 88, AVIF 64).
-  They were regenerated from scratch and are **accepted provisionally** for the
-  current Home closeout.
+- Article covers: three user-approved `1200x300` (4:1) editorial images.
+  Each is stored as a lossless PNG master (pixel-identical to the approved WebP):
+  - `home-article-iphone-15.png` → `iphone-15-review`;
+  - `home-article-galaxy-s24.png` → `galaxy-s24-first-look`;
+  - `home-article-smartwatch-guide.png` → `how-to-pick-a-watch`.
+
+  Each master generates an identity `1200x300` `cover` with widths
+  `320/480/640/900/1200` (WebP 88, AVIF 64). `?picture` sources must be
+  PNG/JPEG. `.home-article__media` sets `height: auto`, so its declared `4 / 1`
+  aspect ratio wins over the `height` attribute that `Picture` emits. The former
+  shared `home-article-editorial.png` sheet was removed as an orphan.
+
 - Removed as confirmed orphans: the superseded per-device masters
   `home-device-{smartphone,earbuds,watch,headphones}.png`, which the generator no
   longer reads since the device library sheet replaced them.
@@ -2563,19 +2573,19 @@ functional suppression directives.
 
 ## Current visual status
 
-**Home A / Page Structure & Section Inventory — technically complete; user
-visual PASS is still required.** `#/` renders the real Home page with zero
+**Home A / Page Structure & Section Inventory — user visual PASS on
+2026-09-27, CLOSED and published.** `#/` renders the accepted Home page with zero
 runtime errors, zero horizontal document overflow and no clipped text at 1440,
 1280, 1024, 768, 430, 390 and 320. Measured against `Home.png` mapped to the
 1440 design space, the section order matches exactly and the hero height (474),
-promo pair (300), category trio (195) and cinema band (298) all match. The hero
-is two columns rather than the raster's three: the banner is 1076px wide and the
-280px offer column is unchanged. The page is taller than the
-raster overall, mostly because the accepted `NewsletterBand` (196 against 109)
-and `SiteFooter` (265 against 202) are larger than the raster's variants and the
-accepted `SiteHeader` carries a category row the raster does not. Omitted
-section affordances, missing artwork and the duplicated category navigation are
-the known visual gaps listed in the Home A section.
+promo pair (300), category trio (195) and cinema band (298) all match. The
+accepted hero is two columns rather than the raster's three: the banner is
+1076px wide and the 280px offer column is unchanged. The accepted page is taller
+than the raster overall, mostly because the accepted `NewsletterBand` (196
+against 109) and `SiteFooter` (265 against 202) are larger than the raster's
+variants and the accepted `SiteHeader` carries a category row the raster does
+not. Section affordances and unavailable destinations remain deliberately
+omitted rather than faked.
 
 **Catalog — pixel-identical to its accepted PASS state.** Restoring the
 `Главная` breadcrumb link makes the production Catalog route match the accepted
@@ -2981,9 +2991,6 @@ network-independent. Hero, offers, benefits, promo pair, category promo trio,
 cinema, latest articles, NewsletterBand and Footer remain fixture/local. Home
 campaign, article and CMS contracts remain deferred.
 
-This integration does not grant Home visual PASS; visual review remains
-user-owned.
-
 ### Reference precedence
 
 `App.tsx` checks `?reference=` first and only renders `ProductionRouter` when the
@@ -3157,9 +3164,9 @@ none of them blocks the closed milestone.
 
 ## Next approved step
 
-**No next milestone is selected.** Cart A, Cart B and Search A are closed.
-Search B (filters/facets, autocomplete, cross-category scope) is not started
-and not scoped.
+**No next milestone is selected.** Home A, Cart A, Cart B and Search A are
+closed. Search B (filters/facets, autocomplete, cross-category scope) is not
+started and not scoped.
 
 Each of the following would need its own explicit scope, and none exists:
 
@@ -3176,39 +3183,22 @@ a second product needs a page, or when real `product_images` exist.
 Product Details Production Integration A and the Route scroll fix are closed.
 They received user visual / UX PASS on 2026-09-27.
 
-**User visual review of Home A against `Home.png`.** The slice and its raster
-media are technically finalized and published; only the user can grant the
-visual PASS. The review covers the unified Home raster family: hero quality,
-device consistency, catalog feel, article cohesion (covers accepted
-provisionally) and overall Home brand consistency.
+**Home A is closed.** User visual PASS was received on 2026-09-27 for the
+current Home page: the integrated desktop/mobile composition, the accepted
+three-slide hero, side offer cards, revised editorial article covers with
+calendar dates, cinema banner without a fake StreamVibe CTA, and the current
+Newsletter/Footer integration.
 
-The category-duplication question raised at the first review is settled: the
-Home hero's vertical category rail is removed, the accepted `SiteHeader`
-horizontal row is the single top-level category navigation, the hero expands
-into the freed space, and `Популярные категории` stays as a Home discovery
-section.
+The category-duplication question is settled: the Home hero's vertical category
+rail is removed, the accepted `SiteHeader` horizontal row is the single
+top-level category navigation, the hero expands into the freed space, and
+`Популярные категории` stays as a Home discovery section.
 
-Questions that still ride with the review, all recorded in the Home A section:
+Future Home work needs a new explicit scope. Likely remaining Home work is the
+real section destinations, StreamVibe/cinema integration if a destination
+exists, and campaign/article media data contracts.
 
-- Section affordances and CTAs are omitted rather than faked, because their
-  destinations do not exist.
-- Home campaign, entertainment, device and article artwork all now use original
-  local raster assets with the graphite/glass/violet studio treatment. Catalog
-  product photography still relies on the preserved synthetic fallback until
-  licensed Supabase `product_images` exist.
-- The page is taller than the raster, mostly because the accepted
-  `NewsletterBand` and `SiteFooter` are larger than the raster's variants.
-
-- The hero is now a real three-slide Embla slider with dots, drag and swipe.
-  Its slides temporarily repeat the same artwork and copy until real campaign
-  content exists. It autoplays every 6 seconds, with hover, keyboard-focus,
-  hidden-tab and reduced-motion pauses.
-
-After the PASS, the next Home milestone is deeper section work driven by the
-gaps above — most likely distinct hero slide content, the real section
-destinations, and article/media data contracts.
-
-**Deferred until after Home:**
+**Deferred after Home A:**
 
 - Home campaign/banner, article and broader merchandising contracts. The shared
   typed Supabase client exists, and Home popular categories/products are wired,

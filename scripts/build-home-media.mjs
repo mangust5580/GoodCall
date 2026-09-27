@@ -23,6 +23,32 @@ const assets = [
     ],
   },
   {
+    id: 'home-hero-laptop-01',
+    variants: [
+      {
+        id: 'desktop',
+        width: 1600,
+        height: 704,
+        position: 'right',
+        widths: [640, 960, 1280, 1600],
+      },
+      { id: 'mobile', width: 720, height: 620, position: 'right', widths: [320, 480, 640, 720] },
+    ],
+  },
+  {
+    id: 'home-hero-audio-02',
+    variants: [
+      {
+        id: 'desktop',
+        width: 1600,
+        height: 704,
+        position: 'right',
+        widths: [640, 960, 1280, 1600],
+      },
+      { id: 'mobile', width: 720, height: 620, position: 'right', widths: [320, 480, 640, 720] },
+    ],
+  },
+  {
     id: 'home-promo-new-arrivals',
     variants: [
       { id: 'desktop', width: 1200, height: 680, position: 'right', widths: [420, 640, 960, 1200] },
@@ -141,9 +167,7 @@ const assets = [
     ],
   },
   {
-    id: 'home-article-smartphone-review',
-    source: 'home-article-editorial',
-    extract: { left: 0, top: 0, width: 2172, height: 543 },
+    id: 'home-article-iphone-15',
     variants: [
       {
         id: 'cover',
@@ -157,9 +181,7 @@ const assets = [
     ],
   },
   {
-    id: 'home-article-flagship-preview',
-    source: 'home-article-editorial',
-    extract: { left: 2172, top: 0, width: 2172, height: 543 },
+    id: 'home-article-galaxy-s24',
     variants: [
       {
         id: 'cover',
@@ -173,9 +195,7 @@ const assets = [
     ],
   },
   {
-    id: 'home-article-watch-guide',
-    source: 'home-article-editorial',
-    extract: { left: 4344, top: 0, width: 2172, height: 543 },
+    id: 'home-article-smartwatch-guide',
     variants: [
       {
         id: 'cover',
@@ -222,10 +242,24 @@ const encodeVariant = async (asset, variant) => {
   );
 };
 
-await rm(derivedDir, { recursive: true, force: true });
+const selectedAssetIds = new Set(process.argv.slice(2));
+const selectedAssets =
+  selectedAssetIds.size === 0 ? assets : assets.filter((asset) => selectedAssetIds.has(asset.id));
+const unknownAssetIds = [...selectedAssetIds].filter((assetId) =>
+  assets.every((asset) => asset.id !== assetId),
+);
+
+if (unknownAssetIds.length > 0) {
+  throw new Error(`Unknown home media asset: ${unknownAssetIds.join(', ')}`);
+}
+
+if (selectedAssetIds.size === 0) {
+  await rm(derivedDir, { recursive: true, force: true });
+}
+
 await mkdir(derivedDir, { recursive: true });
 
-for (const asset of assets) {
+for (const asset of selectedAssets) {
   for (const variant of asset.variants) {
     await encodeVariant(asset, variant);
   }
