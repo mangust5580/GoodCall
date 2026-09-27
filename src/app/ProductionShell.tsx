@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react';
-import { useNavigate } from 'react-router-dom';
 
 import { MobileActionBar, NewsletterBand, SiteFooter, SiteHeader } from '../components/shell';
-import { CART_PATH, HOME_PATH, hashHref, searchPath } from './routes';
+import { CART_PATH, HOME_PATH, hashHref } from './routes';
+import { useSearchNavigation } from './useSearchNavigation';
 
 import './ProductionShell.scss';
 
@@ -16,17 +16,9 @@ const COMPARISON_COUNT = 3;
 const FAVORITES_COUNT = 12;
 
 export function ProductionShell({ children, cartCount = CART_COUNT }: ProductionShellProps) {
-  const navigate = useNavigate();
+  const handleSearchSubmit = useSearchNavigation();
   const home = hashHref(HOME_PATH);
   const cart = hashHref(CART_PATH);
-
-  const handleSearchSubmit = (value: string) => {
-    const query = value.trim();
-
-    if (query !== '') {
-      void navigate(searchPath(query));
-    }
-  };
 
   return (
     <div className="production-shell">

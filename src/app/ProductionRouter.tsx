@@ -1,9 +1,9 @@
-import { HashRouter, Link, Route, Routes } from 'react-router-dom';
+import { HashRouter, Route, Routes } from 'react-router-dom';
 
-import { Container } from '../components/layout';
 import { CartRoute } from './CartRoute';
 import { CatalogRoute } from './CatalogRoute';
 import { HomeRoute } from './HomeRoute';
+import { NotFoundRoute } from './NotFoundRoute';
 import { ProductDetailsRoute } from './ProductDetailsRoute';
 import { RouteScrollReset } from './RouteScrollReset';
 import { SearchRoute } from './SearchRoute';
@@ -15,22 +15,6 @@ import {
   SEARCH_PATH,
 } from './routes';
 
-import './ProductionRouter.scss';
-
-function RouteNotFound() {
-  return (
-    <main className="route-not-found">
-      <Container className="route-not-found__inner">
-        <h1 className="route-not-found__title">Страница не найдена</h1>
-        <p className="route-not-found__message">Такой страницы пока нет. Вернитесь на главную.</p>
-        <Link className="ui-button ui-button--primary route-not-found__action" to={HOME_PATH}>
-          На главную
-        </Link>
-      </Container>
-    </main>
-  );
-}
-
 export function ProductionRouter() {
   return (
     <HashRouter>
@@ -41,7 +25,7 @@ export function ProductionRouter() {
         <Route element={<ProductDetailsRoute />} path={PRODUCT_PATH} />
         <Route element={<CartRoute />} path={CART_PATH} />
         <Route element={<SearchRoute />} path={SEARCH_PATH} />
-        <Route element={<RouteNotFound />} path="*" />
+        <Route element={<NotFoundRoute />} path="*" />
       </Routes>
     </HashRouter>
   );

@@ -63,6 +63,9 @@ Accepted:
 - **Search B / Faceted Results Foundation — user visual PASS on 2026-09-28
   (desktop), CLOSED and published.** Desktop faceted filters and enriched
   result rows on `#/search?q=…` from 1024px. See the Search B section below.
+- **404 A / Designed Not Found — user visual PASS on 2026-09-27 (desktop and
+  mobile), CLOSED and published.** Unmatched routes render the designed 404
+  in the accepted Global Shell. See the 404 A section below.
 - **Home A / Page Structure & Section Inventory — user visual PASS on
   2026-09-27, CLOSED and published.** `#/` renders the accepted Home page with
   the three-slide hero, accepted side offer cards, revised article covers,
@@ -97,7 +100,42 @@ Technically complete:
 Active visual slice:
 
 - **No active visual slice is selected.** Home A, Cart A, Cart B, Search A,
-  Search B and the Product Details production integration are closed.
+  Search B, 404 A and the Product Details production integration are closed.
+
+### 404 A — Designed Not Found Page
+
+**Status: user visual PASS on 2026-09-27 for desktop and mobile; CLOSED and
+published.** Do not reopen it without a new explicit requirement. Evidence:
+`404.png` (1920×2713), for composition and information architecture.
+
+- The `*` route renders `NotFoundRoute` inside the accepted `ProductionShell`:
+  breadcrumb `Главная › 404`, the lavender hero (decorative gradient `404`,
+  the single `h1` `Страница не найдена`, copy, `На главную` primary and
+  `Перейти в каталог` secondary links, the `Попробуйте поискать нужный товар`
+  search with a product placeholder), the approved illustration, the
+  `Возможно, вы ищете` shortcuts and `Вам может понравиться`, then the existing
+  Newsletter and Footer. No left rail and no legacy header.
+- Hero media: `src/assets/media/not-found/not-found-hero.png`, a byte-identical
+  promotion of the user-approved generated candidate 04 (PNG, 1600×1600, alpha,
+  no baked background), served through the `?picture` pipeline with `alt=""`.
+  The other candidates and the contact sheet stay review evidence under
+  `dist/review/404-a-hero-candidates/` and are not production media.
+- Shortcuts are real destinations only: `Смартфоны` → `#/catalog/smartphones`,
+  `Apple iPhone` → `#/search?q=iPhone`, `Samsung Galaxy` → `#/search?q=Samsung`,
+  `Корзина` → `#/cart`.
+- Recommendations reuse the Home product curation (`fetchHomeData`, with the
+  Home fixtures as fallback) rendered through the existing `ProductCard`, five
+  cards, with no cart, favourite or compare actions. Product links appear only
+  for backend-sourced products, as on Home.
+- Search reuses the existing `#/search?q=` contract through
+  `useSearchNavigation`, now shared by the Header and the 404 hero. Blank input
+  is a no-op.
+- Responsive: art beside the copy from 900px up and below it under 900px;
+  shortcuts 4 → 2 → 1 columns; products auto-fill → 1 column under 520px;
+  hero actions stack full-width under 480px. No horizontal overflow from 320px
+  to 1920px.
+
+Product Details keeps its own compact `Товар не найден` state for unknown slugs.
 
 ### Search B — Faceted Results Foundation
 
@@ -2960,10 +2998,8 @@ router owns only the fragment. The base path still lives solely in
   desktop facets); optional `sort` and `page` params.
 - `#/product/:slug` — the production Product Details route, specimen-gated to
   `iphone-15-128`; every other slug renders the route's compact not-found state.
-- `*` — a compact in-router fallback: one `<h1>Страница не найдена</h1>`, one
-  line of copy and one real `<Link>` to Home. It is deliberately not a designed
-  404 page and not a global error architecture; `404.png` will supply the real
-  design later.
+- `*` — the designed 404 (`NotFoundRoute`, 404 A, closed).
+  It is not a global error architecture.
 
 Route paths live in `src/app/routes.ts` as `HOME_PATH`,
 `CATALOG_SMARTPHONES_PATH`, `PRODUCT_PATH`, `CART_PATH` and `SEARCH_PATH`.
@@ -2972,12 +3008,14 @@ navigation seams.
 
 ### Ownership
 
-`src/app/ProductionRouter.tsx` holds the `HashRouter`, the six routes and the
-local fallback component, with `ProductionRouter.scss` beside it.
+`src/app/ProductionRouter.tsx` holds the `HashRouter` and the six routes; it
+has no local fallback component or stylesheet any more.
 `src/app/HomeRoute.tsx`, `src/app/CatalogRoute.tsx`,
-`src/app/ProductDetailsRoute.tsx`, `src/app/CartRoute.tsx` and
-`src/app/SearchRoute.tsx` are the page seams. `ProductionShell` wires the
-Header search submission to `#/search?q=…`.
+`src/app/ProductDetailsRoute.tsx`, `src/app/CartRoute.tsx`,
+`src/app/SearchRoute.tsx` and `src/app/NotFoundRoute.tsx` are the page seams.
+`src/app/useSearchNavigation.ts` turns a submitted query into `#/search?q=…`;
+`ProductionShell` uses it for the Header search and `NotFoundRoute` for the 404
+hero search. `src/pages/not-found/` owns the router-free `NotFoundPage`.
 
 `src/app/ProductionShell.tsx` owns the shared production composition —
 `SiteHeader`, the route's page, `NewsletterBand`, `SiteFooter`,
@@ -3270,8 +3308,8 @@ none of them blocks the closed milestone.
 
 ## Next approved step
 
-**No next milestone is selected.** Home A, Cart A, Cart B, Search A and
-Search B are closed. The candidates are:
+**No next milestone is selected.** Home A, Cart A, Cart B, Search A, Search B
+and 404 A are closed. The candidates are:
 
 - mobile Search filters;
 - **Commerce A — Shared Cart State**, the prerequisite for any real
@@ -3319,7 +3357,6 @@ exists, and campaign/article media data contracts.
   and variant contract exists.
 - URL/query state synchronization for Catalog filters, sorting, quick filters
   and pagination.
-- A designed 404 page from `404.png`, replacing the compact in-router fallback.
 - The remaining Header destinations, each until its own page exists.
 - `SiteFooter` final visual polish at the integrated page review near the end of
   the project: the support phone conflict, social destination wiring, and
