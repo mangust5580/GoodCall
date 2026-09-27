@@ -1,3 +1,4 @@
+@use '../../styles/helpers' as h;
 @use '../ui/controls';
 
 :root {
@@ -223,5 +224,63 @@
 
   &__policy {
     font-size: 13px;
+  }
+}
+
+.benefits-strip {
+  &__list {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: h.fluid(24, 16);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+
+    @include h.media-max(900px) {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    @include h.media-max(480px) {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  &__item {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    min-width: 0;
+  }
+
+  &__glyph {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 52px;
+    height: 52px;
+    background-color: var(--role-surface-card-soft);
+    border-radius: 14px;
+    color: var(--role-text-primary);
+  }
+
+  &__body {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+  }
+
+  &__title {
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1.3;
+    color: var(--role-text-primary);
+  }
+
+  &__note {
+    font-size: 14px;
+    line-height: 1.4;
+    color: var(--role-text-muted);
   }
 }

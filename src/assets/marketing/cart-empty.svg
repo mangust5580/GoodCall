@@ -1,0 +1,104 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 300" fill="none">
+  <defs>
+    <radialGradient id="cart-halo" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(188 138) scale(124)">
+      <stop stop-color="#e9ddff" />
+      <stop offset="0.7" stop-color="#efe6ff" />
+      <stop offset="1" stop-color="#f7f3ff" stop-opacity="0" />
+    </radialGradient>
+    <radialGradient id="cart-shadow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(196 262) scale(118 14)">
+      <stop stop-color="#5b21b6" stop-opacity="0.22" />
+      <stop offset="1" stop-color="#5b21b6" stop-opacity="0" />
+    </radialGradient>
+    <linearGradient id="cart-basket-back" x1="110" y1="112" x2="286" y2="214" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#f1e9ff" />
+      <stop offset="1" stop-color="#ddcbfd" />
+    </linearGradient>
+    <linearGradient id="cart-bag-front" x1="148" y1="46" x2="246" y2="192" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#efe6ff" />
+      <stop offset="1" stop-color="#b597f7" />
+    </linearGradient>
+    <linearGradient id="cart-bag-side" x1="240" y1="74" x2="268" y2="190" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#b596f6" />
+      <stop offset="1" stop-color="#8457e6" />
+    </linearGradient>
+    <linearGradient id="cart-bag-top" x1="150" y1="72" x2="262" y2="92" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#c9b1fb" />
+      <stop offset="1" stop-color="#a27ff2" />
+    </linearGradient>
+    <linearGradient id="cart-badge" x1="176" y1="66" x2="220" y2="110" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#9b6cf7" />
+      <stop offset="1" stop-color="#6224d9" />
+    </linearGradient>
+    <linearGradient id="cart-wire" x1="104" y1="118" x2="292" y2="214" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#c8b1fb" />
+      <stop offset="1" stop-color="#9a74ef" />
+    </linearGradient>
+    <linearGradient id="cart-rim" x1="100" y1="116" x2="296" y2="126" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#d9c7fd" />
+      <stop offset="0.5" stop-color="#b08cf6" />
+      <stop offset="1" stop-color="#8b5cf0" />
+    </linearGradient>
+    <linearGradient id="cart-frame" x1="96" y1="96" x2="286" y2="240" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#b99af8" />
+      <stop offset="1" stop-color="#7c4ae6" />
+    </linearGradient>
+    <linearGradient id="cart-grip" x1="54" y1="84" x2="96" y2="100" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#8b5cf6" />
+      <stop offset="1" stop-color="#5b21b6" />
+    </linearGradient>
+    <linearGradient id="cart-wheel" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#6d3fd8" />
+      <stop offset="1" stop-color="#3b1488" />
+    </linearGradient>
+  </defs>
+
+  <circle cx="188" cy="138" r="124" fill="url(#cart-halo)" />
+  <ellipse cx="196" cy="262" rx="118" ry="14" fill="url(#cart-shadow)" />
+
+  <path d="M104 120 L292 120 L272 212 L124 212 Z" fill="url(#cart-basket-back)" fill-opacity="0.75" />
+
+  <path d="M172 54 C170 18 208 14 210 50" stroke="#9f7aee" stroke-width="6" stroke-linecap="round" />
+  <path d="M150 48 L238 42 L246 192 L146 192 Z" fill="url(#cart-bag-front)" />
+  <path d="M238 42 L262 56 L266 188 L246 192 Z" fill="url(#cart-bag-side)" />
+  <path d="M150 48 L238 42 L262 56 L176 62 Z" fill="url(#cart-bag-top)" />
+  <path d="M166 50 C164 12 204 8 206 46" stroke="#8a5cea" stroke-width="6" stroke-linecap="round" />
+  <path d="M152 54 L236 48" stroke="#ffffff" stroke-opacity="0.55" stroke-width="2" stroke-linecap="round" />
+
+  <circle cx="196" cy="90" r="25" fill="#ffffff" fill-opacity="0.9" />
+  <circle cx="196" cy="90" r="21" fill="url(#cart-badge)" />
+  <path d="M186 90 L193 97 L207 83" stroke="#ffffff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" />
+
+  <g stroke="url(#cart-wire)" stroke-width="4" stroke-linecap="round">
+    <path d="M131 124 L148 208" />
+    <path d="M158 124 L169 208" />
+    <path d="M185 124 L190 208" />
+    <path d="M212 124 L211 208" />
+    <path d="M239 124 L232 208" />
+    <path d="M266 124 L253 208" />
+    <path d="M110 150 L286 150" />
+    <path d="M115 176 L280 176" />
+    <path d="M120 200 L275 200" />
+  </g>
+  <path d="M104 120 L124 212 L272 212 L292 120" stroke="url(#cart-frame)" stroke-width="6" stroke-linejoin="round" stroke-linecap="round" />
+  <path d="M100 120 L296 120" stroke="url(#cart-rim)" stroke-width="9" stroke-linecap="round" />
+
+  <path d="M92 96 L104 120" stroke="url(#cart-frame)" stroke-width="7" stroke-linecap="round" />
+  <path d="M56 88 L94 96" stroke="url(#cart-grip)" stroke-width="11" stroke-linecap="round" />
+  <path d="M124 212 L130 236 L276 236" stroke="url(#cart-frame)" stroke-width="7" stroke-linejoin="round" stroke-linecap="round" />
+  <path d="M146 236 L146 244 M258 236 L258 244 M226 236 L226 240" stroke="#7c4ae6" stroke-width="6" stroke-linecap="round" />
+
+  <circle cx="226" cy="246" r="8" fill="#4c1d95" fill-opacity="0.55" />
+  <circle cx="226" cy="246" r="3" fill="#c4adfa" />
+  <circle cx="146" cy="252" r="13" fill="url(#cart-wheel)" />
+  <circle cx="146" cy="252" r="5" fill="#d8c8fd" />
+  <circle cx="258" cy="252" r="13" fill="url(#cart-wheel)" />
+  <circle cx="258" cy="252" r="5" fill="#d8c8fd" />
+
+  <path d="M302 56 Q302 70 316 70 Q302 70 302 84 Q302 70 288 70 Q302 70 302 56 Z" fill="#a37bf4" />
+  <path d="M318 188 Q318 198 328 198 Q318 198 318 208 Q318 198 308 198 Q318 198 318 188 Z" fill="#c4adfa" />
+  <path d="M62 168 Q62 175 69 175 Q62 175 62 182 Q62 175 55 175 Q62 175 62 168 Z" fill="#d7c6fd" />
+  <circle cx="92" cy="54" r="5" fill="#c4adfa" />
+  <circle cx="306" cy="124" r="6" fill="#ddd0fd" />
+  <circle cx="70" cy="124" r="4" fill="#f5d77a" />
+  <circle cx="286" cy="30" r="3" fill="#b596f6" />
+</svg>

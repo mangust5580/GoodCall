@@ -1,3 +1,4 @@
+import type { BenefitItem } from '../../components/content';
 import type { IconName } from '../../components/ui';
 
 export type HomeArtwork = 'smartphone' | 'earbuds' | 'watch' | 'headphones' | 'laptop' | 'tablet';
@@ -19,12 +20,6 @@ export interface HomeHeroOffer {
   readonly price: string;
   readonly imageAlt: string;
   readonly image: HomeArtwork;
-}
-
-export interface HomeBenefit {
-  readonly title: string;
-  readonly note: string;
-  readonly icon: IconName;
 }
 
 export interface HomeCategoryPromo {
@@ -110,7 +105,7 @@ export const HOME_HERO_OFFERS: readonly HomeHeroOffer[] = [
   },
 ];
 
-export const HOME_BENEFITS: readonly HomeBenefit[] = [
+export const HOME_BENEFITS: readonly BenefitItem[] = [
   { title: 'Гарантия до 24 месяцев', note: 'на все товары', icon: 'check' },
   { title: 'Оригинальная продукция', note: 'только официальные поставки', icon: 'package' },
   { title: 'Быстрая доставка', note: 'от 1 дня по всей России', icon: 'store' },

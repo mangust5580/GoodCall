@@ -3,6 +3,7 @@ import { isProductDetailsSpecimenSlug } from '../pages/product-details/productDe
 export const HOME_PATH = '/';
 export const CATALOG_SMARTPHONES_PATH = '/catalog/smartphones';
 export const PRODUCT_PATH = '/product/:slug';
+export const CART_PATH = '/cart';
 
 export function hashHref(path: string): string {
   return `#${path}`;

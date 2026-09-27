@@ -8,6 +8,7 @@ import {
 } from '../../assets/media/home/homeMarketingMedia';
 import { Picture } from '../../components/media';
 import type { PictureSource } from '../../components/media';
+import { BenefitsStrip } from '../../components/content';
 import { Container } from '../../components/layout';
 import { ProductCard } from '../../components/product';
 import { Icon } from '../../components/ui';
@@ -103,21 +104,7 @@ export function HomePage({
           </ul>
         </section>
 
-        <section aria-label="Преимущества GoodCall" className="home-benefits">
-          <ul className="home-benefits__list">
-            {HOME_BENEFITS.map((benefit) => (
-              <li className="home-benefit" key={benefit.title}>
-                <span className="home-benefit__glyph">
-                  <Icon name={benefit.icon} />
-                </span>
-                <span className="home-benefit__body">
-                  <span className="home-benefit__title">{benefit.title}</span>
-                  <span className="home-benefit__note">{benefit.note}</span>
-                </span>
-              </li>
-            ))}
-          </ul>
-        </section>
+        <BenefitsStrip items={HOME_BENEFITS} label="Преимущества GoodCall" />
 
         <div className="home-promos">
           <section className="home-promo home-promo--light">

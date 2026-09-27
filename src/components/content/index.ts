@@ -1,3 +1,5 @@
+export { BenefitsStrip } from './BenefitsStrip';
+export type { BenefitItem } from './BenefitsStrip';
 export { BrandCard } from './BrandCard';
 export { CategoryCard } from './CategoryCard';
 export { NewsletterCard } from './NewsletterCard';

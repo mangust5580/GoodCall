@@ -1,25 +1,28 @@
 import type { ReactNode } from 'react';
 
 import { MobileActionBar, NewsletterBand, SiteFooter, SiteHeader } from '../components/shell';
-import { HOME_PATH, hashHref } from './routes';
+import { CART_PATH, HOME_PATH, hashHref } from './routes';
 
 import './ProductionShell.scss';
 
 interface ProductionShellProps {
   readonly children: ReactNode;
+  readonly cartCount?: number;
 }
 
 const CART_COUNT = 2;
 const COMPARISON_COUNT = 3;
 const FAVORITES_COUNT = 12;
 
-export function ProductionShell({ children }: ProductionShellProps) {
+export function ProductionShell({ children, cartCount = CART_COUNT }: ProductionShellProps) {
   const home = hashHref(HOME_PATH);
+  const cart = hashHref(CART_PATH);
 
   return (
     <div className="production-shell">
       <SiteHeader
-        cartCount={CART_COUNT}
+        cartCount={cartCount}
+        cartHref={cart}
         comparisonCount={COMPARISON_COUNT}
         favoritesCount={FAVORITES_COUNT}
         homeHref={home}
@@ -28,7 +31,8 @@ export function ProductionShell({ children }: ProductionShellProps) {
       <NewsletterBand />
       <SiteFooter homeHref={home} />
       <MobileActionBar
-        cartCount={CART_COUNT}
+        cartCount={cartCount}
+        cartHref={cart}
         comparisonCount={COMPARISON_COUNT}
         favoritesCount={FAVORITES_COUNT}
       />

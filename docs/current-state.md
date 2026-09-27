@@ -50,6 +50,9 @@ Accepted:
   `#/product/:slug` route reads live commercial fields, and production route
   navigation resets scroll. See the Product Details Production Integration and
   Route scroll sections.
+- **Cart A / System Foundation + Empty State — user visual PASS on
+  2026-09-27 (desktop and mobile), CLOSED and published.** The production
+  `#/cart` empty-cart page. See the Cart A section below.
 - Media Foundation / Picture pipeline + Icon policy
 - Location Foundation / CitySelector — visual gate, user visual PASS on
   2026-08-27, including the requested danger-red service/geolocation failure
@@ -85,6 +88,74 @@ Active visual slice:
   `Home.png`; section depth, promotional artwork and section-level destinations
   are deliberately still open. See the Home section below.
 
+### Cart A — System Foundation + Empty State
+
+**Status: user visual PASS on 2026-09-27; CLOSED and published.** Do not
+reopen accepted visuals.
+
+The PASS covers:
+
+- **Desktop:**
+  - the illustration;
+  - the empty-state hierarchy;
+  - category discovery;
+  - the trust strip;
+  - recommendation density;
+  - the Newsletter/Footer transition.
+- **Mobile:**
+  - the artwork scale;
+  - the stacked actions;
+  - the 2×2 categories;
+  - the single-column benefits and `ProductCard` stack.
+
+Evidence: `Cart_empty.png`. `Cart_items.png` is planning evidence for the wider
+Cart family only.
+
+**Ownership.**
+
+- `src/pages/cart/` holds `CartPage.tsx`, `cartFixtures.ts`, `cart.scss`
+  (loaded through `global.scss`) and `index.ts`.
+- `src/app/CartRoute.tsx` is the route seam; the route is `#/cart`
+  (`CART_PATH`).
+- The page is router-free. Its public API is `homeHref` and `catalogHref`.
+
+**Composition,** in order:
+
+1. breadcrumbs `Главная › Корзина`, duplicated page-locally;
+2. the illustration `src/assets/marketing/cart-empty.svg`;
+3. the `h1` `Корзина пуста` and its copy;
+4. `Перейти в каталог` → `#/catalog/smartphones` and `На главную` → `#/`;
+5. `Популярные категории`:
+   - `Смартфоны` is the only link;
+   - `Ноутбуки`, `Наушники` and `Умные часы` are non-interactive items;
+   - the list becomes a 2×2 grid at 480px and below;
+6. the shared `BenefitsStrip`, between Cart-local hairlines;
+7. `Вам может понравиться` — five accepted `ProductCard`s.
+
+**Illustration.** An original, hand-authored gradient SVG, following the
+`newsletter-gift.svg` convention. It is decorative (`alt=""`).
+
+**Recommendations fixture.**
+
+- `CART_RECOMMENDATIONS` is page-local presentation content, not a
+  recommendations contract.
+- Imagery comes from the `HOME_DEVICE_MEDIA` asset manifest.
+- Badges use the accepted `Chip`.
+- Cards have no title links, no add-to-cart and no favourite action.
+
+**Badge.** `ProductionShell` takes an optional `cartCount`, which defaults to
+the specimen `2`. `CartRoute` passes `0`. This is a static presentation seam, not
+cart state.
+
+**Deferred.**
+
+- populated cart, cart state and persistence;
+- backend, checkout and add-to-cart synchronization;
+- real cart-count synchronization;
+- a recommendations contract;
+- a `Смотреть все` link;
+- a shared `Breadcrumbs` component.
+
 ### Home A — Page Structure & Section Inventory
 
 **Active slice. User visual PASS is still required.**
@@ -105,7 +176,8 @@ the route hand Home the one destination that exists.
 
 1. Hero — a two-column band: the dominant dark discount banner and a 280px
    column of three compact offer cards. Home-owned.
-2. Benefits strip — four icon/title/note items. Home-owned.
+2. Benefits strip — four icon/title/note items, rendered by the shared
+   `BenefitsStrip` (`src/components/content/`) from Home's `HOME_BENEFITS`.
 3. Promo pair — the light `Новинки от GOODCALL` card and the dark
    `Чёрная пятница` card. Home-owned.
 4. Category trio — `Аксессуары`, `Умные часы`, `Наушники и аудиотехника`.
@@ -122,7 +194,8 @@ at 1440 the hero is 474px tall with 250/806/280 columns, the promo pair 300px,
 the category trio 195px and the cinema band 298px, all matching the raster's
 design-space heights.
 
-**Reuse.** `Container`, `Icon`, `ProductCard`, `SiteHeader`, `NewsletterBand`,
+**Reuse.** `Container`, `Icon`, `ProductCard`, `BenefitsStrip` (extracted from
+Home for Cart A, pixel-identical), `SiteHeader`, `NewsletterBand`,
 `SiteFooter`, `MobileActionBar`, the existing colour roles, the `fluid()` and
 media helpers, and the `ui-button` control classes. No component was forked. No
 `Section`, `SectionHeader`, `CardGrid`, `HomeSection`, `Stack`, `Box` or `Grid`
@@ -2557,6 +2630,7 @@ router owns only the fragment. The base path still lives solely in
 - `#/` — the production Home route. The temporary redirect to Catalog is gone.
 - `#/catalog/smartphones` — the production Catalog route. Direct-entry shape:
   <https://mangust5580.github.io/GoodCall/#/catalog/smartphones>
+- `#/cart` — the production Cart route; Cart A renders only the empty state.
 - `#/product/:slug` — the production Product Details route, specimen-gated to
   `iphone-15-128`; every other slug renders the route's compact not-found state.
 - `*` — a compact in-router fallback: one `<h1>Страница не найдена</h1>`, one
@@ -2565,23 +2639,24 @@ router owns only the fragment. The base path still lives solely in
   design later.
 
 Route paths live in `src/app/routes.ts` as `HOME_PATH`,
-`CATALOG_SMARTPHONES_PATH` and `PRODUCT_PATH`. `hashHref()` and
+`CATALOG_SMARTPHONES_PATH`, `PRODUCT_PATH` and `CART_PATH`. `hashHref()` and
 `productDetailsHref()` serve the `href` seams that plain anchors need.
 
 ### Ownership
 
-`src/app/ProductionRouter.tsx` holds the `HashRouter`, the four routes and the
+`src/app/ProductionRouter.tsx` holds the `HashRouter`, the five routes and the
 local fallback component, with `ProductionRouter.scss` beside it.
-`src/app/HomeRoute.tsx`, `src/app/CatalogRoute.tsx` and
-`src/app/ProductDetailsRoute.tsx` are the page seams.
+`src/app/HomeRoute.tsx`, `src/app/CatalogRoute.tsx`,
+`src/app/ProductDetailsRoute.tsx` and `src/app/CartRoute.tsx` are the page seams.
 
 `src/app/ProductionShell.tsx` owns the shared production composition —
 `SiteHeader`, the route's page, `NewsletterBand`, `SiteFooter`,
 `MobileActionBar` — with `ProductionShell.scss` owning the page background and
 the mobile bottom inset. It was extracted once Home became the second real
 production consumer and both routes proved literally identical composition,
-props and wrapper styling; it takes only `children` and has no options, variants
-or configuration. There is still no `AppShell`, `PageShell`, `AppLayout`,
+props and wrapper styling. It takes `children` and one optional `cartCount`, which
+defaults to the specimen `2`. The Cart route passes `0` so the empty cart does not
+show the specimen count. There are no other options, variants or configuration. There is still no `AppShell`, `PageShell`, `AppLayout`,
 `LayoutProvider` or route registry. Global shell regions stay outside the page
 components.
 
@@ -2719,7 +2794,8 @@ never jumps into the production router.
   invented to make a breadcrumb clickable.
 - **Header and Footer brand links** now point at `#/`, because Home is real.
   Everything else in the Header is still deliberately unwired: the utility
-  links, the four actions, `Каталог товаров`, `Ещё` and all nine category links
+  links, three of the four actions (`Корзина` now links to `#/cart` in both
+  `SiteHeader` and `MobileActionBar`), `Каталог товаров`, `Ещё` and all nine category links
   keep the existing consumer-injected fallback to the app base. No unavailable
   destination received a fake route and no category label became semantically
   false. Each gets a real route when its page exists.
@@ -2865,6 +2941,16 @@ none of them blocks the closed milestone.
   live reverse geocoding and live Pages behaviour all remain open.
 
 ## Next approved step
+
+**Cart B — populated Cart** is the next Cart-family candidate (not started,
+not scoped). `Cart_items.png` is its evidence. It will need its own explicit
+scope for:
+
+- line items, selection, quantity and removal;
+- the order summary;
+- any cart state, persistence and real count synchronization.
+
+None of this exists yet.
 
 **Product Details Production Integration B — backend content/media contract**
 (likely next Product Details milestone, not started). It becomes necessary when
