@@ -12,6 +12,7 @@ import type { PictureSource } from '../../components/media';
 import type { IconName } from '../../components/ui';
 import { CATALOG_PRODUCTS } from '../catalog/catalogProductFixtures';
 import type { CatalogProduct } from '../catalog/catalogProductFixtures';
+import type { ProductDetailsLiveProduct } from './productDetailsData';
 
 export type ProductDetailsColourId = 'pink' | 'black' | 'blue';
 
@@ -123,6 +124,8 @@ export interface ProductDetailsFixture {
 }
 
 const REFERENCE_PRODUCT_ID = 'iphone-15-128';
+const NEW_LABEL = 'Новинка';
+const SPECIMEN_LABELS: readonly string[] = ['Хит продаж'];
 const WARRANTY_TEXT = 'Официальная гарантия 12 месяцев';
 const DEFAULT_COLOUR: ProductDetailsColour = { id: 'pink', label: 'Розовый', swatch: 'pink' };
 const COLOURS: readonly ProductDetailsColour[] = [
@@ -131,6 +134,11 @@ const COLOURS: readonly ProductDetailsColour[] = [
   { id: 'blue', label: 'Голубой', swatch: 'blue' },
 ];
 const TITLE_COLOUR_SEPARATOR = ', ';
+const DEFAULT_COLOUR_SUFFIX = `${TITLE_COLOUR_SEPARATOR}${DEFAULT_COLOUR.label}`;
+
+export function isProductDetailsSpecimenSlug(slug: string): boolean {
+  return slug === REFERENCE_PRODUCT_ID;
+}
 
 export function productDetailsTitle(
   product: ProductDetailsFixture,
@@ -156,13 +164,13 @@ function referenceCatalogProduct(): CatalogProduct {
 const catalogProduct = referenceCatalogProduct();
 
 function referenceBaseTitle(title: string): string {
-  const colourSuffix = `${TITLE_COLOUR_SEPARATOR}${DEFAULT_COLOUR.label}`;
-
-  if (!title.endsWith(colourSuffix)) {
-    throw new Error(`Catalog fixture ${REFERENCE_PRODUCT_ID} title must end with ${colourSuffix}`);
+  if (!title.endsWith(DEFAULT_COLOUR_SUFFIX)) {
+    throw new Error(
+      `Catalog fixture ${REFERENCE_PRODUCT_ID} title must end with ${DEFAULT_COLOUR_SUFFIX}`,
+    );
   }
 
-  return title.slice(0, -colourSuffix.length);
+  return title.slice(0, -DEFAULT_COLOUR_SUFFIX.length);
 }
 
 function galleryForColour(
@@ -212,7 +220,7 @@ export const PRODUCT_DETAILS_FIXTURE: ProductDetailsFixture = {
   rating: catalogProduct.rating ?? 0,
   reviewCount: catalogProduct.reviewCount,
   sku: '213475',
-  labels: ['Новинка', 'Хит продаж'],
+  labels: [NEW_LABEL, ...SPECIMEN_LABELS],
   installmentMonths: 36,
   availability: 'В наличии',
   deliveryNote: 'Доставка завтра',
@@ -393,3 +401,35 @@ export const PRODUCT_DETAILS_FIXTURE: ProductDetailsFixture = {
     },
   ],
 };
+
+function discountLabel(priceValue: number, oldPriceValue: number): string {
+  return `-${String(Math.round(((oldPriceValue - priceValue) / oldPriceValue) * 100))}%`;
+}
+
+export function productDetailsSpecimenFromLive(
+  product: ProductDetailsLiveProduct,
+): ProductDetailsFixture | undefined {
+  if (
+    !isProductDetailsSpecimenSlug(product.slug) ||
+    !product.name.endsWith(DEFAULT_COLOUR_SUFFIX)
+  ) {
+    return undefined;
+  }
+
+  const oldPriceValue =
+    product.oldPriceValue !== undefined && product.oldPriceValue > product.priceValue
+      ? product.oldPriceValue
+      : undefined;
+
+  return {
+    ...PRODUCT_DETAILS_FIXTURE,
+    baseTitle: product.name.slice(0, -DEFAULT_COLOUR_SUFFIX.length),
+    priceValue: product.priceValue,
+    oldPriceValue,
+    discount:
+      oldPriceValue === undefined ? undefined : discountLabel(product.priceValue, oldPriceValue),
+    rating: product.rating,
+    reviewCount: product.reviewCount,
+    labels: product.isNew ? [NEW_LABEL, ...SPECIMEN_LABELS] : SPECIMEN_LABELS,
+  };
+}

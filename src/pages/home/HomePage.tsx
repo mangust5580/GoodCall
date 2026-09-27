@@ -29,6 +29,7 @@ export interface HomePageProps {
   readonly smartphonesPath?: string;
   readonly categories?: readonly HomeCategoryTile[];
   readonly products?: readonly HomeProduct[];
+  readonly productHref?: (slug: string) => string | undefined;
 }
 
 const SMARTPHONES_SLUG = 'smartphones';
@@ -61,6 +62,7 @@ export function HomePage({
   smartphonesPath,
   categories = HOME_CATEGORY_TILES,
   products = HOME_PRODUCTS,
+  productHref,
 }: HomePageProps) {
   const categoryLink = (slug: string, content: ReactNode, className: string) => {
     if (slug === SMARTPHONES_SLUG && smartphonesPath !== undefined) {
@@ -218,6 +220,7 @@ export function HomePage({
                     </span>
                   )
                 }
+                href={productHref?.(product.id)}
                 image={product.imageSrc === undefined ? ARTWORK[product.image] : undefined}
                 imageAlt={product.imageAlt}
                 imageSizes={PRODUCT_MEDIA_SIZES}

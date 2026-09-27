@@ -3,7 +3,9 @@ import { HashRouter, Link, Route, Routes } from 'react-router-dom';
 import { Container } from '../components/layout';
 import { CatalogRoute } from './CatalogRoute';
 import { HomeRoute } from './HomeRoute';
-import { CATALOG_SMARTPHONES_PATH, HOME_PATH } from './routes';
+import { ProductDetailsRoute } from './ProductDetailsRoute';
+import { RouteScrollReset } from './RouteScrollReset';
+import { CATALOG_SMARTPHONES_PATH, HOME_PATH, PRODUCT_PATH } from './routes';
 
 import './ProductionRouter.scss';
 
@@ -24,9 +26,11 @@ function RouteNotFound() {
 export function ProductionRouter() {
   return (
     <HashRouter>
+      <RouteScrollReset />
       <Routes>
         <Route element={<HomeRoute />} path={HOME_PATH} />
         <Route element={<CatalogRoute />} path={CATALOG_SMARTPHONES_PATH} />
+        <Route element={<ProductDetailsRoute />} path={PRODUCT_PATH} />
         <Route element={<RouteNotFound />} path="*" />
       </Routes>
     </HashRouter>

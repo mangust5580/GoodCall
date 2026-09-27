@@ -4,7 +4,7 @@ import { CatalogPage } from '../pages/catalog';
 import type { CatalogProduct } from '../pages/catalog/catalogProductFixtures';
 import { fetchCatalogProducts } from '../pages/catalog/catalogProductData';
 import { ProductionShell } from './ProductionShell';
-import { HOME_PATH, hashHref } from './routes';
+import { HOME_PATH, hashHref, productDetailsHref } from './routes';
 
 export function CatalogRoute() {
   const [products, setProducts] = useState<readonly CatalogProduct[]>();
@@ -31,7 +31,11 @@ export function CatalogRoute() {
 
   return (
     <ProductionShell>
-      <CatalogPage homeHref={hashHref(HOME_PATH)} products={products} />
+      <CatalogPage
+        homeHref={hashHref(HOME_PATH)}
+        productHref={products === undefined ? undefined : productDetailsHref}
+        products={products}
+      />
     </ProductionShell>
   );
 }

@@ -22,6 +22,7 @@ export interface CatalogPageProps {
   readonly resultCount?: number;
   readonly homeHref?: string;
   readonly products?: readonly CatalogProduct[];
+  readonly productHref?: (slug: string) => string | undefined;
 }
 
 interface QuickFilter {
@@ -50,6 +51,7 @@ export function CatalogPage({
   resultCount = DEFAULT_RESULT_COUNT,
   homeHref,
   products = CATALOG_PRODUCTS,
+  productHref,
 }: CatalogPageProps) {
   const [filters, setFilters] = useState<CatalogFilterState>(DEFAULT_CATALOG_FILTER_STATE);
   const [quickFilter, setQuickFilter] = useState(DEFAULT_QUICK_FILTER);
@@ -158,7 +160,7 @@ export function CatalogPage({
               })}
             </div>
 
-            <CatalogProductGrid products={visibleProducts} />
+            <CatalogProductGrid productHref={productHref} products={visibleProducts} />
 
             <div className="catalog-page__pagination">
               <Pagination

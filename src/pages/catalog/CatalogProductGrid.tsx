@@ -7,6 +7,7 @@ import type { CatalogProduct } from './catalogProductFixtures';
 
 interface CatalogProductGridProps {
   readonly products: readonly CatalogProduct[];
+  readonly productHref?: (slug: string) => string | undefined;
 }
 
 const PROMO_AFTER_INDEX = 8;
@@ -23,7 +24,7 @@ function formatPrice(value: number): string {
   return priceFormatter.format(value);
 }
 
-export function CatalogProductGrid({ products }: CatalogProductGridProps) {
+export function CatalogProductGrid({ productHref, products }: CatalogProductGridProps) {
   const [favorites, setFavorites] = useState<readonly string[]>([]);
   const [cart, setCart] = useState<Readonly<Record<string, number>>>({});
 
@@ -72,6 +73,7 @@ export function CatalogProductGrid({ products }: CatalogProductGridProps) {
               )
             }
             favoritePressed={favorites.includes(product.id)}
+            href={productHref?.(product.id)}
             imageAlt={product.imageAlt}
             imageSrc={product.imageSrc ?? productPhone}
             oldPrice={

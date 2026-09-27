@@ -43,9 +43,13 @@ Accepted:
 - **Product Details visual milestone (A + B + B1) — user visual PASS on
   2026-09-27, CLOSED.** Covers the primary surface, colour-aware gallery,
   content/trust/payment tabs, review avatars, payment marks, the accepted footer
-  payment row and the compact sticky primary header. Reference-only at
-  `?reference=product-details`; production integration is the next milestone.
-  See the Product Details section below.
+  payment row and the compact sticky primary header. Reference surface at
+  `?reference=product-details`. See the Product Details section below.
+- **Product Details Production Integration A + Route scroll fix — user
+  visual / UX PASS on 2026-09-27, CLOSED and published.** The specimen-gated
+  `#/product/:slug` route reads live commercial fields, and production route
+  navigation resets scroll. See the Product Details Production Integration and
+  Route scroll sections.
 - Media Foundation / Picture pipeline + Icon policy
 - Location Foundation / CitySelector — visual gate, user visual PASS on
   2026-08-27, including the requested danger-red service/geolocation failure
@@ -273,9 +277,9 @@ serves both the full and the key lists), `ProductReviews`,
 `ProductDeliveryPayment`, `ProductWarranty` and `ProductStars` (the half-star
 rating shared by the purchase panel and the reviews). The reference surface
 `src/app/ProductDetailsReference.tsx` composes the accepted shell around it,
-like Catalog and Home. There is no production route, no `ProductCard` link,
-no Supabase read, and no provider, context, store or product/variant/offer
-domain model.
+like Catalog and Home. The production route is described in the Product
+Details Production Integration section below. There is no provider, context,
+store or product/variant/offer domain model.
 
 **Fixture.** `PRODUCT_DETAILS_FIXTURE` derives `baseTitle` (the title minus its
 verified `, Розовый` suffix) and reads price, old price, rating, review count
@@ -442,10 +446,8 @@ direction. Gallery, description and warranty media use the existing `Picture` /
 
 **Deferred.**
 
-- A production `#/product/:slug` route and `ProductCard` navigation.
-- Supabase product-by-slug, image and review reads.
-- A loading/error/not-found contract; the skeleton/loading-state system is a
-  later cross-page system milestone.
+- Supabase image and review reads, and product pages beyond the one specimen.
+- The skeleton/loading-state system, a later cross-page system milestone.
 - Variant pricing, cart, favourites and comparison.
 - A reviews backend, a payment provider (the displayed method set must be
   reconciled with it), and a delivery estimator.
@@ -453,6 +455,136 @@ direction. Gallery, description and warranty media use the existing `Picture` /
 - `Похожие товары` (Product Details C).
 
 The Home latest-article cover visual debt is unrelated and untouched.
+
+### Product Details Production Integration A — specimen-gated route
+
+**Status: user visual / UX PASS on 2026-09-27; CLOSED and published.** The
+PASS covers:
+
+- the linked `ProductCard` title;
+- the loading, not-found and error route surfaces;
+- the live specimen route.
+
+Do not broaden the supported-slug set without a product content contract.
+
+**Route.**
+
+- `routes.ts` owns:
+  - `PRODUCT_PATH` (`/product/:slug`);
+  - `productPath(slug)` (URI-encoded);
+  - `productDetailsHref(slug)`, which returns a hash href only for specimen
+    slugs.
+- The URL shape is `#/product/iphone-15-128`.
+- `src/app/ProductDetailsRoute.tsx` renders inside `ProductionShell` and owns
+  the route states. `ProductDetailsRoute.scss` sits beside it.
+
+**Read.** `src/pages/product-details/productDetailsData.ts` makes one query:
+
+- `products.select('slug, name, price, old_price, rating, review_count, is_new, is_active')`;
+- filtered by `slug = :slug` and `is_active = true`;
+- read with `.maybeSingle()`.
+
+It returns `ready`, `not-found`, `failure` or `unavailable`. A non-finite price
+or review count, or a null rating, is a `failure`.
+
+**Specimen gate.** `isProductDetailsSpecimenSlug` in `productDetailsFixtures.ts`
+accepts only `iphone-15-128`. It is checked before any request, so every other
+slug renders not-found with no backend read.
+
+`productDetailsSpecimenFromLive` overlays the backend fields on the specimen.
+It fails closed to not-found unless the backend name ends with `, Розовый`, in
+which case the base title comes from the backend name.
+
+**Backend-owned fields:**
+
+- the name (h1 and current breadcrumb, with the existing colour swap);
+- price and old price;
+- rating;
+- review count (including the tab label).
+
+`Новинка` shows only when `is_new` is true; the live row is false, so it is
+hidden.
+
+Derived fields:
+
+- The discount is `-round((old - price) / old × 100)%`, shown only when old
+  price is above price.
+- The monthly installment is `ceil(price / 36)`.
+
+`Хит продаж` and every other content, gallery, variant, review, SKU,
+availability, delivery and bonus value remain local specimen presentation for
+this slug only.
+
+`?reference=product-details` still renders the unmodified fixture. It shows
+both labels and makes no network request.
+
+**States.**
+
+- Loading is a compact `<main aria-busy="true">` with a `role="status"` line.
+  It is not a skeleton and shows no fixture.
+- Not-found (`Товар не найден`, links to Catalog and Home) covers:
+  - an unsupported slug;
+  - no active row;
+  - a specimen identity mismatch.
+- Error (`Не удалось загрузить товар`, link to Catalog) covers:
+  - missing Supabase configuration;
+  - a query failure;
+  - a multiple-row result;
+  - invalid values.
+- There is **no fixture fallback** on the production route.
+- An empty `#/product/` falls through to the global `*` fallback.
+
+**Links.**
+
+- `ProductCard` has an optional router-free `href`. When present, only the
+  `<h3>` text is wrapped in `a.product-card__link`, with an inherited colour,
+  the link-role hover and the standard focus-visible outline. Card geometry is
+  unchanged.
+- `CatalogPage` and `CatalogProductGrid` take an optional
+  `productHref(slug)`, and so does `HomePage`.
+- `CatalogRoute` and `HomeRoute` pass `productDetailsHref` only after their
+  live read succeeded. As a result:
+  - only the live `iphone-15-128` card links, on Catalog page 2 by popularity
+    and at Home popular position 1;
+  - fixture-fallback cards never link.
+
+**Live backend facts** (verified read-only outside this repository at task
+handoff, 2026-09-27):
+
+- 8 categories;
+- 18 products, all active;
+- `products.slug` has a UNIQUE constraint;
+- `product_images` has 0 rows;
+- `home_popular_products` has 5 rows;
+- `iphone-15-128` is Розовый, 79 990 / 84 990 ₽, rating 4.7, 1 976 reviews,
+  `is_new = false`.
+
+**Readiness facts** (from the preceding audit; the full matrices were in its
+local `AUDIT.md`):
+
+- `products` has only list-level columns. There is no SKU, stock,
+  description, specification, variant, review-body or delivery data.
+- Home's local fallback ids (`galaxy-s24-256`, `redmi-note-13-pro`,
+  `airpods-pro-2`, `apple-watch-9-45`) are not backend slugs. Its fallback
+  iPhone is `Чёрный`, 64 990 ₽.
+- The specimen's specifications, description, highlights, colours, memory
+  options, galleries, reviews and SKU are iPhone-specific.
+
+**Still deferred.** Deferred until a second product needs a page:
+
+- a product content contract (description, highlights, specifications);
+- variants (colour and memory options, per-variant price, SKU and media);
+- stock and delivery;
+- review bodies;
+- `product_images` in `ProductGallery`, which accepts only build-time
+  `PictureSource` objects and has no empty-images branch.
+
+Also deferred:
+
+- the skeleton system;
+- scroll restoration when traversing into the async route (see Route scroll);
+- the Home `-12%` iPhone badge, which is local and disagrees with the derived
+  `-6%`.
 
 ### Catalog A — Page Foundation & Layout
 
@@ -2116,7 +2248,7 @@ so reference surfaces are unaffected by routing; the bare base URL now belongs t
 - `?reference=product-details` — the Product Details A + B reference surface: a
   reference-only note followed by the real production shell around
   `ProductDetailsPage` with its deterministic local fixture. It makes no
-  network or Supabase request and has no production route yet.
+  network or Supabase request; the production route is `#/product/:slug`.
 - `?reference=catalog` — the Catalog reference surface: a reference-only note
   followed by the real production shell — `SiteHeader`, `CatalogPage`,
   `NewsletterBand`, `SiteFooter` and `MobileActionBar`. It owns the mobile bottom
@@ -2425,20 +2557,23 @@ router owns only the fragment. The base path still lives solely in
 - `#/` — the production Home route. The temporary redirect to Catalog is gone.
 - `#/catalog/smartphones` — the production Catalog route. Direct-entry shape:
   <https://mangust5580.github.io/GoodCall/#/catalog/smartphones>
+- `#/product/:slug` — the production Product Details route, specimen-gated to
+  `iphone-15-128`; every other slug renders the route's compact not-found state.
 - `*` — a compact in-router fallback: one `<h1>Страница не найдена</h1>`, one
   line of copy and one real `<Link>` to Home. It is deliberately not a designed
   404 page and not a global error architecture; `404.png` will supply the real
   design later.
 
-Route paths live in `src/app/routes.ts` as `HOME_PATH` and
-`CATALOG_SMARTPHONES_PATH`, with `hashHref()` for the `href` seams that plain
-anchors need.
+Route paths live in `src/app/routes.ts` as `HOME_PATH`,
+`CATALOG_SMARTPHONES_PATH` and `PRODUCT_PATH`. `hashHref()` and
+`productDetailsHref()` serve the `href` seams that plain anchors need.
 
 ### Ownership
 
-`src/app/ProductionRouter.tsx` holds the `HashRouter`, the three routes and the
+`src/app/ProductionRouter.tsx` holds the `HashRouter`, the four routes and the
 local fallback component, with `ProductionRouter.scss` beside it.
-`src/app/HomeRoute.tsx` and `src/app/CatalogRoute.tsx` are the page seams.
+`src/app/HomeRoute.tsx`, `src/app/CatalogRoute.tsx` and
+`src/app/ProductDetailsRoute.tsx` are the page seams.
 
 `src/app/ProductionShell.tsx` owns the shared production composition —
 `SiteHeader`, the route's page, `NewsletterBand`, `SiteFooter`,
@@ -2452,6 +2587,31 @@ components.
 
 The Header action counts (`2`, `3`, `12`) are specimen shell values, like
 `2 546 товаров`. No cart, favourites or comparison state exists yet.
+
+### Route scroll
+
+**User UX PASS on 2026-09-27; CLOSED.** `src/app/RouteScrollReset.tsx` sits
+inside `HashRouter`, before `Routes`. It only runs in production mode, because
+`?reference=` surfaces never mount the router.
+
+It acts only when the pathname changes. Query, state and same-route renders
+never scroll.
+
+- **Forward navigation.** It scrolls instantly to the top, with no smooth
+  scrolling and no focus change. This covers router `PUSH`/`REPLACE`, and plain
+  hash anchors that the Navigation API reports as `push`/`replace`. Plain
+  anchors include `ProductCard` titles, breadcrumbs and header/footer home
+  links; `HashRouter` reports them as `POP`.
+- **Back/Forward.** A Navigation API `traverse` is left to the browser's native
+  restoration. `history.scrollRestoration` is unchanged (`auto`).
+- **Browsers without the Navigation API.** Plain-anchor `POP` is treated as
+  traversal and not reset.
+
+Known limitation: Back/Forward and reload restore Home and Catalog positions,
+because both render synchronously. Into `#/product/:slug`, the restored offset
+is clamped by the short loading state. Scroll anchoring can then land at the
+top or the bottom. This belongs to the deferred loading-state/skeleton work,
+not to a custom scroll-persistence layer.
 
 ### Catalog Supabase read path
 
@@ -2563,8 +2723,9 @@ never jumps into the production router.
   keep the existing consumer-injected fallback to the app base. No unavailable
   destination received a fake route and no category label became semantically
   false. Each gets a real route when its page exists.
-- **`ProductCard`.** Cards remain non-links. No `/product/:slug` route, no
-  `Link` wrapper, no slug fixture routing.
+- **`ProductCard`.** Only the live `iphone-15-128` card has a title link. All
+  other cards, and every fixture-fallback card, remain non-links. There is no
+  whole-card link and no `Link` inside `ProductCard`.
 - **URL state.** Catalog filters, sorting, quick filters and pagination stay
   local UI state. No `?page=`, `?sort=` or `?brand=` synchronization was added;
   that belongs with the real Catalog data and facet contract.
@@ -2599,8 +2760,11 @@ Only `react-router`, `cookie` and `set-cookie-parser` came with it. No
 library or query-state library is installed.
 
 `@supabase/supabase-js` resolves to **2.112.4** and is the only Supabase/client
-data dependency. Its current production consumers are the smartphone Catalog
-read path and the Home popular categories/products read path.
+data dependency. Its current production consumers are:
+
+- the smartphone Catalog read path;
+- the Home popular categories/products read path;
+- the Product Details product-by-slug read.
 
 `sharp` resolves to **0.35.4** and is a direct dev dependency for the local
 `npm run media:home` raster derivative generator. `vite-imagetools` also uses
@@ -2691,9 +2855,9 @@ none of them blocks the closed milestone.
   filter inventories, and the trigger for designing common-versus-category-
   specific filter and facet architecture is a second real category with a
   different inventory — not a refactor of the current specimen data.
-- `#/catalog/smartphones` is the only real page route. No product route and no
-  second category route exists, so cards and the in-grid promo still carry no
-  links.
+- `#/catalog/smartphones` is the only category route. No second category
+  route exists. Only the specimen product card links to a product page; the
+  in-grid promo carries no link.
 - Live DaData behaviour is unverified. No local token is available, GitHub secret
   presence is unverifiable without `gh`, and the DaData hosts are unreachable
   from this build environment, so the adapter was verified against recorded
@@ -2702,11 +2866,12 @@ none of them blocks the closed milestone.
 
 ## Next approved step
 
-**Product Details Production Integration** (next milestone, not started):
-`#/product/:slug`, `ProductCard` linking, the Supabase product-by-slug read,
-the loading/error/not-found contract, and whatever backend/media variant
-contract real data requires. The Product Details visual milestone is CLOSED
-(user visual PASS 2026-09-27).
+**Product Details Production Integration B — backend content/media contract**
+(likely next Product Details milestone, not started). It becomes necessary when
+a second product needs a page, or when real `product_images` exist.
+
+Product Details Production Integration A and the Route scroll fix are closed.
+They received user visual / UX PASS on 2026-09-27.
 
 **User visual review of Home A against `Home.png`.** The slice and its raster
 media are technically finalized and published; only the user can grant the
@@ -2745,8 +2910,8 @@ destinations, and article/media data contracts.
 - Home campaign/banner, article and broader merchandising contracts. The shared
   typed Supabase client exists, and Home popular categories/products are wired,
   but campaign/offers/articles/cinema and deeper merchandising remain local.
-- Product detail route and `ProductCard` links, until a real Product Detail and
-  data contract exists.
+- Product pages beyond the `iphone-15-128` specimen, until a product content
+  and variant contract exists.
 - URL/query state synchronization for Catalog filters, sorting, quick filters
   and pagination.
 - A designed 404 page from `404.png`, replacing the compact in-router fallback.

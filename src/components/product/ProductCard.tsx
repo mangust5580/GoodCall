@@ -13,6 +13,7 @@ const CART_ACTION_TEXT = 'В корзину';
 
 interface ProductCardProps {
   readonly title: string;
+  readonly href?: string;
   readonly imageSrc?: string;
   readonly image?: PictureSource;
   readonly imageAlt: string;
@@ -34,6 +35,7 @@ interface ProductCardProps {
 
 export function ProductCard({
   title,
+  href,
   imageSrc,
   image,
   imageAlt,
@@ -100,7 +102,15 @@ export function ProductCard({
 
       <div className="product-card__body">
         <div className="product-card__info">
-          <h3 className="product-card__title">{title}</h3>
+          <h3 className="product-card__title">
+            {href === undefined ? (
+              title
+            ) : (
+              <a className="product-card__link" href={href}>
+                {title}
+              </a>
+            )}
+          </h3>
           {rating === undefined ? null : (
             <ProductRating rating={rating} reviewCount={reviewCount} />
           )}

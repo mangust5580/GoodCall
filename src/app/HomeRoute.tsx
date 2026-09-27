@@ -4,7 +4,7 @@ import { HomePage } from '../pages/home';
 import { fetchHomeData } from '../pages/home/homeData';
 import type { HomeCategoryTile, HomeProduct } from '../pages/home/homeFixtures';
 import { ProductionShell } from './ProductionShell';
-import { CATALOG_SMARTPHONES_PATH } from './routes';
+import { CATALOG_SMARTPHONES_PATH, productDetailsHref } from './routes';
 
 interface HomeRouteData {
   readonly categories: readonly HomeCategoryTile[];
@@ -38,6 +38,7 @@ export function HomeRoute() {
     <ProductionShell>
       <HomePage
         categories={homeData?.categories}
+        productHref={homeData === undefined ? undefined : productDetailsHref}
         products={homeData?.products}
         smartphonesPath={CATALOG_SMARTPHONES_PATH}
       />
