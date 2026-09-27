@@ -1,18 +1,42 @@
-import cartEmptyArtwork from '../../assets/marketing/cart-empty.svg';
+import { useEffect, useRef } from 'react';
+
 import { BenefitsStrip } from '../../components/content';
 import { Container } from '../../components/layout';
 import { ProductCard } from '../../components/product';
-import { Chip, Icon } from '../../components/ui';
-import { CART_BENEFITS, CART_CATEGORIES, CART_RECOMMENDATIONS } from './cartFixtures';
+import { Button, Checkbox, Chip } from '../../components/ui';
+import { CartEmptyState } from './CartEmptyState';
+import { CartLineItem } from './CartLineItem';
+import { CartOrderSummary } from './CartOrderSummary';
+import { CART_BENEFITS, CART_RECOMMENDATIONS } from './cartFixtures';
+import { cartTotals, formatUnitCount } from './cartPricing';
+import type { CartLinesState } from './useCartLines';
 
 export interface CartPageProps {
   readonly homeHref: string;
   readonly catalogHref: string;
+  readonly cart: CartLinesState;
 }
 
 const RECOMMENDATION_MEDIA_SIZES = '(max-width: 520px) 240px, 220px';
+const POPULATED_TITLE_ID = 'cart-title';
+const EMPTY_TITLE_ID = 'cart-empty-title';
 
-export function CartPage({ homeHref, catalogHref }: CartPageProps) {
+export function CartPage({ homeHref, catalogHref, cart }: CartPageProps) {
+  const { lines } = cart;
+  const totals = cartTotals(lines);
+  const selectedLineCount = lines.filter((line) => line.selected).length;
+  const allSelected = selectedLineCount === lines.length;
+  const lineCount = lines.length;
+  const previousLineCount = useRef(lineCount);
+
+  useEffect(() => {
+    if (lineCount < previousLineCount.current && document.activeElement === document.body) {
+      document.getElementById(lineCount === 0 ? EMPTY_TITLE_ID : POPULATED_TITLE_ID)?.focus();
+    }
+
+    previousLineCount.current = lineCount;
+  }, [lineCount]);
+
   return (
     <main className="cart-page">
       <Container>
@@ -29,55 +53,52 @@ export function CartPage({ homeHref, catalogHref }: CartPageProps) {
           </ol>
         </nav>
 
-        <section aria-labelledby="cart-empty-title" className="cart-empty">
-          <img
-            alt=""
-            className="cart-empty__artwork"
-            height={300}
-            src={cartEmptyArtwork}
-            width={360}
-          />
-          <h1 className="cart-empty__title" id="cart-empty-title">
-            Корзина пуста
-          </h1>
-          <p className="cart-empty__message">
-            Похоже, вы ещё не добавили товары. Загляните в каталог и найдите то, что вам нужно.
-          </p>
-          <div className="cart-empty__actions">
-            <a className="ui-button ui-button--primary cart-empty__action" href={catalogHref}>
-              Перейти в каталог
-            </a>
-            <a className="ui-button ui-button--secondary cart-empty__action" href={homeHref}>
-              На главную
-            </a>
-          </div>
-        </section>
+        {lineCount === 0 ? (
+          <CartEmptyState catalogHref={catalogHref} homeHref={homeHref} />
+        ) : (
+          <div className="cart-layout">
+            <section aria-labelledby={POPULATED_TITLE_ID} className="cart-items">
+              <div className="cart-items__header">
+                <h1 className="cart-items__title" id={POPULATED_TITLE_ID} tabIndex={-1}>
+                  Корзина
+                </h1>
+                <Chip>{formatUnitCount(totals.unitCount)}</Chip>
+              </div>
 
-        <section aria-labelledby="cart-categories-title" className="cart-categories">
-          <h2 className="cart-categories__title" id="cart-categories-title">
-            Популярные категории
-          </h2>
-          <ul className="cart-categories__list">
-            {CART_CATEGORIES.map((category) => (
-              <li key={category.label}>
-                {category.linksToCatalog ? (
-                  <a
-                    className="cart-categories__item cart-categories__item--link"
-                    href={catalogHref}
-                  >
-                    <Icon className="cart-categories__icon" name={category.icon} />
-                    {category.label}
-                  </a>
-                ) : (
-                  <span className="cart-categories__item">
-                    <Icon className="cart-categories__icon" name={category.icon} />
-                    {category.label}
-                  </span>
-                )}
-              </li>
-            ))}
-          </ul>
-        </section>
+              <div className="cart-items__toolbar">
+                <Checkbox checked={allSelected} label="Выбрать все" onChange={cart.toggleAll} />
+                <Button
+                  className="cart-items__remove-selected"
+                  disabled={selectedLineCount === 0}
+                  onClick={cart.removeSelected}
+                  variant="text"
+                >
+                  Удалить выбранные
+                </Button>
+              </div>
+
+              <ul aria-label="Товары в корзине" className="cart-items__list">
+                {lines.map((line) => (
+                  <CartLineItem
+                    key={line.id}
+                    line={line}
+                    onQuantityChange={(quantity) => {
+                      cart.setQuantity(line.id, quantity);
+                    }}
+                    onRemove={() => {
+                      cart.removeLine(line.id);
+                    }}
+                    onToggle={(selected) => {
+                      cart.toggleLine(line.id, selected);
+                    }}
+                  />
+                ))}
+              </ul>
+            </section>
+
+            <CartOrderSummary totals={totals} />
+          </div>
+        )}
 
         <div className="cart-page__benefits">
           <BenefitsStrip items={CART_BENEFITS} label="Преимущества GoodCall" />

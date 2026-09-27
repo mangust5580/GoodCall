@@ -53,6 +53,9 @@ Accepted:
 - **Cart A / System Foundation + Empty State — user visual PASS on
   2026-09-27 (desktop and mobile), CLOSED and published.** The production
   `#/cart` empty-cart page. See the Cart A section below.
+- **Cart B / Populated Cart — user visual/UX PASS on 2026-09-27 (desktop and
+  mobile), CLOSED and published.** `#/cart` opens on a populated Cart-local
+  seed and falls back to the Cart A empty state. See the Cart B section below.
 - Media Foundation / Picture pipeline + Icon policy
 - Location Foundation / CitySelector — visual gate, user visual PASS on
   2026-08-27, including the requested danger-red service/geolocation failure
@@ -87,6 +90,106 @@ Active visual slice:
   structure, section inventory, band geometry and responsive behaviour from
   `Home.png`; section depth, promotional artwork and section-level destinations
   are deliberately still open. See the Home section below.
+
+### Cart B — Populated Cart
+
+**Status: user visual/UX PASS on 2026-09-27; CLOSED and published.** Do not
+reopen accepted visuals or behaviour.
+
+The PASS covers:
+
+- **Desktop:**
+  - the two-column items + summary layout;
+  - line-item density;
+  - the selection, quantity and removal hierarchy;
+  - the price hierarchy;
+  - the summary weight and the disabled checkout;
+  - the fake-free omissions;
+  - the transition into Benefits, Recommendations and Newsletter.
+- **Mobile:**
+  - the narrow line anatomy;
+  - the stacked summary, with Benefits following it;
+  - the single-column recommendations;
+  - no overflow.
+
+Evidence: `Cart_items.png`.
+
+**Ownership.** All of it lives in `src/pages/cart/` and is Cart-route-local:
+
+- `useCartLines.ts` — a `useState` hook holding `CartLine[]`;
+- `cartPricing.ts` — pure derivation and formatting;
+- `CartLineItem.tsx`, `CartOrderSummary.tsx` and `CartEmptyState.tsx` —
+  Cart-local components. `CartEmptyState` holds the accepted Cart A markup,
+  moved verbatim.
+- `CART_SEED_LINES` in `cartFixtures.ts` — three deterministic presentation
+  lines using `HOME_DEVICE_MEDIA` renders:
+  - iPhone 15 Pro, 109 990 / 129 990 ₽;
+  - iPad Air 11" M2, 62 990 / 69 990 ₽;
+  - Sony WH-1000XM5, 29 990 ₽.
+
+`CartRoute` calls `useCartLines(CART_SEED_LINES)` and passes the state to the
+router-free `CartPage`.
+
+**State.** This is not a global, persisted or backend Cart. There is no
+Context, store or storage. The state lives only as long as `CartRoute` is
+mounted: leaving `#/cart` and returning restores the seed. Transitions:
+
+- toggle a line;
+- toggle all;
+- set quantity (minimum 1; the accepted `QuantityStepper` keeps its default
+  maximum of 99);
+- remove a line;
+- remove selected.
+
+**Derived pricing** (selected lines only):
+
+- line total = price × qty;
+- list total = oldPrice × qty, where oldPrice > price;
+- discount = Σ (oldPrice − price) × qty;
+- `Товары, N шт.` = Σ list-or-current totals;
+- `Итого` = Σ price × qty.
+
+With nothing selected, the summary shows `Не выбрано ни одного товара`.
+
+**Badge.** The Cart route passes `cartCount` = total units in the Cart,
+selected or not, to Header and `MobileActionBar`. It reaches `0` with the
+empty state. Other routes keep the specimen `2`.
+
+**UI.**
+
+- An `h1` `Корзина` with a unit-count `Chip`.
+- `Выбрать все` uses the accepted `Checkbox`, which has no indeterminate state;
+  it is checked only when every line is selected.
+- `Удалить выбранные` is disabled when nothing is selected.
+- Each line shows:
+  - a checkbox labelled `Выбрать: …`;
+  - a decorative image;
+  - the title and a variant line;
+  - the accepted `QuantityStepper`, with product-specific labels;
+  - a text `Удалить` button labelled `Удалить из корзины: …`;
+  - the line total, with the struck list total, a `Chip` discount percentage,
+    and a per-unit note when qty > 1.
+- After a removal, focus moves to the current `h1`.
+- Removing the last line renders the accepted Cart A empty state,
+  pixel-identical to Cart A.
+- `Популярные категории` renders only in the empty state, matching
+  `Cart_items.png`. `BenefitsStrip` and recommendations render once, below
+  both states.
+
+**Layout.**
+
+- Summary in a 340px column from 1024px; stacked below that. It is never fixed
+  or sticky.
+- Lines are one row from 1280px, two rows below that, and three rows below
+  560px.
+
+**Omitted instead of faked:**
+
+- `Оформить заказ` renders as a genuinely disabled `Button`: there is no
+  Checkout route.
+- The promo code, delivery row, bonus note, payment-method card and
+  data-protection note.
+- `Найти в корзине`, per-line favourites and `Очистить корзину`.
 
 ### Cart A — System Foundation + Empty State
 
@@ -144,7 +247,8 @@ Cart family only.
 - Cards have no title links, no add-to-cart and no favourite action.
 
 **Badge.** `ProductionShell` takes an optional `cartCount`, which defaults to
-the specimen `2`. `CartRoute` passes `0`. This is a static presentation seam, not
+the specimen `2`. Cart B replaced the static `0` with the Cart-local unit count
+(see Cart B). This is a presentation seam, not
 cart state.
 
 **Deferred.**
@@ -2630,7 +2734,8 @@ router owns only the fragment. The base path still lives solely in
 - `#/` — the production Home route. The temporary redirect to Catalog is gone.
 - `#/catalog/smartphones` — the production Catalog route. Direct-entry shape:
   <https://mangust5580.github.io/GoodCall/#/catalog/smartphones>
-- `#/cart` — the production Cart route; Cart A renders only the empty state.
+- `#/cart` — the production Cart route: the Cart B populated state with a
+  Cart-local seed, and the Cart A empty state after the last line is removed.
 - `#/product/:slug` — the production Product Details route, specimen-gated to
   `iphone-15-128`; every other slug renders the route's compact not-found state.
 - `*` — a compact in-router fallback: one `<h1>Страница не найдена</h1>`, one
@@ -2655,8 +2760,8 @@ local fallback component, with `ProductionRouter.scss` beside it.
 the mobile bottom inset. It was extracted once Home became the second real
 production consumer and both routes proved literally identical composition,
 props and wrapper styling. It takes `children` and one optional `cartCount`, which
-defaults to the specimen `2`. The Cart route passes `0` so the empty cart does not
-show the specimen count. There are no other options, variants or configuration. There is still no `AppShell`, `PageShell`, `AppLayout`,
+defaults to the specimen `2`. The Cart route passes its Cart-local unit count; it
+is presentation-only, not cart synchronization. There are no other options, variants or configuration. There is still no `AppShell`, `PageShell`, `AppLayout`,
 `LayoutProvider` or route registry. Global shell regions stay outside the page
 components.
 
@@ -2942,15 +3047,15 @@ none of them blocks the closed milestone.
 
 ## Next approved step
 
-**Cart B — populated Cart** is the next Cart-family candidate (not started,
-not scoped). `Cart_items.png` is its evidence. It will need its own explicit
-scope for:
+**No next Cart milestone is selected.** Cart A and Cart B are closed.
 
-- line items, selection, quantity and removal;
-- the order summary;
-- any cart state, persistence and real count synchronization.
+Each of the following would need its own explicit scope, and none exists:
 
-None of this exists yet.
+- Checkout;
+- cross-route add-to-cart synchronization;
+- global or persisted cart state;
+- a backend cart;
+- a promo-code engine.
 
 **Product Details Production Integration B — backend content/media contract**
 (likely next Product Details milestone, not started). It becomes necessary when

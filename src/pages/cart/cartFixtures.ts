@@ -21,6 +21,49 @@ export interface CartRecommendation {
   readonly badge?: { readonly label: string; readonly tone: 'sale' | 'new' };
 }
 
+export interface CartLine {
+  readonly id: string;
+  readonly title: string;
+  readonly variant: string;
+  readonly image: PictureSource;
+  readonly price: number;
+  readonly oldPrice?: number;
+  readonly quantity: number;
+  readonly selected: boolean;
+}
+
+export const CART_SEED_LINES: readonly CartLine[] = [
+  {
+    id: 'iphone-15-pro-128',
+    title: 'Apple iPhone 15 Pro 128 ГБ',
+    variant: 'Чёрный титан · 128 ГБ',
+    image: HOME_DEVICE_MEDIA.smartphone,
+    price: 109990,
+    oldPrice: 129990,
+    quantity: 1,
+    selected: true,
+  },
+  {
+    id: 'ipad-air-11-m2-128',
+    title: 'Apple iPad Air 11" M2 128 ГБ Wi-Fi',
+    variant: 'Фиолетовый · 128 ГБ',
+    image: HOME_DEVICE_MEDIA.tablet,
+    price: 62990,
+    oldPrice: 69990,
+    quantity: 1,
+    selected: true,
+  },
+  {
+    id: 'sony-wh-1000xm5',
+    title: 'Sony WH-1000XM5',
+    variant: 'Чёрный',
+    image: HOME_DEVICE_MEDIA.headphones,
+    price: 29990,
+    quantity: 1,
+    selected: true,
+  },
+];
+
 export const CART_CATEGORIES: readonly CartCategory[] = [
   { label: 'Смартфоны', icon: 'smartphone', linksToCatalog: true },
   { label: 'Ноутбуки', icon: 'laptop', linksToCatalog: false },
