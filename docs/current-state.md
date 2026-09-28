@@ -63,6 +63,9 @@ Accepted:
 - **Search B / Faceted Results Foundation — user visual PASS on 2026-09-28
   (desktop), CLOSED and published.** Desktop faceted filters and enriched
   result rows on `#/search?q=…` from 1024px. See the Search B section below.
+- **Blog A / Blog Listing — user visual PASS on 2026-09-28 (desktop and
+  mobile), CLOSED and published.** `#/blog` renders the accepted Blog listing.
+  See the Blog A section below.
 - **404 A / Designed Not Found — user visual PASS on 2026-09-27 (desktop and
   mobile), CLOSED and published.** Unmatched routes render the designed 404
   in the accepted Global Shell. See the 404 A section below.
@@ -99,8 +102,74 @@ Technically complete:
 
 Active visual slice:
 
-- **No active visual slice is selected.** Home A, Cart A, Cart B, Search A,
-  Search B, 404 A and the Product Details production integration are closed.
+- **No active visual slice is selected.** Blog A, Home A, Cart A, Cart B,
+  Search A, Search B, 404 A and the Product Details production integration are
+  closed.
+
+### Blog A — Blog Listing
+
+**Status: user visual PASS on 2026-09-28 for desktop and mobile; CLOSED and
+published.** The PASS covers the listing, the Blog media family,
+search/categories/pagination, the responsive layout, the visible calendar date
+metadata, `Популярные статьи`, `Последние статьи` and the Newsletter/Footer
+integration. Do not reopen accepted Blog A visuals or behaviour without a new
+explicit requirement. Blog B (article details, `#/blog/:slug`, card links) is
+separate future work and not started. Evidence: `Blog.png` (1920×3360); only the
+ninth article's title, date, category and lead come from `Blog_details.png`.
+
+- `#/blog` renders `BlogRoute` inside the accepted `ProductionShell`:
+  page-owned breadcrumb `Главная › Блог`, the hero band (`h1` `Блог GOODCALL`
+  with the violet `Блог`, lead copy, decorative art `alt=""`), then a workspace
+  of the article grid with a 372px right sidebar from 1024px (`Поиск по блогу`,
+  `Популярные статьи`, `Последние статьи`, `Категории`), pagination under the
+  grid, and the existing Newsletter and Footer.
+- Data: `src/pages/blog/blogArticles.ts` owns the typed Blog-family corpus
+  (`slug`, `title`, `excerpt`, `category`, ISO `publishedAt`, `cover`) of nine
+  articles, sorted newest-first with corpus order as the tiebreak, plus
+  `BLOG_CATEGORIES` and the explicit five-article popular curation. No author,
+  reading time, tags, body or Home fixtures. `blogListing.ts` owns filtering,
+  search, pagination, the `ru-RU` date formatter (no ` г.` suffix, UTC) and
+  counts.
+- Categories are the content-type axis only: `Все статьи` plus Сравнения,
+  Гайды, Подборки, Новости, Советы, Акции, Обзоры, as `aria-pressed` buttons;
+  pressing the active category clears it. Product-topic chips are omitted.
+- Search is a bounded case-insensitive match over the local titles and
+  excerpts. A filtered view shows a `role="status"` count and
+  `Сбросить фильтры`; zero results show a Blog-owned empty state with
+  `Показать все статьи`.
+- URL state: `category`, `q`, `page`, owned by `BlogRoute` (the `SearchRoute`
+  pattern). Changing category or query drops `page`; invalid values fall back
+  to defaults; a page beyond the result count renders the last valid page.
+  Page change scrolls to the article list.
+- Pagination: 8 per page with the accepted `Pagination`; the corpus is 8 + 1,
+  so `Обзор MacBook Air M3` is on page 2. Hidden when there is one page.
+- Cards are `<article>` with the category `Chip` over a 16:7 cover, `h3`
+  title, excerpt and a date row: a 16px brand-violet `calendar` icon, 6px
+  gap, 13px muted `<time>`. It follows the Home row layout but is stronger than
+  Home's subtle 14px icon, which renders too faint to read. Cards are not
+  links and carry no `Читать подробнее` CTA until Blog B provides
+  `#/blog/:slug`. No hover affordance.
+- Media: byte-identical promotions of the user-approved asset pass into
+  `src/assets/media/blog/` (`blog-article-<slug>.png` 1600×700 ×9 and
+  `blog-hero.png` 1774×887), served through `?picture` from the
+  `blogMedia.ts` manifest; no generator script is needed because no crops are
+  derived. Review evidence stays in the git-ignored `dist/review/blog-a-assets/`;
+  `npm run build` empties `dist/`, so it must be restored after a build.
+- `Последние статьи` is derived, not authored: the date-sorted corpus minus the
+  popular articles, up to five (currently four), non-linked rows with a violet
+  `clock` icon, title and `<time>`. Plain «latest five» would duplicate the
+  popular curation exactly.
+- Responsive: sidebar below 1024px becomes search → categories → articles →
+  popular → latest; hero art stacks under the copy below 900px; grid is 1 column below
+  620px. No horizontal overflow from 320px to 1920px.
+- Deliberate raster deviations: no `Читать подробнее` CTA and no card links
+  (Blog B), `Последние статьи` from the corpus in place of the raster's
+  `Последние новости` news items (no news domain), content-type categories only plus `Все статьи`, 2 real pages instead of `…10`, one 16:7
+  cover ratio, the details article on page 1 and MacBook on page 2, separate
+  search and popular panels, the standard `SearchField` and brand `Chip`
+  instead of the raster's filled field and translucent badges.
+- Home is unchanged; its three articles stay separate from the Blog corpus and
+  Home has no link to `#/blog` yet.
 
 ### 404 A — Designed Not Found Page
 
@@ -2998,21 +3067,25 @@ router owns only the fragment. The base path still lives solely in
   desktop facets); optional `sort` and `page` params.
 - `#/product/:slug` — the production Product Details route, specimen-gated to
   `iphone-15-128`; every other slug renders the route's compact not-found state.
+- `#/blog` — the Blog listing (Blog A, closed); optional
+  `category`, `q` and `page` params. `#/blog/:slug` is not registered.
 - `*` — the designed 404 (`NotFoundRoute`, 404 A, closed).
   It is not a global error architecture.
 
 Route paths live in `src/app/routes.ts` as `HOME_PATH`,
-`CATALOG_SMARTPHONES_PATH`, `PRODUCT_PATH`, `CART_PATH` and `SEARCH_PATH`.
+`CATALOG_SMARTPHONES_PATH`, `PRODUCT_PATH`, `CART_PATH`, `SEARCH_PATH` and
+`BLOG_PATH`.
 `hashHref()`, `productDetailsHref()` and `searchPath()` serve the `href` and
 navigation seams.
 
 ### Ownership
 
-`src/app/ProductionRouter.tsx` holds the `HashRouter` and the six routes; it
+`src/app/ProductionRouter.tsx` holds the `HashRouter` and the seven routes; it
 has no local fallback component or stylesheet any more.
 `src/app/HomeRoute.tsx`, `src/app/CatalogRoute.tsx`,
 `src/app/ProductDetailsRoute.tsx`, `src/app/CartRoute.tsx`,
-`src/app/SearchRoute.tsx` and `src/app/NotFoundRoute.tsx` are the page seams.
+`src/app/SearchRoute.tsx`, `src/app/BlogRoute.tsx` and
+`src/app/NotFoundRoute.tsx` are the page seams.
 `src/app/useSearchNavigation.ts` turns a submitted query into `#/search?q=…`;
 `ProductionShell` uses it for the Header search and `NotFoundRoute` for the 404
 hero search. `src/pages/not-found/` owns the router-free `NotFoundPage`.
@@ -3308,14 +3381,15 @@ none of them blocks the closed milestone.
 
 ## Next approved step
 
-**No next milestone is selected.** Home A, Cart A, Cart B, Search A, Search B
-and 404 A are closed. The candidates are:
+**No next milestone is selected.** Blog A is closed. Candidates:
 
+- **Blog B — Article Details** (`#/blog/:slug`, card and popular/latest links,
+  `Читать подробнее`), which builds on the Blog A corpus;
 - mobile Search filters;
 - **Commerce A — Shared Cart State**, the prerequisite for any real
   `В корзину` outside `#/cart`.
 
-Neither is scoped. Autocomplete and cross-category search are not scoped
+None is scoped. Autocomplete and cross-category search are not scoped
 either.
 
 Each of the following would need its own explicit scope, and none exists:
