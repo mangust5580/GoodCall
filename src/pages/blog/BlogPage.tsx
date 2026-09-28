@@ -30,6 +30,7 @@ export interface BlogPageProps {
   readonly onPageChange: (page: number) => void;
   readonly onReset: () => void;
   readonly homeHref: string;
+  readonly articleHref: (slug: string) => string | undefined;
 }
 
 const HERO_MEDIA_SIZES = '(max-width: 899px) calc(100vw - 32px), 760px';
@@ -45,6 +46,7 @@ export function BlogPage({
   onPageChange,
   onReset,
   homeHref,
+  articleHref,
 }: BlogPageProps) {
   const articlesRef = useRef<HTMLElement>(null);
   const matches = filterBlogArticles(articles, category, query);
@@ -134,7 +136,11 @@ export function BlogPage({
                 <ul className="blog-grid">
                   {visibleArticles.map((article, index) => (
                     <li key={article.slug}>
-                      <BlogArticleCard article={article} priority={index < PRIORITY_CARD_COUNT} />
+                      <BlogArticleCard
+                        article={article}
+                        href={articleHref(article.slug)}
+                        priority={index < PRIORITY_CARD_COUNT}
+                      />
                     </li>
                   ))}
                 </ul>
@@ -169,7 +175,11 @@ export function BlogPage({
 
           <BlogPopularPanel articles={BLOG_POPULAR_ARTICLES} className="blog-workspace__popular" />
 
-          <BlogLatestPanel articles={BLOG_LATEST_ARTICLES} className="blog-workspace__latest" />
+          <BlogLatestPanel
+            articleHref={articleHref}
+            articles={BLOG_LATEST_ARTICLES}
+            className="blog-workspace__latest"
+          />
         </div>
       </Container>
     </main>

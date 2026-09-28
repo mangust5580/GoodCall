@@ -36,7 +36,17 @@ export type IconName =
   | 'watch'
   | 'tv'
   | 'gamepad'
-  | 'appliance';
+  | 'appliance'
+  | 'message'
+  | 'camera'
+  | 'briefcase'
+  | 'lightbulb'
+  | 'folder'
+  | 'link'
+  | 'vk'
+  | 'telegram'
+  | 'whatsapp'
+  | 'x';
 
 interface IconProps {
   readonly name: IconName;

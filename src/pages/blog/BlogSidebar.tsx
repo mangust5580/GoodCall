@@ -119,27 +119,69 @@ export function BlogPopularPanel({ className, articles }: BlogPopularPanelProps)
 interface BlogLatestPanelProps {
   readonly className: string;
   readonly articles: readonly BlogArticle[];
+  readonly articleHref: (slug: string) => string | undefined;
 }
 
-export function BlogLatestPanel({ className, articles }: BlogLatestPanelProps) {
+export function BlogLatestPanel({ className, articles, articleHref }: BlogLatestPanelProps) {
   return (
     <section aria-labelledby="blog-latest-title" className={`blog-panel ${className}`}>
       <h2 className="blog-panel__title" id="blog-latest-title">
         Последние статьи
       </h2>
       <ul className="blog-latest">
-        {articles.map((article) => (
-          <li className="blog-latest__item" key={article.slug}>
-            <Icon className="blog-latest__icon" name="clock" />
-            <div className="blog-latest__text">
-              <p className="blog-latest__title">{article.title}</p>
-              <time className="blog-latest__date" dateTime={article.publishedAt}>
-                {formatBlogDate(article.publishedAt)}
-              </time>
-            </div>
+        {articles.map((article) => {
+          const href = articleHref(article.slug);
+
+          return (
+            <li className="blog-latest__item" key={article.slug}>
+              <Icon className="blog-latest__icon" name="clock" />
+              <div className="blog-latest__text">
+                <p className="blog-latest__title">
+                  {href === undefined ? (
+                    article.title
+                  ) : (
+                    <a className="blog-latest__link" href={href}>
+                      {article.title}
+                    </a>
+                  )}
+                </p>
+                <time className="blog-latest__date" dateTime={article.publishedAt}>
+                  {formatBlogDate(article.publishedAt)}
+                </time>
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
+  );
+}
+
+interface BlogCategoryLinksPanelProps {
+  readonly className: string;
+  readonly categoryHref: (category: BlogCategoryId | undefined) => string;
+}
+
+export function BlogCategoryLinksPanel({ className, categoryHref }: BlogCategoryLinksPanelProps) {
+  return (
+    <nav aria-labelledby="blog-categories-title" className={`blog-panel ${className}`}>
+      <h2 className="blog-panel__title" id="blog-categories-title">
+        Категории
+      </h2>
+      <ul className="blog-categories">
+        <li>
+          <a className="blog-categories__item" href={categoryHref(undefined)}>
+            Все статьи
+          </a>
+        </li>
+        {BLOG_CATEGORIES.map((item) => (
+          <li key={item.id}>
+            <a className="blog-categories__item" href={categoryHref(item.id)}>
+              {item.label}
+            </a>
           </li>
         ))}
       </ul>
-    </section>
+    </nav>
   );
 }

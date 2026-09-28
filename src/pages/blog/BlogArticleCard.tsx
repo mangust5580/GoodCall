@@ -9,21 +9,31 @@ const COVER_SIZES =
 interface BlogArticleCardProps {
   readonly article: BlogArticle;
   readonly priority?: boolean;
+  readonly href?: string;
 }
 
-export function BlogArticleCard({ article, priority = false }: BlogArticleCardProps) {
+export function BlogArticleCard({ article, priority = false, href }: BlogArticleCardProps) {
   const category = blogCategory(article.category);
+  const cover = (
+    <Picture
+      alt=""
+      className="blog-card__image"
+      loading={priority ? 'eager' : 'lazy'}
+      sizes={COVER_SIZES}
+      source={article.cover}
+    />
+  );
 
   return (
     <article className="blog-card">
       <div className="blog-card__media">
-        <Picture
-          alt=""
-          className="blog-card__image"
-          loading={priority ? 'eager' : 'lazy'}
-          sizes={COVER_SIZES}
-          source={article.cover}
-        />
+        {href === undefined ? (
+          cover
+        ) : (
+          <a aria-hidden="true" className="blog-card__cover-link" href={href} tabIndex={-1}>
+            {cover}
+          </a>
+        )}
         {category === undefined ? null : (
           <span className="blog-card__badge">
             <Chip>{category.label}</Chip>
@@ -31,7 +41,15 @@ export function BlogArticleCard({ article, priority = false }: BlogArticleCardPr
         )}
       </div>
       <div className="blog-card__body">
-        <h3 className="blog-card__title">{article.title}</h3>
+        <h3 className="blog-card__title">
+          {href === undefined ? (
+            article.title
+          ) : (
+            <a className="blog-card__link" href={href}>
+              {article.title}
+            </a>
+          )}
+        </h3>
         <p className="blog-card__excerpt">{article.excerpt}</p>
         <p className="blog-card__date">
           <Icon className="blog-card__date-icon" name="calendar" />

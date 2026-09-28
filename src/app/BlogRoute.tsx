@@ -5,7 +5,7 @@ import { BLOG_ARTICLES } from '../pages/blog/blogArticles';
 import type { BlogCategoryId } from '../pages/blog/blogArticles';
 import { normalizeBlogQuery, parseBlogCategory, parseBlogPage } from '../pages/blog/blogListing';
 import { ProductionShell } from './ProductionShell';
-import { HOME_PATH, hashHref } from './routes';
+import { HOME_PATH, blogArticleHref, hashHref } from './routes';
 
 const CATEGORY_PARAM = 'category';
 const QUERY_PARAM = 'q';
@@ -62,6 +62,7 @@ export function BlogRoute() {
   return (
     <ProductionShell>
       <BlogPage
+        articleHref={blogArticleHref}
         articles={BLOG_ARTICLES}
         category={category}
         homeHref={hashHref(HOME_PATH)}

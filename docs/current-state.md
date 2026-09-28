@@ -63,6 +63,9 @@ Accepted:
 - **Search B / Faceted Results Foundation — user visual PASS on 2026-09-28
   (desktop), CLOSED and published.** Desktop faceted filters and enriched
   result rows on `#/search?q=…` from 1024px. See the Search B section below.
+- **Blog B / Article Details — user visual PASS on 2026-09-28 (desktop and
+  mobile ~390px), CLOSED and published.** `#/blog/how-to-choose-smartphone-2024`
+  is the only Blog detail page. See the Blog B section below.
 - **Blog A / Blog Listing — user visual PASS on 2026-09-28 (desktop and
   mobile), CLOSED and published.** `#/blog` renders the accepted Blog listing.
   See the Blog A section below.
@@ -102,9 +105,64 @@ Technically complete:
 
 Active visual slice:
 
-- **No active visual slice is selected.** Blog A, Home A, Cart A, Cart B,
-  Search A, Search B, 404 A and the Product Details production integration are
-  closed.
+- **No active visual slice is selected.** Blog B, Blog A, Home A, Cart A,
+  Cart B, Search A, Search B, 404 A and the Product Details production
+  integration are closed.
+
+### Blog B — Article Details
+
+**Status: user visual PASS on 2026-09-28 for desktop and mobile (~390px), from
+the user's manual full-page review; CLOSED and published.** The earlier user
+asset PASS on the same date covers the three generated detail assets. Do not
+reopen accepted Blog B visuals or behaviour without a new explicit requirement.
+The other eight Blog articles have no detail content, and no further Blog
+architecture exists. Evidence: `Blog_details.png` (1920×3360).
+
+- `#/blog/how-to-choose-smartphone-2024` is the only detail page.
+  `BLOG_ARTICLE_PATH` (`/blog/:slug`) renders `BlogArticleRoute`, which renders
+  the accepted `NotFoundRoute` for every slug without a detail entry (the other
+  eight listing slugs and unknown slugs). There is no Blog-specific not-found
+  state.
+- Content model: `src/pages/blog/blogArticleDetails.ts` is a typed registry
+  keyed by slug (`readingMinutes`, `relatedSlugs`, `Body`). It joins the
+  single-source Blog A corpus for title, category, date and cover.
+  `HowToChooseSmartphone2024Body.tsx` owns the bespoke JSX body. There is no
+  CMS, MDX, markdown or block renderer. `blogArticleHref()` in
+  `src/app/routes.ts` returns an href only for registered slugs, like
+  `productDetailsHref()`.
+- Copy is transcribed from the raster. Only obvious raster typos are
+  normalized (`Выбрайте`, `робота`, `сьемки`, `SG`). The reading time `8 мин на
+чтение` is Blog-B-owned detail metadata. It is not added to the Blog A
+  corpus.
+- `BlogArticlePage` reuses the `blog-page` breadcrumb, `Container`, `Picture`,
+  `Icon`, `BlogArticleCard` and the Blog A sidebar panels. Layout: the article
+  column plus the 372px sidebar from 1024px, and `Похожие статьи` across the
+  full width below. Mobile order is article → related → sidebar. The prose
+  measure is capped at 760px.
+- Media: byte-identical promotions of the approved `blog-detail-smartphone-5g.png`
+  (1200×960), `blog-detail-camera-macro.png` (1600×490) and
+  `blog-detail-target.png` (800×800, alpha) into `src/assets/media/blog/`,
+  registered as `BLOG_DETAIL_MEDIA` in `blogMedia.ts`. The hero reuses the
+  article's Blog A cover. Target art is decorative (`alt=""`).
+- Share: real share-intent links (VK, Telegram, WhatsApp, X) built from the
+  current page URL, which open in a new tab, plus a `Скопировать ссылку` button
+  (Clipboard API, `role="status"` feedback). It uses the X mark, not the
+  Twitter bird. The icon registry gained `vk`, `telegram`, `whatsapp`, `x`,
+  `link`, `message`, `camera`, `briefcase`, `lightbulb` and `folder`
+  monochrome glyphs.
+- Sidebar: the search submits to `#/blog?q=…`, and categories are links to
+  `#/blog?category=…`. Popular and Latest are the Blog A panels. The current
+  article is plain text in Latest.
+- `Похожие статьи` are the three raster-evidenced corpus articles (earbuds,
+  Apple Watch, battery), shown with corpus metadata. They are not links, and
+  there is no `Читать подробнее`. `Смотреть все` → `#/blog`.
+- Blog A integration boundary: only the
+  `how-to-choose-smartphone-2024` card title (and its `aria-hidden`
+  `tabIndex=-1` cover link) and its `Последние статьи` row link to the detail.
+  Card design, spacing, badges, dates, search, categories and pagination are
+  unchanged.
+- Verified at 1440, 390 and 320 with no horizontal overflow, broken images or
+  console errors.
 
 ### Blog A — Blog Listing
 
@@ -113,8 +171,8 @@ published.** The PASS covers the listing, the Blog media family,
 search/categories/pagination, the responsive layout, the visible calendar date
 metadata, `Популярные статьи`, `Последние статьи` and the Newsletter/Footer
 integration. Do not reopen accepted Blog A visuals or behaviour without a new
-explicit requirement. Blog B (article details, `#/blog/:slug`, card links) is
-separate future work and not started. Evidence: `Blog.png` (1920×3360); only the
+explicit requirement. Blog B (article details, `#/blog/:slug`) is closed; see the
+Blog B section. Evidence: `Blog.png` (1920×3360); only the
 ninth article's title, date, category and lead come from `Blog_details.png`.
 
 - `#/blog` renders `BlogRoute` inside the accepted `ProductionShell`:
@@ -146,9 +204,10 @@ ninth article's title, date, category and lead come from `Blog_details.png`.
 - Cards are `<article>` with the category `Chip` over a 16:7 cover, `h3`
   title, excerpt and a date row: a 16px brand-violet `calendar` icon, 6px
   gap, 13px muted `<time>`. It follows the Home row layout but is stronger than
-  Home's subtle 14px icon, which renders too faint to read. Cards are not
-  links and carry no `Читать подробнее` CTA until Blog B provides
-  `#/blog/:slug`. No hover affordance.
+  Home's subtle 14px icon, which renders too faint to read. Only the card with a Blog B detail page
+  (`how-to-choose-smartphone-2024`) links: its title, plus its cover as an
+  `aria-hidden` duplicate. The other cards are not links. No card carries a
+  `Читать подробнее` CTA.
 - Media: byte-identical promotions of the user-approved asset pass into
   `src/assets/media/blog/` (`blog-article-<slug>.png` 1600×700 ×9 and
   `blog-hero.png` 1774×887), served through `?picture` from the
@@ -3068,23 +3127,28 @@ router owns only the fragment. The base path still lives solely in
 - `#/product/:slug` — the production Product Details route, specimen-gated to
   `iphone-15-128`; every other slug renders the route's compact not-found state.
 - `#/blog` — the Blog listing (Blog A, closed); optional
-  `category`, `q` and `page` params. `#/blog/:slug` is not registered.
+  `category`, `q` and `page` params.
+- `#/blog/:slug` — the Blog article detail (Blog B, closed),
+  registered only for `how-to-choose-smartphone-2024`. Every other slug renders
+  the designed 404.
 - `*` — the designed 404 (`NotFoundRoute`, 404 A, closed).
   It is not a global error architecture.
 
 Route paths live in `src/app/routes.ts` as `HOME_PATH`,
-`CATALOG_SMARTPHONES_PATH`, `PRODUCT_PATH`, `CART_PATH`, `SEARCH_PATH` and
-`BLOG_PATH`.
-`hashHref()`, `productDetailsHref()` and `searchPath()` serve the `href` and
-navigation seams.
+`CATALOG_SMARTPHONES_PATH`, `PRODUCT_PATH`, `CART_PATH`, `SEARCH_PATH`,
+`BLOG_PATH` and `BLOG_ARTICLE_PATH`.
+`hashHref()`, `productDetailsHref()`, `searchPath()`, `blogPath()`,
+`blogArticlePath()` and `blogArticleHref()` serve the `href` and navigation
+seams.
 
 ### Ownership
 
-`src/app/ProductionRouter.tsx` holds the `HashRouter` and the seven routes; it
+`src/app/ProductionRouter.tsx` holds the `HashRouter` and the eight routes; it
 has no local fallback component or stylesheet any more.
 `src/app/HomeRoute.tsx`, `src/app/CatalogRoute.tsx`,
 `src/app/ProductDetailsRoute.tsx`, `src/app/CartRoute.tsx`,
-`src/app/SearchRoute.tsx`, `src/app/BlogRoute.tsx` and
+`src/app/SearchRoute.tsx`, `src/app/BlogRoute.tsx`,
+`src/app/BlogArticleRoute.tsx` and
 `src/app/NotFoundRoute.tsx` are the page seams.
 `src/app/useSearchNavigation.ts` turns a submitted query into `#/search?q=…`;
 `ProductionShell` uses it for the Header search and `NotFoundRoute` for the 404
@@ -3381,10 +3445,8 @@ none of them blocks the closed milestone.
 
 ## Next approved step
 
-**No next milestone is selected.** Blog A is closed. Candidates:
+**No next milestone is selected.** Blog A and Blog B are closed. Candidates:
 
-- **Blog B — Article Details** (`#/blog/:slug`, card and popular/latest links,
-  `Читать подробнее`), which builds on the Blog A corpus;
 - mobile Search filters;
 - **Commerce A — Shared Cart State**, the prerequisite for any real
   `В корзину` outside `#/cart`.
