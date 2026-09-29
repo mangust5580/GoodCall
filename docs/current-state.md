@@ -63,6 +63,10 @@ Accepted:
 - **Search B / Faceted Results Foundation — user visual PASS on 2026-09-28
   (desktop), CLOSED and published.** Desktop faceted filters and enriched
   result rows on `#/search?q=…` from 1024px. See the Search B section below.
+- **Commerce B / Search → Shared Cart — user visual/UX PASS on 2026-09-30
+  (desktop and mobile), CLOSED and published.** Live Search results add to
+  the Commerce A shared cart on both Search layouts. See the Commerce B
+  section below.
 - **Commerce A / Shared Cart State A — user visual/UX PASS on 2026-09-30
   (desktop and mobile), CLOSED and published.** Live Catalog and Product
   Details add to one shared, locally persisted cart with a total-unit badge.
@@ -109,9 +113,88 @@ Technically complete:
 
 Active visual slice:
 
-- **No active visual slice is selected.** Commerce A, Blog B, Blog A, Home A,
-  Cart A, Cart B, Search A, Search B, 404 A and the Product Details production
-  integration are closed.
+- **No active visual slice is selected.** Commerce B, Commerce A, Blog B,
+  Blog A, Home A, Cart A, Cart B, Search A, Search B, 404 A and the Product
+  Details production integration are closed.
+
+### Commerce B — Search → Shared Cart
+
+**Status: CLOSED — USER VISUAL/UX PASS on 2026-09-30; published.** Do not
+reopen accepted Search cart behaviour or visuals without a new explicit
+requirement. The user's manual review accepted:
+
+- the desktop Search initial `В корзину` action (~1440px);
+- the desktop `SearchResultRow` shared stepper plus `В корзину` state after an
+  add;
+- the Search → Cart handoff for the added live product;
+- the mobile Search shared-cart states (~390px): an in-cart card with the
+  stepper and cart action, and a not-yet-added card with the normal action;
+- the surrounding Search layout, Newsletter and Footer, unchanged.
+
+Evidence: `Search_result.png`, which shows `В корзину` under the
+price in the row's right column. It is the pre-add state only; the post-add
+stepper follows the accepted Catalog pattern. There is no mobile Search
+raster, so mobile behaviour is derived from the accepted horizontal
+`ProductCard`.
+
+**Shared seam.** `src/app/useCatalogCartSeam.ts` is the Commerce A seam
+builder extracted unchanged from `CatalogRoute`. It is called with
+`liveProducts: boolean` and returns a `CatalogCartSeam` (`quantityOf`, `add`,
+`setQuantity`) only when that flag is true.
+
+- It uses `useCartLineList()`, `cartLineId(product.id)`,
+  `addCartLine(…, 1)` and `setCartLineQuantity`, with the Commerce A snapshot:
+  slug id, title, `url` or `catalog-fallback` image reference, numeric price
+  and old price.
+- `CatalogRoute` and `SearchRoute` both call it with
+  `products !== undefined`, the same live condition as `productHref`.
+- No `cartStore`, Context or dependency change.
+
+**Search.**
+
+- `SearchRoute` passes `cart` to `SearchPage` only after
+  `fetchCatalogProducts()` returned `ready`. No extra query was added, and
+  query parsing, matching, facets, sort and pagination are unchanged.
+- **Below 1024px:** the accepted `ProductCard layout="horizontal"` receives
+  `onAddToCart`, `quantity`, `onQuantityChange` and `disabled`. It shows the
+  accepted icon cart button, then the shared stepper beside it after an add.
+- **From 1024px:** `SearchResultRow` wraps its unchanged price paragraph in
+  `search-row__aside` and adds `search-row__actions` under it. These hold the
+  existing `QuantityStepper` (after an add) and the labelled `AddToCartButton`
+  `В корзину`. The row grid `136px / 1fr / auto` and the media, info and
+  price hierarchy are unchanged. The only new styles are the two Search-owned
+  flex rules in `search.scss`.
+- Fallback results (`CATALOG_PRODUCTS`) render the add control natively
+  `disabled`, with no stepper and no cart mutation.
+- One visually hidden `role="status"` line in `SearchPage` announces
+  «Товар добавлен в корзину: … В корзине: N шт.». Focus does not move.
+
+**Identity.** Search results carry the live slug, so a Search add and a
+Catalog add of the same product merge into one line. A Product Details line
+(`slug|colour|memory`) stays separate, as accepted in Commerce A. Quantity is
+read from the store on every render, so Search, Catalog and Cart always agree.
+
+**Verification (agent checks, not the user PASS).** A headless-Chrome
+DevTools run passed 46/46 checks. It ran against a scratch build whose
+Supabase reads were answered with test rows. It covered:
+
+- Search add, stepper, badge and announcement;
+- Cart handoff: title, price, old price and image;
+- Search ↔ Cart quantity agreement;
+- the Catalog ↔ Search merge, with Product Details lines kept separate;
+- reload persistence;
+- fallback disabling on both layouts;
+- Search query, sort, pagination, filtered-empty, reset, no-results and
+  no-query;
+- Catalog, Product Details and Cart regressions;
+- no overflow or control spill at 1440/1024/1023/768/390/320.
+
+**Deferred.**
+
+- the raster's row `♥`, `Сравнить` and `В наличии`;
+- Home, 404 and Cart-recommendation cart actions;
+- the add-to-cart modal;
+- Checkout, orders, auth, stock and a server or cross-tab cart.
 
 ### Commerce A — Shared Cart State A
 
@@ -194,7 +277,8 @@ line are therefore separate lines.
 
 - `CatalogRoute` builds a `CatalogCartSeam` only after the live read
   succeeds, the same boundary as product links. It passes the seam through
-  `CatalogPage` to `CatalogProductGrid`.
+  `CatalogPage` to `CatalogProductGrid`. Since Commerce B, the builder lives
+  in `src/app/useCatalogCartSeam.ts`, shared with Search.
 - `В корзину` adds one unit. The accepted card stepper then reads and writes
   the shared line.
 - Without the seam (fallback or `?reference=catalog`), every card is
@@ -276,7 +360,7 @@ The compiled CSS is byte-identical to the previous build.
 - Checkout, Thank-you and orders;
 - payment, promo code, delivery cost and bonuses;
 - the add-to-cart modal and quick view;
-- Search, Home and recommendation cart actions;
+- Home and recommendation cart actions (Search is covered by Commerce B);
 - favourites, comparison and per-line favourites;
 - `Найти в корзине`, `Очистить корзину` and `Купить в 1 клик`;
 - stock and variant pricing;
@@ -532,8 +616,8 @@ engine, and no dependency.
 - mobile Search filters and URL-synced filters;
 - Category facet, cross-category search and autocomplete;
 - a page-size selector;
-- Search-row `В корзину` (the shared cart exists since Commerce A but is not
-  wired to Search), favourites and comparison;
+- favourites and comparison. Search `В корзину` is delivered by Commerce B
+  (closed);
 - availability, stock and delivery availability (no data source);
 - richer first-class specs and real product imagery (`product_images` is
   empty);
@@ -615,7 +699,9 @@ obsolete evidence.
   above the old price.
 - Below 768px the accepted stacked card is unchanged.
 - The shared `ProductCard` source was not modified.
-- Cards carry no add-to-cart or favourite actions (the Home/Cart precedent).
+- Cards carried no add-to-cart or favourite actions at Search A. Commerce B
+  now adds the shared-cart `В корзину` for live results; there are still no
+  favourite actions.
 - Titles link only through `productDetailsHref` after a live read, so only
   the `iphone-15-128` specimen links.
 - Badges use `Chip`.
@@ -3612,7 +3698,7 @@ none of them blocks the closed milestone.
 
 ## Next approved step
 
-**No next milestone is selected.** Commerce A is closed. Mobile Search filters
+**No next milestone is selected.** Commerce B is closed. Mobile Search filters
 remain an unscoped candidate; autocomplete and cross-category search are not
 scoped either.
 

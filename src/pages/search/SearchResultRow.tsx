@@ -1,16 +1,29 @@
 import productPhone from '../../assets/products/product-phone.svg';
-import { ProductRating } from '../../components/product';
-import { Chip } from '../../components/ui';
+import { AddToCartButton, ProductRating } from '../../components/product';
+import { Chip, QuantityStepper } from '../../components/ui';
 import type { CatalogProduct } from '../catalog/catalogProductFixtures';
 import { productColour, productRam, productStorage } from './searchFacets';
 import { formatSearchPrice, searchSavings } from './searchResults';
 
+const CART_ACTION_TEXT = 'В корзину';
+
 interface SearchResultRowProps {
   readonly product: CatalogProduct;
   readonly href?: string;
+  readonly quantity?: number;
+  readonly onAddToCart: () => void;
+  readonly onQuantityChange: (value: number) => void;
+  readonly disabled: boolean;
 }
 
-export function SearchResultRow({ product, href }: SearchResultRowProps) {
+export function SearchResultRow({
+  product,
+  href,
+  quantity,
+  onAddToCart,
+  onQuantityChange,
+  disabled,
+}: SearchResultRowProps) {
   const ram = productRam(product);
   const storage = productStorage(product);
   const meta = [
@@ -53,17 +66,35 @@ export function SearchResultRow({ product, href }: SearchResultRowProps) {
         )}
       </div>
 
-      <p className="search-row__prices">
-        <strong className="product-price search-row__price">
-          {formatSearchPrice(product.priceValue)}
-        </strong>
-        {product.oldPriceValue === undefined ? null : (
-          <del className="product-price-old">{formatSearchPrice(product.oldPriceValue)}</del>
-        )}
-        {savings === undefined ? null : (
-          <span className="search-row__savings">{`Выгода ${formatSearchPrice(savings)}`}</span>
-        )}
-      </p>
+      <div className="search-row__aside">
+        <p className="search-row__prices">
+          <strong className="product-price search-row__price">
+            {formatSearchPrice(product.priceValue)}
+          </strong>
+          {product.oldPriceValue === undefined ? null : (
+            <del className="product-price-old">{formatSearchPrice(product.oldPriceValue)}</del>
+          )}
+          {savings === undefined ? null : (
+            <span className="search-row__savings">{`Выгода ${formatSearchPrice(savings)}`}</span>
+          )}
+        </p>
+        <div className="search-row__actions">
+          {quantity === undefined ? null : (
+            <QuantityStepper
+              label={`Количество: ${product.title}`}
+              onChange={onQuantityChange}
+              value={quantity}
+            />
+          )}
+          <AddToCartButton
+            disabled={disabled}
+            label={`${CART_ACTION_TEXT}: ${product.title}`}
+            onClick={onAddToCart}
+          >
+            {CART_ACTION_TEXT}
+          </AddToCartButton>
+        </div>
+      </div>
     </article>
   );
 }

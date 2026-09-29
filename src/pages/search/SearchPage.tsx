@@ -5,6 +5,7 @@ import productPhone from '../../assets/products/product-phone.svg';
 import { Container } from '../../components/layout';
 import { ProductCard } from '../../components/product';
 import { Button, Chip, Icon, Pagination } from '../../components/ui';
+import type { CatalogCartSeam } from '../catalog/CatalogProductGrid';
 import { CATALOG_SORT_OPTIONS, sortCatalogProducts } from '../catalog/catalogProductFixtures';
 import type { CatalogProduct, CatalogSortValue } from '../catalog/catalogProductFixtures';
 import {
@@ -35,6 +36,7 @@ export interface SearchPageProps {
   readonly productHref?: (slug: string) => string | undefined;
   readonly homeHref: string;
   readonly catalogHref: string;
+  readonly cart?: CatalogCartSeam;
 }
 
 const SORT_LABEL = 'Сортировка';
@@ -68,6 +70,7 @@ export function SearchPage({
   productHref,
   homeHref,
   catalogHref,
+  cart,
 }: SearchPageProps) {
   const facetsViewport = useSyncExternalStore(
     subscribeToFacetsViewport,
@@ -76,6 +79,7 @@ export function SearchPage({
   );
   const [draftFilters, setDraftFilters] = useState<SearchFilterState>(EMPTY_SEARCH_FILTERS);
   const [appliedFilters, setAppliedFilters] = useState<SearchFilterState>(EMPTY_SEARCH_FILTERS);
+  const [announcement, setAnnouncement] = useState('');
   const baseMatches = matchSearchProducts(products, query);
   const faceted = facetsViewport && baseMatches.length > 0;
   const facetOptions = buildSearchFacetOptions(baseMatches);
@@ -100,6 +104,21 @@ export function SearchPage({
     returnToFirstPage();
   };
 
+  const addToCart = (product: CatalogProduct) => {
+    if (cart === undefined) {
+      return;
+    }
+
+    const lineQuantity = cart.add(product);
+    setAnnouncement(
+      `Товар добавлен в корзину: ${product.title}. В корзине: ${String(lineQuantity)} шт.`,
+    );
+  };
+
+  const changeQuantity = (product: CatalogProduct, value: number) => {
+    cart?.setQuantity(product, value);
+  };
+
   const resetFilters = () => {
     setDraftFilters(EMPTY_SEARCH_FILTERS);
     setAppliedFilters(EMPTY_SEARCH_FILTERS);
@@ -119,6 +138,7 @@ export function SearchPage({
                   </Chip>
                 )
               }
+              disabled={cart === undefined}
               href={productHref?.(product.id)}
               imageAlt={product.imageAlt}
               imageSrc={product.imageSrc ?? productPhone}
@@ -128,7 +148,18 @@ export function SearchPage({
                   ? undefined
                   : formatSearchPrice(product.oldPriceValue)
               }
+              onAddToCart={() => {
+                addToCart(product);
+              }}
+              onQuantityChange={
+                cart?.quantityOf(product) === undefined
+                  ? undefined
+                  : (value) => {
+                      changeQuantity(product, value);
+                    }
+              }
               price={formatSearchPrice(product.priceValue)}
+              quantity={cart?.quantityOf(product)}
               rating={product.rating}
               reviewCount={product.reviewCount}
               title={product.title}
@@ -235,7 +266,18 @@ export function SearchPage({
                   <ul aria-label="Найденные товары" className="search-rows">
                     {visibleMatches.map((product) => (
                       <li key={product.id}>
-                        <SearchResultRow href={productHref?.(product.id)} product={product} />
+                        <SearchResultRow
+                          disabled={cart === undefined}
+                          href={productHref?.(product.id)}
+                          onAddToCart={() => {
+                            addToCart(product);
+                          }}
+                          onQuantityChange={(value) => {
+                            changeQuantity(product, value);
+                          }}
+                          product={product}
+                          quantity={cart?.quantityOf(product)}
+                        />
                       </li>
                     ))}
                   </ul>
@@ -303,6 +345,9 @@ export function SearchPage({
           </section>
         )}
       </Container>
+      <p className="ui-visually-hidden" role="status">
+        {announcement}
+      </p>
     </main>
   );
 }

@@ -333,6 +333,21 @@
     text-align: end;
   }
 
+  &__aside {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    align-items: flex-end;
+  }
+
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+    justify-content: flex-end;
+  }
+
   &__price {
     font-size: 22px;
     white-space: nowrap;

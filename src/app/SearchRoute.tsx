@@ -18,6 +18,7 @@ import {
   hashHref,
   productDetailsHref,
 } from './routes';
+import { useCatalogCartSeam } from './useCatalogCartSeam';
 
 const SORT_PARAM = 'sort';
 const PAGE_PARAM = 'page';
@@ -25,6 +26,7 @@ const PAGE_PARAM = 'page';
 export function SearchRoute() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [products, setProducts] = useState<readonly CatalogProduct[]>();
+  const cart = useCatalogCartSeam(products !== undefined);
   const query = normalizeSearchQuery(searchParams.get(SEARCH_QUERY_PARAM) ?? '');
   const sort = parseSearchSort(searchParams.get(SORT_PARAM)) ?? DEFAULT_CATALOG_SORT;
   const page = parseSearchPage(searchParams.get(PAGE_PARAM));
@@ -83,6 +85,7 @@ export function SearchRoute() {
     <ProductionShell>
       <SearchPage
         key={query}
+        cart={cart}
         catalogHref={hashHref(CATALOG_SMARTPHONES_PATH)}
         homeHref={hashHref(HOME_PATH)}
         onPageChange={handlePageChange}
