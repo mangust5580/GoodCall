@@ -5,14 +5,22 @@ import { PRODUCT_STAR_COUNT, ProductStars } from './ProductStars';
 import { formatPoints, formatPrice, formatRating, formatReviewCount } from './productDetailsFormat';
 import type { ProductDetailsColourId, ProductDetailsFixture } from './productDetailsFixtures';
 
+export interface ProductDetailsCartSelection {
+  readonly colourId: ProductDetailsColourId;
+  readonly memoryId: string;
+  readonly quantity: number;
+}
+
 interface ProductPurchasePanelProps {
   readonly product: ProductDetailsFixture;
   readonly selectedColourId: ProductDetailsColourId;
   readonly title: string;
   readonly onColourChange: (colourId: ProductDetailsColourId) => void;
+  readonly onAddToCart?: (selection: ProductDetailsCartSelection) => number;
 }
 
 export function ProductPurchasePanel({
+  onAddToCart,
   onColourChange,
   product,
   selectedColourId,
@@ -20,6 +28,7 @@ export function ProductPurchasePanel({
 }: ProductPurchasePanelProps) {
   const [memoryId, setMemoryId] = useState(product.defaultMemoryId);
   const [quantity, setQuantity] = useState(1);
+  const [announcement, setAnnouncement] = useState('');
   const optionName = useId();
 
   const colour = product.colours.find((entry) => entry.id === selectedColourId);
@@ -136,12 +145,33 @@ export function ProductPurchasePanel({
       <div className="product-purchase__actions">
         <div className="product-purchase__cart-row">
           <QuantityStepper label="Количество товара" onChange={setQuantity} value={quantity} />
-          <Button className="product-purchase__cart">В корзину</Button>
+          <Button
+            className="product-purchase__cart"
+            onClick={
+              onAddToCart === undefined
+                ? undefined
+                : () => {
+                    const lineQuantity = onAddToCart({
+                      colourId: selectedColourId,
+                      memoryId,
+                      quantity,
+                    });
+                    setAnnouncement(
+                      `Товар добавлен в корзину: ${title}, ${[colour?.label, memory?.label].filter(Boolean).join(', ')}. В корзине: ${String(lineQuantity)} шт.`,
+                    );
+                  }
+            }
+          >
+            В корзину
+          </Button>
         </div>
         <Button className="product-purchase__one-click" variant="secondary">
           Купить в 1 клик
         </Button>
       </div>
+      <p className="ui-visually-hidden" role="status">
+        {announcement}
+      </p>
 
       <p className="product-purchase__bonus">
         <Icon className="product-purchase__bonus-icon" name="bonus" />

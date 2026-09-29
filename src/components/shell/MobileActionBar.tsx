@@ -1,5 +1,5 @@
 import { Icon } from '../ui';
-import { shellActions } from './shellActions';
+import { shellActionName, shellActions } from './shellActions';
 import type { ShellActionInput } from './shellActions';
 
 export type MobileActionBarProps = Omit<ShellActionInput, 'fallbackHref'>;
@@ -12,7 +12,11 @@ export function MobileActionBar(props: MobileActionBarProps) {
       <ul className="mobile-action-bar__list">
         {actions.map((action) => (
           <li className="mobile-action-bar__item" key={action.label}>
-            <a className="mobile-action-bar__link" href={action.href}>
+            <a
+              aria-label={shellActionName(action)}
+              className="mobile-action-bar__link"
+              href={action.href}
+            >
               <span className="mobile-action-bar__glyph">
                 <Icon name={action.icon} />
                 {action.count === undefined ? null : (

@@ -1,15 +1,13 @@
 import { CartPage } from '../pages/cart';
-import { CART_SEED_LINES } from '../pages/cart/cartFixtures';
-import { cartUnitCount } from '../pages/cart/cartPricing';
 import { useCartLines } from '../pages/cart/useCartLines';
 import { ProductionShell } from './ProductionShell';
 import { CATALOG_SMARTPHONES_PATH, HOME_PATH, hashHref } from './routes';
 
 export function CartRoute() {
-  const cart = useCartLines(CART_SEED_LINES);
+  const cart = useCartLines();
 
   return (
-    <ProductionShell cartCount={cartUnitCount(cart.lines)}>
+    <ProductionShell>
       <CartPage
         cart={cart}
         catalogHref={hashHref(CATALOG_SMARTPHONES_PATH)}

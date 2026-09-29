@@ -1,4 +1,4 @@
-import type { CartLine } from './cartFixtures';
+import type { CartLine } from './cartStore';
 
 export interface CartTotals {
   readonly unitCount: number;

@@ -45,3 +45,7 @@ export function shellActions({
     { label: 'Войти', icon: 'person', href: accountHref ?? fallbackHref },
   ];
 }
+
+export function shellActionName({ label, count }: ShellAction): string | undefined {
+  return count === undefined ? undefined : `${label}: ${String(count)}`;
+}

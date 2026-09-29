@@ -1,6 +1,8 @@
+import productPhone from '../../assets/products/product-phone.svg';
 import { Picture } from '../../components/media';
 import { Button, Checkbox, Chip, Icon, QuantityStepper } from '../../components/ui';
-import type { CartLine } from './cartFixtures';
+import { PRODUCT_DETAILS_FIXTURE } from '../product-details/productDetailsFixtures';
+import type { CartLine, CartLineImage } from './cartStore';
 import { formatPrice, lineDiscountPercent, lineListTotal, lineTotal } from './cartPricing';
 
 interface CartLineItemProps {
@@ -11,6 +13,28 @@ interface CartLineItemProps {
 }
 
 const LINE_MEDIA_SIZES = '(max-width: 559px) 72px, 96px';
+
+function CartLineMedia({ image }: { readonly image: CartLineImage }) {
+  if (image.kind === 'product-details') {
+    const source = PRODUCT_DETAILS_FIXTURE.galleryByColour[image.colourId][0]?.source;
+
+    if (source !== undefined) {
+      return (
+        <Picture alt="" className="cart-line__image" sizes={LINE_MEDIA_SIZES} source={source} />
+      );
+    }
+  }
+
+  return (
+    <img
+      alt=""
+      className="cart-line__image"
+      decoding="async"
+      loading="lazy"
+      src={image.kind === 'url' ? image.src : productPhone}
+    />
+  );
+}
 
 export function CartLineItem({ line, onToggle, onQuantityChange, onRemove }: CartLineItemProps) {
   const listTotal = lineListTotal(line);
@@ -27,12 +51,12 @@ export function CartLineItem({ line, onToggle, onQuantityChange, onRemove }: Car
       </div>
 
       <div className="cart-line__media">
-        <Picture alt="" className="cart-line__image" sizes={LINE_MEDIA_SIZES} source={line.image} />
+        <CartLineMedia image={line.image} />
       </div>
 
       <div className="cart-line__info">
         <p className="cart-line__title">{line.title}</p>
-        <p className="cart-line__variant">{line.variant}</p>
+        {line.variant === undefined ? null : <p className="cart-line__variant">{line.variant}</p>}
       </div>
 
       <div className="cart-line__controls">

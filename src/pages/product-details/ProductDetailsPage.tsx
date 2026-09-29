@@ -5,6 +5,7 @@ import { ProductDetailsSections } from './ProductDetailsSections';
 import { ProductGallery } from './ProductGallery';
 import { ProductOfferSummary } from './ProductOfferSummary';
 import { ProductPurchasePanel } from './ProductPurchasePanel';
+import type { ProductDetailsCartSelection } from './ProductPurchasePanel';
 import { PRODUCT_DETAILS_FIXTURE, productDetailsTitle } from './productDetailsFixtures';
 import type { ProductDetailsColourId, ProductDetailsFixture } from './productDetailsFixtures';
 
@@ -12,6 +13,7 @@ export interface ProductDetailsPageProps {
   readonly homeHref?: string;
   readonly categoryHref?: string;
   readonly product?: ProductDetailsFixture;
+  readonly onAddToCart?: (selection: ProductDetailsCartSelection) => number;
 }
 
 const CATEGORY_TITLE = 'Смартфоны';
@@ -20,6 +22,7 @@ export function ProductDetailsPage({
   homeHref,
   categoryHref,
   product = PRODUCT_DETAILS_FIXTURE,
+  onAddToCart,
 }: ProductDetailsPageProps) {
   const [selectedColourId, setSelectedColourId] = useState<ProductDetailsColourId>(
     product.defaultColourId,
@@ -73,6 +76,7 @@ export function ProductDetailsPage({
           </div>
           <div className="product-details__purchase">
             <ProductPurchasePanel
+              onAddToCart={onAddToCart}
               onColourChange={handleColourChange}
               product={product}
               selectedColourId={selectedColourId}

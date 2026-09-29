@@ -2,12 +2,15 @@ import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 
 import { Container } from '../components/layout';
+import { addCartLine, cartLineId } from '../pages/cart/cartStore';
 import { ProductDetailsPage } from '../pages/product-details';
+import type { ProductDetailsCartSelection } from '../pages/product-details/ProductPurchasePanel';
 import { fetchProductDetails } from '../pages/product-details/productDetailsData';
 import type { ProductDetailsDataResult } from '../pages/product-details/productDetailsData';
 import {
   isProductDetailsSpecimenSlug,
   productDetailsSpecimenFromLive,
+  productDetailsTitle,
 } from '../pages/product-details/productDetailsFixtures';
 import type { ProductDetailsFixture } from '../pages/product-details/productDetailsFixtures';
 import { ProductionShell } from './ProductionShell';
@@ -38,6 +41,31 @@ function viewFromResult(result: ProductDetailsDataResult): ProductDetailsRouteVi
   }
 
   return result.status === 'not-found' ? NOT_FOUND_VIEW : ERROR_VIEW;
+}
+
+function addProductDetailsLine(
+  slug: string,
+  product: ProductDetailsFixture,
+  { colourId, memoryId, quantity }: ProductDetailsCartSelection,
+): number {
+  const colour = product.colours.find((entry) => entry.id === colourId);
+  const memory = product.memories.find((entry) => entry.id === memoryId);
+  const variant = [colour?.label, memory?.label]
+    .filter((part): part is string => part !== undefined)
+    .join(' · ');
+
+  return addCartLine(
+    {
+      id: cartLineId(slug, [colourId, memoryId]),
+      productSlug: slug,
+      title: productDetailsTitle(product, colourId),
+      variant: variant === '' ? undefined : variant,
+      image: { kind: 'product-details', colourId },
+      price: product.priceValue,
+      oldPrice: product.oldPriceValue,
+    },
+    quantity,
+  );
 }
 
 function ProductRouteLoading() {
@@ -127,10 +155,11 @@ export function ProductDetailsRoute() {
       {view.status === 'loading' ? <ProductRouteLoading /> : null}
       {view.status === 'not-found' ? <ProductRouteNotFound /> : null}
       {view.status === 'error' ? <ProductRouteError /> : null}
-      {view.status === 'ready' ? (
+      {view.status === 'ready' && slug !== undefined ? (
         <ProductDetailsPage
           categoryHref={hashHref(CATALOG_SMARTPHONES_PATH)}
           homeHref={hashHref(HOME_PATH)}
+          onAddToCart={(selection) => addProductDetailsLine(slug, view.product, selection)}
           product={view.product}
         />
       ) : null}

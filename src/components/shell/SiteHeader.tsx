@@ -7,7 +7,7 @@ import { CityLocationControl } from '../location';
 import type { CityLookupClient } from '../location';
 import { Icon, SearchField } from '../ui';
 import type { IconName } from '../ui';
-import { shellActions } from './shellActions';
+import { shellActionName, shellActions } from './shellActions';
 import type { ShellAction, ShellActionInput } from './shellActions';
 
 export interface SiteHeaderCategory {
@@ -79,10 +79,12 @@ const CANONICAL_CATEGORIES: readonly { readonly label: string; readonly icon: Ic
   { label: 'Бытовая техника', icon: 'appliance' },
 ];
 
-function ActionLink({ label, icon, href, count }: ShellAction) {
+function ActionLink(action: ShellAction) {
+  const { label, icon, href, count } = action;
+
   return (
     <li className="site-header__action-item">
-      <a className="site-header__action" href={href}>
+      <a aria-label={shellActionName(action)} className="site-header__action" href={href}>
         <span className="site-header__action-glyph">
           <Icon name={icon} />
           {count === undefined ? null : <span className="site-header__badge">{count}</span>}

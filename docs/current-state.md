@@ -63,6 +63,10 @@ Accepted:
 - **Search B / Faceted Results Foundation — user visual PASS on 2026-09-28
   (desktop), CLOSED and published.** Desktop faceted filters and enriched
   result rows on `#/search?q=…` from 1024px. See the Search B section below.
+- **Commerce A / Shared Cart State A — user visual/UX PASS on 2026-09-30
+  (desktop and mobile), CLOSED and published.** Live Catalog and Product
+  Details add to one shared, locally persisted cart with a total-unit badge.
+  See the Commerce A section below.
 - **Blog B / Article Details — user visual PASS on 2026-09-28 (desktop and
   mobile ~390px), CLOSED and published.** `#/blog/how-to-choose-smartphone-2024`
   is the only Blog detail page. See the Blog B section below.
@@ -105,9 +109,178 @@ Technically complete:
 
 Active visual slice:
 
-- **No active visual slice is selected.** Blog B, Blog A, Home A, Cart A,
-  Cart B, Search A, Search B, 404 A and the Product Details production
+- **No active visual slice is selected.** Commerce A, Blog B, Blog A, Home A,
+  Cart A, Cart B, Search A, Search B, 404 A and the Product Details production
   integration are closed.
+
+### Commerce A — Shared Cart State A
+
+**Status: user visual/UX PASS on 2026-09-30; CLOSED and published.** Do not
+reopen accepted cart behaviour or visuals without a new explicit requirement.
+The user reviewed the flow end to end on desktop and mobile:
+
+- the empty Cart;
+- the live Catalog `В корзину` and the shared stepper;
+- Catalog → Cart;
+- Product Details presentation variant → Cart, as a separate line with the
+  correct variant text and image;
+- populated Cart prices, discounts and totals;
+- reload persistence.
+
+Evidence: `Catalog.png`, `Product_details.png`, `Cart_empty.png`,
+`Cart_items.png`. There are no new visuals; the PASS covers behaviour on the
+accepted surfaces. There is no commerce mobile raster, so mobile behaviour is
+derived from the accepted Catalog, Product Details, Cart and shell patterns.
+
+**Accepted user decisions.**
+
+- The production cart starts empty. `CART_SEED_LINES` is removed; Cart B's
+  populated state is reached only through real adds.
+- Product Details colour and memory are presentation-level variants. They
+  take part in line identity and display, with the one displayed price. They
+  are not backend SKUs, stock or per-variant prices.
+- Only live-backed Catalog products can enter the cart. Fixture-fallback
+  cards keep their layout with the accepted `ProductCard` `disabled`
+  semantics.
+
+**Ownership.** `src/pages/cart/cartStore.ts` is the single cart owner: a
+module store with a listener set, read through `useSyncExternalStore` in
+`src/pages/cart/useCartLines.ts` (`useCartLineList`, `useCartUnitCount`,
+`useCartLines`). There is no Context, provider, reducer framework or
+dependency. Operations:
+
+- add, merging identical identity;
+- set quantity, clamped to 1–99 (the `QuantityStepper` range);
+- toggle one and toggle all;
+- remove one and remove selected.
+
+Totals still come from `cartPricing.ts`.
+
+**Persistence.** The localStorage key is `goodcall.cart.v1`, with the value
+`{ "lines": CartLine[] }`. It is read lazily on first use and written after
+every mutation.
+
+- Every field is validated. Any of these empties the cart and removes only
+  this key:
+  - malformed JSON;
+  - a foreign shape;
+  - an out-of-range quantity;
+  - an unknown image kind;
+  - a duplicate id.
+- Storage errors are swallowed, following the `cityStorage` precedent.
+- There is no migration framework; a future shape change bumps the key
+  version.
+- There is no cross-tab sync.
+
+**Line contract.** `CartLine` has `id`, `productSlug`, `title`, optional
+`variant`, `image`, `price`, optional `oldPrice`, `quantity` and `selected`.
+`image` is a reference, not a build-hashed URL, so persisted lines survive
+redeploys:
+
+- `{ kind: 'url', src }` — a live Storage image URL;
+- `{ kind: 'catalog-fallback' }` — the accepted `product-phone.svg`;
+- `{ kind: 'product-details', colourId }` — the first gallery image of that
+  colour, resolved at render.
+
+**Identity.**
+
+- Catalog: the live product slug.
+- Product Details: `slug|colourId|memoryId`, e.g. `iphone-15-128|black|256`.
+
+A Catalog `iphone-15-128` line and a Product Details `iphone-15-128|pink|128`
+line are therefore separate lines.
+
+**Catalog.**
+
+- `CatalogRoute` builds a `CatalogCartSeam` only after the live read
+  succeeds, the same boundary as product links. It passes the seam through
+  `CatalogPage` to `CatalogProductGrid`.
+- `В корзину` adds one unit. The accepted card stepper then reads and writes
+  the shared line.
+- Without the seam (fallback or `?reference=catalog`), every card is
+  `disabled` and no stepper appears. This also disables the card's local
+  favourite.
+- The favourite toggle is still grid-local visual state.
+
+**Product Details.**
+
+- `ProductDetailsRoute` passes `onAddToCart` to the router-free
+  `ProductDetailsPage`. `ProductPurchasePanel` calls it with the selected
+  colour, memory and quantity.
+- The line captures:
+  - the displayed title (`productDetailsTitle`);
+  - the variant `Цвет · Память`, e.g. `Чёрный · 256 ГБ`;
+  - the displayed price and old price;
+  - the selected colour's first gallery image.
+- `?reference=product-details` passes no handler, so its button stays inert.
+- `Купить в 1 клик` is unchanged and has no behaviour.
+
+**Cart.** `CartRoute` uses the shared `useCartLines()`. `CartPage` and its
+accepted A/B behaviour are unchanged. Catalog lines have no variant row,
+because Catalog titles already carry the colour and nothing is parsed from
+them.
+
+**Badge.**
+
+- `ProductionShell` reads `useCartUnitCount()` (total units, selected or not)
+  for `SiteHeader` and `MobileActionBar` on every production route.
+- The specimen default `2` and the `cartCount` prop are gone.
+- Zero follows the accepted Cart A convention and shows `0`.
+- Shell action links that carry a count get an explicit accessible name, such
+  as `Корзина: 3`. The unchanged specimen counts get `Сравнение: 3` and
+  `Избранное: 12`.
+- Reference surfaces keep their static specimen counts.
+
+**Feedback.** Each surface (the Catalog grid and the Product Details purchase
+panel) has one visually hidden, polite `role="status"` line. It announces the
+added product and the resulting line quantity. Focus does not move. The
+`Modals.png` add-to-cart dialog is deferred.
+
+**Truthfulness limits.**
+
+- Device/browser-local only; no account or cross-device cart.
+- Price is a snapshot from the originating read, with no revalidation.
+- No stock or reservation.
+- No real variant SKU or price.
+- No order creation; `Оформить заказ` stays disabled.
+- The Product Details title keeps the backend `128 ГБ` wording while the
+  variant line can say `256 ГБ`. That inconsistency is inherited from the
+  accepted page and not resolved here.
+
+**Local development.** Live product-backed commerce needs
+`VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` in an untracked
+`.env.local`. Without them Catalog renders its fixture fallback with disabled
+`В корзину`, and `#/product/iphone-15-128` shows its error state. `VITE_*`
+values are compiled at build time, so `npm run preview` serves whatever the
+last `npm run build` saw. Rebuild after changing env, or use `npm run dev`.
+
+**Agent verification before the PASS.** A headless-Chrome
+DevTools run passed 46 checks. It ran against a scratch build whose Supabase
+reads were answered with test rows. It covered:
+
+- the fresh empty state;
+- Catalog add, stepper and persistence;
+- fallback disabling;
+- Product Details variant add, merge and separation;
+- Cart quantity, select, remove-selected and last-line removal;
+- reload restore;
+- three corrupt-storage cases, with unrelated keys untouched;
+- announcements and accessible names;
+- no horizontal overflow on Cart, Catalog and Product Details at
+  1440/1024/768/390/320.
+
+The compiled CSS is byte-identical to the previous build.
+
+**Deferred.**
+
+- Checkout, Thank-you and orders;
+- payment, promo code, delivery cost and bonuses;
+- the add-to-cart modal and quick view;
+- Search, Home and recommendation cart actions;
+- favourites, comparison and per-line favourites;
+- `Найти в корзине`, `Очистить корзину` and `Купить в 1 клик`;
+- stock and variant pricing;
+- a server cart.
 
 ### Blog B — Article Details
 
@@ -359,8 +532,8 @@ engine, and no dependency.
 - mobile Search filters and URL-synced filters;
 - Category facet, cross-category search and autocomplete;
 - a page-size selector;
-- a real `В корзину` (needs a shared cart, **Commerce A**), favourites and
-  comparison;
+- Search-row `В корзину` (the shared cart exists since Commerce A but is not
+  wired to Search), favourites and comparison;
 - availability, stock and delivery availability (no data source);
 - richer first-class specs and real product imagery (`product_images` is
   empty);
@@ -491,25 +664,22 @@ The PASS covers:
 
 Evidence: `Cart_items.png`.
 
-**Ownership.** All of it lives in `src/pages/cart/` and is Cart-route-local:
+**Ownership.** All of it lives in `src/pages/cart/`. Commerce A replaced the
+route-local state and the seed with the shared cart (see Commerce A). The
+visuals and transitions below are unchanged.
 
-- `useCartLines.ts` — a `useState` hook holding `CartLine[]`;
+- `useCartLines.ts` — now the hook over the shared `cartStore.ts`;
 - `cartPricing.ts` — pure derivation and formatting;
 - `CartLineItem.tsx`, `CartOrderSummary.tsx` and `CartEmptyState.tsx` —
   Cart-local components. `CartEmptyState` holds the accepted Cart A markup,
   moved verbatim.
-- `CART_SEED_LINES` in `cartFixtures.ts` — three deterministic presentation
-  lines using `HOME_DEVICE_MEDIA` renders:
-  - iPhone 15 Pro, 109 990 / 129 990 ₽;
-  - iPad Air 11" M2, 62 990 / 69 990 ₽;
-  - Sony WH-1000XM5, 29 990 ₽.
+- `CART_SEED_LINES` was removed by Commerce A; the cart starts empty.
 
-`CartRoute` calls `useCartLines(CART_SEED_LINES)` and passes the state to the
+`CartRoute` calls the shared `useCartLines()` and passes the state to the
 router-free `CartPage`.
 
-**State.** This is not a global, persisted or backend Cart. There is no
-Context, store or storage. The state lives only as long as `CartRoute` is
-mounted: leaving `#/cart` and returning restores the seed. Transitions:
+**State.** Since Commerce A the cart is shared and persisted locally. It is
+still not a backend Cart. Transitions:
 
 - toggle a line;
 - toggle all;
@@ -528,9 +698,8 @@ mounted: leaving `#/cart` and returning restores the seed. Transitions:
 
 With nothing selected, the summary shows `Не выбрано ни одного товара`.
 
-**Badge.** The Cart route passes `cartCount` = total units in the Cart,
-selected or not, to Header and `MobileActionBar`. It reaches `0` with the
-empty state. Other routes keep the specimen `2`.
+**Badge.** Total units in the cart, selected or not, on every production
+route (Commerce A). It reaches `0` with the empty state.
 
 **UI.**
 
@@ -623,16 +792,12 @@ Cart family only.
 - Badges use the accepted `Chip`.
 - Cards have no title links, no add-to-cart and no favourite action.
 
-**Badge.** `ProductionShell` takes an optional `cartCount`, which defaults to
-the specimen `2`. Cart B replaced the static `0` with the Cart-local unit count
-(see Cart B). This is a presentation seam, not
-cart state.
+**Badge.** `ProductionShell` now reads the shared cart unit count (see
+Commerce A).
 
 **Deferred.**
 
-- populated cart, cart state and persistence;
-- backend, checkout and add-to-cart synchronization;
-- real cart-count synchronization;
+- backend and checkout;
 - a recommendations contract;
 - a `Смотреть все` link;
 - a shared `Breadcrumbs` component.
@@ -895,8 +1060,9 @@ schema.
   colour, because production variant pricing and backend contracts are
   deferred.
 - `QuantityStepper` is local.
-- `В корзину` and `Купить в 1 клик` are real buttons with no cart or checkout
-  behaviour.
+- On the production route, `В корзину` adds the selected presentation-level
+  variant and quantity to the shared cart (Commerce A). `Купить в 1 клик` is a
+  real button with no checkout behaviour.
 - Lower sections reuse the accepted `Tabs` unchanged: `Описание`,
   `Характеристики`, `Отзывы (1 976)` (the raster's three), plus task-directed
   `Доставка и оплата` and `Гарантия`. Panels are `role="tabpanel"` with
@@ -3120,8 +3286,9 @@ router owns only the fragment. The base path still lives solely in
 - `#/` — the production Home route. The temporary redirect to Catalog is gone.
 - `#/catalog/smartphones` — the production Catalog route. Direct-entry shape:
   <https://mangust5580.github.io/GoodCall/#/catalog/smartphones>
-- `#/cart` — the production Cart route: the Cart B populated state with a
-  Cart-local seed, and the Cart A empty state after the last line is removed.
+- `#/cart` — the production Cart route over the shared local cart
+  (Commerce A): the Cart A empty state when the cart is empty, and the Cart B
+  populated state otherwise.
 - `#/search?q=…` — the production Search results route (Search A, with Search B
   desktop facets); optional `sort` and `page` params.
 - `#/product/:slug` — the production Product Details route, specimen-gated to
@@ -3159,14 +3326,14 @@ hero search. `src/pages/not-found/` owns the router-free `NotFoundPage`.
 `MobileActionBar` — with `ProductionShell.scss` owning the page background and
 the mobile bottom inset. It was extracted once Home became the second real
 production consumer and both routes proved literally identical composition,
-props and wrapper styling. It takes `children` and one optional `cartCount`, which
-defaults to the specimen `2`. The Cart route passes its Cart-local unit count; it
-is presentation-only, not cart synchronization. There are no other options, variants or configuration. There is still no `AppShell`, `PageShell`, `AppLayout`,
+props and wrapper styling. It takes only `children` and reads the shared cart
+unit count itself (Commerce A). There are no options, variants or configuration. There is still no `AppShell`, `PageShell`, `AppLayout`,
 `LayoutProvider` or route registry. Global shell regions stay outside the page
 components.
 
-The Header action counts (`2`, `3`, `12`) are specimen shell values, like
-`2 546 товаров`. No cart, favourites or comparison state exists yet.
+The cart count is real (Commerce A). The comparison and favourites counts
+(`3`, `12`) remain specimen shell values, like `2 546 товаров`. No favourites
+or comparison state exists yet.
 
 ### Route scroll
 
@@ -3445,20 +3612,14 @@ none of them blocks the closed milestone.
 
 ## Next approved step
 
-**No next milestone is selected.** Blog A and Blog B are closed. Candidates:
-
-- mobile Search filters;
-- **Commerce A — Shared Cart State**, the prerequisite for any real
-  `В корзину` outside `#/cart`.
-
-None is scoped. Autocomplete and cross-category search are not scoped
-either.
+**No next milestone is selected.** Commerce A is closed. Mobile Search filters
+remain an unscoped candidate; autocomplete and cross-category search are not
+scoped either.
 
 Each of the following would need its own explicit scope, and none exists:
 
 - Checkout;
-- cross-route add-to-cart synchronization;
-- global or persisted cart state;
+- the add-to-cart dialog and Search/Home cart actions;
 - a backend cart;
 - a promo-code engine.
 

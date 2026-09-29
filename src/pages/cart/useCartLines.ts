@@ -1,6 +1,16 @@
-import { useState } from 'react';
+import { useSyncExternalStore } from 'react';
 
-import type { CartLine } from './cartFixtures';
+import { cartUnitCount } from './cartPricing';
+import {
+  getCartLines,
+  removeCartLine,
+  removeSelectedCartLines,
+  setCartLineQuantity,
+  subscribeCart,
+  toggleAllCartLines,
+  toggleCartLine,
+} from './cartStore';
+import type { CartLine } from './cartStore';
 
 export interface CartLinesState {
   readonly lines: readonly CartLine[];
@@ -11,31 +21,21 @@ export interface CartLinesState {
   readonly removeSelected: () => void;
 }
 
-const MIN_QUANTITY = 1;
+export function useCartLineList(): readonly CartLine[] {
+  return useSyncExternalStore(subscribeCart, getCartLines);
+}
 
-export function useCartLines(seed: readonly CartLine[]): CartLinesState {
-  const [lines, setLines] = useState(seed);
+export function useCartUnitCount(): number {
+  return cartUnitCount(useCartLineList());
+}
 
+export function useCartLines(): CartLinesState {
   return {
-    lines,
-    toggleLine: (id, selected) => {
-      setLines((current) => current.map((line) => (line.id === id ? { ...line, selected } : line)));
-    },
-    toggleAll: (selected) => {
-      setLines((current) => current.map((line) => ({ ...line, selected })));
-    },
-    setQuantity: (id, quantity) => {
-      setLines((current) =>
-        current.map((line) =>
-          line.id === id ? { ...line, quantity: Math.max(MIN_QUANTITY, quantity) } : line,
-        ),
-      );
-    },
-    removeLine: (id) => {
-      setLines((current) => current.filter((line) => line.id !== id));
-    },
-    removeSelected: () => {
-      setLines((current) => current.filter((line) => !line.selected));
-    },
+    lines: useCartLineList(),
+    toggleLine: toggleCartLine,
+    toggleAll: toggleAllCartLines,
+    setQuantity: setCartLineQuantity,
+    removeLine: removeCartLine,
+    removeSelected: removeSelectedCartLines,
   };
 }
