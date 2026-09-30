@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import { MobileActionBar, NewsletterBand, SiteFooter, SiteHeader } from '../components/shell';
 import { useCartUnitCount } from '../pages/cart/useCartLines';
 import { useFavoritesCount } from '../pages/favorites/useFavorites';
-import { CART_PATH, FAVORITES_PATH, HOME_PATH, hashHref } from './routes';
+import { CART_PATH, FAVORITES_PATH, HOME_PATH, SHOPS_PATH, hashHref } from './routes';
 import { useSearchNavigation } from './useSearchNavigation';
 
 import './ProductionShell.scss';
@@ -32,6 +32,7 @@ export function ProductionShell({ children }: ProductionShellProps) {
         favoritesHref={favorites}
         homeHref={home}
         onSearchSubmit={handleSearchSubmit}
+        storesHref={hashHref(SHOPS_PATH)}
       />
       {children}
       <NewsletterBand />

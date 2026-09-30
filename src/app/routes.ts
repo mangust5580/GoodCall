@@ -7,6 +7,7 @@ export const PRODUCT_PATH = '/product/:slug';
 export const CART_PATH = '/cart';
 export const CHECKOUT_PATH = '/checkout';
 export const FAVORITES_PATH = '/favorites';
+export const SHOPS_PATH = '/shops';
 export const SEARCH_PATH = '/search';
 export const SEARCH_QUERY_PARAM = 'q';
 export const BLOG_PATH = '/blog';

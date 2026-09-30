@@ -11,6 +11,7 @@ import { NotFoundRoute } from './NotFoundRoute';
 import { ProductDetailsRoute } from './ProductDetailsRoute';
 import { RouteScrollReset } from './RouteScrollReset';
 import { SearchRoute } from './SearchRoute';
+import { ShopsRoute } from './ShopsRoute';
 import {
   BLOG_ARTICLE_PATH,
   BLOG_PATH,
@@ -21,6 +22,7 @@ import {
   HOME_PATH,
   PRODUCT_PATH,
   SEARCH_PATH,
+  SHOPS_PATH,
 } from './routes';
 
 export function ProductionRouter() {
@@ -35,6 +37,7 @@ export function ProductionRouter() {
         <Route element={<CheckoutRoute />} path={CHECKOUT_PATH} />
         <Route element={<FavoritesRoute />} path={FAVORITES_PATH} />
         <Route element={<SearchRoute />} path={SEARCH_PATH} />
+        <Route element={<ShopsRoute />} path={SHOPS_PATH} />
         <Route element={<BlogRoute />} path={BLOG_PATH} />
         <Route element={<BlogArticleRoute />} path={BLOG_ARTICLE_PATH} />
         <Route element={<NotFoundRoute />} path="*" />

@@ -63,6 +63,10 @@ Accepted:
 - **Search B / Faceted Results Foundation — user visual PASS on 2026-09-28
   (desktop), CLOSED and published.** Desktop faceted filters and enriched
   result rows on `#/search?q=…` from 1024px. See the Search B section below.
+- **Stores A / Demo Store Dataset + Shops List Page — user visual/UX PASS
+  (desktop 1440 and mobile 390), CLOSED and published.** `#/shops` lists the
+  six Moscow demo stores from the typed local `DEMO_STORES` dataset (list-only,
+  no map, stock or filters). See the Stores A section below.
 - **Checkout A / Checkout Page Foundation — user visual/UX PASS on 2026-09-30,
   CLOSED and published.** `#/checkout` over the selected Cart lines, with
   courier delivery, DaData address autocomplete (optional) and a first-class
@@ -125,11 +129,53 @@ Technically complete:
 
 Active visual slice:
 
-- None. **Checkout A / Checkout Page Foundation — USER VISUAL/UX PASS on
-  2026-09-30, CLOSED and published.** See the
-  Checkout A section below. Search C, Favourites A, Commerce B, Commerce A,
+- None. **Stores A / Demo Store Dataset + Shops List Page — USER VISUAL/UX
+  PASS (desktop 1440 and mobile 390), CLOSED and published.** See the Stores A
+  section below. **Checkout A / Checkout Page Foundation — USER VISUAL/UX PASS
+  on 2026-09-30, CLOSED and published.** See the Checkout A section below. Search C, Favourites A, Commerce B, Commerce A,
   Blog B, Blog A, Home A, Cart A, Cart B, Search A, Search B, 404 A and the
   Product Details production integration are closed.
+
+### Stores A — Demo Store Dataset + Shops List Page
+
+**Status: USER VISUAL/UX PASS (desktop 1440 and mobile 390) — CLOSED and
+published.** Evidence: `Shops.png`, from which the list-only scope is derived.
+Do not reopen the accepted list-only adaptation, neutral tiles or metadata strip
+without a new explicit requirement.
+
+**Data.** `src/pages/stores/storeData.ts` owns the canonical store identity:
+`StorePoint { id, name, city, address, hours, metro? }` and the typed local
+**demo** dataset `DEMO_STORES`.
+
+- It holds the six Moscow stores visible in `Shops.png`: Авиапарк, Европейский,
+  Метрополис, РИО Дмитровка, Колумбус, Мегаполис. They have stable slug IDs
+  (`moscow-aviapark` …), raster addresses and metro stations, and the hours
+  «Ежедневно 10:00 – 22:00».
+- It is demo/reference content, not a real store network.
+- There are no coordinates, stock, pickup cost or timing, phone or images,
+  and no Supabase table.
+
+**Route.** `SHOPS_PATH` (`/shops`) → `ShopsRoute` → the router-free
+`StoresPage` inside `ProductionShell`. The Header «Магазины» utility link
+points to `#/shops`.
+
+**Page.** A list-only derivation of `Shops.png`:
+
+- breadcrumb, `h1` «Магазины», and the raster lead;
+- a static city label and a count derived from the data
+  («Найдено 6 магазинов»);
+- a semantic list of Stores-owned cards: a neutral store-icon tile, the
+  name as `h2`, then address, metro and hours rows;
+- a grid of 3/2/1 columns (1440/768/390).
+
+**Deferred and intentionally absent.** Map, pins and route-building; the
+stock labels and the «Только магазины с наличием» filter; the metro filter;
+the city selector; «Показать ещё»; store photos (only one approved store
+image exists, so a consistent neutral tile is used); the «Не нашли магазин
+рядом?» promo, which advertises pickup. `CommerceLocationCard` is unchanged.
+
+Stores A supplies the store-identity prerequisite for a future Pickup A.
+Pickup is not implemented.
 
 ### Checkout A — Checkout Page Foundation
 
@@ -138,16 +184,11 @@ DaData address autocomplete (observed working by the user), and the
 manual/graceful-degradation address UX. Evidence: `Checkout.png` (desktop
 only). The mobile layout is derived.
 
-**Pickup is a separate capability, and its data contract is not ready.**
-`Самовывоз` stays omitted. The repository has no store or pickup-point dataset:
+**Pickup is a separate capability.** `Самовывоз` stays omitted.
 
-- no Supabase table;
-- no ID, city, hours or coordinates contract;
-- no availability data;
-- no delivery-method pricing.
-
-The only store content is one `CommerceLocationCard` specimen on
-`?reference=components` and fixture copy («Из 45 магазинов»).
+- Store identity now exists: Stores A, `DEMO_STORES`, demo data.
+- Still missing: availability data, delivery-method pricing, and the
+  product decisions on pickup date/time, payment and store scoping.
 
 **Route and handoff.**
 
@@ -3816,6 +3857,8 @@ router owns only the fragment. The base path still lives solely in
 - `#/blog` — the Blog listing (Blog A, closed); optional
   `category`, `q` and `page` params.
 - `#/favorites` — the local favourites page (Favourites A, closed).
+- `#/shops` — the list-only Stores page over the demo store dataset
+  (Stores A, closed).
 - `#/checkout` — the Checkout A page over the selected shared-cart lines
   (complete, user visual/UX PASS).
 - `#/blog/:slug` — the Blog article detail (Blog B, closed),
@@ -3825,7 +3868,7 @@ router owns only the fragment. The base path still lives solely in
   It is not a global error architecture.
 
 Route paths live in `src/app/routes.ts` as `HOME_PATH`,
-`CATALOG_SMARTPHONES_PATH`, `PRODUCT_PATH`, `CART_PATH`, `CHECKOUT_PATH`, `FAVORITES_PATH`,
+`CATALOG_SMARTPHONES_PATH`, `PRODUCT_PATH`, `CART_PATH`, `CHECKOUT_PATH`, `FAVORITES_PATH`, `SHOPS_PATH`,
 `SEARCH_PATH`, `BLOG_PATH` and `BLOG_ARTICLE_PATH`.
 `hashHref()`, `productDetailsHref()`, `searchPath()`, `blogPath()`,
 `blogArticlePath()` and `blogArticleHref()` serve the `href` and navigation
@@ -3833,7 +3876,7 @@ seams.
 
 ### Ownership
 
-`src/app/ProductionRouter.tsx` holds the `HashRouter` and the ten routes; it
+`src/app/ProductionRouter.tsx` holds the `HashRouter` and the eleven routes; it
 has no local fallback component or stylesheet any more.
 `src/app/HomeRoute.tsx`, `src/app/CatalogRoute.tsx`,
 `src/app/ProductDetailsRoute.tsx`, `src/app/CartRoute.tsx`,
@@ -3986,7 +4029,8 @@ never jumps into the production router.
   invented to make a breadcrumb clickable.
 - **Header and Footer brand links** now point at `#/`, because Home is real.
   Everything else in the Header is still deliberately unwired: the utility
-  links, three of the four actions (`Корзина` now links to `#/cart` in both
+  links (except «Магазины», which links to `#/shops`), three of the four
+  actions (`Корзина` now links to `#/cart` in both
   `SiteHeader` and `MobileActionBar`; the Header search submits to
   `#/search?q=…`), `Каталог товаров`, `Ещё` and all nine category links
   keep the existing consumer-injected fallback to the app base. No unavailable
@@ -4135,14 +4179,15 @@ none of them blocks the closed milestone.
 
 ## Next approved step
 
-**Checkout A — Checkout Page Foundation is CLOSED and published (user
-visual/UX PASS on 2026-09-30).** No next milestone is active; neither of the
-following has started.
+**Checkout A and Stores A are CLOSED and published.** No next milestone is
+active; none of the following has started.
 
-- **Pickup** needs its own store data-contract slice first. That slice would
-  hold a canonical store list with a stable ID, name, address, city, hours
-  and coordinates if a map is wanted, with the source decided explicitly:
-  either a Supabase table or a typed local dataset labelled as demo.
+- **Pickup A** can consume `DEMO_STORES` by ID once the fulfilment decisions
+  are made: availability or eligibility, cost, date/time, payment
+  restrictions, store scoping, and courier/pickup switching.
+- **Deferred store capabilities:** map and coordinates, stock and
+  availability, city and metro filters, route-building, and a Supabase
+  `stores` source.
 - **Order Confirmation** needs an order-creation decision.
 
 Search autocomplete, URL-synced filters and cross-category search are not
