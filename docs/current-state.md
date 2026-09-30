@@ -63,6 +63,10 @@ Accepted:
 - **Search B / Faceted Results Foundation — user visual PASS on 2026-09-28
   (desktop), CLOSED and published.** Desktop faceted filters and enriched
   result rows on `#/search?q=…` from 1024px. See the Search B section below.
+- **Comparison A / Local Product Comparison — USER VISUAL/UX PASS on
+  2026-09-30, CLOSED and published.** Catalog cards add up to 4 products to a
+  local comparison shown on `#/compare`; the fabricated shell count `3` is
+  gone. See the Comparison A section below.
 - **Order Confirmation A / Demo Order Handoff + Thank-you Page — USER
   VISUAL/UX PASS, CLOSED and published.** A valid Checkout submit records a
   session-only demo order, removes the ordered cart lines and opens
@@ -138,7 +142,9 @@ Technically complete:
 
 Active visual slice:
 
-- None. **Order Confirmation A / Demo Order Handoff + Thank-you Page — USER
+- None. **Comparison A / Local Product Comparison — USER VISUAL/UX PASS on
+  2026-09-30, CLOSED and published.** See the Comparison A section below.
+  **Order Confirmation A / Demo Order Handoff + Thank-you Page — USER
   VISUAL/UX PASS, CLOSED and published.** See the Order Confirmation A section
   below. **Pickup A / Checkout Pickup Foundation — USER VISUAL/UX PASS
   (desktop 1440 and mobile 390), CLOSED and published.** See the Pickup A
@@ -148,6 +154,50 @@ Active visual slice:
   on 2026-09-30, CLOSED and published.** See the Checkout A section below. Search C, Favourites A, Commerce B, Commerce A,
   Blog B, Blog A, Home A, Cart A, Cart B, Search A, Search B, 404 A and the
   Product Details production integration are closed.
+
+### Comparison A — Local Product Comparison
+
+**Status: USER VISUAL/UX PASS on 2026-09-30 — CLOSED and published.** Do not
+reopen the accepted table, card control or shell count without a new explicit
+requirement. Evidence: `Account_profile_product comparison.png` (main content,
+account rail omitted as in Favorites A); `Modals.png` #1 for the compare
+control paired with ♥. `Catalog.png` and `Product_details.png` show no
+compare control; the Catalog card control is an approved extension.
+
+- **State** (`src/pages/compare/compareStore.ts`, `useCompare.ts`):
+  `localStorage` `goodcall.compare.v1` as `{ items }`, product-level slug
+  identity plus a minimal snapshot (title, image ref, price, old price,
+  rating, review count, brand, storage, colour). Cap `COMPARE_LIMIT = 4`,
+  insertion order, duplicate or over-cap add is a no-op; malformed JSON, a
+  foreign shape, duplicate slugs or more than 4 items clear only this key.
+  No category rule, no cross-tab sync.
+- **Entry point: Catalog only.** `ProductCard` gained optional
+  `onCompareToggle` / `comparePressed` / `compareDisabled` / `compareLabel`;
+  a `CompareButton` (native `aria-pressed` icon button) sits under ♥ on the
+  media. `useCatalogCompareSeam` binds it after the live read, deriving brand,
+  storage and colour with the accepted Search B helpers. At 4/4 inactive
+  toggles are disabled with «Сравнение заполнено (4 из 4): …»; active ones
+  stay usable. Search, Product Details, Home and Favorites have no control.
+- **Shell.** `COMPARISON_COUNT = 3` is removed; `ProductionShell` passes the
+  live count and `#/compare` to `SiteHeader` and `MobileActionBar`.
+- **Page** (`CompareRoute` → router-free `ComparePage`, `#/compare`):
+  breadcrumb «Главная › Сравнение товаров», `h1` «Сравнение товаров» with
+  «N из 4», «Очистить все»; a native `<table>` (hidden caption, product
+  `th scope="col"` with ×, image, title, price/old price; `th scope="row"`
+  labels) with exactly six rows — Цена, Выгода (old − current, else «—»),
+  Рейтинг, Бренд, Встроенная память, Цвет — and a per-column «В корзину»
+  through the shared cart (merge by `cartLineId(slug)`; the item stays in
+  comparison). Removing a column focuses the next (else previous) remove
+  button; clearing focuses the empty-state `h1` «Сравнение пусто». The
+  top-left header cell is structurally present but visually empty; the page
+  bottom padding is `fluid(40, 28)`.
+- **Responsive.** The matrix fits at desktop; below that it scrolls inside
+  its own wrapper (label ≥120px, columns ≥168px), which becomes a focusable
+  `role="region"` only while it overflows. The page never scrolls sideways.
+- **Deferred.** Richer spec rows (screen, CPU, RAM, battery, weight…),
+  stock/«В наличии», share, highlight/hide-equal, category rules, reorder,
+  sticky headers, the Modals #12 header popover, Quick View, Search/PD/Home
+  entry points, account/server/cross-tab sync.
 
 ### Order Confirmation A — Demo Order Handoff + Thank-you Page
 
@@ -605,7 +655,8 @@ dependency or generic persistence layer, and the cart store is untouched.
   `favoritesHref` `#/favorites` to `SiteHeader` and `MobileActionBar`.
   - The specimen `12` is gone. Zero shows `0`, following the cart convention.
   - The accessible name is `Избранное: N`.
-  - The comparison specimen `3` is unchanged.
+  - The comparison specimen `3` was later replaced by the real count in
+    Comparison A.
 
 **`#/favorites` page.** `FAVORITES_PATH` routes to
 `src/app/FavoritesRoute.tsx`, which renders the router-free
@@ -3946,6 +3997,7 @@ router owns only the fragment. The base path still lives solely in
 - `#/blog` — the Blog listing (Blog A, closed); optional
   `category`, `q` and `page` params.
 - `#/favorites` — the local favourites page (Favourites A, closed).
+- `#/compare` — the local product comparison (Comparison A, closed).
 - `#/shops` — the list-only Stores page over the demo store dataset
   (Stores A, closed).
 - `#/checkout` — the Checkout A page over the selected shared-cart lines
@@ -3959,7 +4011,7 @@ router owns only the fragment. The base path still lives solely in
   It is not a global error architecture.
 
 Route paths live in `src/app/routes.ts` as `HOME_PATH`,
-`CATALOG_SMARTPHONES_PATH`, `PRODUCT_PATH`, `CART_PATH`, `CHECKOUT_PATH`, `ORDER_CONFIRMATION_PATH`, `FAVORITES_PATH`, `SHOPS_PATH`,
+`CATALOG_SMARTPHONES_PATH`, `PRODUCT_PATH`, `CART_PATH`, `CHECKOUT_PATH`, `ORDER_CONFIRMATION_PATH`, `FAVORITES_PATH`, `COMPARE_PATH`, `SHOPS_PATH`,
 `SEARCH_PATH`, `BLOG_PATH` and `BLOG_ARTICLE_PATH`.
 `hashHref()`, `productDetailsHref()`, `searchPath()`, `blogPath()`,
 `blogArticlePath()` and `blogArticleHref()` serve the `href` and navigation
@@ -3989,8 +4041,8 @@ unit count itself (Commerce A). There are no options, variants or configuration.
 components.
 
 The cart count (Commerce A) and the favourites count (Favourites A) are real.
-The comparison count `3` remains a specimen shell value, like `2 546 товаров`.
-No comparison state exists yet.
+The comparison count is real since Comparison A (`useCompareCount()`, linking
+to `#/compare`).
 
 ### Route scroll
 
@@ -4270,9 +4322,9 @@ none of them blocks the closed milestone.
 
 ## Next approved step
 
-**Checkout A, Stores A, Pickup A and Order Confirmation A are CLOSED and
-published.** No next
-milestone is active; none of the following has started.
+**Checkout A, Stores A, Pickup A, Order Confirmation A and Comparison A are
+CLOSED and published.** No next milestone is active; none of the following has
+started.
 
 - **Pickup follow-ups:** real availability or stock, pickup cost, pickup
   scheduling and payment rules remain deferred, together with `/shops` →

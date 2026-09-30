@@ -8,6 +8,7 @@ export const CART_PATH = '/cart';
 export const CHECKOUT_PATH = '/checkout';
 export const ORDER_CONFIRMATION_PATH = '/order-confirmation';
 export const FAVORITES_PATH = '/favorites';
+export const COMPARE_PATH = '/compare';
 export const SHOPS_PATH = '/shops';
 export const SEARCH_PATH = '/search';
 export const SEARCH_QUERY_PARAM = 'q';

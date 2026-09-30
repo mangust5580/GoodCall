@@ -49,6 +49,20 @@
     }
   }
 
+  &--compare {
+    color: var(--role-text-subtle);
+
+    &:not([aria-pressed='true']):hover:not(:disabled) {
+      background-color: var(--role-surface-page-soft);
+      color: var(--role-text-secondary);
+    }
+
+    &[aria-pressed='true'] {
+      background-color: var(--role-surface-brand-soft);
+      color: var(--role-text-link);
+    }
+  }
+
   &--cart {
     background-color: var(--color-brand-purple-600);
     color: var(--role-text-inverse);
@@ -181,6 +195,12 @@
   &__favorite {
     position: absolute;
     top: -10px;
+    right: -10px;
+  }
+
+  &__compare {
+    position: absolute;
+    top: calc(var(--product-action-size) - 6px);
     right: -10px;
   }
 

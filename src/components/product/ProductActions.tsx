@@ -39,6 +39,43 @@ export function FavoriteButton({
   );
 }
 
+interface CompareButtonProps {
+  readonly label: string;
+  readonly pressed: boolean;
+  readonly onToggle: (pressed: boolean) => void;
+  readonly disabled?: boolean;
+  readonly className?: string;
+}
+
+export function CompareButton({
+  label,
+  pressed,
+  onToggle,
+  disabled = false,
+  className,
+}: CompareButtonProps) {
+  const classes = ['product-action', 'product-action--compare'];
+
+  if (className) {
+    classes.push(className);
+  }
+
+  return (
+    <button
+      aria-label={label}
+      aria-pressed={pressed}
+      className={classes.join(' ')}
+      disabled={disabled}
+      onClick={() => {
+        onToggle(!pressed);
+      }}
+      type="button"
+    >
+      <Icon name="compare" />
+    </button>
+  );
+}
+
 interface AddToCartButtonProps {
   readonly label: string;
   readonly onClick: () => void;

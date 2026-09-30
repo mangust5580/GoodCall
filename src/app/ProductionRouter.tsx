@@ -5,6 +5,7 @@ import { BlogRoute } from './BlogRoute';
 import { CartRoute } from './CartRoute';
 import { CatalogRoute } from './CatalogRoute';
 import { CheckoutRoute } from './CheckoutRoute';
+import { CompareRoute } from './CompareRoute';
 import { FavoritesRoute } from './FavoritesRoute';
 import { HomeRoute } from './HomeRoute';
 import { NotFoundRoute } from './NotFoundRoute';
@@ -19,6 +20,7 @@ import {
   CART_PATH,
   CATALOG_SMARTPHONES_PATH,
   CHECKOUT_PATH,
+  COMPARE_PATH,
   FAVORITES_PATH,
   HOME_PATH,
   ORDER_CONFIRMATION_PATH,
@@ -39,6 +41,7 @@ export function ProductionRouter() {
         <Route element={<CheckoutRoute />} path={CHECKOUT_PATH} />
         <Route element={<OrderConfirmationRoute />} path={ORDER_CONFIRMATION_PATH} />
         <Route element={<FavoritesRoute />} path={FAVORITES_PATH} />
+        <Route element={<CompareRoute />} path={COMPARE_PATH} />
         <Route element={<SearchRoute />} path={SEARCH_PATH} />
         <Route element={<ShopsRoute />} path={SHOPS_PATH} />
         <Route element={<BlogRoute />} path={BLOG_PATH} />

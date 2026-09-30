@@ -6,7 +6,11 @@ import { Icon, Pagination } from '../../components/ui';
 import { CatalogFilterDialog } from './CatalogFilterDialog';
 import { CatalogFilters } from './CatalogFilters';
 import { CatalogProductGrid } from './CatalogProductGrid';
-import type { CatalogCartSeam, CatalogFavoritesSeam } from './CatalogProductGrid';
+import type {
+  CatalogCartSeam,
+  CatalogCompareSeam,
+  CatalogFavoritesSeam,
+} from './CatalogProductGrid';
 import { DEFAULT_CATALOG_FILTER_STATE } from './catalogFilterState';
 import type { CatalogFilterState } from './catalogFilterState';
 import {
@@ -26,6 +30,7 @@ export interface CatalogPageProps {
   readonly productHref?: (slug: string) => string | undefined;
   readonly cart?: CatalogCartSeam;
   readonly favorites?: CatalogFavoritesSeam;
+  readonly compare?: CatalogCompareSeam;
 }
 
 interface QuickFilter {
@@ -57,6 +62,7 @@ export function CatalogPage({
   productHref,
   cart,
   favorites,
+  compare,
 }: CatalogPageProps) {
   const [filters, setFilters] = useState<CatalogFilterState>(DEFAULT_CATALOG_FILTER_STATE);
   const [quickFilter, setQuickFilter] = useState(DEFAULT_QUICK_FILTER);
@@ -168,6 +174,7 @@ export function CatalogPage({
             <CatalogProductGrid
               cart={cart}
               favorites={favorites}
+              compare={compare}
               productHref={productHref}
               products={visibleProducts}
             />

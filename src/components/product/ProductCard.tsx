@@ -4,7 +4,7 @@ import { Picture } from '../media';
 import type { PictureSource } from '../media';
 import { QuantityStepper } from '../ui';
 
-import { AddToCartButton, FavoriteButton } from './ProductActions';
+import { AddToCartButton, CompareButton, FavoriteButton } from './ProductActions';
 import { ProductRating } from './ProductRating';
 
 export type ProductCardLayout = 'vertical' | 'horizontal';
@@ -27,6 +27,10 @@ interface ProductCardProps {
   readonly availability?: ReactNode;
   readonly favoritePressed?: boolean;
   readonly onFavoriteToggle?: (pressed: boolean) => void;
+  readonly comparePressed?: boolean;
+  readonly compareDisabled?: boolean;
+  readonly compareLabel?: string;
+  readonly onCompareToggle?: (pressed: boolean) => void;
   readonly quantity?: number;
   readonly onQuantityChange?: (value: number) => void;
   readonly onAddToCart?: () => void;
@@ -49,6 +53,10 @@ export function ProductCard({
   availability,
   favoritePressed = false,
   onFavoriteToggle,
+  comparePressed = false,
+  compareDisabled = false,
+  compareLabel,
+  onCompareToggle,
   quantity,
   onQuantityChange,
   onAddToCart,
@@ -96,6 +104,18 @@ export function ProductCard({
             }
             onToggle={onFavoriteToggle}
             pressed={favoritePressed}
+          />
+        )}
+        {onCompareToggle === undefined ? null : (
+          <CompareButton
+            className="product-card__compare"
+            disabled={compareDisabled}
+            label={
+              compareLabel ??
+              (comparePressed ? `Убрать из сравнения: ${title}` : `Добавить к сравнению: ${title}`)
+            }
+            onToggle={onCompareToggle}
+            pressed={comparePressed}
           />
         )}
       </div>
