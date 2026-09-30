@@ -1,4 +1,9 @@
-import { addCartLine, cartLineId, setCartLineQuantity } from '../pages/cart/cartStore';
+import {
+  addCartLine,
+  cartLineId,
+  removeCartLine,
+  setCartLineQuantity,
+} from '../pages/cart/cartStore';
 import { useCartLineList } from '../pages/cart/useCartLines';
 import { FavoritesPage } from '../pages/favorites';
 import type { FavoritesCartSeam } from '../pages/favorites';
@@ -26,7 +31,11 @@ export function FavoritesRoute() {
         1,
       ),
     setQuantity: (item, quantity) => {
-      setCartLineQuantity(cartLineId(item.slug), quantity);
+      if (quantity <= 0) {
+        removeCartLine(cartLineId(item.slug));
+      } else {
+        setCartLineQuantity(cartLineId(item.slug), quantity);
+      }
     },
   };
 

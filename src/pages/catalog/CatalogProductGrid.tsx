@@ -113,11 +113,16 @@ export function CatalogProductGrid({
                 onFavoriteToggle={(pressed) => {
                   favorites?.toggle(product, pressed);
                 }}
+                allowZeroQuantity
                 onQuantityChange={
                   cart === undefined || quantity === undefined
                     ? undefined
                     : (value) => {
                         cart.setQuantity(product, value);
+
+                        if (value === 0) {
+                          setAnnouncement(`Товар удалён из корзины: ${product.title}`);
+                        }
                       }
                 }
                 price={formatPrice(product.priceValue)}

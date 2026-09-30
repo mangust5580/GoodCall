@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import type { ReactNode } from 'react';
 
 import { Picture } from '../media';
@@ -33,6 +34,7 @@ interface ProductCardProps {
   readonly onCompareToggle?: (pressed: boolean) => void;
   readonly quantity?: number;
   readonly onQuantityChange?: (value: number) => void;
+  readonly allowZeroQuantity?: boolean;
   readonly onAddToCart?: () => void;
   readonly disabled?: boolean;
 }
@@ -59,15 +61,30 @@ export function ProductCard({
   onCompareToggle,
   quantity,
   onQuantityChange,
+  allowZeroQuantity = false,
   onAddToCart,
   disabled = false,
 }: ProductCardProps) {
   const labelledCart = layout === 'vertical';
+  const cardRef = useRef<HTMLElement>(null);
+  const cartFocusPending = useRef(false);
+
+  useEffect(() => {
+    if (cartFocusPending.current && quantity === undefined) {
+      cartFocusPending.current = false;
+      cardRef.current?.querySelector<HTMLButtonElement>('.product-card__cart')?.focus();
+    }
+  }, [quantity]);
+
   const stepper =
     quantity === undefined || onQuantityChange === undefined ? null : (
       <QuantityStepper
         label={`Количество: ${title}`}
-        onChange={onQuantityChange}
+        min={allowZeroQuantity ? 0 : 1}
+        onChange={(value) => {
+          cartFocusPending.current = value === 0;
+          onQuantityChange(value);
+        }}
         value={quantity}
       />
     );
@@ -91,7 +108,7 @@ export function ProductCard({
     );
 
   return (
-    <article className={`product-card product-card--${layout}`}>
+    <article className={`product-card product-card--${layout}`} ref={cardRef}>
       <div className="product-card__media">
         {badge === undefined ? null : <div className="product-card__badge">{badge}</div>}
         {productImage}

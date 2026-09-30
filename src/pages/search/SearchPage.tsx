@@ -127,6 +127,10 @@ export function SearchPage({
 
   const changeQuantity = (product: CatalogProduct, value: number) => {
     cart?.setQuantity(product, value);
+
+    if (value === 0) {
+      setAnnouncement(`Товар удалён из корзины: ${product.title}`);
+    }
   };
 
   const resetFilters = () => {
@@ -176,6 +180,7 @@ export function SearchPage({
               onAddToCart={() => {
                 addToCart(product);
               }}
+              allowZeroQuantity
               onQuantityChange={
                 cart?.quantityOf(product) === undefined
                   ? undefined

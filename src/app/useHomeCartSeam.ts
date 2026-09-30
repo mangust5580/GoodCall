@@ -5,14 +5,10 @@ import {
   setCartLineQuantity,
 } from '../pages/cart/cartStore';
 import { useCartLineList } from '../pages/cart/useCartLines';
-import type { CatalogCartSeam } from '../pages/catalog/CatalogProductGrid';
-import type { CatalogProduct } from '../pages/catalog/catalogProductFixtures';
+import type { HomeCartSeam } from '../pages/home';
+import type { HomeProduct } from '../pages/home/homeFixtures';
 
-function catalogCartLineId(product: CatalogProduct): string {
-  return cartLineId(product.id);
-}
-
-export function useCatalogCartSeam(liveProducts: boolean): CatalogCartSeam | undefined {
+export function useHomeCartSeam(liveProducts: boolean): HomeCartSeam | undefined {
   const cartLines = useCartLineList();
 
   if (!liveProducts) {
@@ -20,12 +16,12 @@ export function useCatalogCartSeam(liveProducts: boolean): CatalogCartSeam | und
   }
 
   return {
-    quantityOf: (product) =>
-      cartLines.find((line) => line.id === catalogCartLineId(product))?.quantity,
+    quantityOf: (product: HomeProduct) =>
+      cartLines.find((line) => line.id === cartLineId(product.id))?.quantity,
     add: (product) =>
       addCartLine(
         {
-          id: catalogCartLineId(product),
+          id: cartLineId(product.id),
           productSlug: product.id,
           title: product.title,
           image:
@@ -39,9 +35,9 @@ export function useCatalogCartSeam(liveProducts: boolean): CatalogCartSeam | und
       ),
     setQuantity: (product, quantity) => {
       if (quantity <= 0) {
-        removeCartLine(catalogCartLineId(product));
+        removeCartLine(cartLineId(product.id));
       } else {
-        setCartLineQuantity(catalogCartLineId(product), quantity);
+        setCartLineQuantity(cartLineId(product.id), quantity);
       }
     },
   };

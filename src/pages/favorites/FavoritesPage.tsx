@@ -122,11 +122,16 @@ export function FavoritesPage({
                         setAnnouncement(`Товар удалён из избранного: ${item.title}`);
                       }
                     }}
+                    allowZeroQuantity
                     onQuantityChange={
                       quantity === undefined
                         ? undefined
                         : (value) => {
                             cart.setQuantity(item, value);
+
+                            if (value === 0) {
+                              setAnnouncement(`Товар удалён из корзины: ${item.title}`);
+                            }
                           }
                     }
                     price={formatPrice(item.price)}

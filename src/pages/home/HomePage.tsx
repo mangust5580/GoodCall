@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 
@@ -26,11 +27,18 @@ import type { HomeArtwork, HomeCategoryTile, HomeProduct } from './homeFixtures'
 import { HomeHeroSlider } from './HomeHeroSlider';
 import { HomeMarketingPicture } from './HomeMarketingPicture';
 
+export interface HomeCartSeam {
+  readonly quantityOf: (product: HomeProduct) => number | undefined;
+  readonly add: (product: HomeProduct) => number;
+  readonly setQuantity: (product: HomeProduct, quantity: number) => void;
+}
+
 export interface HomePageProps {
   readonly smartphonesPath?: string;
   readonly categories?: readonly HomeCategoryTile[];
   readonly products?: readonly HomeProduct[];
   readonly productHref?: (slug: string) => string | undefined;
+  readonly cart?: HomeCartSeam;
 }
 
 const SMARTPHONES_SLUG = 'smartphones';
@@ -64,7 +72,9 @@ export function HomePage({
   categories = HOME_CATEGORY_TILES,
   products = HOME_PRODUCTS,
   productHref,
+  cart,
 }: HomePageProps) {
+  const [announcement, setAnnouncement] = useState('');
   const categoryLink = (slug: string, content: ReactNode, className: string) => {
     if (slug === SMARTPHONES_SLUG && smartphonesPath !== undefined) {
       return (
@@ -200,26 +210,54 @@ export function HomePage({
             </h2>
           </header>
           <div className="home-products">
-            {products.map((product) => (
-              <ProductCard
-                badge={
-                  product.badge === undefined ? undefined : (
-                    <span className={`home-badge home-badge--${product.badgeTone ?? 'new'}`}>
-                      {product.badge}
-                    </span>
-                  )
-                }
-                href={productHref?.(product.id)}
-                image={product.imageSrc === undefined ? ARTWORK[product.image] : undefined}
-                imageAlt={product.imageAlt}
-                imageSizes={PRODUCT_MEDIA_SIZES}
-                imageSrc={product.imageSrc}
-                key={product.id}
-                oldPrice={product.oldPrice}
-                price={product.price}
-                title={product.title}
-              />
-            ))}
+            {products.map((product) => {
+              const quantity = cart?.quantityOf(product);
+
+              return (
+                <ProductCard
+                  badge={
+                    product.badge === undefined ? undefined : (
+                      <span className={`home-badge home-badge--${product.badgeTone ?? 'new'}`}>
+                        {product.badge}
+                      </span>
+                    )
+                  }
+                  disabled={cart === undefined}
+                  href={productHref?.(product.id)}
+                  image={product.imageSrc === undefined ? ARTWORK[product.image] : undefined}
+                  imageAlt={product.imageAlt}
+                  imageSizes={PRODUCT_MEDIA_SIZES}
+                  imageSrc={product.imageSrc}
+                  key={product.id}
+                  oldPrice={product.oldPrice}
+                  onAddToCart={() => {
+                    if (cart === undefined) {
+                      return;
+                    }
+
+                    const lineQuantity = cart.add(product);
+                    setAnnouncement(
+                      `Товар добавлен в корзину: ${product.title}. В корзине: ${String(lineQuantity)} шт.`,
+                    );
+                  }}
+                  allowZeroQuantity
+                  onQuantityChange={
+                    cart === undefined || quantity === undefined
+                      ? undefined
+                      : (value) => {
+                          cart.setQuantity(product, value);
+
+                          if (value === 0) {
+                            setAnnouncement(`Товар удалён из корзины: ${product.title}`);
+                          }
+                        }
+                  }
+                  price={product.price}
+                  quantity={quantity}
+                  title={product.title}
+                />
+              );
+            })}
           </div>
         </section>
 
@@ -273,6 +311,9 @@ export function HomePage({
           </ul>
         </section>
       </Container>
+      <p className="ui-visually-hidden" role="status">
+        {announcement}
+      </p>
     </main>
   );
 }

@@ -142,10 +142,10 @@ function mapProduct(
       ? undefined
       : client.storage.from(CATALOG_MEDIA_BUCKET).getPublicUrl(primaryImage.storage_path).data
           .publicUrl;
-  const oldPrice =
+  const oldPriceValue =
     product.old_price === null || !Number.isFinite(product.old_price)
       ? undefined
-      : formatPrice(product.old_price);
+      : product.old_price;
 
   return {
     id: product.slug,
@@ -153,7 +153,9 @@ function mapProduct(
     imageSrc,
     imageAlt: primaryImage?.alt.trim() || presentation.imageAlt,
     price: formatPrice(product.price),
-    oldPrice,
+    priceValue: product.price,
+    oldPrice: oldPriceValue === undefined ? undefined : formatPrice(oldPriceValue),
+    oldPriceValue,
     badge: presentation.badge,
     badgeTone: presentation.badgeTone,
     image: presentation.image,

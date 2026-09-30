@@ -63,6 +63,10 @@ Accepted:
 - **Search B / Faceted Results Foundation — user visual PASS on 2026-09-28
   (desktop), CLOSED and published.** Desktop faceted filters and enriched
   result rows on `#/search?q=…` from 1024px. See the Search B section below.
+- **Commerce C / Home Popular Products → Shared Cart — USER VISUAL/UX PASS on
+  2026-09-30, CLOSED and published.** Home «Популярные товары» cards add live
+  products to the shared cart; cart-enabled product cards remove a line at
+  quantity 0. See the Commerce C section below.
 - **Comparison A / Local Product Comparison — USER VISUAL/UX PASS on
   2026-09-30, CLOSED and published.** Catalog cards add up to 4 products to a
   local comparison shown on `#/compare`; the fabricated shell count `3` is
@@ -142,7 +146,9 @@ Technically complete:
 
 Active visual slice:
 
-- None. **Comparison A / Local Product Comparison — USER VISUAL/UX PASS on
+- None. **Commerce C / Home Popular Products → Shared Cart — USER VISUAL/UX
+  PASS on 2026-09-30, CLOSED and published.** See the Commerce C section below.
+  **Comparison A / Local Product Comparison — USER VISUAL/UX PASS on
   2026-09-30, CLOSED and published.** See the Comparison A section below.
   **Order Confirmation A / Demo Order Handoff + Thank-you Page — USER
   VISUAL/UX PASS, CLOSED and published.** See the Order Confirmation A section
@@ -154,6 +160,38 @@ Active visual slice:
   on 2026-09-30, CLOSED and published.** See the Checkout A section below. Search C, Favourites A, Commerce B, Commerce A,
   Blog B, Blog A, Home A, Cart A, Cart B, Search A, Search B, 404 A and the
   Product Details production integration are closed.
+
+### Commerce C — Home Popular Products → Shared Cart
+
+**Status: USER VISUAL/UX PASS on 2026-09-30 — CLOSED and published.** The
+PASS covers the Home shelf integration and the shared decrement-to-zero
+behaviour. Do not reopen them without a new explicit requirement. Evidence:
+`Home.png` «Популярные товары» (full-width «В корзину» on
+every card; no ♥ or compare there).
+
+- `HomeProduct` gained numeric `priceValue` / `oldPriceValue` beside the
+  formatted strings; `homeData.ts` fills them from `products.price` /
+  `old_price`, and the fixtures carry matching numbers.
+- `useHomeCartSeam` (`src/app/`) binds only after a successful live Home read
+  (live ids are backend slugs). It maps to the existing cart line
+  (`cartLineId(slug)`, `productSlug`, title, prices, `url` image when
+  `product_images` has one, else `catalog-fallback`), so Home lines merge with
+  Catalog, Search, PD, Favorites and Comparison lines; the shell cart count
+  follows.
+- `HomePage` passes the accepted `ProductCard` cart props: the labelled
+  «В корзину» plus, once in the cart, the existing stepper above it, and a
+  visually hidden `role="status"` announcement with the Catalog wording.
+- **Decrement to zero (shared).** `ProductCard` gained an opt-in
+  `allowZeroQuantity` (default `false`): the stepper minimum becomes 0 and
+  `onQuantityChange(0)` means «remove this line». Catalog, Search (mobile
+  cards), Favorites and Home opt in; their seams map 0 to the existing
+  `removeCartLine`, the card returns focus to its «В корзину», and pages
+  announce «Товар удалён из корзины: <title>». The Cart page, desktop
+  `SearchResultRow`, Product Details and reference surfaces keep min 1.
+- Fallback Home data keeps the labelled button visible but disabled; fixture
+  ids never reach the cart.
+- Not included: ♥ and compare on Home cards, the `Modals.png` add-to-cart
+  dialog, Home layout changes, backend/Supabase/dependency changes.
 
 ### Comparison A — Local Product Comparison
 
@@ -4322,8 +4360,8 @@ none of them blocks the closed milestone.
 
 ## Next approved step
 
-**Checkout A, Stores A, Pickup A, Order Confirmation A and Comparison A are
-CLOSED and published.** No next milestone is active; none of the following has
+**Checkout A, Stores A, Pickup A, Order Confirmation A, Comparison A and
+Commerce C are CLOSED and published.** No next milestone is active; none of the following has
 started.
 
 - **Pickup follow-ups:** real availability or stock, pickup cost, pickup
@@ -4341,7 +4379,8 @@ scoped.
 Each of the following would need its own explicit scope, and none exists:
 
 - backend order creation (Order Confirmation A is a local demo only);
-- the add-to-cart dialog and Search/Home cart actions;
+- the add-to-cart dialog (Search and Home cart actions are delivered by
+  Commerce B and Commerce C);
 - a backend cart;
 - a promo-code engine.
 

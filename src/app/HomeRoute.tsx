@@ -5,6 +5,7 @@ import { fetchHomeData } from '../pages/home/homeData';
 import type { HomeCategoryTile, HomeProduct } from '../pages/home/homeFixtures';
 import { ProductionShell } from './ProductionShell';
 import { CATALOG_SMARTPHONES_PATH, productDetailsHref } from './routes';
+import { useHomeCartSeam } from './useHomeCartSeam';
 
 interface HomeRouteData {
   readonly categories: readonly HomeCategoryTile[];
@@ -13,6 +14,7 @@ interface HomeRouteData {
 
 export function HomeRoute() {
   const [homeData, setHomeData] = useState<HomeRouteData>();
+  const cart = useHomeCartSeam(homeData !== undefined);
 
   useEffect(() => {
     let mounted = true;
@@ -37,6 +39,7 @@ export function HomeRoute() {
   return (
     <ProductionShell>
       <HomePage
+        cart={cart}
         categories={homeData?.categories}
         productHref={homeData === undefined ? undefined : productDetailsHref}
         products={homeData?.products}

@@ -41,7 +41,9 @@ export interface HomeProduct {
   readonly imageSrc?: string;
   readonly imageAlt: string;
   readonly price: string;
+  readonly priceValue: number;
   readonly oldPrice?: string;
+  readonly oldPriceValue?: number;
   readonly badge?: string;
   readonly badgeTone?: 'sale' | 'new';
   readonly image: HomeArtwork;
@@ -150,7 +152,9 @@ export const HOME_PRODUCTS: readonly HomeProduct[] = [
     title: 'Apple iPhone 15 128 ГБ, Чёрный',
     imageAlt: 'Смартфон Apple iPhone 15 в чёрном цвете',
     price: '64 990 ₽',
+    priceValue: 64990,
     oldPrice: '73 990 ₽',
+    oldPriceValue: 73990,
     badge: '-12%',
     badgeTone: 'sale',
     image: 'smartphone',
@@ -160,6 +164,7 @@ export const HOME_PRODUCTS: readonly HomeProduct[] = [
     title: 'Samsung Galaxy S24 256 ГБ, Фиолетовый',
     imageAlt: 'Смартфон Samsung Galaxy S24 в фиолетовом цвете',
     price: '69 990 ₽',
+    priceValue: 69990,
     badge: 'Новинка',
     badgeTone: 'new',
     image: 'smartphone',
@@ -169,7 +174,9 @@ export const HOME_PRODUCTS: readonly HomeProduct[] = [
     title: 'Xiaomi Redmi Note 13 Pro 12/512 ГБ',
     imageAlt: 'Смартфон Xiaomi Redmi Note 13 Pro',
     price: '23 990 ₽',
+    priceValue: 23990,
     oldPrice: '26 990 ₽',
+    oldPriceValue: 26990,
     badge: '-10%',
     badgeTone: 'sale',
     image: 'smartphone',
@@ -179,6 +186,7 @@ export const HOME_PRODUCTS: readonly HomeProduct[] = [
     title: 'Apple AirPods Pro 2 (USB-C)',
     imageAlt: 'Беспроводные наушники Apple AirPods Pro 2',
     price: '24 990 ₽',
+    priceValue: 24990,
     image: 'earbuds',
   },
   {
@@ -186,7 +194,9 @@ export const HOME_PRODUCTS: readonly HomeProduct[] = [
     title: 'Apple Watch Series 9 45 мм, Чёрный',
     imageAlt: 'Смарт-часы Apple Watch Series 9',
     price: '44 990 ₽',
+    priceValue: 44990,
     oldPrice: '52 990 ₽',
+    oldPriceValue: 52990,
     badge: '-15%',
     badgeTone: 'sale',
     image: 'watch',
