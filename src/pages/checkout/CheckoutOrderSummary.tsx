@@ -3,17 +3,25 @@ import { CartLineMedia } from '../cart/CartLineMedia';
 import type { CartTotals } from '../cart/cartPricing';
 import { formatPrice, formatUnitCount, lineTotal } from '../cart/cartPricing';
 import type { CartLine } from '../cart/cartStore';
+import type { StorePoint } from '../stores';
 
 interface CheckoutOrderSummaryProps {
   readonly lines: readonly CartLine[];
   readonly totals: CartTotals;
   readonly formId: string;
   readonly status: string;
+  readonly pickupStore?: StorePoint;
 }
 
 const LINE_MEDIA_SIZES = '72px';
 
-export function CheckoutOrderSummary({ lines, totals, formId, status }: CheckoutOrderSummaryProps) {
+export function CheckoutOrderSummary({
+  lines,
+  totals,
+  formId,
+  status,
+  pickupStore,
+}: CheckoutOrderSummaryProps) {
   return (
     <section aria-labelledby="checkout-summary-title" className="checkout-summary">
       <div className="checkout-summary__card">
@@ -43,6 +51,16 @@ export function CheckoutOrderSummary({ lines, totals, formId, status }: Checkout
             </li>
           ))}
         </ul>
+
+        {pickupStore === undefined ? null : (
+          <div className="checkout-summary__pickup">
+            <p className="checkout-summary__pickup-label">Самовывоз</p>
+            <p className="checkout-summary__pickup-name">{pickupStore.name}</p>
+            <p className="checkout-summary__pickup-address">
+              {pickupStore.city}, {pickupStore.address}
+            </p>
+          </div>
+        )}
 
         <dl className="checkout-summary__rows">
           <div className="checkout-summary__row">

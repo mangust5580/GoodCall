@@ -59,3 +59,7 @@ export const DEMO_STORES: readonly StorePoint[] = [
     metro: 'Технопарк',
   },
 ];
+
+export function findStore(id: string | null): StorePoint | undefined {
+  return id === null ? undefined : DEMO_STORES.find((store) => store.id === id);
+}

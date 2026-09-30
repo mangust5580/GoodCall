@@ -63,6 +63,10 @@ Accepted:
 - **Search B / Faceted Results Foundation — user visual PASS on 2026-09-28
   (desktop), CLOSED and published.** Desktop faceted filters and enriched
   result rows on `#/search?q=…` from 1024px. See the Search B section below.
+- **Pickup A / Checkout Pickup Foundation — user visual/UX PASS (desktop 1440
+  and mobile 390), CLOSED and published.** Courier or pickup in Checkout; any
+  of the six `DEMO_STORES` is selectable as a demo pickup point by stable ID,
+  with no availability, pricing or scheduling. See the Pickup A section below.
 - **Stores A / Demo Store Dataset + Shops List Page — user visual/UX PASS
   (desktop 1440 and mobile 390), CLOSED and published.** `#/shops` lists the
   six Moscow demo stores from the typed local `DEMO_STORES` dataset (list-only,
@@ -129,12 +133,43 @@ Technically complete:
 
 Active visual slice:
 
-- None. **Stores A / Demo Store Dataset + Shops List Page — USER VISUAL/UX
+- None. **Pickup A / Checkout Pickup Foundation — USER VISUAL/UX PASS
+  (desktop 1440 and mobile 390), CLOSED and published.** See the Pickup A
+  section below. **Stores A / Demo Store Dataset + Shops List Page — USER VISUAL/UX
   PASS (desktop 1440 and mobile 390), CLOSED and published.** See the Stores A
   section below. **Checkout A / Checkout Page Foundation — USER VISUAL/UX PASS
   on 2026-09-30, CLOSED and published.** See the Checkout A section below. Search C, Favourites A, Commerce B, Commerce A,
   Blog B, Blog A, Home A, Cart A, Cart B, Search A, Search B, 404 A and the
   Product Details production integration are closed.
+
+### Pickup A — Checkout Pickup Foundation
+
+**Status: USER VISUAL/UX PASS (desktop 1440 and mobile 390) — CLOSED and
+published.** It uses the approved demo contract. Do not reopen the accepted
+selector, summary block or switching semantics without a new explicit
+requirement.
+
+- **State.** `CheckoutFormState` gains `deliveryMethod: 'courier' | 'pickup'`
+  (default courier) and `pickupStoreId: StorePoint['id'] | null`. Display
+  data is derived by ID through the Stores-owned `findStore`; Checkout holds
+  no copied store data.
+- **Delivery method.** «Способ получения» offers «Курьером» and «Самовывоз» as
+  native radios in two cards, as in `Checkout.png`.
+- **Pickup branch.** «Магазин для самовывоза» replaces «Адрес доставки» and
+  «Дата и время доставки». It is a `fieldset` of radio cards for all six
+  `DEMO_STORES` (name, address, metro, hours) with the city shown once, and it
+  requires «Выберите магазин для самовывоза». Validation and first-invalid
+  focus are branch-aware.
+- **Summary.** A «Самовывоз» block shows the store name and address; totals
+  are unchanged.
+- **Switching.** Courier address, DaData state and the date/slot values are
+  kept in memory while pickup is active: not rendered, not validated, and not
+  in the focus order. The selected store is kept while courier is active.
+- **Demo truthfulness.** All six stores are selectable as demo pickup points.
+  There is no availability or stock, no pickup price or «Бесплатно», no
+  pickup scheduling (store hours are descriptive only), no payment
+  restrictions (all four methods stay), and no order creation. `/shops`
+  stays informational.
 
 ### Stores A — Demo Store Dataset + Shops List Page
 
@@ -184,11 +219,8 @@ DaData address autocomplete (observed working by the user), and the
 manual/graceful-degradation address UX. Evidence: `Checkout.png` (desktop
 only). The mobile layout is derived.
 
-**Pickup is a separate capability.** `Самовывоз` stays omitted.
-
-- Store identity now exists: Stores A, `DEMO_STORES`, demo data.
-- Still missing: availability data, delivery-method pricing, and the
-  product decisions on pickup date/time, payment and store scoping.
+**Pickup** is delivered separately by Pickup A (see above) as a demo
+contract, with no availability, pricing or scheduling.
 
 **Route and handoff.**
 
@@ -4179,12 +4211,12 @@ none of them blocks the closed milestone.
 
 ## Next approved step
 
-**Checkout A and Stores A are CLOSED and published.** No next milestone is
-active; none of the following has started.
+**Checkout A, Stores A and Pickup A are CLOSED and published.** No next
+milestone is active; none of the following has started.
 
-- **Pickup A** can consume `DEMO_STORES` by ID once the fulfilment decisions
-  are made: availability or eligibility, cost, date/time, payment
-  restrictions, store scoping, and courier/pickup switching.
+- **Pickup follow-ups:** real availability or stock, pickup cost, pickup
+  scheduling and payment rules remain deferred, together with `/shops` →
+  Checkout selection.
 - **Deferred store capabilities:** map and coordinates, stock and
   availability, city and metro filters, route-building, and a Supabase
   `stores` source.

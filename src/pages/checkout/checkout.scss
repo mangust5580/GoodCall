@@ -744,3 +744,126 @@
     color: var(--role-text-muted);
   }
 }
+
+.checkout-option {
+  &__method {
+    display: inline-flex;
+    gap: 10px;
+    align-items: center;
+  }
+
+  &__method-icon {
+    --control-icon-size: 22px;
+
+    flex: none;
+    color: var(--role-text-link);
+  }
+
+  &--store {
+    align-items: stretch;
+    padding: 0;
+
+    .ui-choice {
+      gap: 12px;
+      align-items: flex-start;
+      padding: 14px 16px;
+
+      &__box {
+        margin-top: -1px;
+      }
+    }
+  }
+}
+
+.checkout-pickup {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+
+  &__city {
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
+    margin: 0;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.4;
+    color: var(--role-text-secondary);
+  }
+
+  &__city-icon {
+    --control-icon-size: 16px;
+
+    color: var(--role-text-link);
+  }
+
+  &__list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
+    gap: 10px 12px;
+  }
+}
+
+.checkout-store {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+
+  &__name {
+    margin-bottom: 1px;
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.35;
+    color: var(--role-text-primary);
+    overflow-wrap: anywhere;
+  }
+
+  &__meta {
+    font-size: 14px;
+    line-height: 1.45;
+    color: var(--role-text-secondary);
+    overflow-wrap: anywhere;
+  }
+
+  &__metro-mark {
+    margin-right: 4px;
+    font-weight: 800;
+    color: color-mix(in srgb, var(--role-state-danger) 80%, var(--role-text-primary));
+  }
+}
+
+.checkout-summary {
+  &__pickup {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 12px 14px;
+    background-color: var(--role-surface-card-soft);
+    border-radius: var(--control-radius);
+  }
+
+  &__pickup-label {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.4;
+    color: var(--role-text-muted);
+  }
+
+  &__pickup-name {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.35;
+    color: var(--role-text-primary);
+  }
+
+  &__pickup-address {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.4;
+    color: var(--role-text-secondary);
+  }
+}

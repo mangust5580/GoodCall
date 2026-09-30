@@ -2,8 +2,14 @@ import paymentMir from '../../assets/commerce/payment-mir.svg';
 import paymentSbp from '../../assets/commerce/payment-sbp.svg';
 import type { BenefitItem } from '../../components/content';
 import type { CityOption } from '../../components/location';
+import { findStore } from '../stores';
+import type { StorePoint } from '../stores';
+
+export type CheckoutDeliveryMethod = 'courier' | 'pickup';
 
 export interface CheckoutFormState {
+  readonly deliveryMethod: CheckoutDeliveryMethod;
+  readonly pickupStoreId: StorePoint['id'] | null;
   readonly firstName: string;
   readonly lastName: string;
   readonly phone: string;
@@ -67,6 +73,7 @@ export type CheckoutValidatedField =
   | 'apartment'
   | 'deliveryDate'
   | 'deliverySlot'
+  | 'pickupStore'
   | 'payment';
 
 export type CheckoutErrors = Partial<Record<CheckoutValidatedField, string>>;
@@ -82,6 +89,7 @@ export const CHECKOUT_FIELD_ORDER: readonly CheckoutValidatedField[] = [
   'apartment',
   'deliveryDate',
   'deliverySlot',
+  'pickupStore',
   'payment',
 ];
 
@@ -172,6 +180,8 @@ export function initialCheckoutForm(
   addressMode: CheckoutAddressMode,
 ): CheckoutFormState {
   return {
+    deliveryMethod: 'courier',
+    pickupStoreId: null,
     firstName: '',
     lastName: '',
     phone: '',
@@ -301,22 +311,28 @@ export function validateCheckoutForm(form: CheckoutFormState): CheckoutErrors {
     errors.email = 'Проверьте e-mail: например, name@example.ru';
   }
 
-  errors.city = cityError(form);
-  errors.street = streetError(form);
-  errors.house = houseError(form);
+  if (form.deliveryMethod === 'pickup') {
+    if (findStore(form.pickupStoreId) === undefined) {
+      errors.pickupStore = 'Выберите магазин для самовывоза';
+    }
+  } else {
+    errors.city = cityError(form);
+    errors.street = streetError(form);
+    errors.house = houseError(form);
 
-  const apartment = normalizeText(form.apartment);
+    const apartment = normalizeText(form.apartment);
 
-  if (apartment !== '' && !HAS_LETTER_OR_DIGIT.test(apartment)) {
-    errors.apartment = 'Укажите номер квартиры или оставьте поле пустым';
-  }
+    if (apartment !== '' && !HAS_LETTER_OR_DIGIT.test(apartment)) {
+      errors.apartment = 'Укажите номер квартиры или оставьте поле пустым';
+    }
 
-  if (form.deliveryDate.trim() === '') {
-    errors.deliveryDate = 'Выберите дату доставки';
-  }
+    if (form.deliveryDate.trim() === '') {
+      errors.deliveryDate = 'Выберите дату доставки';
+    }
 
-  if (form.deliverySlot.trim() === '') {
-    errors.deliverySlot = 'Выберите интервал доставки';
+    if (form.deliverySlot.trim() === '') {
+      errors.deliverySlot = 'Выберите интервал доставки';
+    }
   }
 
   if (form.payment.trim() === '') {
