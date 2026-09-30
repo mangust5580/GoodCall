@@ -9,7 +9,7 @@ interface CheckoutOrderSummaryProps {
   readonly lines: readonly CartLine[];
   readonly totals: CartTotals;
   readonly formId: string;
-  readonly status: string;
+  readonly placing: boolean;
   readonly pickupStore?: StorePoint;
 }
 
@@ -19,7 +19,7 @@ export function CheckoutOrderSummary({
   lines,
   totals,
   formId,
-  status,
+  placing,
   pickupStore,
 }: CheckoutOrderSummaryProps) {
   return (
@@ -79,13 +79,9 @@ export function CheckoutOrderSummary({
           </div>
         </dl>
 
-        <Button className="checkout-summary__action" form={formId} type="submit">
+        <Button className="checkout-summary__action" disabled={placing} form={formId} type="submit">
           Подтвердить заказ
         </Button>
-
-        <p className="checkout-summary__status" role="status">
-          {status}
-        </p>
 
         <div className="checkout-summary__note">
           <span className="checkout-summary__note-glyph">

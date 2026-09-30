@@ -4,6 +4,7 @@ import { Icon } from '../../components/ui';
 import { cartTotals } from '../cart/cartPricing';
 import type { CartLine } from '../cart/cartStore';
 import { CheckoutForm } from './CheckoutForm';
+import type { CheckoutFormState } from './checkoutFormModel';
 
 export interface CheckoutPageProps {
   readonly homeHref: string;
@@ -13,6 +14,7 @@ export interface CheckoutPageProps {
   readonly cityLookupClient: CityLookupClient;
   readonly addressLookupClient: AddressLookupClient;
   readonly addressLookupConfigured: boolean;
+  readonly onPlaceOrder: (form: CheckoutFormState) => void;
 }
 
 export function CheckoutPage({
@@ -23,6 +25,7 @@ export function CheckoutPage({
   cityLookupClient,
   addressLookupClient,
   addressLookupConfigured,
+  onPlaceOrder,
 }: CheckoutPageProps) {
   const selectedLines = lines.filter((line) => line.selected);
   const totals = cartTotals(lines);
@@ -72,6 +75,7 @@ export function CheckoutPage({
               cityLookupClient={cityLookupClient}
               initialCity={initialCity}
               lines={selectedLines}
+              onPlaceOrder={onPlaceOrder}
               totals={totals}
             />
           </>

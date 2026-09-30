@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { FormEvent, ReactNode } from 'react';
 
 import { BenefitsStrip } from '../../components/content';
@@ -50,6 +50,7 @@ interface CheckoutFormProps {
   readonly cityLookupClient: CityLookupClient;
   readonly addressLookupClient: AddressLookupClient;
   readonly addressLookupConfigured: boolean;
+  readonly onPlaceOrder: (form: CheckoutFormState) => void;
 }
 
 interface CheckoutCardProps {
@@ -61,7 +62,6 @@ interface CheckoutCardProps {
 }
 
 const FORM_ID = 'checkout-form';
-const READY_MESSAGE = 'Данные заполнены. Создание заказа будет подключено отдельно.';
 const ADDRESS_FALLBACK_NOTICE = 'Не удалось загрузить подсказки. Адрес можно ввести вручную.';
 const CITY_MIN_QUERY_LENGTH = 2;
 const STREET_MIN_QUERY_LENGTH = 1;
@@ -148,6 +148,7 @@ export function CheckoutForm({
   cityLookupClient,
   addressLookupClient,
   addressLookupConfigured,
+  onPlaceOrder,
 }: CheckoutFormProps) {
   const [deliveryDates] = useState(() => checkoutDeliveryDates(new Date()));
   const [form, setForm] = useState<CheckoutFormState>(() =>
@@ -159,7 +160,8 @@ export function CheckoutForm({
   );
   const [addressNotice, setAddressNotice] = useState('');
   const [submitted, setSubmitted] = useState(false);
-  const [status, setStatus] = useState('');
+  const [placing, setPlacing] = useState(false);
+  const placingRef = useRef(false);
   const [focusRequest, setFocusRequest] = useState<
     { readonly field: CheckoutValidatedField } | undefined
   >(undefined);
@@ -173,7 +175,6 @@ export function CheckoutForm({
 
   const chooseManualAddress = () => {
     setForm(toManualAddress);
-    setStatus('');
     setFocusRequest({ field: 'city' });
   };
 
@@ -200,7 +201,6 @@ export function CheckoutForm({
 
   const updateAddress = (patch: (current: CheckoutFormState) => CheckoutFormState) => {
     setForm(patch);
-    setStatus('');
   };
 
   const cityMode = isManualAddressLevel(form, 'city') ? 'manual' : 'provider';
@@ -217,11 +217,14 @@ export function CheckoutForm({
 
   const update = (field: keyof CheckoutFormState, value: string) => {
     setForm((current) => ({ ...current, [field]: value }));
-    setStatus('');
   };
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+
+    if (placingRef.current) {
+      return;
+    }
 
     const nextErrors = validateCheckoutForm(form);
     const firstInvalid = CHECKOUT_FIELD_ORDER.find((field) => nextErrors[field] !== undefined);
@@ -229,13 +232,13 @@ export function CheckoutForm({
     setSubmitted(true);
 
     if (firstInvalid === undefined) {
-      setForm(normalizeCheckoutForm(form));
-      setStatus(READY_MESSAGE);
+      placingRef.current = true;
+      setPlacing(true);
+      onPlaceOrder(normalizeCheckoutForm(form));
 
       return;
     }
 
-    setStatus('');
     setFocusRequest({ field: firstInvalid });
   };
 
@@ -719,7 +722,7 @@ export function CheckoutForm({
         formId={FORM_ID}
         lines={lines}
         pickupStore={form.deliveryMethod === 'pickup' ? findStore(form.pickupStoreId) : undefined}
-        status={status}
+        placing={placing}
         totals={totals}
       />
 

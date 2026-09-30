@@ -6,6 +6,7 @@ export const CATALOG_SMARTPHONES_PATH = '/catalog/smartphones';
 export const PRODUCT_PATH = '/product/:slug';
 export const CART_PATH = '/cart';
 export const CHECKOUT_PATH = '/checkout';
+export const ORDER_CONFIRMATION_PATH = '/order-confirmation';
 export const FAVORITES_PATH = '/favorites';
 export const SHOPS_PATH = '/shops';
 export const SEARCH_PATH = '/search';

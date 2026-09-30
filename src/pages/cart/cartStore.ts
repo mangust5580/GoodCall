@@ -41,7 +41,7 @@ function positiveNumber(value: unknown): value is number {
   return typeof value === 'number' && Number.isFinite(value) && value > 0;
 }
 
-function toCartLineImage(value: unknown): CartLineImage | undefined {
+export function toCartLineImage(value: unknown): CartLineImage | undefined {
   if (typeof value !== 'object' || value === null) {
     return undefined;
   }

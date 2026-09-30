@@ -215,6 +215,15 @@ export function normalizeText(value: string): string {
   return value.trim().replace(/\s+/gu, ' ');
 }
 
+export function formatCourierAddress(
+  form: Pick<CheckoutFormState, 'city' | 'street' | 'house' | 'apartment'>,
+): string {
+  const apartment = normalizeText(form.apartment);
+  const parts = [normalizeText(form.city), normalizeText(form.street), normalizeText(form.house)];
+
+  return [...parts, ...(apartment === '' ? [] : [`кв. ${apartment}`])].join(', ');
+}
+
 export function normalizeCheckoutForm(form: CheckoutFormState): CheckoutFormState {
   return {
     ...form,

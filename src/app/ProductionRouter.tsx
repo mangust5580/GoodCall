@@ -8,6 +8,7 @@ import { CheckoutRoute } from './CheckoutRoute';
 import { FavoritesRoute } from './FavoritesRoute';
 import { HomeRoute } from './HomeRoute';
 import { NotFoundRoute } from './NotFoundRoute';
+import { OrderConfirmationRoute } from './OrderConfirmationRoute';
 import { ProductDetailsRoute } from './ProductDetailsRoute';
 import { RouteScrollReset } from './RouteScrollReset';
 import { SearchRoute } from './SearchRoute';
@@ -20,6 +21,7 @@ import {
   CHECKOUT_PATH,
   FAVORITES_PATH,
   HOME_PATH,
+  ORDER_CONFIRMATION_PATH,
   PRODUCT_PATH,
   SEARCH_PATH,
   SHOPS_PATH,
@@ -35,6 +37,7 @@ export function ProductionRouter() {
         <Route element={<ProductDetailsRoute />} path={PRODUCT_PATH} />
         <Route element={<CartRoute />} path={CART_PATH} />
         <Route element={<CheckoutRoute />} path={CHECKOUT_PATH} />
+        <Route element={<OrderConfirmationRoute />} path={ORDER_CONFIRMATION_PATH} />
         <Route element={<FavoritesRoute />} path={FAVORITES_PATH} />
         <Route element={<SearchRoute />} path={SEARCH_PATH} />
         <Route element={<ShopsRoute />} path={SHOPS_PATH} />

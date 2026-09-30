@@ -63,6 +63,11 @@ Accepted:
 - **Search B / Faceted Results Foundation — user visual PASS on 2026-09-28
   (desktop), CLOSED and published.** Desktop faceted filters and enriched
   result rows on `#/search?q=…` from 1024px. See the Search B section below.
+- **Order Confirmation A / Demo Order Handoff + Thank-you Page — USER
+  VISUAL/UX PASS, CLOSED and published.** A valid Checkout submit records a
+  session-only demo order, removes the ordered cart lines and opens
+  `#/order-confirmation`. See the Order Confirmation A section
+  below.
 - **Pickup A / Checkout Pickup Foundation — user visual/UX PASS (desktop 1440
   and mobile 390), CLOSED and published.** Courier or pickup in Checkout; any
   of the six `DEMO_STORES` is selectable as a demo pickup point by stable ID,
@@ -133,7 +138,9 @@ Technically complete:
 
 Active visual slice:
 
-- None. **Pickup A / Checkout Pickup Foundation — USER VISUAL/UX PASS
+- None. **Order Confirmation A / Demo Order Handoff + Thank-you Page — USER
+  VISUAL/UX PASS, CLOSED and published.** See the Order Confirmation A section
+  below. **Pickup A / Checkout Pickup Foundation — USER VISUAL/UX PASS
   (desktop 1440 and mobile 390), CLOSED and published.** See the Pickup A
   section below. **Stores A / Demo Store Dataset + Shops List Page — USER VISUAL/UX
   PASS (desktop 1440 and mobile 390), CLOSED and published.** See the Stores A
@@ -141,6 +148,54 @@ Active visual slice:
   on 2026-09-30, CLOSED and published.** See the Checkout A section below. Search C, Favourites A, Commerce B, Commerce A,
   Blog B, Blog A, Home A, Cart A, Cart B, Search A, Search B, 404 A and the
   Product Details production integration are closed.
+
+### Order Confirmation A — Demo Order Handoff + Thank-you Page
+
+**Status: USER VISUAL/UX PASS — CLOSED and published.** The PASS covers the
+whole confirmation flow after the final density polish (desktop and mobile
+composition). Evidence: `Thank-you.png`, normalized to a truthful demo (no
+account rail). Do not reopen the accepted contract or visual state without a
+new explicit requirement.
+
+- **Behaviour summary.** Valid Checkout placement creates a local demo order,
+  kept for the browser session only. Exactly the ordered (selected) lines are
+  removed once; unselected lines stay. Courier and pickup are both confirmed.
+  Direct entry without an order shows a real empty state. Payment is
+  descriptive only. There is no backend order, no real payment, no
+  e-mail/SMS/tracking and no inventory or store reservation. Account and Admin
+  are outside this milestone.
+
+- **Handoff (replaces Checkout D1).** A valid submit in `CheckoutForm` calls
+  `onPlaceOrder(normalizedForm)`; `CheckoutRoute` builds the snapshot with
+  `createDemoOrder`, saves it with `saveDemoOrder`, calls the existing
+  `removeSelectedCartLines()` and navigates to `ORDER_CONFIRMATION_PATH` with
+  `replace`, so Back returns to Cart. `CheckoutForm` stays router-free; a ref
+  plus the disabled CTA prevent a double placement.
+- **Snapshot** (`src/pages/order-confirmation/demoOrder.ts`): number
+  `GC-YYYYMMDD-XXXX` (client-generated), `createdAt`, the selected lines
+  (title, variant, image ref, price, oldPrice, quantity), totals, delivery
+  method, payment method value, courier `{ address, date (ISO), slot }` or
+  `pickupStoreId`. No contact data, comments or DaData IDs.
+- **Persistence.** `sessionStorage` `goodcall.lastOrder.v1`, shape-validated
+  on read; malformed values are removed. When storage throws, an in-memory
+  copy serves the current page (a refresh then shows the empty state).
+- **Page** (`OrderConfirmationPage`, `#/order-confirmation`): breadcrumb, one
+  focused `h1` «Спасибо! Ваш заказ оформлен», a demo lead, «Номер демо-заказа»,
+  a `dl` info strip (date, «Способ оплаты: <label>», method, address or
+  store), the lines list and an «Итого» `dl`, then «Перейти к покупкам»
+  (Catalog) and «На главную». Pickup resolves the store via `findStore`, with
+  the fallback «Магазин самовывоза», and shows no date, ETA, price or
+  availability.
+- **Empty state.** Direct entry without a stored order shows «Заказ не
+  найден» with Catalog and Home links; the cart is not touched.
+- **Omitted by decision.** The account rail, «Смотреть заказ», «Что дальше?»,
+  «Отследить заказ», «Доставка Бесплатно», email/SMS/processing copy, any
+  payment status, and comments.
+- **Deferred.** Real backend orders and Supabase order mutation,
+  server-generated order numbers, payment execution and transaction status,
+  e-mail/SMS, inventory mutation and store reservation, fulfilment statuses
+  and tracking, cancellation/refund, Account order history, Admin order
+  management.
 
 ### Pickup A — Checkout Pickup Foundation
 
@@ -168,7 +223,8 @@ requirement.
 - **Demo truthfulness.** All six stores are selectable as demo pickup points.
   There is no availability or stock, no pickup price or «Бесплатно», no
   pickup scheduling (store hours are descriptive only), no payment
-  restrictions (all four methods stay), and no order creation. `/shops`
+  restrictions (all four methods stay), and no real order creation (Order
+  Confirmation A records a session-only demo snapshot). `/shops`
   stays informational.
 
 ### Stores A — Demo Store Dataset + Shops List Page
@@ -240,7 +296,8 @@ contract, with no availability, pricing or scheduling.
 - The line image resolver moved unchanged from `CartLineItem` into
   `src/pages/cart/CartLineMedia.tsx`, now shared by Cart and Checkout.
 - Form state is page-local (`CheckoutForm`, `checkoutFormModel.ts`). There is
-  no checkout or order store, no persistence and no URL state.
+  no checkout store and no URL state; the only persistence is the Order
+  Confirmation A session snapshot written on a valid submit.
 - `Город` is prefilled once from the existing public `readStoredCity()` seam;
   otherwise it is empty. Checkout never writes the header city.
 
@@ -323,9 +380,9 @@ normalized (trim, collapse spaces) only at a valid submit.
 - the required fields and groups, the complete `PhoneField` mask and the
   e-mail format;
 - errors are tied to their fields, and focus moves to the first invalid one;
-- a valid form shows the status «Данные заполнены. Создание заказа будет
-  подключено отдельно.»
-- There is no order creation, cart mutation, navigation or Thank-you.
+- **D1 replaced by Order Confirmation A:** a valid form records a local demo
+  order, removes the ordered selected lines and replaces the route with
+  `#/order-confirmation`. The former status «Данные заполнены…» is gone.
 
 **Shared field change.** The accepted fields gained an optional `error` prop
 (through `FieldShell`), which renders `.ui-field__error` and sets
@@ -355,7 +412,7 @@ Also:
   at viewports wider than 1440 it is narrower than the raster's roughly
   1780px canvas.
 
-**Deferred.** Order Confirmation / Thank-you, order creation, payment,
+**Deferred.** Real (server) order creation, payment,
 bonuses, promo codes, delivery pricing, pickup, address lookup, account
 prefill and saved addresses/cards.
 
@@ -3893,6 +3950,8 @@ router owns only the fragment. The base path still lives solely in
   (Stores A, closed).
 - `#/checkout` — the Checkout A page over the selected shared-cart lines
   (complete, user visual/UX PASS).
+- `#/order-confirmation` — the Order Confirmation A thank-you page for the
+  session demo order, or «Заказ не найден» (Order Confirmation A, closed).
 - `#/blog/:slug` — the Blog article detail (Blog B, closed),
   registered only for `how-to-choose-smartphone-2024`. Every other slug renders
   the designed 404.
@@ -3900,7 +3959,7 @@ router owns only the fragment. The base path still lives solely in
   It is not a global error architecture.
 
 Route paths live in `src/app/routes.ts` as `HOME_PATH`,
-`CATALOG_SMARTPHONES_PATH`, `PRODUCT_PATH`, `CART_PATH`, `CHECKOUT_PATH`, `FAVORITES_PATH`, `SHOPS_PATH`,
+`CATALOG_SMARTPHONES_PATH`, `PRODUCT_PATH`, `CART_PATH`, `CHECKOUT_PATH`, `ORDER_CONFIRMATION_PATH`, `FAVORITES_PATH`, `SHOPS_PATH`,
 `SEARCH_PATH`, `BLOG_PATH` and `BLOG_ARTICLE_PATH`.
 `hashHref()`, `productDetailsHref()`, `searchPath()`, `blogPath()`,
 `blogArticlePath()` and `blogArticleHref()` serve the `href` and navigation
@@ -4211,7 +4270,8 @@ none of them blocks the closed milestone.
 
 ## Next approved step
 
-**Checkout A, Stores A and Pickup A are CLOSED and published.** No next
+**Checkout A, Stores A, Pickup A and Order Confirmation A are CLOSED and
+published.** No next
 milestone is active; none of the following has started.
 
 - **Pickup follow-ups:** real availability or stock, pickup cost, pickup
@@ -4220,14 +4280,15 @@ milestone is active; none of the following has started.
 - **Deferred store capabilities:** map and coordinates, stock and
   availability, city and metro filters, route-building, and a Supabase
   `stores` source.
-- **Order Confirmation** needs an order-creation decision.
+- **Real orders** (backend creation, payment, notifications, tracking,
+  Account history, Admin) need their own decision and scope.
 
 Search autocomplete, URL-synced filters and cross-category search are not
 scoped.
 
 Each of the following would need its own explicit scope, and none exists:
 
-- order creation and Order Confirmation;
+- backend order creation (Order Confirmation A is a local demo only);
 - the add-to-cart dialog and Search/Home cart actions;
 - a backend cart;
 - a promo-code engine.
