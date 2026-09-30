@@ -3,6 +3,8 @@ import { Link, useParams } from 'react-router-dom';
 
 import { Container } from '../components/layout';
 import { addCartLine, cartLineId } from '../pages/cart/cartStore';
+import { toggleFavorite } from '../pages/favorites/favoritesStore';
+import { useFavoriteItems } from '../pages/favorites/useFavorites';
 import { ProductDetailsPage } from '../pages/product-details';
 import type { ProductDetailsCartSelection } from '../pages/product-details/ProductPurchasePanel';
 import { fetchProductDetails } from '../pages/product-details/productDetailsData';
@@ -68,6 +70,23 @@ function addProductDetailsLine(
   );
 }
 
+function productDetailsFavoriteToggle(
+  slug: string,
+  product: ProductDetailsFixture,
+  pressed: boolean,
+): void {
+  toggleFavorite(
+    {
+      slug,
+      title: productDetailsTitle(product, product.defaultColourId),
+      image: { kind: 'catalog-fallback' },
+      price: product.priceValue,
+      oldPrice: product.oldPriceValue,
+    },
+    pressed,
+  );
+}
+
 function ProductRouteLoading() {
   return (
     <main aria-busy="true" className="product-route-state">
@@ -123,6 +142,7 @@ export function ProductDetailsRoute() {
   const { slug } = useParams();
   const supported = slug !== undefined && isProductDetailsSpecimenSlug(slug);
   const [settled, setSettled] = useState<SettledProductRead>();
+  const favoriteItems = useFavoriteItems();
 
   useEffect(() => {
     if (slug === undefined || !isProductDetailsSpecimenSlug(slug)) {
@@ -159,6 +179,12 @@ export function ProductDetailsRoute() {
         <ProductDetailsPage
           categoryHref={hashHref(CATALOG_SMARTPHONES_PATH)}
           homeHref={hashHref(HOME_PATH)}
+          favorite={{
+            pressed: favoriteItems.some((item) => item.slug === slug),
+            onToggle: (pressed) => {
+              productDetailsFavoriteToggle(slug, view.product, pressed);
+            },
+          }}
           onAddToCart={(selection) => addProductDetailsLine(slug, view.product, selection)}
           product={view.product}
         />

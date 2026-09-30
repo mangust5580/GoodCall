@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Container } from '../../components/layout';
 import { ProductDetailsSections } from './ProductDetailsSections';
 import { ProductGallery } from './ProductGallery';
+import type { ProductFavoriteBinding } from './ProductGallery';
 import { ProductOfferSummary } from './ProductOfferSummary';
 import { ProductPurchasePanel } from './ProductPurchasePanel';
 import type { ProductDetailsCartSelection } from './ProductPurchasePanel';
@@ -14,6 +15,7 @@ export interface ProductDetailsPageProps {
   readonly categoryHref?: string;
   readonly product?: ProductDetailsFixture;
   readonly onAddToCart?: (selection: ProductDetailsCartSelection) => number;
+  readonly favorite?: ProductFavoriteBinding;
 }
 
 const CATEGORY_TITLE = 'Смартфоны';
@@ -23,6 +25,7 @@ export function ProductDetailsPage({
   categoryHref,
   product = PRODUCT_DETAILS_FIXTURE,
   onAddToCart,
+  favorite,
 }: ProductDetailsPageProps) {
   const [selectedColourId, setSelectedColourId] = useState<ProductDetailsColourId>(
     product.defaultColourId,
@@ -70,6 +73,7 @@ export function ProductDetailsPage({
             <ProductGallery
               activeIndex={activeGalleryIndex}
               discount={product.discount}
+              favorite={favorite}
               images={gallery}
               onActiveIndexChange={setActiveGalleryIndex}
             />

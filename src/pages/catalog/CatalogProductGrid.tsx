@@ -11,10 +11,16 @@ export interface CatalogCartSeam {
   readonly setQuantity: (product: CatalogProduct, quantity: number) => void;
 }
 
+export interface CatalogFavoritesSeam {
+  readonly isFavorite: (product: CatalogProduct) => boolean;
+  readonly toggle: (product: CatalogProduct, pressed: boolean) => void;
+}
+
 interface CatalogProductGridProps {
   readonly products: readonly CatalogProduct[];
   readonly productHref?: (slug: string) => string | undefined;
   readonly cart?: CatalogCartSeam;
+  readonly favorites?: CatalogFavoritesSeam;
 }
 
 const PROMO_AFTER_INDEX = 8;
@@ -31,15 +37,13 @@ function formatPrice(value: number): string {
   return priceFormatter.format(value);
 }
 
-export function CatalogProductGrid({ cart, productHref, products }: CatalogProductGridProps) {
-  const [favorites, setFavorites] = useState<readonly string[]>([]);
+export function CatalogProductGrid({
+  cart,
+  favorites,
+  productHref,
+  products,
+}: CatalogProductGridProps) {
   const [announcement, setAnnouncement] = useState('');
-
-  const toggleFavorite = (id: string, pressed: boolean): void => {
-    setFavorites((current) =>
-      pressed ? [...current, id] : current.filter((entry) => entry !== id),
-    );
-  };
 
   return (
     <>
@@ -70,7 +74,7 @@ export function CatalogProductGrid({ cart, productHref, products }: CatalogProdu
                   )
                 }
                 disabled={cart === undefined}
-                favoritePressed={favorites.includes(product.id)}
+                favoritePressed={favorites?.isFavorite(product) ?? false}
                 href={productHref?.(product.id)}
                 imageAlt={product.imageAlt}
                 imageSrc={product.imageSrc ?? productPhone}
@@ -90,7 +94,7 @@ export function CatalogProductGrid({ cart, productHref, products }: CatalogProdu
                   );
                 }}
                 onFavoriteToggle={(pressed) => {
-                  toggleFavorite(product.id, pressed);
+                  favorites?.toggle(product, pressed);
                 }}
                 onQuantityChange={
                   cart === undefined || quantity === undefined

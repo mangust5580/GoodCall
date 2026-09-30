@@ -6,7 +6,7 @@ import { Icon, Pagination } from '../../components/ui';
 import { CatalogFilterDialog } from './CatalogFilterDialog';
 import { CatalogFilters } from './CatalogFilters';
 import { CatalogProductGrid } from './CatalogProductGrid';
-import type { CatalogCartSeam } from './CatalogProductGrid';
+import type { CatalogCartSeam, CatalogFavoritesSeam } from './CatalogProductGrid';
 import { DEFAULT_CATALOG_FILTER_STATE } from './catalogFilterState';
 import type { CatalogFilterState } from './catalogFilterState';
 import {
@@ -25,6 +25,7 @@ export interface CatalogPageProps {
   readonly products?: readonly CatalogProduct[];
   readonly productHref?: (slug: string) => string | undefined;
   readonly cart?: CatalogCartSeam;
+  readonly favorites?: CatalogFavoritesSeam;
 }
 
 interface QuickFilter {
@@ -55,6 +56,7 @@ export function CatalogPage({
   products = CATALOG_PRODUCTS,
   productHref,
   cart,
+  favorites,
 }: CatalogPageProps) {
   const [filters, setFilters] = useState<CatalogFilterState>(DEFAULT_CATALOG_FILTER_STATE);
   const [quickFilter, setQuickFilter] = useState(DEFAULT_QUICK_FILTER);
@@ -163,7 +165,12 @@ export function CatalogPage({
               })}
             </div>
 
-            <CatalogProductGrid cart={cart} productHref={productHref} products={visibleProducts} />
+            <CatalogProductGrid
+              cart={cart}
+              favorites={favorites}
+              productHref={productHref}
+              products={visibleProducts}
+            />
 
             <div className="catalog-page__pagination">
               <Pagination

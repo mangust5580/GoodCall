@@ -1,5 +1,3 @@
-import { useState } from 'react';
-
 import { Picture } from '../../components/media';
 import { FavoriteButton } from '../../components/product';
 import { Icon } from '../../components/ui';
@@ -10,6 +8,16 @@ interface ProductGalleryProps {
   readonly activeIndex: number;
   readonly onActiveIndexChange: (index: number) => void;
   readonly discount?: string;
+  readonly favorite?: ProductFavoriteBinding;
+}
+
+export interface ProductFavoriteBinding {
+  readonly pressed: boolean;
+  readonly onToggle: (pressed: boolean) => void;
+}
+
+function ignoreFavoriteToggle(): void {
+  return;
 }
 
 const GALLERY_IMAGE_SIZES = '(max-width: 767px) 72vw, (max-width: 1199px) 34vw, 420px';
@@ -18,10 +26,10 @@ const GALLERY_THUMB_SIZES = '(max-width: 767px) 18vw, 76px';
 export function ProductGallery({
   activeIndex,
   discount,
+  favorite,
   images,
   onActiveIndexChange,
 }: ProductGalleryProps) {
-  const [favorite, setFavorite] = useState(false);
   const activeImage = images[activeIndex];
 
   const showImage = (index: number) => {
@@ -36,9 +44,10 @@ export function ProductGallery({
         )}
         <FavoriteButton
           className="product-gallery__favorite"
+          disabled={favorite === undefined}
           label="Добавить в избранное"
-          onToggle={setFavorite}
-          pressed={favorite}
+          onToggle={favorite?.onToggle ?? ignoreFavoriteToggle}
+          pressed={favorite?.pressed ?? false}
         />
         {activeImage === undefined ? null : (
           <Picture

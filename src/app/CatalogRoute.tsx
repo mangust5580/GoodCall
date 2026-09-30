@@ -6,10 +6,12 @@ import { fetchCatalogProducts } from '../pages/catalog/catalogProductData';
 import { ProductionShell } from './ProductionShell';
 import { HOME_PATH, hashHref, productDetailsHref } from './routes';
 import { useCatalogCartSeam } from './useCatalogCartSeam';
+import { useCatalogFavoritesSeam } from './useCatalogFavoritesSeam';
 
 export function CatalogRoute() {
   const [products, setProducts] = useState<readonly CatalogProduct[]>();
   const cart = useCatalogCartSeam(products !== undefined);
+  const favorites = useCatalogFavoritesSeam(products !== undefined);
 
   useEffect(() => {
     let mounted = true;
@@ -35,6 +37,7 @@ export function CatalogRoute() {
     <ProductionShell>
       <CatalogPage
         cart={cart}
+        favorites={favorites}
         homeHref={hashHref(HOME_PATH)}
         productHref={products === undefined ? undefined : productDetailsHref}
         products={products}

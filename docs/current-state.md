@@ -63,6 +63,10 @@ Accepted:
 - **Search B / Faceted Results Foundation — user visual PASS on 2026-09-28
   (desktop), CLOSED and published.** Desktop faceted filters and enriched
   result rows on `#/search?q=…` from 1024px. See the Search B section below.
+- **Favourites A / Local Favourites — user visual/UX PASS on 2026-09-30
+  (desktop and mobile), CLOSED and published.** Live Catalog and Product
+  Details ♥ share one local product-level favourites store, with a real shell
+  count and the `#/favorites` page. See the Favourites A section below.
 - **Commerce B / Search → Shared Cart — user visual/UX PASS on 2026-09-30
   (desktop and mobile), CLOSED and published.** Live Search results add to
   the Commerce A shared cart on both Search layouts. See the Commerce B
@@ -113,9 +117,147 @@ Technically complete:
 
 Active visual slice:
 
-- **No active visual slice is selected.** Commerce B, Commerce A, Blog B,
-  Blog A, Home A, Cart A, Cart B, Search A, Search B, 404 A and the Product
-  Details production integration are closed.
+- **No active visual slice is selected.** Favourites A, Commerce B,
+  Commerce A, Blog B, Blog A, Home A, Cart A, Cart B, Search A, Search B, 404 A
+  and the Product Details production integration are closed.
+
+### Favourites A — Local Favourites
+
+**Status: CLOSED — USER VISUAL/UX PASS on 2026-09-30; published.** Do not
+reopen accepted favourites behaviour or visuals without a new explicit
+requirement. The user's manual review accepted:
+
+- the desktop empty state (~1440px): hierarchy, centring and CTA hierarchy;
+- the desktop filled state: `h1` plus count `Chip` plus lead, the grid and
+  card composition, the pressed-♥ remove affordance, and the price, old-price
+  and cart-action hierarchy;
+- the mobile filled state (~390px): one column, and the card image, title,
+  price and action layout, with no overflow;
+- shell favourites-count synchronization;
+- the normalized page without the account sidebar and deferred raster
+  controls, with Newsletter and Footer coherent.
+
+Evidence: `Favorites.png` (main content). `Account_profile_favorites.png`
+and `Modals.png` #3 are secondary. There is no mobile raster, so mobile
+behaviour is derived from the accepted `ProductCard` and the Catalog grid rule.
+
+**Ownership.** `src/pages/favorites/favoritesStore.ts` is the single owner: a
+module store with a listener set, read through `useSyncExternalStore` in
+`useFavorites.ts` (`useFavoriteItems`, `useFavoritesCount`). It mirrors the
+Commerce A pattern without sharing code with it. There is no Context,
+dependency or generic persistence layer, and the cart store is untouched.
+
+**Persistence.**
+
+- Key `goodcall.favorites.v1`, value `{ "items": FavoriteItem[] }`. It is read
+  lazily once and written after every mutation, with every storage access
+  guarded.
+- Items are ordered newest first; re-adding an existing slug is a no-op.
+- Validation mirrors the cart: malformed JSON, a foreign shape, a duplicate
+  slug or a malformed item empties the list and removes only this key.
+- A write failure still updates the in-memory state for the session.
+- There is no cross-tab sync and no migration framework; a future shape
+  change bumps the key version.
+
+**Identity and snapshot.**
+
+- Identity is the canonical live product slug. It is product-level: Product
+  Details colour and memory never change the ♥ state or create a second entry.
+- The snapshot holds the slug, the live product name, an image reference
+  (`url`, or `catalog-fallback` for the accepted `product-phone.svg`), the
+  numeric price and the optional old price. It is captured when the product is
+  favourited and not revalidated; removing and re-adding refreshes it.
+- Rating, badge, availability, descriptions and variant choices are not
+  stored.
+
+**Surfaces.**
+
+- **Catalog:** `src/app/useCatalogFavoritesSeam.ts` provides a
+  `CatalogFavoritesSeam` (`isFavorite`, `toggle`) only after the live read.
+  This is the same boundary as links and the cart seam. `CatalogProductGrid`
+  lost its grid-local favourites state. Fallback and `?reference=catalog`
+  cards keep the existing `disabled` treatment and never write.
+- **Product Details:** `ProductDetailsRoute` passes a
+  `ProductFavoriteBinding` (`pressed`, `onToggle`) through
+  `ProductDetailsPage` to `ProductGallery`, replacing its local `useState`.
+  The persisted title is the live backend name, not the colour-swapped `h1`,
+  and the image is the listing `catalog-fallback`.
+  `?reference=product-details` passes no binding, so the ♥ renders
+  `disabled`. The gallery layout and `FavoriteButton` are unchanged.
+- **Shell:** `ProductionShell` reads `useFavoritesCount()` and passes
+  `favoritesHref` `#/favorites` to `SiteHeader` and `MobileActionBar`.
+  - The specimen `12` is gone. Zero shows `0`, following the cart convention.
+  - The accessible name is `Избранное: N`.
+  - The comparison specimen `3` is unchanged.
+
+**`#/favorites` page.** `FAVORITES_PATH` routes to
+`src/app/FavoritesRoute.tsx`, which renders the router-free
+`src/pages/favorites/FavoritesPage.tsx` inside `ProductionShell`. Styles live
+in `favorites.scss`, loaded through `global.scss`. The page shows:
+
+- a page-local breadcrumb `Главная › Избранное`;
+- `h1` `Избранное` with a count `Chip` (`N товаров`, cart plurals);
+- the lead «Товары, которые вы добавили в избранное.»;
+- a `<ul aria-label="Товары в избранном">` of accepted vertical
+  `ProductCard`s on the Catalog grid rule
+  `repeat(auto-fill, minmax(228px, 1fr))` / 20px. That gives 5 columns at
+  1440, 3 at 1024, 2 at 768 and 1 at 390/320.
+
+Each card shows the snapshot title, image, price and old price, a pressed ♥
+(the only remove affordance) and the shared-cart action and stepper. The
+iPhone specimen title links to its product page.
+
+**Cart integration.** `FavoritesRoute` holds a small adapter over the Commerce
+A API (`cartLineId(slug)`, `addCartLine`, `setCartLineQuantity`,
+`useCartLineList`). The same slug merges with Catalog and Search lines, and
+adding to the cart keeps the favourite.
+
+**Empty state and accessibility.**
+
+- The empty state is page-owned, following the Search pattern: a heart disc,
+  `h2` «В избранном пока пусто», «Нажимайте ♥ на карточках товаров, чтобы
+  сохранить их здесь.», and the links `Перейти в каталог` / `На главную`.
+- When empty, the chip and lead are omitted. `EmptyState` (Components F) was
+  not used, because it is cart-specific.
+- Removing a card moves focus to the `h1` when focus would fall to `body`, as
+  in the Cart precedent.
+- One polite `role="status"` announces removals and cart adds.
+
+**Raster normalization (documented omissions).**
+
+- The account sidebar is omitted; there is no account system.
+- Omitted controls: `Поделиться списком`, `Очистить избранное`, select-all,
+  bulk delete, sort, per-card checkbox, the red `Удалить` link (the ♥ removes),
+  `В наличии`, `Показать ещё` and `Рекомендуем вам`.
+- The first lead sentence is kept; «Цены и наличие обновляются регулярно» is
+  dropped as untrue.
+- The grid is wider than the raster (5 columns at 1440) because there is no
+  sidebar.
+
+**Limitations.**
+
+- Device/browser-local only; no account, cross-device or cross-tab sync.
+- Snapshot prices are not revalidated.
+- Search, Home, 404 and Cart-recommendation cards have no ♥.
+
+**Agent verification (not the user PASS).** A headless-Chrome DevTools run
+passed 50/50 checks. It ran against a scratch build whose Supabase reads were
+answered with test rows. It covered:
+
+- shell count, link and accessible names;
+- Catalog ↔ Product Details ↔ page synchronization, with colour/memory
+  stability;
+- favourites → Cart merge with Catalog and Search;
+- removal focus and announcements;
+- the empty state and its links;
+- five storage cases;
+- fallback and reference disabling;
+- cart regressions;
+- no overflow at 1440/1024/768/390/320, filled and empty.
+
+**Deferred.** Server, account and cross-tab favourites; Search, Home, 404 and
+recommendation ♥; Comparison; share, sort, bulk and show-more; the favourites
+mini-modal; availability; recommendations; snapshot revalidation.
 
 ### Commerce B — Search → Shared Cart
 
@@ -284,7 +426,7 @@ line are therefore separate lines.
 - Without the seam (fallback or `?reference=catalog`), every card is
   `disabled` and no stepper appears. This also disables the card's local
   favourite.
-- The favourite toggle is still grid-local visual state.
+- Favourites moved to the shared Favourites A owner (see Favourites A).
 
 **Product Details.**
 
@@ -1129,7 +1271,8 @@ schema.
   restrained 200–220ms ease-out state transitions. Under
   `prefers-reduced-motion: reduce`, these non-essential transitions and the
   image animation are removed, with instant state changes and no focus movement.
-- `FavoriteButton` toggles local `aria-pressed` only.
+- `FavoriteButton` reflects shared Favourites A state on the production route
+  (product-level slug). It is `disabled` on the reference surface.
 - Colour and memory are native radio groups in `<fieldset>`/`<legend>`.
   Colour keeps the selected label in the legend, e.g. `Цвет: Розовый`.
   Swatches use 48px hit targets around 32px visual dots, a restrained
@@ -3381,6 +3524,7 @@ router owns only the fragment. The base path still lives solely in
   `iphone-15-128`; every other slug renders the route's compact not-found state.
 - `#/blog` — the Blog listing (Blog A, closed); optional
   `category`, `q` and `page` params.
+- `#/favorites` — the local favourites page (Favourites A, closed).
 - `#/blog/:slug` — the Blog article detail (Blog B, closed),
   registered only for `how-to-choose-smartphone-2024`. Every other slug renders
   the designed 404.
@@ -3388,15 +3532,15 @@ router owns only the fragment. The base path still lives solely in
   It is not a global error architecture.
 
 Route paths live in `src/app/routes.ts` as `HOME_PATH`,
-`CATALOG_SMARTPHONES_PATH`, `PRODUCT_PATH`, `CART_PATH`, `SEARCH_PATH`,
-`BLOG_PATH` and `BLOG_ARTICLE_PATH`.
+`CATALOG_SMARTPHONES_PATH`, `PRODUCT_PATH`, `CART_PATH`, `FAVORITES_PATH`,
+`SEARCH_PATH`, `BLOG_PATH` and `BLOG_ARTICLE_PATH`.
 `hashHref()`, `productDetailsHref()`, `searchPath()`, `blogPath()`,
 `blogArticlePath()` and `blogArticleHref()` serve the `href` and navigation
 seams.
 
 ### Ownership
 
-`src/app/ProductionRouter.tsx` holds the `HashRouter` and the eight routes; it
+`src/app/ProductionRouter.tsx` holds the `HashRouter` and the nine routes; it
 has no local fallback component or stylesheet any more.
 `src/app/HomeRoute.tsx`, `src/app/CatalogRoute.tsx`,
 `src/app/ProductDetailsRoute.tsx`, `src/app/CartRoute.tsx`,
@@ -3417,9 +3561,9 @@ unit count itself (Commerce A). There are no options, variants or configuration.
 `LayoutProvider` or route registry. Global shell regions stay outside the page
 components.
 
-The cart count is real (Commerce A). The comparison and favourites counts
-(`3`, `12`) remain specimen shell values, like `2 546 товаров`. No favourites
-or comparison state exists yet.
+The cart count (Commerce A) and the favourites count (Favourites A) are real.
+The comparison count `3` remains a specimen shell value, like `2 546 товаров`.
+No comparison state exists yet.
 
 ### Route scroll
 
@@ -3698,9 +3842,9 @@ none of them blocks the closed milestone.
 
 ## Next approved step
 
-**No next milestone is selected.** Commerce B is closed. Mobile Search filters
-remain an unscoped candidate; autocomplete and cross-category search are not
-scoped either.
+**No next milestone is selected.** Favourites A is closed. Mobile Search
+filters remain an unscoped candidate; autocomplete and cross-category search are
+not scoped either.
 
 Each of the following would need its own explicit scope, and none exists:
 
