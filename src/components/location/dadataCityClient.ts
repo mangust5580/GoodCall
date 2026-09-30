@@ -1,4 +1,10 @@
-import type { CityLookupClient, CityOption } from './types';
+import type {
+  AddressLookupClient,
+  CityLookupClient,
+  CityOption,
+  HouseOption,
+  StreetOption,
+} from './types';
 
 const SUGGESTIONS_ROOT = 'https://suggestions.dadata.ru/suggestions/api/4_1/rs';
 const IPLOCATE_URL = `${SUGGESTIONS_ROOT}/iplocate/address`;
@@ -178,6 +184,126 @@ export function createDaDataCityClient(): CityLookupClient {
       );
 
       return toCityOptions(payload, false)[0] ?? null;
+    },
+  };
+}
+
+const FEDERAL_CITY_PREFIX = 'г ';
+
+function isFederalCity(city: CityOption): boolean {
+  return city.region.trim() === `${FEDERAL_CITY_PREFIX}${city.name.trim()}`;
+}
+
+function cityRestriction(city: CityOption): Record<string, string> {
+  return isFederalCity(city) ? { region_fias_id: city.fiasId } : { city_fias_id: city.fiasId };
+}
+
+function suggestionData(payload: unknown): readonly Record<string, unknown>[] {
+  const body = asRecord(payload);
+
+  if (body === null || !Array.isArray(body.suggestions)) {
+    throw new Error('Address lookup response is malformed');
+  }
+
+  return (body.suggestions as readonly unknown[])
+    .map((suggestion) => asRecord(asRecord(suggestion)?.data))
+    .filter((data): data is Record<string, unknown> => data !== null);
+}
+
+function uniqueByFiasId<T extends { readonly fiasId: string }>(
+  options: readonly T[],
+): readonly T[] {
+  const seen = new Set<string>();
+
+  return options.filter((option) => {
+    if (seen.has(option.fiasId)) {
+      return false;
+    }
+
+    seen.add(option.fiasId);
+
+    return true;
+  });
+}
+
+function toStreetOption(data: Record<string, unknown>): StreetOption | null {
+  const fiasId = asText(data.street_fias_id);
+  const label = asText(data.street_with_type);
+
+  if (fiasId === '' || label === '' || asText(data.house) !== '') {
+    return null;
+  }
+
+  return { fiasId, label };
+}
+
+function toHouseOption(data: Record<string, unknown>): HouseOption | null {
+  const fiasId = asText(data.house_fias_id);
+  const house = asText(data.house);
+
+  if (fiasId === '' || house === '') {
+    return null;
+  }
+
+  const label = [
+    asText(data.house_type),
+    house,
+    asText(data.block_type),
+    asText(data.block),
+    asText(data.building_type),
+    asText(data.building),
+  ]
+    .filter((part) => part !== '')
+    .join(' ');
+
+  return { fiasId, label };
+}
+
+function suggestAddressBody(
+  query: string,
+  level: 'street' | 'house',
+  location: Record<string, string>,
+): string {
+  return JSON.stringify({
+    query,
+    count: RESULT_LIMIT,
+    from_bound: { value: level },
+    to_bound: { value: level },
+    locations: [location],
+  });
+}
+
+export function createDaDataAddressClient(): AddressLookupClient {
+  return {
+    async searchStreets(city, query, signal) {
+      const payload = await requestJson(
+        SUGGEST_URL,
+        { method: 'POST', body: suggestAddressBody(query, 'street', cityRestriction(city)) },
+        signal,
+      );
+
+      return uniqueByFiasId(
+        suggestionData(payload)
+          .map(toStreetOption)
+          .filter((option) => option !== null),
+      );
+    },
+
+    async searchHouses(street, query, signal) {
+      const payload = await requestJson(
+        SUGGEST_URL,
+        {
+          method: 'POST',
+          body: suggestAddressBody(query, 'house', { street_fias_id: street.fiasId }),
+        },
+        signal,
+      );
+
+      return uniqueByFiasId(
+        suggestionData(payload)
+          .map(toHouseOption)
+          .filter((option) => option !== null),
+      );
     },
   };
 }

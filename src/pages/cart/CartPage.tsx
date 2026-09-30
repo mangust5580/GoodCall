@@ -14,6 +14,7 @@ import type { CartLinesState } from './useCartLines';
 export interface CartPageProps {
   readonly homeHref: string;
   readonly catalogHref: string;
+  readonly checkoutHref: string;
   readonly cart: CartLinesState;
 }
 
@@ -21,7 +22,7 @@ const RECOMMENDATION_MEDIA_SIZES = '(max-width: 520px) 240px, 220px';
 const POPULATED_TITLE_ID = 'cart-title';
 const EMPTY_TITLE_ID = 'cart-empty-title';
 
-export function CartPage({ homeHref, catalogHref, cart }: CartPageProps) {
+export function CartPage({ homeHref, catalogHref, checkoutHref, cart }: CartPageProps) {
   const { lines } = cart;
   const totals = cartTotals(lines);
   const selectedLineCount = lines.filter((line) => line.selected).length;
@@ -96,7 +97,7 @@ export function CartPage({ homeHref, catalogHref, cart }: CartPageProps) {
               </ul>
             </section>
 
-            <CartOrderSummary totals={totals} />
+            <CartOrderSummary checkoutHref={checkoutHref} totals={totals} />
           </div>
         )}
 

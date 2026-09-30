@@ -26,6 +26,16 @@ npm ci
 npm run dev
 ```
 
+Local configuration lives in an untracked `.env.local`, with keys taken from
+`.env.example`. `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` enable
+live catalogue data. `VITE_DADATA_TOKEN` (the DaData suggestions API key)
+enables the city, street and house autocomplete. Without it, the header city
+stays «Выберите город» and Checkout uses manual address entry. Vite restarts
+the dev server when a `.env*` file changes; reload the open page afterwards. A
+variable exported in the shell needs a manual `npm run dev` restart.
+`VITE_*` values are compiled into `npm run build` output, so rebuild after
+changing them.
+
 ## Scripts
 
 | Script                 | Purpose                              |

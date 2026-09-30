@@ -519,6 +519,13 @@ $icon-names: (
     font-size: var(--control-hint-size);
     color: var(--role-text-muted);
   }
+
+  &__error {
+    margin: 0;
+    font-size: var(--control-hint-size);
+    line-height: 1.4;
+    color: color-mix(in srgb, var(--role-state-danger) 80%, var(--role-text-primary));
+  }
 }
 
 .ui-input {
@@ -539,6 +546,10 @@ $icon-names: (
 
   &:focus-visible {
     border-color: var(--role-border-focus);
+  }
+
+  &[aria-invalid='true']:not(:focus-visible) {
+    border-color: var(--role-state-danger);
   }
 
   &::placeholder {

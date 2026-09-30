@@ -13,3 +13,26 @@ export interface CityLookupClient {
     signal?: AbortSignal,
   ): Promise<CityOption | null>;
 }
+
+export interface StreetOption {
+  readonly fiasId: string;
+  readonly label: string;
+}
+
+export interface HouseOption {
+  readonly fiasId: string;
+  readonly label: string;
+}
+
+export interface AddressLookupClient {
+  searchStreets(
+    city: CityOption,
+    query: string,
+    signal?: AbortSignal,
+  ): Promise<readonly StreetOption[]>;
+  searchHouses(
+    street: StreetOption,
+    query: string,
+    signal?: AbortSignal,
+  ): Promise<readonly HouseOption[]>;
+}

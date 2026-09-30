@@ -63,6 +63,10 @@ Accepted:
 - **Search B / Faceted Results Foundation — user visual PASS on 2026-09-28
   (desktop), CLOSED and published.** Desktop faceted filters and enriched
   result rows on `#/search?q=…` from 1024px. See the Search B section below.
+- **Checkout A / Checkout Page Foundation — user visual/UX PASS on 2026-09-30,
+  CLOSED and published.** `#/checkout` over the selected Cart lines, with
+  courier delivery, DaData address autocomplete (optional) and a first-class
+  manual address fallback. See the Checkout A section below.
 - **Search C / Mobile Search Filters — user visual/UX PASS on 2026-09-30
   (desktop and mobile), CLOSED and published.** The mobile filter trigger and
   inset dialog, applied filters at every width and the refined mobile card
@@ -121,9 +125,166 @@ Technically complete:
 
 Active visual slice:
 
-- None. The next milestone has not been selected. Search C, Favourites A,
-  Commerce B, Commerce A, Blog B, Blog A, Home A, Cart A, Cart B, Search A,
-  Search B, 404 A and the Product Details production integration are closed.
+- None. **Checkout A / Checkout Page Foundation — USER VISUAL/UX PASS on
+  2026-09-30, CLOSED and published.** See the
+  Checkout A section below. Search C, Favourites A, Commerce B, Commerce A,
+  Blog B, Blog A, Home A, Cart A, Cart B, Search A, Search B, 404 A and the
+  Product Details production integration are closed.
+
+### Checkout A — Checkout Page Foundation
+
+**Status: USER VISUAL/UX PASS on 2026-09-30 — CLOSED and published.** The PASS covers the accepted density scale, the live
+DaData address autocomplete (observed working by the user), and the
+manual/graceful-degradation address UX. Evidence: `Checkout.png` (desktop
+only). The mobile layout is derived.
+
+**Pickup is a separate capability, and its data contract is not ready.**
+`Самовывоз` stays omitted. The repository has no store or pickup-point dataset:
+
+- no Supabase table;
+- no ID, city, hours or coordinates contract;
+- no availability data;
+- no delivery-method pricing.
+
+The only store content is one `CommerceLocationCard` specimen on
+`?reference=components` and fixture copy («Из 45 магазинов»).
+
+**Route and handoff.**
+
+- `CHECKOUT_PATH` (`/checkout`) routes to `src/app/CheckoutRoute.tsx`, which
+  renders the router-free `src/pages/checkout/CheckoutPage` inside
+  `ProductionShell`. Styles live in `checkout.scss`, loaded through
+  `global.scss`.
+- Cart's `Оформить заказ` is a link to `#/checkout` when at least one line is
+  selected. It stays a disabled `Button` otherwise. Cart pricing, selection
+  and layout are unchanged.
+
+**Ownership.**
+
+- Checkout reads the shared cart through `useCartLineList()` and shows only
+  the selected lines. Totals come from `cartTotals` in `cartPricing.ts`, so
+  `К оплате` equals the Cart `Итого`.
+- The line image resolver moved unchanged from `CartLineItem` into
+  `src/pages/cart/CartLineMedia.tsx`, now shared by Cart and Checkout.
+- Form state is page-local (`CheckoutForm`, `checkoutFormModel.ts`). There is
+  no checkout or order store, no persistence and no URL state.
+- `Город` is prefilled once from the existing public `readStoredCity()` seam;
+  otherwise it is empty. Checkout never writes the header city.
+
+**Entry guard.** With no selected lines, the page shows a Checkout-owned state
+(`h1` `Оформление заказа`, a message for an empty cart or no selection, and a
+`Перейти в корзину` link). It never auto-selects lines.
+
+**Form.**
+
+- Sections: `Контактные данные`, `Способ получения`, `Адрес доставки`,
+  `Дата и время доставки`, `Способ оплаты`, `Комментарий к заказу`, built from
+  the accepted `TextField`, `PhoneField`, `SelectField`, `TextareaField` and
+  `Radio`.
+- Fields start empty; the raster's specimen values are not used.
+- Courier delivery only; `Самовывоз` is not shown.
+- The date is a local choice of the next 7 days, defaulting to `Завтра, …`.
+  The time is one of three local intervals. Neither claims availability.
+- Payment choices: card online (МИР mark), СБП (СБП mark), card on delivery
+  (МИР mark) and cash. They are form choices only; there is no payment
+  capability.
+
+**Address flow.** Город → Улица → Дом use one Checkout-owned ARIA combobox,
+`CheckoutAddressCombobox`, over the existing DaData owner in
+`src/components/location/`. That module adds `createDaDataAddressClient`
+(`searchStreets`, `searchHouses`) through the same `suggest/address` request
+path. The header city picker and storage are unchanged. There is no new
+dependency, provider or proxy.
+
+- **Parent restrictions.** Streets are restricted by `city_fias_id`, or
+  `region_fias_id` for federal cities. Houses are restricted by
+  `street_fias_id`. Both use street/house `from_bound`/`to_bound`.
+- **Minimum query lengths.** City 2, street 1, house 1.
+- **Form state.** The form keeps the text plus `cityFiasId`, `cityRegion`,
+  `streetFiasId` and `houseFiasId`, together with `addressMode`
+  (provider/manual session) and `manualFrom` (the level where the user chose
+  «Не нашли? Указать вручную»). No postal code, coordinates or persistence
+  are kept.
+- **Dependencies.** A dependent field is disabled with a hint until its parent
+  is confirmed. Selecting a different city clears street and house; selecting
+  a different street clears the house. Typing that diverges clears that
+  level's ID and its descendants' IDs. The apartment is never reset.
+- **Manual escape.** Every result list, including an empty one, ends with the
+  manual option. The chosen level and all lower levels then become plain
+  validated text fields.
+- **Progressive enhancement.** DaData is optional: Checkout stays fully usable
+  with local manual address entry whenever the provider is unavailable.
+  - Lookup unconfigured: all address fields are manual.
+  - «Ввести адрес вручную» in the address heading (provider mode only) switches
+    the whole address to manual. It shows no notice and moves focus to Город.
+  - A genuine lookup failure does the same automatically, with the neutral
+    notice «Не удалось загрузить подсказки. Адрес можно ввести вручную.».
+    Genuine failures are a network error, a non-OK response, a malformed
+    street/house response, or no response within 6 s.
+  - In every case, text is kept, FIAS IDs are cleared, and DaData is not
+    called again for that Checkout mount. There are no retries; a reload tries
+    the provider again.
+  - Not failures: empty results (the per-field «Не нашли? Указать вручную»
+    escape still applies), query-replacement aborts and unmount.
+- **Configuration.** Autocomplete needs `VITE_DADATA_TOKEN` in `.env.local`
+  locally, or the `DADATA_TOKEN` secret in the Pages build. `.env.local`
+  currently has no such key, so local Checkout runs in manual address mode,
+  and in dev the console logs that lookup is off. Vite restarts on `.env*`
+  changes; reload the page afterwards.
+- **Verification status.** Live DaData street/house behaviour is **not
+  verified**: there is no token, and the host is unreachable from the agent
+  environment. It is verified with mocked responses only.
+
+**Field constraints.** Validation is page-local and non-destructive; values are
+normalized (trim, collapse spaces) only at a valid submit.
+
+- Имя / Фамилия: Unicode letters with space, hyphen or apostrophe.
+- Телефон: the accepted `PhoneField` mask, with `autocomplete="tel"`.
+- E-mail: `type=email`, basic format.
+- Улица: must contain a letter.
+- Дом, and Квартира when filled: must contain a letter or digit.
+- Comments: 300 and 500 characters, with visible hints.
+
+**Submit contract.** `Подтвердить заказ` validates on the client only:
+
+- the required fields and groups, the complete `PhoneField` mask and the
+  e-mail format;
+- errors are tied to their fields, and focus moves to the first invalid one;
+- a valid form shows the status «Данные заполнены. Создание заказа будет
+  подключено отдельно.»
+- There is no order creation, cart mutation, navigation or Thank-you.
+
+**Shared field change.** The accepted fields gained an optional `error` prop
+(through `FieldShell`), which renders `.ui-field__error` and sets
+`aria-invalid` and `aria-describedby`. The error text is an AA colour mix of
+`--role-state-danger`. Without `error`, the output is unchanged.
+
+**Intentional raster deviations.** Omitted:
+
+- the `Начислим бонусы` card;
+- the `Бонусы`, `Промокод` and `Доставка: Бесплатно` rows;
+- `Самовывоз`;
+- the VISA and Mastercard marks.
+
+Also:
+
+- The `h1` is visually hidden.
+- The breadcrumb uses the accepted `›` separator.
+- Город, Улица and Дом are dependent DaData comboboxes with a manual escape and
+  a manual fallback. There is no local address list.
+- The optional fields are labelled «(необязательно)».
+- The BenefitsStrip payment note matches the offered methods.
+- The BenefitsStrip spans the full width below both columns instead of the
+  left column. The raster pairs it with the omitted bonus card.
+- Controls use the accepted system scale: 48px height, 15px text and 13px
+  labels. Card headings are 18px; the Cart-level summary uses a 22px title, a
+  26px total and a 48px CTA. The body keeps the accepted 1440 `Container`, so
+  at viewports wider than 1440 it is narrower than the raster's roughly
+  1780px canvas.
+
+**Deferred.** Order Confirmation / Thank-you, order creation, payment,
+bonuses, promo codes, delivery pricing, pickup, address lookup, account
+prefill and saved addresses/cards.
 
 ### Search C — Mobile Search Filters
 
@@ -594,7 +755,8 @@ added product and the resulting line quantity. Focus does not move. The
 - Price is a snapshot from the originating read, with no revalidation.
 - No stock or reservation.
 - No real variant SKU or price.
-- No order creation; `Оформить заказ` stays disabled.
+- No order creation. `Оформить заказ` now opens Checkout A, which validates
+  only (see Checkout A).
 - The Product Details title keeps the backend `128 ГБ` wording while the
   variant line can say `256 ГБ`. That inconsistency is inherited from the
   accepted page and not resolved here.
@@ -1088,8 +1250,8 @@ route (Commerce A). It reaches `0` with the empty state.
 
 **Omitted instead of faked:**
 
-- `Оформить заказ` renders as a genuinely disabled `Button`: there is no
-  Checkout route.
+- `Оформить заказ` renders as a genuinely disabled `Button` when nothing is
+  selected. Otherwise, since Checkout A, it links to `#/checkout`.
 - The promo code, delivery row, bonus note, payment-method card and
   data-protection note.
 - `Найти в корзине`, per-line favourites and `Очистить корзину`.
@@ -3654,6 +3816,8 @@ router owns only the fragment. The base path still lives solely in
 - `#/blog` — the Blog listing (Blog A, closed); optional
   `category`, `q` and `page` params.
 - `#/favorites` — the local favourites page (Favourites A, closed).
+- `#/checkout` — the Checkout A page over the selected shared-cart lines
+  (complete, user visual/UX PASS).
 - `#/blog/:slug` — the Blog article detail (Blog B, closed),
   registered only for `how-to-choose-smartphone-2024`. Every other slug renders
   the designed 404.
@@ -3661,7 +3825,7 @@ router owns only the fragment. The base path still lives solely in
   It is not a global error architecture.
 
 Route paths live in `src/app/routes.ts` as `HOME_PATH`,
-`CATALOG_SMARTPHONES_PATH`, `PRODUCT_PATH`, `CART_PATH`, `FAVORITES_PATH`,
+`CATALOG_SMARTPHONES_PATH`, `PRODUCT_PATH`, `CART_PATH`, `CHECKOUT_PATH`, `FAVORITES_PATH`,
 `SEARCH_PATH`, `BLOG_PATH` and `BLOG_ARTICLE_PATH`.
 `hashHref()`, `productDetailsHref()`, `searchPath()`, `blogPath()`,
 `blogArticlePath()` and `blogArticleHref()` serve the `href` and navigation
@@ -3669,7 +3833,7 @@ seams.
 
 ### Ownership
 
-`src/app/ProductionRouter.tsx` holds the `HashRouter` and the nine routes; it
+`src/app/ProductionRouter.tsx` holds the `HashRouter` and the ten routes; it
 has no local fallback component or stylesheet any more.
 `src/app/HomeRoute.tsx`, `src/app/CatalogRoute.tsx`,
 `src/app/ProductDetailsRoute.tsx`, `src/app/CartRoute.tsx`,
@@ -3971,13 +4135,22 @@ none of them blocks the closed milestone.
 
 ## Next approved step
 
-**No next milestone is selected.** Search C — Mobile Search Filters is closed
-with user visual/UX PASS on 2026-09-30. Autocomplete, URL-synced filters and
-cross-category search are not scoped.
+**Checkout A — Checkout Page Foundation is CLOSED and published (user
+visual/UX PASS on 2026-09-30).** No next milestone is active; neither of the
+following has started.
+
+- **Pickup** needs its own store data-contract slice first. That slice would
+  hold a canonical store list with a stable ID, name, address, city, hours
+  and coordinates if a map is wanted, with the source decided explicitly:
+  either a Supabase table or a typed local dataset labelled as demo.
+- **Order Confirmation** needs an order-creation decision.
+
+Search autocomplete, URL-synced filters and cross-category search are not
+scoped.
 
 Each of the following would need its own explicit scope, and none exists:
 
-- Checkout;
+- order creation and Order Confirmation;
 - the add-to-cart dialog and Search/Home cart actions;
 - a backend cart;
 - a promo-code engine.

@@ -21,6 +21,7 @@ interface FieldShellProps {
   readonly controlId: string;
   readonly label: string;
   readonly hint?: string;
+  readonly error?: string;
   readonly children: ReactNode;
   readonly icon?: IconName;
   readonly labelVisuallyHidden?: boolean;
@@ -30,6 +31,7 @@ function FieldShell({
   controlId,
   label,
   hint,
+  error,
   children,
   icon,
   labelVisuallyHidden = false,
@@ -51,8 +53,21 @@ function FieldShell({
           {hint}
         </p>
       ) : null}
+      {error ? (
+        <p className="ui-field__error" id={`${controlId}-error`}>
+          {error}
+        </p>
+      ) : null}
     </div>
   );
+}
+
+function describedBy(controlId: string, hint?: string, error?: string): string | undefined {
+  const ids = [hint ? `${controlId}-hint` : undefined, error ? `${controlId}-error` : undefined]
+    .filter((value) => value !== undefined)
+    .join(' ');
+
+  return ids === '' ? undefined : ids;
 }
 
 type NativeInputProps = Omit<InputHTMLAttributes<HTMLInputElement>, 'id' | 'className'>;
@@ -60,6 +75,7 @@ type NativeInputProps = Omit<InputHTMLAttributes<HTMLInputElement>, 'id' | 'clas
 interface BaseFieldProps extends NativeInputProps {
   readonly label: string;
   readonly hint?: string;
+  readonly error?: string;
   readonly id?: string;
 }
 
@@ -76,6 +92,7 @@ function cx(...classes: readonly (string | false | undefined)[]): string {
 function InputField({
   label,
   hint,
+  error,
   id,
   icon,
   ...rest
@@ -83,9 +100,10 @@ function InputField({
   const controlId = useControlId(id);
 
   return (
-    <FieldShell controlId={controlId} hint={hint} icon={icon} label={label}>
+    <FieldShell controlId={controlId} error={error} hint={hint} icon={icon} label={label}>
       <input
-        aria-describedby={hint ? `${controlId}-hint` : undefined}
+        aria-describedby={describedBy(controlId, hint, error)}
+        aria-invalid={error ? true : undefined}
         className={icon ? 'ui-input ui-input--with-icon' : 'ui-input'}
         id={controlId}
         {...rest}
@@ -244,6 +262,7 @@ export function SearchField({
 interface PhoneFieldProps {
   readonly label: string;
   readonly hint?: string;
+  readonly error?: string;
   readonly id?: string;
   readonly name?: string;
   readonly placeholder?: string;
@@ -252,6 +271,7 @@ interface PhoneFieldProps {
   readonly onValueChange?: (value: string) => void;
   readonly disabled?: boolean;
   readonly required?: boolean;
+  readonly autoComplete?: string;
 }
 
 const phoneMaskOptions: MaskitoOptions = {
@@ -280,6 +300,7 @@ const phoneMaskOptions: MaskitoOptions = {
 export function PhoneField({
   label,
   hint,
+  error,
   id,
   name,
   placeholder = '+7 (___) ___-__-__',
@@ -288,6 +309,7 @@ export function PhoneField({
   onValueChange,
   disabled = false,
   required = false,
+  autoComplete,
 }: PhoneFieldProps) {
   const controlId = useControlId(id);
   const maskRef = useMaskito({ options: phoneMaskOptions });
@@ -307,9 +329,11 @@ export function PhoneField({
   };
 
   return (
-    <FieldShell controlId={controlId} hint={hint} label={label}>
+    <FieldShell controlId={controlId} error={error} hint={hint} label={label}>
       <input
-        aria-describedby={hint ? `${controlId}-hint` : undefined}
+        aria-describedby={describedBy(controlId, hint, error)}
+        aria-invalid={error ? true : undefined}
+        autoComplete={autoComplete}
         className="ui-input"
         disabled={disabled}
         id={controlId}
@@ -329,6 +353,7 @@ export function PhoneField({
 interface SelectFieldProps {
   readonly label: string;
   readonly hint?: string;
+  readonly error?: string;
   readonly id?: string;
   readonly placeholder?: string;
   readonly options: readonly { readonly value: string; readonly label: string }[];
@@ -343,6 +368,7 @@ interface SelectFieldProps {
 export function SelectField({
   label,
   hint,
+  error,
   id,
   placeholder,
   options,
@@ -356,7 +382,7 @@ export function SelectField({
   const controlId = useControlId(id);
 
   return (
-    <FieldShell controlId={controlId} hint={hint} label={label}>
+    <FieldShell controlId={controlId} error={error} hint={hint} label={label}>
       <Select.Root
         defaultValue={defaultValue}
         disabled={disabled}
@@ -366,7 +392,8 @@ export function SelectField({
         value={value}
       >
         <Select.Trigger
-          aria-describedby={hint ? `${controlId}-hint` : undefined}
+          aria-describedby={describedBy(controlId, hint, error)}
+          aria-invalid={error ? true : undefined}
           className="ui-input ui-input--select-trigger"
           id={controlId}
         >
@@ -404,6 +431,7 @@ export function SelectField({
 interface DateFieldProps {
   readonly label: string;
   readonly hint?: string;
+  readonly error?: string;
   readonly id?: string;
   readonly placeholder?: string;
   readonly value?: string;
@@ -484,6 +512,7 @@ function CalendarChevron({ orientation = 'left', className }: ChevronProps) {
 export function DateField({
   label,
   hint,
+  error,
   id,
   placeholder = 'Выберите дату',
   value,
@@ -511,10 +540,11 @@ export function DateField({
   };
 
   return (
-    <FieldShell controlId={controlId} hint={hint} label={label}>
+    <FieldShell controlId={controlId} error={error} hint={hint} label={label}>
       <Popover.Root onOpenChange={setOpen} open={open}>
         <Popover.Trigger
-          aria-describedby={hint ? `${controlId}-hint` : undefined}
+          aria-describedby={describedBy(controlId, hint, error)}
+          aria-invalid={error ? true : undefined}
           className="ui-input ui-input--date-trigger"
           disabled={disabled}
           id={controlId}
@@ -568,16 +598,18 @@ interface TextareaFieldProps extends Omit<
 > {
   readonly label: string;
   readonly hint?: string;
+  readonly error?: string;
   readonly id?: string;
 }
 
-export function TextareaField({ label, hint, id, rows = 4, ...rest }: TextareaFieldProps) {
+export function TextareaField({ label, hint, error, id, rows = 4, ...rest }: TextareaFieldProps) {
   const controlId = useControlId(id);
 
   return (
-    <FieldShell controlId={controlId} hint={hint} label={label}>
+    <FieldShell controlId={controlId} error={error} hint={hint} label={label}>
       <textarea
-        aria-describedby={hint ? `${controlId}-hint` : undefined}
+        aria-describedby={describedBy(controlId, hint, error)}
+        aria-invalid={error ? true : undefined}
         className="ui-input ui-input--textarea"
         id={controlId}
         rows={rows}

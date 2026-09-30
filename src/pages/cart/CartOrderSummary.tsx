@@ -4,9 +4,10 @@ import { formatPrice } from './cartPricing';
 
 interface CartOrderSummaryProps {
   readonly totals: CartTotals;
+  readonly checkoutHref: string;
 }
 
-export function CartOrderSummary({ totals }: CartOrderSummaryProps) {
+export function CartOrderSummary({ totals, checkoutHref }: CartOrderSummaryProps) {
   return (
     <section aria-labelledby="cart-summary-title" className="cart-summary">
       <h2 className="cart-summary__title" id="cart-summary-title">
@@ -34,9 +35,15 @@ export function CartOrderSummary({ totals }: CartOrderSummaryProps) {
         </dl>
       )}
 
-      <Button className="cart-summary__action" disabled variant="primary">
-        Оформить заказ
-      </Button>
+      {totals.selectedUnitCount === 0 ? (
+        <Button className="cart-summary__action" disabled variant="primary">
+          Оформить заказ
+        </Button>
+      ) : (
+        <a className="ui-button ui-button--primary cart-summary__action" href={checkoutHref}>
+          Оформить заказ
+        </a>
+      )}
     </section>
   );
 }
