@@ -12,10 +12,12 @@ import {
   EMPTY_SEARCH_FILTERS,
   applySearchFilters,
   buildSearchFacetOptions,
+  countActiveSearchFilters,
   sameSearchFilters,
   searchFiltersActive,
 } from './searchFacets';
 import type { SearchFilterState } from './searchFacets';
+import { SearchFilterDialog } from './SearchFilterDialog';
 import { SearchFilters } from './SearchFilters';
 import { SearchResultRow } from './SearchResultRow';
 import {
@@ -81,10 +83,12 @@ export function SearchPage({
   const [appliedFilters, setAppliedFilters] = useState<SearchFilterState>(EMPTY_SEARCH_FILTERS);
   const [announcement, setAnnouncement] = useState('');
   const baseMatches = matchSearchProducts(products, query);
-  const faceted = facetsViewport && baseMatches.length > 0;
+  const hasBaseMatches = baseMatches.length > 0;
+  const faceted = facetsViewport && hasBaseMatches;
+  const showFilterTrigger = !facetsViewport && hasBaseMatches;
   const facetOptions = buildSearchFacetOptions(baseMatches);
-  const filtersApplied = faceted && searchFiltersActive(appliedFilters, facetOptions);
-  const filtered = faceted
+  const filtersApplied = hasBaseMatches && searchFiltersActive(appliedFilters, facetOptions);
+  const filtered = hasBaseMatches
     ? applySearchFilters(baseMatches, appliedFilters, facetOptions)
     : baseMatches;
   const matches = sortCatalogProducts(filtered, sort);
@@ -101,6 +105,12 @@ export function SearchPage({
 
   const applyFilters = () => {
     setAppliedFilters(draftFilters);
+    returnToFirstPage();
+  };
+
+  const applyDialogFilters = (next: SearchFilterState) => {
+    setDraftFilters(next);
+    setAppliedFilters(next);
     returnToFirstPage();
   };
 
@@ -124,6 +134,21 @@ export function SearchPage({
     setAppliedFilters(EMPTY_SEARCH_FILTERS);
     returnToFirstPage();
   };
+
+  const filteredEmpty = (
+    <section aria-labelledby="search-filtered-empty-title" className="search-filtered-empty">
+      <span className="search-empty__visual">
+        <Icon className="search-empty__icon" name="search" />
+      </span>
+      <h2 className="search-empty__title" id="search-filtered-empty-title">
+        Ничего не найдено
+      </h2>
+      <p className="search-empty__message">По текущему запросу и выбранным фильтрам товаров нет.</p>
+      <Button className="search-filtered-empty__reset" onClick={resetFilters}>
+        Сбросить фильтры
+      </Button>
+    </section>
+  );
 
   const resultList = (
     <>
@@ -209,39 +234,51 @@ export function SearchPage({
             ) : null}
           </div>
 
-          {matches.length > 0 ? (
-            <Select.Root onValueChange={onSortChange} value={sort}>
-              <Select.Trigger
-                aria-label={SORT_LABEL}
-                className="ui-input ui-input--select-trigger search-page__sort"
-              >
-                <Select.Value />
-                <Select.Icon asChild>
-                  <Icon className="ui-input__select-icon" name="chevron-down" />
-                </Select.Icon>
-              </Select.Trigger>
-              <Select.Portal>
-                <Select.Content
-                  align="end"
-                  className="ui-floating-surface ui-select-content"
-                  collisionPadding={16}
-                  position="popper"
-                  sideOffset={8}
-                >
-                  <Select.Viewport className="ui-select-content__viewport">
-                    {CATALOG_SORT_OPTIONS.map((option) => (
-                      <Select.Item
-                        className="ui-select-content__item"
-                        key={option.value}
-                        value={option.value}
-                      >
-                        <Select.ItemText>{option.label}</Select.ItemText>
-                      </Select.Item>
-                    ))}
-                  </Select.Viewport>
-                </Select.Content>
-              </Select.Portal>
-            </Select.Root>
+          {showFilterTrigger || matches.length > 0 ? (
+            <div className="search-page__controls">
+              {showFilterTrigger ? (
+                <SearchFilterDialog
+                  activeCount={countActiveSearchFilters(appliedFilters, facetOptions)}
+                  applied={appliedFilters}
+                  onApply={applyDialogFilters}
+                  options={facetOptions}
+                />
+              ) : null}
+              {matches.length > 0 ? (
+                <Select.Root onValueChange={onSortChange} value={sort}>
+                  <Select.Trigger
+                    aria-label={SORT_LABEL}
+                    className="ui-input ui-input--select-trigger search-page__sort"
+                  >
+                    <Select.Value />
+                    <Select.Icon asChild>
+                      <Icon className="ui-input__select-icon" name="chevron-down" />
+                    </Select.Icon>
+                  </Select.Trigger>
+                  <Select.Portal>
+                    <Select.Content
+                      align="end"
+                      className="ui-floating-surface ui-select-content"
+                      collisionPadding={16}
+                      position="popper"
+                      sideOffset={8}
+                    >
+                      <Select.Viewport className="ui-select-content__viewport">
+                        {CATALOG_SORT_OPTIONS.map((option) => (
+                          <Select.Item
+                            className="ui-select-content__item"
+                            key={option.value}
+                            value={option.value}
+                          >
+                            <Select.ItemText>{option.label}</Select.ItemText>
+                          </Select.Item>
+                        ))}
+                      </Select.Viewport>
+                    </Select.Content>
+                  </Select.Portal>
+                </Select.Root>
+              ) : null}
+            </div>
           ) : null}
         </header>
 
@@ -294,28 +331,14 @@ export function SearchPage({
                   ) : null}
                 </>
               ) : (
-                <section
-                  aria-labelledby="search-filtered-empty-title"
-                  className="search-filtered-empty"
-                >
-                  <span className="search-empty__visual">
-                    <Icon className="search-empty__icon" name="search" />
-                  </span>
-                  <h2 className="search-empty__title" id="search-filtered-empty-title">
-                    Ничего не найдено
-                  </h2>
-                  <p className="search-empty__message">
-                    По текущему запросу и выбранным фильтрам товаров нет.
-                  </p>
-                  <Button className="search-filtered-empty__reset" onClick={resetFilters}>
-                    Сбросить фильтры
-                  </Button>
-                </section>
+                filteredEmpty
               )}
             </div>
           </div>
         ) : matches.length > 0 ? (
           resultList
+        ) : hasBaseMatches ? (
+          filteredEmpty
         ) : (
           <section aria-labelledby="search-empty-title" className="search-empty">
             <span className="search-empty__visual">

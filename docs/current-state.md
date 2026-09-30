@@ -63,6 +63,10 @@ Accepted:
 - **Search B / Faceted Results Foundation — user visual PASS on 2026-09-28
   (desktop), CLOSED and published.** Desktop faceted filters and enriched
   result rows on `#/search?q=…` from 1024px. See the Search B section below.
+- **Search C / Mobile Search Filters — user visual/UX PASS on 2026-09-30
+  (desktop and mobile), CLOSED and published.** The mobile filter trigger and
+  inset dialog, applied filters at every width and the refined mobile card
+  composition on `#/search?q=…`. See the Search C section below.
 - **Favourites A / Local Favourites — user visual/UX PASS on 2026-09-30
   (desktop and mobile), CLOSED and published.** Live Catalog and Product
   Details ♥ share one local product-level favourites store, with a real shell
@@ -117,9 +121,131 @@ Technically complete:
 
 Active visual slice:
 
-- **No active visual slice is selected.** Favourites A, Commerce B,
-  Commerce A, Blog B, Blog A, Home A, Cart A, Cart B, Search A, Search B, 404 A
-  and the Product Details production integration are closed.
+- None. The next milestone has not been selected. Search C, Favourites A,
+  Commerce B, Commerce A, Blog B, Blog A, Home A, Cart A, Cart B, Search A,
+  Search B, 404 A and the Product Details production integration are closed.
+
+### Search C — Mobile Search Filters
+
+**Status: CLOSED — USER VISUAL/UX PASS on 2026-09-30; published.** Do not
+reopen accepted Search filter behaviour or visuals without a new explicit
+requirement. The user's manual review accepted:
+
+- desktop Search, unchanged (no regression);
+- the responsive Search layouts;
+- the mobile card price/action composition and its cart-state geometry;
+- the open mobile filter dialog at ~390px after the inset modal-surface
+  refinement.
+
+Evidence:
+
+- `Search_result.png` for the facet content;
+- the accepted Catalog B mobile filter trigger and bottom sheet for the
+  presentation;
+- the accepted Search compact and stacked cards for the page.
+
+There is no mobile Search raster, so the presentation is derived.
+
+**Filtering.** `SearchPage` stays the single owner of `draftFilters` and
+`appliedFilters`.
+
+- The viewport no longer gates filtering: applied filters narrow the base
+  matches at every width, and the «с выбранными фильтрами» summary is
+  viewport-independent.
+- `facetsViewport` (1024px and up) now chooses only the desktop
+  panel-plus-rows presentation.
+- With nothing applied, the output is unchanged.
+- Applied filters survive resizing across 1024px. A mobile apply also syncs
+  the desktop draft.
+
+**Mobile dialog.** `src/pages/search/SearchFilterDialog.tsx` is Search-owned
+and mirrors `CatalogFilterDialog`; Catalog is unchanged.
+
+- The Radix trigger pill «Фильтры» shows a count badge when N > 0. Its
+  `aria-label` is «Фильтры» or «Фильтры, выбрано: N».
+- It opens a bottom sheet: title «Фильтры», close «Закрыть», a scrolling
+  body, and a footer with `Сбросить` and `Показать`.
+- The body is `SearchFilters layout="dialog"`, a discriminated-union prop. It
+  has the same four facets (`Цена, ₽`, `Бренд`, `Цвет`, `Встроенная память`),
+  no panel `h2` and no in-panel actions, and uses plain chrome
+  (`search-filters--plain`).
+- The trigger and dialog render only below 1024px when there are base
+  matches. The panel and dialog are never mounted together.
+
+**Semantics (Catalog B parity).**
+
+- Opening seeds the dialog draft from the applied filters. Edits change only
+  that draft.
+- `Показать` applies the filters, syncs the desktop draft, returns to page 1
+  and closes.
+- `Сбросить` clears the draft only.
+- Close, Escape and overlay discard the draft.
+- The desktop panel's immediate reset is unchanged.
+- `countActiveSearchFilters` in `searchFacets.ts` counts each brand, colour
+  and storage value, plus 1 for an active price range.
+
+**Layout.** `search-page__controls` groups `[Фильтры] + sort` on the header's
+right. It renders only when it has content. At 1024px and up it holds only the
+sort, and the header geometry is identical to before. At 480px and below the
+group takes full width, the trigger stays compact and the sort grows from a
+160px basis; at 320px the sort wraps under the trigger.
+
+**Mobile card price/action composition (refined during visual review).**
+Below 768px, Search-owned rules in `search.scss` compose the horizontal card
+footer as one row: the price is on the left, with the old price stacked under
+it (the compact-override precedent), and the `[stepper][cart]` group is on the
+right, adjacent with the existing 12px gap.
+
+- The actions row is held at `--control-height`, so the cart button has one
+  anchor and the card has one height in both cart states.
+- Below 360px the footer deliberately uses two rows (the price row, then the
+  right-aligned group) in **both** states, because one row needs about 288px.
+- The card is 40px shorter at 360–480px. `ProductCard` is unchanged, and 768px
+  and wider is geometrically identical.
+
+**Mobile filter dialog surface (refined during visual review).** The Search
+bottom sheet is now an inset modal surface, using Search-owned values that
+mirror the accepted feedback-dialog language:
+
+- an inset of `fluid-between(16, 10, 320, 768)` from the viewport sides and
+  bottom;
+- a 16px radius on all corners, a 1px `--role-border-default` border and the
+  existing floating shadow;
+- centring with `max-inline-size: 560px` (the Search empty-state measure) and
+  `max-block-size: 85dvh`.
+
+The body scrolls inside the rounded surface with a thin, progressively styled
+scrollbar and a stable gutter. The overlay, semantics, contents and filter
+behaviour are unchanged, and nothing changes from 1024px up.
+
+**Filtered-empty.** Below 1024px, zero filtered results show the existing
+`search-filtered-empty` section, extracted to one local constant shared with
+desktop, not the generic no-results state. The trigger stays; summary and
+sort hide as before.
+
+**Verification (agent checks, not the user PASS).** A headless-Chrome
+DevTools run passed 56/56 checks, one of them informational (320px
+composition). It ran against a scratch build with test-row Supabase reads,
+and it covered:
+
+- desktop 1440 and 1024 header, sort, panel and rows geometry, identical to
+  a `HEAD` baseline build;
+- mobile card and list sizes, identical to that baseline at
+  1023/768/390/320;
+- open and close, focus return, and draft, apply, reset and cancel;
+- counts 1, 2 and 5; page reset and clamping; sort persistence;
+- mobile filtered-empty and its recovery;
+- breakpoint crossing, with no stranded modal;
+- desktop panel regressions and Search cart regressions;
+- no overflow, and a usable dialog down to 320×640.
+
+**Known debt.** The dialog-shell SCSS duplicates Catalog's
+(`search-filter-trigger`, `search-filter-dialog`), which is intentional under
+the page-local precedent.
+
+**Deferred.** URL-synced filters, a category facet, cross-category search,
+autocomplete, a page-size selector, a count in `Показать`, new facet types and
+a shared filter-dialog abstraction.
 
 ### Favourites A — Local Favourites
 
@@ -679,10 +805,12 @@ part of Search B.
 - The corpus is still the 16 Catalog smartphones: live, or the fixture
   fallback.
 - 12 results per page are retained, with no page-size selector.
-- Faceting is desktop-only from 1024px: a 272px filter card, a 24px gap and a
-  results panel (one card with divided rows and a pagination footer).
-- Below 1024px the page is the unchanged Search A layout, and no hidden
-  filters apply.
+- The facet panel is desktop-only from 1024px: a 272px filter card, a 24px
+  gap and a results panel (one card with divided rows and a pagination
+  footer).
+- Below 1024px the page keeps the Search A layout. Since Search C, the same
+  facets are available through a mobile filter dialog, and applied filters
+  work at every width.
 
 **Facets.** All are derived in `src/pages/search/searchFacets.ts` from the
 product **title**, the one field identical across live and fixture data:
@@ -755,7 +883,8 @@ engine, and no dependency.
 
 **Deferred (future work, not Search B blockers):**
 
-- mobile Search filters and URL-synced filters;
+- URL-synced filters. Mobile Search filters are delivered by Search C
+  (closed);
 - Category facet, cross-category search and autocomplete;
 - a page-size selector;
 - favourites and comparison. Search `В корзину` is delivered by Commerce B
@@ -3842,9 +3971,9 @@ none of them blocks the closed milestone.
 
 ## Next approved step
 
-**No next milestone is selected.** Favourites A is closed. Mobile Search
-filters remain an unscoped candidate; autocomplete and cross-category search are
-not scoped either.
+**No next milestone is selected.** Search C — Mobile Search Filters is closed
+with user visual/UX PASS on 2026-09-30. Autocomplete, URL-synced filters and
+cross-category search are not scoped.
 
 Each of the following would need its own explicit scope, and none exists:
 

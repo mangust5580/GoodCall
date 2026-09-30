@@ -84,13 +84,25 @@
     color: var(--role-text-primary);
   }
 
+  &__controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+    justify-content: flex-end;
+
+    @include h.media-max(480px) {
+      flex: 1 1 100%;
+    }
+  }
+
   &__sort {
     flex: none;
     width: auto;
     min-width: 230px;
 
     @include h.media-max(480px) {
-      flex: 1 1 100%;
+      flex: 1 1 160px;
       min-width: 0;
     }
   }
@@ -109,6 +121,38 @@
   margin: 0;
   padding: 0;
   list-style: none;
+
+  @include h.media-max(768px) {
+    .product-card {
+      &__footer {
+        flex-flow: row wrap;
+        gap: 12px;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      &__prices {
+        flex-direction: column;
+        gap: 2px;
+        align-items: flex-start;
+      }
+
+      &__actions {
+        justify-content: flex-end;
+        min-block-size: var(--control-height);
+        margin-inline-start: auto;
+      }
+    }
+  }
+
+  @include h.media-max(360px) {
+    .product-card {
+      &__footer {
+        flex-direction: column;
+        align-items: stretch;
+      }
+    }
+  }
 
   @include h.media-up(768px) {
     gap: 12px;
@@ -368,6 +412,14 @@
 
 .search-filters {
   min-width: 0;
+
+  &--plain {
+    padding: 0;
+    background-color: transparent;
+    border: 0;
+    border-radius: 0;
+  }
+
   padding: 20px;
   background-color: var(--role-surface-card);
   border: var(--control-border-width) solid var(--role-border-soft);
@@ -576,5 +628,141 @@
 
   &__reset {
     margin-top: h.fluid(28, 24);
+  }
+}
+
+.search-filter-trigger {
+  display: inline-flex;
+  flex: none;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--button-height);
+  padding: 0 20px;
+  background-color: var(--role-surface-card);
+  border: var(--control-border-width) solid var(--role-border-default);
+  border-radius: var(--control-radius-pill);
+  font: inherit;
+  font-size: var(--control-font-size);
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--role-text-primary);
+  cursor: pointer;
+
+  &:hover {
+    border-color: var(--role-border-strong);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--role-border-focus);
+    outline-offset: 2px;
+  }
+
+  &__count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 22px;
+    height: 22px;
+    padding: 0 6px;
+    background-color: var(--color-brand-purple-600);
+    border-radius: var(--control-radius-pill);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--role-text-inverse);
+  }
+}
+
+.search-filter-dialog {
+  --search-filter-dialog-inset: #{h.fluid-between(16, 10, 320, 768)};
+
+  position: fixed;
+  inset-inline: var(--search-filter-dialog-inset);
+  inset-block-end: var(--search-filter-dialog-inset);
+  z-index: var(--control-floating-z-index);
+  display: flex;
+  flex-direction: column;
+  max-inline-size: 560px;
+  max-block-size: 85dvh;
+  margin-inline: auto;
+  overflow: hidden;
+  background-color: var(--role-surface-card);
+  border: var(--control-border-width) solid var(--role-border-default);
+  border-radius: 16px;
+  box-shadow: var(--control-floating-shadow);
+
+  &__overlay {
+    position: fixed;
+    inset: 0;
+    z-index: var(--control-floating-z-index);
+    background-color: var(--alpha-black-36);
+  }
+
+  &__header {
+    display: flex;
+    flex: none;
+    gap: 12px;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 16px 12px;
+    border-bottom: var(--control-border-width) solid var(--role-border-soft);
+  }
+
+  &__title {
+    margin: 0;
+    font-size: 17px;
+    font-weight: 700;
+    line-height: 1.3;
+    color: var(--role-text-primary);
+  }
+
+  &__close {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    background: none;
+    border: 0;
+    border-radius: var(--control-radius-sm);
+    color: var(--role-text-muted);
+    cursor: pointer;
+
+    &:hover {
+      color: var(--role-text-primary);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--role-border-focus);
+      outline-offset: 2px;
+    }
+  }
+
+  &__body {
+    flex: 1 1 auto;
+    min-height: 0;
+    padding: 16px 12px 16px 16px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-color: var(--role-border-strong) transparent;
+    scrollbar-gutter: stable;
+    scrollbar-width: thin;
+  }
+
+  &__footer {
+    display: flex;
+    flex: none;
+    gap: 12px;
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
+    background-color: var(--role-surface-card);
+    border-top: var(--control-border-width) solid var(--role-border-soft);
+  }
+
+  &__action {
+    flex: 1 1 auto;
+    min-width: 0;
+    padding-inline: 12px;
   }
 }

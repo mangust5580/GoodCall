@@ -5,15 +5,25 @@ import { Button, Checkbox, Icon, RangeSlider } from '../../components/ui';
 import { SEARCH_PRICE_STEP, toggleFilterValue } from './searchFacets';
 import type { SearchFacetOption, SearchFacetOptions, SearchFilterState } from './searchFacets';
 
-interface SearchFiltersProps {
+interface SearchFiltersBaseProps {
   readonly options: SearchFacetOptions;
   readonly draft: SearchFilterState;
   readonly onDraftChange: (draft: SearchFilterState) => void;
+}
+
+interface SearchFiltersPanelProps extends SearchFiltersBaseProps {
+  readonly layout?: 'panel';
   readonly onApply: () => void;
   readonly onReset: () => void;
   readonly applyDisabled: boolean;
   readonly resetDisabled: boolean;
 }
+
+interface SearchFiltersDialogProps extends SearchFiltersBaseProps {
+  readonly layout: 'dialog';
+}
+
+type SearchFiltersProps = SearchFiltersPanelProps | SearchFiltersDialogProps;
 
 const COLLAPSED_OPTION_COUNT = 6;
 
@@ -104,27 +114,16 @@ function DisclosureList({
   );
 }
 
-export function SearchFilters({
-  options,
-  draft,
-  onDraftChange,
-  onApply,
-  onReset,
-  applyDisabled,
-  resetDisabled,
-}: SearchFiltersProps) {
+export function SearchFilters(props: SearchFiltersProps) {
+  const { options, draft, onDraftChange } = props;
   const [brandsExpanded, setBrandsExpanded] = useState(false);
   const [coloursExpanded, setColoursExpanded] = useState(false);
   const bounds = options.priceBounds;
   const brands = visibleOptions(options.brands, draft.brands, brandsExpanded);
   const colours = visibleOptions(options.colours, draft.colours, coloursExpanded);
 
-  return (
-    <aside aria-labelledby="search-filters-title" className="search-filters">
-      <h2 className="search-filters__title" id="search-filters-title">
-        Фильтры
-      </h2>
-
+  const fields = (
+    <>
       {bounds === undefined ? null : (
         <fieldset className="search-filters__group">
           <legend className="search-filters__legend">Цена, ₽</legend>
@@ -240,12 +239,26 @@ export function SearchFilters({
           </ul>
         </fieldset>
       )}
+    </>
+  );
+
+  if (props.layout === 'dialog') {
+    return <div className="search-filters search-filters--plain">{fields}</div>;
+  }
+
+  return (
+    <aside aria-labelledby="search-filters-title" className="search-filters">
+      <h2 className="search-filters__title" id="search-filters-title">
+        Фильтры
+      </h2>
+
+      {fields}
 
       <div className="search-filters__actions">
-        <Button disabled={applyDisabled} onClick={onApply} variant="primary">
+        <Button disabled={props.applyDisabled} onClick={props.onApply} variant="primary">
           Применить
         </Button>
-        <Button disabled={resetDisabled} onClick={onReset} variant="secondary">
+        <Button disabled={props.resetDisabled} onClick={props.onReset} variant="secondary">
           Сбросить
         </Button>
       </div>

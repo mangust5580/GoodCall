@@ -114,6 +114,18 @@ export function searchFiltersActive(
   );
 }
 
+export function countActiveSearchFilters(
+  filters: SearchFilterState,
+  options: SearchFacetOptions,
+): number {
+  return (
+    filters.brands.length +
+    filters.colours.length +
+    filters.storages.length +
+    (priceFilterActive(filters, options) ? 1 : 0)
+  );
+}
+
 export function applySearchFilters(
   products: readonly CatalogProduct[],
   filters: SearchFilterState,
