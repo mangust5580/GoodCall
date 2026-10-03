@@ -1,5 +1,5 @@
 import { hasBlogArticleDetail } from '../pages/blog/blogArticleDetails';
-import { isProductDetailsSpecimenSlug } from '../pages/product-details/productDetailsFixtures';
+import { hasProductDetailsContent } from '../pages/product-details/productDetailsContent';
 
 export const HOME_PATH = '/';
 export const CATALOG_SMARTPHONES_PATH = '/catalog/smartphones';
@@ -28,7 +28,7 @@ export function productPath(slug: string): string {
 }
 
 export function productDetailsHref(slug: string): string | undefined {
-  return isProductDetailsSpecimenSlug(slug) ? hashHref(productPath(slug)) : undefined;
+  return hasProductDetailsContent(slug) ? hashHref(productPath(slug)) : undefined;
 }
 
 export function blogPath(params: Readonly<Record<string, string>> = {}): string {

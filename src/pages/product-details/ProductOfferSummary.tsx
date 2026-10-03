@@ -1,9 +1,9 @@
 import { Chip, Icon } from '../../components/ui';
 import { formatPrice } from './productDetailsFormat';
-import type { ProductDetailsFixture } from './productDetailsFixtures';
+import type { ProductDetailsView } from './productDetailsView';
 
 interface ProductOfferSummaryProps {
-  readonly product: ProductDetailsFixture;
+  readonly product: ProductDetailsView;
 }
 
 export function ProductOfferSummary({ product }: ProductOfferSummaryProps) {

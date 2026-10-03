@@ -1,6 +1,6 @@
 import { Icon } from '../../components/ui';
 import { formatPrice } from './productDetailsFormat';
-import type { ProductDetailsPaymentMethod, ProductDetailsService } from './productDetailsFixtures';
+import type { ProductDetailsPaymentMethod, ProductDetailsService } from './productDetailsView';
 
 interface ProductDeliveryPaymentProps {
   readonly delivery: readonly ProductDetailsService[];

@@ -85,6 +85,11 @@ const assets = [
     widths: [160, 240, 320, 480, 640, 960, 1254],
   },
   {
+    id: 'product-details-gallery-apple-watch-s9-black',
+    variant: 'gallery',
+    widths: [160, 240, 320, 480, 640],
+  },
+  {
     id: 'product-details-description-editorial',
     variant: 'editorial',
     widths: [320, 480, 640, 960, 1280, 1672],

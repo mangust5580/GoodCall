@@ -3,91 +3,44 @@ import { useId, useState } from 'react';
 import { Button, Chip, Icon, QuantityStepper } from '../../components/ui';
 import { PRODUCT_STAR_COUNT, ProductStars } from './ProductStars';
 import { formatPoints, formatPrice, formatRating, formatReviewCount } from './productDetailsFormat';
-import type { ProductDetailsColourId, ProductDetailsFixture } from './productDetailsFixtures';
-
-export interface ProductDetailsCartSelection {
-  readonly colourId: ProductDetailsColourId;
-  readonly memoryId: string;
-  readonly quantity: number;
-}
+import type {
+  ProductDetailsColourId,
+  ProductDetailsVariants,
+  ProductDetailsView,
+} from './productDetailsView';
 
 interface ProductPurchasePanelProps {
-  readonly product: ProductDetailsFixture;
-  readonly selectedColourId: ProductDetailsColourId;
+  readonly product: ProductDetailsView;
+  readonly selectedColourId?: ProductDetailsColourId;
   readonly title: string;
   readonly onColourChange: (colourId: ProductDetailsColourId) => void;
-  readonly onAddToCart?: (selection: ProductDetailsCartSelection) => number;
+  readonly onAddToCart?: (quantity: number) => number;
 }
 
-export function ProductPurchasePanel({
-  onAddToCart,
-  onColourChange,
-  product,
-  selectedColourId,
-  title,
-}: ProductPurchasePanelProps) {
-  const [memoryId, setMemoryId] = useState(product.defaultMemoryId);
-  const [quantity, setQuantity] = useState(1);
-  const [announcement, setAnnouncement] = useState('');
-  const optionName = useId();
+interface ProductVariantOptionsProps {
+  readonly variants: ProductDetailsVariants;
+  readonly selectedColourId?: ProductDetailsColourId;
+  readonly onColourChange: (colourId: ProductDetailsColourId) => void;
+}
 
-  const colour = product.colours.find((entry) => entry.id === selectedColourId);
-  const memory = product.memories.find((entry) => entry.id === memoryId);
-  const monthlyPayment = Math.ceil(product.priceValue / product.installmentMonths);
-  const rating = formatRating(product.rating);
+function ProductVariantOptions({
+  variants,
+  selectedColourId,
+  onColourChange,
+}: ProductVariantOptionsProps) {
+  const [memoryId, setMemoryId] = useState(variants.defaultMemoryId);
+  const optionName = useId();
+  const colour = variants.colours.find((entry) => entry.id === selectedColourId);
+  const memory = variants.memories.find((entry) => entry.id === memoryId);
 
   return (
-    <div className="product-purchase">
-      {product.labels.length === 0 ? null : (
-        <ul className="product-purchase__labels">
-          {product.labels.map((label) => (
-            <li key={label}>
-              <Chip>{label}</Chip>
-            </li>
-          ))}
-        </ul>
-      )}
-
-      <h1 className="product-purchase__title">{title}</h1>
-
-      <div className="product-purchase__meta">
-        <p className="product-purchase__rating">
-          <span className="ui-visually-hidden">{`Рейтинг ${rating} из ${String(PRODUCT_STAR_COUNT)}`}</span>
-          <ProductStars rating={product.rating} />
-          <span aria-hidden="true" className="product-purchase__rating-value">
-            {rating}
-          </span>
-        </p>
-        <p className="product-purchase__reviews">{formatReviewCount(product.reviewCount)}</p>
-        <p className="product-purchase__sku">Код товара: {product.sku}</p>
-      </div>
-
-      <div className="product-purchase__pricing">
-        <p className="product-purchase__prices">
-          <strong className="product-purchase__price">{formatPrice(product.priceValue)}</strong>
-          {product.oldPriceValue === undefined ? null : (
-            <del className="product-purchase__old-price">{formatPrice(product.oldPriceValue)}</del>
-          )}
-          {product.discount === undefined ? null : (
-            <span className="product-details-badge">{product.discount}</span>
-          )}
-        </p>
-        <p className="product-purchase__installment">
-          <strong>{formatPrice(monthlyPayment)}</strong> × {product.installmentMonths} мес в
-          рассрочку
-        </p>
-        <p className="product-purchase__stock">
-          <span className="product-purchase__stock-status">{product.availability}</span>
-          <span className="product-purchase__stock-note">{product.deliveryNote}</span>
-        </p>
-      </div>
-
+    <>
       <fieldset className="product-option">
         <legend className="product-option__legend">
           Цвет: <span className="product-option__value">{colour?.label}</span>
         </legend>
         <div className="product-option__swatches">
-          {product.colours.map((entry) => (
+          {variants.colours.map((entry) => (
             <label className="product-option__swatch" key={entry.id}>
               <input
                 checked={entry.id === selectedColourId}
@@ -115,7 +68,7 @@ export function ProductPurchasePanel({
           Память: <span className="product-option__value">{memory?.label}</span>
         </legend>
         <div className="product-option__choices">
-          {product.memories.map((entry) => (
+          {variants.memories.map((entry) => (
             <label className="product-option__choice" key={entry.id}>
               <input
                 checked={entry.id === memoryId}
@@ -132,6 +85,90 @@ export function ProductPurchasePanel({
           ))}
         </div>
       </fieldset>
+    </>
+  );
+}
+
+export function ProductPurchasePanel({
+  onAddToCart,
+  onColourChange,
+  product,
+  selectedColourId,
+  title,
+}: ProductPurchasePanelProps) {
+  const [quantity, setQuantity] = useState(1);
+  const [announcement, setAnnouncement] = useState('');
+  const monthlyPayment = Math.ceil(product.priceValue / product.installmentMonths);
+  const rating = formatRating(product.rating);
+
+  return (
+    <div className="product-purchase">
+      {product.labels.length === 0 ? null : (
+        <ul className="product-purchase__labels">
+          {product.labels.map((label) => (
+            <li key={label}>
+              <Chip>{label}</Chip>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <h1 className="product-purchase__title">{title}</h1>
+
+      <div className="product-purchase__meta">
+        <p className="product-purchase__rating">
+          <span className="ui-visually-hidden">{`Рейтинг ${rating} из ${String(PRODUCT_STAR_COUNT)}`}</span>
+          <ProductStars rating={product.rating} />
+          <span aria-hidden="true" className="product-purchase__rating-value">
+            {rating}
+          </span>
+        </p>
+        <p className="product-purchase__reviews">{formatReviewCount(product.reviewCount)}</p>
+        {product.sku === undefined ? null : (
+          <p className="product-purchase__sku">Код товара: {product.sku}</p>
+        )}
+      </div>
+
+      <div className="product-purchase__pricing">
+        <p className="product-purchase__prices">
+          <strong className="product-purchase__price">{formatPrice(product.priceValue)}</strong>
+          {product.oldPriceValue === undefined ? null : (
+            <del className="product-purchase__old-price">{formatPrice(product.oldPriceValue)}</del>
+          )}
+          {product.discount === undefined ? null : (
+            <span className="product-details-badge">{product.discount}</span>
+          )}
+        </p>
+        <p className="product-purchase__installment">
+          <strong>{formatPrice(monthlyPayment)}</strong> × {product.installmentMonths} мес в
+          рассрочку
+        </p>
+        {product.availability === undefined ? null : (
+          <p className="product-purchase__stock">
+            <span className="product-purchase__stock-status">{product.availability.status}</span>
+            <span className="product-purchase__stock-note">{product.availability.note}</span>
+          </p>
+        )}
+      </div>
+
+      {product.variants === undefined ? null : (
+        <ProductVariantOptions
+          onColourChange={onColourChange}
+          selectedColourId={selectedColourId}
+          variants={product.variants}
+        />
+      )}
+
+      {product.attributes.length === 0 ? null : (
+        <dl className="product-attributes">
+          {product.attributes.map((attribute) => (
+            <div className="product-attributes__item" key={attribute.label}>
+              <dt className="product-attributes__label">{attribute.label}</dt>
+              <dd className="product-attributes__value">{attribute.value}</dd>
+            </div>
+          ))}
+        </dl>
+      )}
 
       <ul className="product-purchase__highlights">
         {product.highlights.map((highlight) => (
@@ -151,13 +188,9 @@ export function ProductPurchasePanel({
               onAddToCart === undefined
                 ? undefined
                 : () => {
-                    const lineQuantity = onAddToCart({
-                      colourId: selectedColourId,
-                      memoryId,
-                      quantity,
-                    });
+                    const lineQuantity = onAddToCart(quantity);
                     setAnnouncement(
-                      `Товар добавлен в корзину: ${title}, ${[colour?.label, memory?.label].filter(Boolean).join(', ')}. В корзине: ${String(lineQuantity)} шт.`,
+                      `Товар добавлен в корзину: ${title}. В корзине: ${String(lineQuantity)} шт.`,
                     );
                   }
             }
@@ -165,20 +198,24 @@ export function ProductPurchasePanel({
             В корзину
           </Button>
         </div>
-        <Button className="product-purchase__one-click" variant="secondary">
-          Купить в 1 клик
-        </Button>
+        {product.oneClickPurchase === true ? (
+          <Button className="product-purchase__one-click" variant="secondary">
+            Купить в 1 клик
+          </Button>
+        ) : null}
       </div>
       <p className="ui-visually-hidden" role="status">
         {announcement}
       </p>
 
-      <p className="product-purchase__bonus">
-        <Icon className="product-purchase__bonus-icon" name="bonus" />
-        <span>
-          <strong>+{formatPoints(product.bonusPoints)} бонусов</strong> на бонусную карту
-        </span>
-      </p>
+      {product.bonusPoints === undefined ? null : (
+        <p className="product-purchase__bonus">
+          <Icon className="product-purchase__bonus-icon" name="bonus" />
+          <span>
+            <strong>+{formatPoints(product.bonusPoints)} бонусов</strong> на бонусную карту
+          </span>
+        </p>
+      )}
     </div>
   );
 }

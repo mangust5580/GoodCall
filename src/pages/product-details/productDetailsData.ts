@@ -3,6 +3,9 @@ import { supabaseClient } from '../../lib/supabase/client';
 export interface ProductDetailsLiveProduct {
   readonly slug: string;
   readonly name: string;
+  readonly brand: string;
+  readonly categorySlug: string;
+  readonly categoryName: string;
   readonly priceValue: number;
   readonly oldPriceValue?: number;
   readonly rating: number;
@@ -33,7 +36,9 @@ export async function fetchProductDetails(slug: string): Promise<ProductDetailsD
   try {
     const { data: product, error } = await client
       .from('products')
-      .select('slug, name, price, old_price, rating, review_count, is_new, is_active')
+      .select(
+        'slug, name, brand, price, old_price, rating, review_count, is_new, is_active, categories(slug, name)',
+      )
       .eq('slug', slug)
       .eq('is_active', true)
       .maybeSingle();
@@ -46,11 +51,14 @@ export async function fetchProductDetails(slug: string): Promise<ProductDetailsD
       return { status: 'not-found' };
     }
 
+    const category = product.categories;
+
     if (
       !Number.isFinite(product.price) ||
       product.rating === null ||
       !Number.isFinite(product.rating) ||
-      !Number.isFinite(product.review_count)
+      !Number.isFinite(product.review_count) ||
+      category === null
     ) {
       return { status: 'failure', reason: 'product-details-invalid' };
     }
@@ -60,6 +68,9 @@ export async function fetchProductDetails(slug: string): Promise<ProductDetailsD
       product: {
         slug: product.slug,
         name: product.name,
+        brand: product.brand,
+        categorySlug: category.slug,
+        categoryName: category.name,
         priceValue: product.price,
         oldPriceValue:
           product.old_price === null || !Number.isFinite(product.old_price)

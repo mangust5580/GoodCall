@@ -1,6 +1,7 @@
+import { Icon } from '../../components/ui';
 import { PRODUCT_STAR_COUNT, ProductStars } from './ProductStars';
 import { formatRating, formatReviewCount } from './productDetailsFormat';
-import type { ProductDetailsReview } from './productDetailsFixtures';
+import type { ProductDetailsReview } from './productDetailsView';
 
 const AVATAR_INITIALS_LIMIT = 2;
 
@@ -22,23 +23,45 @@ interface ProductReviewsProps {
 
 export function ProductReviews({ rating, reviewCount, reviews }: ProductReviewsProps) {
   const ratingLabel = formatRating(rating);
+  const summary = (
+    <>
+      <p className="product-reviews__score">
+        <span className="ui-visually-hidden">
+          {`Средняя оценка ${ratingLabel} из ${String(PRODUCT_STAR_COUNT)}`}
+        </span>
+        <span aria-hidden="true" className="product-reviews__score-value">
+          {ratingLabel}
+        </span>
+        <ProductStars rating={rating} />
+      </p>
+      <p className="product-reviews__count">На основе {formatReviewCount(reviewCount)}</p>
+    </>
+  );
+
+  if (reviews.length === 0) {
+    return (
+      <div className="product-panel product-reviews">
+        <h2 className="product-panel__title">Отзывы покупателей</h2>
+
+        <div className="product-reviews__summary product-reviews__summary--standalone">
+          {summary}
+        </div>
+        <p className="product-reviews__note">
+          <Icon className="product-reviews__note-icon" name="message" />
+          <span>
+            Тексты отзывов в демо-витрине не публикуются — оценка и количество отзывов приходят из
+            каталога.
+          </span>
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="product-panel product-reviews">
       <h2 className="product-panel__title">Отзывы покупателей</h2>
 
-      <div className="product-reviews__summary">
-        <p className="product-reviews__score">
-          <span className="ui-visually-hidden">
-            {`Средняя оценка ${ratingLabel} из ${String(PRODUCT_STAR_COUNT)}`}
-          </span>
-          <span aria-hidden="true" className="product-reviews__score-value">
-            {ratingLabel}
-          </span>
-          <ProductStars rating={rating} />
-        </p>
-        <p className="product-reviews__count">На основе {formatReviewCount(reviewCount)}</p>
-      </div>
+      <div className="product-reviews__summary">{summary}</div>
 
       <ul className="product-reviews__list">
         {reviews.map((review) => (

@@ -7,14 +7,14 @@ import { ProductReviews } from './ProductReviews';
 import { ProductSpecificationList, ProductSpecifications } from './ProductSpecifications';
 import { ProductWarranty } from './ProductWarranty';
 import { formatPoints } from './productDetailsFormat';
-import type { ProductDetailsFixture } from './productDetailsFixtures';
+import type { ProductDetailsView } from './productDetailsView';
 
 type SectionId = 'description' | 'specifications' | 'reviews' | 'delivery' | 'warranty';
 
 const DEFAULT_SECTION: SectionId = 'description';
 
 interface ProductDetailsSectionsProps {
-  readonly product: ProductDetailsFixture;
+  readonly product: ProductDetailsView;
 }
 
 export function ProductDetailsSections({ product }: ProductDetailsSectionsProps) {
@@ -47,7 +47,7 @@ export function ProductDetailsSections({ product }: ProductDetailsSectionsProps)
           <ProductReviews
             rating={product.rating}
             reviewCount={product.reviewCount}
-            reviews={product.reviews}
+            reviews={product.reviews ?? []}
           />
         );
       case 'delivery':

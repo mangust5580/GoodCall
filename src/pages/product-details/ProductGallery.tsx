@@ -1,12 +1,13 @@
 import { Picture } from '../../components/media';
 import { FavoriteButton } from '../../components/product';
 import { Icon } from '../../components/ui';
-import type { ProductDetailsGalleryImage } from './productDetailsFixtures';
+import type { ProductDetailsGalleryImage } from './productDetailsView';
 
 interface ProductGalleryProps {
   readonly images: readonly ProductDetailsGalleryImage[];
   readonly activeIndex: number;
   readonly onActiveIndexChange: (index: number) => void;
+  readonly decorative?: boolean;
   readonly discount?: string;
   readonly favorite?: ProductFavoriteBinding;
 }
@@ -25,19 +26,24 @@ const GALLERY_THUMB_SIZES = '(max-width: 767px) 18vw, 76px';
 
 export function ProductGallery({
   activeIndex,
+  decorative = false,
   discount,
   favorite,
   images,
   onActiveIndexChange,
 }: ProductGalleryProps) {
   const activeImage = images[activeIndex];
+  const browsable = images.length > 1;
 
   const showImage = (index: number) => {
     onActiveIndexChange((index + images.length) % images.length);
   };
 
   return (
-    <section aria-label="Фотографии товара" className="product-gallery">
+    <section
+      aria-label={decorative ? 'Изображение товара' : 'Фотографии товара'}
+      className="product-gallery"
+    >
       <div className="product-gallery__stage">
         {discount === undefined ? null : (
           <span className="product-details-badge product-gallery__badge">{discount}</span>
@@ -51,7 +57,13 @@ export function ProductGallery({
         />
         {activeImage === undefined ? null : (
           <Picture
-            alt={`${activeImage.alt}, фото ${String(activeIndex + 1)} из ${String(images.length)}`}
+            alt={
+              decorative
+                ? ''
+                : browsable
+                  ? `${activeImage.alt}, фото ${String(activeIndex + 1)} из ${String(images.length)}`
+                  : activeImage.alt
+            }
             className="product-gallery__image"
             decoding="async"
             fetchPriority="high"
@@ -61,50 +73,56 @@ export function ProductGallery({
             source={activeImage.source}
           />
         )}
-        <button
-          aria-label="Предыдущее фото"
-          className="product-gallery__arrow product-gallery__arrow--previous"
-          onClick={() => {
-            showImage(activeIndex - 1);
-          }}
-          type="button"
-        >
-          <Icon name="chevron-left" />
-        </button>
-        <button
-          aria-label="Следующее фото"
-          className="product-gallery__arrow product-gallery__arrow--next"
-          onClick={() => {
-            showImage(activeIndex + 1);
-          }}
-          type="button"
-        >
-          <Icon name="chevron-right" />
-        </button>
-      </div>
-
-      <ul className="product-gallery__thumbs">
-        {images.map((image, index) => (
-          <li key={image.id}>
+        {browsable ? (
+          <>
             <button
-              aria-current={index === activeIndex ? 'true' : undefined}
-              aria-label={`Показать фото ${String(index + 1)} из ${String(images.length)}`}
-              className="product-gallery__thumb"
+              aria-label="Предыдущее фото"
+              className="product-gallery__arrow product-gallery__arrow--previous"
               onClick={() => {
-                showImage(index);
+                showImage(activeIndex - 1);
               }}
               type="button"
             >
-              <Picture
-                alt=""
-                className="product-gallery__thumb-image"
-                sizes={GALLERY_THUMB_SIZES}
-                source={image.source}
-              />
+              <Icon name="chevron-left" />
             </button>
-          </li>
-        ))}
-      </ul>
+            <button
+              aria-label="Следующее фото"
+              className="product-gallery__arrow product-gallery__arrow--next"
+              onClick={() => {
+                showImage(activeIndex + 1);
+              }}
+              type="button"
+            >
+              <Icon name="chevron-right" />
+            </button>
+          </>
+        ) : null}
+      </div>
+
+      {browsable ? (
+        <ul className="product-gallery__thumbs">
+          {images.map((image, index) => (
+            <li key={image.id}>
+              <button
+                aria-current={index === activeIndex ? 'true' : undefined}
+                aria-label={`Показать фото ${String(index + 1)} из ${String(images.length)}`}
+                className="product-gallery__thumb"
+                onClick={() => {
+                  showImage(index);
+                }}
+                type="button"
+              >
+                <Picture
+                  alt=""
+                  className="product-gallery__thumb-image"
+                  sizes={GALLERY_THUMB_SIZES}
+                  source={image.source}
+                />
+              </button>
+            </li>
+          ))}
+        </ul>
+      ) : null}
     </section>
   );
 }

@@ -144,22 +144,105 @@ Technically complete:
   owned by React Router using a GitHub Pages-safe hash strategy. See the
   Current routes section below.
 
-Active visual slice:
+Completed visual slice:
 
-- None. **Commerce C / Home Popular Products → Shared Cart — USER VISUAL/UX
-  PASS on 2026-09-30, CLOSED and published.** See the Commerce C section below.
-  **Comparison A / Local Product Comparison — USER VISUAL/UX PASS on
-  2026-09-30, CLOSED and published.** See the Comparison A section below.
-  **Order Confirmation A / Demo Order Handoff + Thank-you Page — USER
-  VISUAL/UX PASS, CLOSED and published.** See the Order Confirmation A section
-  below. **Pickup A / Checkout Pickup Foundation — USER VISUAL/UX PASS
-  (desktop 1440 and mobile 390), CLOSED and published.** See the Pickup A
-  section below. **Stores A / Demo Store Dataset + Shops List Page — USER VISUAL/UX
-  PASS (desktop 1440 and mobile 390), CLOSED and published.** See the Stores A
-  section below. **Checkout A / Checkout Page Foundation — USER VISUAL/UX PASS
-  on 2026-09-30, CLOSED and published.** See the Checkout A section below. Search C, Favourites A, Commerce B, Commerce A,
-  Blog B, Blog A, Home A, Cart A, Cart B, Search A, Search B, 404 A and the
-  Product Details production integration are closed.
+- **Product Details Production Integration B / Rich Live Product Pages —
+  USER VISUAL/UX PASS granted — implementation/regression gates complete —
+  verification harnesses repository-owned and reproducible — final Codex
+  commit-readiness gate passed (READY TO COMMIT) — milestone complete.**
+  See the Product Details Production Integration B section below.
+
+Closed slices: **Commerce C / Home Popular Products → Shared Cart — USER VISUAL/UX
+PASS on 2026-09-30, CLOSED and published.** See the Commerce C section below.
+**Comparison A / Local Product Comparison — USER VISUAL/UX PASS on
+2026-09-30, CLOSED and published.** See the Comparison A section below.
+**Order Confirmation A / Demo Order Handoff + Thank-you Page — USER
+VISUAL/UX PASS, CLOSED and published.** See the Order Confirmation A section
+below. **Pickup A / Checkout Pickup Foundation — USER VISUAL/UX PASS
+(desktop 1440 and mobile 390), CLOSED and published.** See the Pickup A
+section below. **Stores A / Demo Store Dataset + Shops List Page — USER VISUAL/UX
+PASS (desktop 1440 and mobile 390), CLOSED and published.** See the Stores A
+section below. **Checkout A / Checkout Page Foundation — USER VISUAL/UX PASS
+on 2026-09-30, CLOSED and published.** See the Checkout A section below. Search C, Favourites A, Commerce B, Commerce A,
+Blog B, Blog A, Home A, Cart A, Cart B, Search A, Search B, 404 A and the
+Product Details production integration are closed.
+
+### Product Details Production Integration B — Rich Live Product Pages
+
+**Status: USER VISUAL/UX PASS granted — implementation/regression gates
+complete — verification harnesses repository-owned and reproducible — final
+Codex commit-readiness gate passed (READY TO COMMIT) — milestone complete.** It
+supersedes the specimen gate of Integration A; the accepted Product Details
+visual system is reused, not redesigned.
+
+Commit gates run with `npm run verify` (all suites; details in
+`scripts/verify/README.md`). The runner builds the working tree and the
+reference ref (default `HEAD`) itself, with an empty `VITE_DADATA_TOKEN`, mock
+Supabase values and an empty `envDir`, so `.env.local` is never read; a build
+that resolves anything else aborts. Do not hand-build regression artifacts: a
+PowerShell `$env:VITE_DADATA_TOKEN = ""` build once leaked the real token and
+produced a false checkout `87/95` with order/form aborts. Expected Product
+Details B gates: content 5020/5020, product-details 310/310 (includes the
+frozen reference pixel diff, 0 at 1440 and 390), home-cart 40/40, compare
+71/71, compare-store 21/21, search 46/46, cart 51/51, checkout 95/95, order
+50/50, form-unconfigured 41/41, favorites 50/51. The favorites failure
+«shell: comparison specimen 3 unchanged» is known baseline drift, as are
+configured-mode form and Search C (not in the runner).
+
+- **Coverage.** All 18 active products have a production page: 16
+  smartphones, `apple-watch-series-9-45` and `airpods-pro-2-usb-c`.
+- **Ownership.** Live `products` + `categories` own identity and commercial
+  facts (slug, name, brand, category, prices, rating, review count, `is_new`,
+  active). Derived values: discount, «Выгода», 36-month installment, the
+  smartphones breadcrumb link, the pickup store count (`DEMO_STORES.length`).
+  A typed local registry (`productDetailsContent.ts` + `content/*.ts`, keyed
+  by canonical slug; duplicate slugs throw) owns static attributes,
+  highlights, original editorial description and features, specification
+  groups with key flags, and optional Tier-1 media.
+  `productDetailsStorewide.ts` owns delivery/pickup wording, payment methods,
+  installment term, warranty/trust and support copy.
+  `buildProductDetailsView(live, content, storewide)` produces the
+  router-free `ProductDetailsView` consumed by the existing components.
+- **Content policy (B2).** Specifications are externally verified against
+  official manufacturer sources; provenance per slug lives in
+  `docs/product-content-sources.md`. Editorial copy is original. Category
+  templates: smartphones (7 groups), smart watches (7), headphones (6).
+- **Routing.** `productDetailsHref(slug)` links only when
+  `hasProductDetailsContent(slug)`. The route checks content first (no content
+  → «Товар не найден», no read), then reads the live row with its category;
+  missing/inactive → not-found, query/config failure → error, content/live
+  category mismatch → not-found with a dev-only warning. There is no thin
+  fallback page. Catalog, Search, Home popular, Favorites, Comparison and the
+  404 popular cards link live products through their existing seams.
+- **No fabricated operations.** Production pages render no stock, delivery
+  dates, SKU, «Хит продаж», bonus, colour/memory selectors, review cards or
+  «Купить в 1 клик». Configuration values from the live name render as a
+  static attribute row (`dl.product-attributes`), not as controls. Only live
+  «Новинка» renders as a label. Delivery reads «Дата и время — при
+  оформлении», pickup «Из 6 магазинов».
+- **Reviews.** Summary-only in production (live score, stars, count) with a
+  muted note that review texts are not published in the demo storefront.
+- **Media.** Tier 1: per-product local media from the content record —
+  `iphone-15-128` (its pink five-image gallery, editorial and warranty art)
+  and `apple-watch-series-9-45` (one Apple Watch render, master
+  `product-details-gallery-apple-watch-s9-black.png`, cropped from the
+  repository's own blog Apple Watch render). Tier 2: existing
+  `HOME_DEVICE_MEDIA` category artwork (smartphone, earbuds) as one
+  decorative image (`alt=""`, section label «Изображение товара»); arrows and
+  thumbnails render only for two or more images. Description and warranty fall
+  back to text-only layouts without empty media slots. The Apple Watch media
+  blocker from user review (generic round-watch artwork) is corrected on the
+  product page; Product Details B has USER VISUAL/UX PASS and passed the final
+  commit-readiness gate.
+- **Commerce.** Product Details adds `cartLineId(slug)` lines (live name, no
+  variant text), so they merge with Catalog, Search and Home lines. Legacy
+  `iphone-15-128|pink|128` lines stay parseable and are not migrated. ♥ uses
+  the canonical slug. Compare stays absent from Product Details.
+- **Reference.** `?reference=product-details` keeps the frozen rich fixture
+  (selectors, SKU, stock, bonus, review cards, one-click, alternate galleries)
+  through a reference adapter onto the same view shape; production never sets
+  those fields.
+- **No backend, schema or dependency changes.**
 
 ### Commerce C — Home Popular Products → Shared Cart
 
@@ -250,8 +333,8 @@ new explicit requirement.
   removed once; unselected lines stay. Courier and pickup are both confirmed.
   Direct entry without an order shows a real empty state. Payment is
   descriptive only. There is no backend order, no real payment, no
-  e-mail/SMS/tracking and no inventory or store reservation. Account and Admin
-  are outside this milestone.
+  e-mail/SMS/tracking and no inventory or store reservation. Customer Account
+  is outside this milestone; there is no Admin panel in the product scope.
 
 - **Handoff (replaces Checkout D1).** A valid submit in `CheckoutForm` calls
   `onPlaceOrder(normalizedForm)`; `CheckoutRoute` builds the snapshot with
@@ -282,8 +365,8 @@ new explicit requirement.
 - **Deferred.** Real backend orders and Supabase order mutation,
   server-generated order numbers, payment execution and transaction status,
   e-mail/SMS, inventory mutation and store reservation, fulfilment statuses
-  and tracking, cancellation/refund, Account order history, Admin order
-  management.
+  and tracking, cancellation/refund, Customer Account order history. An Admin
+  order-management panel is not in the product scope.
 
 ### Pickup A — Checkout Pickup Foundation
 
@@ -916,10 +999,10 @@ redeploys:
 **Identity.**
 
 - Catalog: the live product slug.
-- Product Details: `slug|colourId|memoryId`, e.g. `iphone-15-128|black|256`.
-
-A Catalog `iphone-15-128` line and a Product Details `iphone-15-128|pink|128`
-line are therefore separate lines.
+- Product Details: since Product Details Integration B, also the live product
+  slug (`cartLineId(slug)`), so it merges with Catalog lines. Legacy
+  `slug|colourId|memoryId` lines (e.g. `iphone-15-128|black|256`) from before
+  Integration B remain valid stored lines and are not migrated.
 
 **Catalog.**
 
@@ -4030,8 +4113,9 @@ router owns only the fragment. The base path still lives solely in
   populated state otherwise.
 - `#/search?q=…` — the production Search results route (Search A, with Search B
   desktop facets); optional `sort` and `page` params.
-- `#/product/:slug` — the production Product Details route, specimen-gated to
-  `iphone-15-128`; every other slug renders the route's compact not-found state.
+- `#/product/:slug` — the production Product Details route, content-gated by
+  the local Product Details registry (all 18 active products); a slug without
+  content renders the route's compact not-found state.
 - `#/blog` — the Blog listing (Blog A, closed); optional
   `category`, `q` and `page` params.
 - `#/favorites` — the local favourites page (Favourites A, closed).
@@ -4217,9 +4301,9 @@ never jumps into the production router.
   keep the existing consumer-injected fallback to the app base. No unavailable
   destination received a fake route and no category label became semantically
   false. Each gets a real route when its page exists.
-- **`ProductCard`.** Only the live `iphone-15-128` card has a title link. All
-  other cards, and every fixture-fallback card, remain non-links. There is no
-  whole-card link and no `Link` inside `ProductCard`.
+- **`ProductCard`.** Live product cards whose slug has Product Details content
+  have a title link (Integration B). Fixture-fallback cards remain non-links.
+  There is no whole-card link and no `Link` inside `ProductCard`.
 - **URL state.** Catalog filters, sorting, quick filters and pagination stay
   local UI state. No `?page=`, `?sort=` or `?brand=` synchronization was added;
   that belongs with the real Catalog data and facet contract.
@@ -4371,7 +4455,11 @@ started.
   availability, city and metro filters, route-building, and a Supabase
   `stores` source.
 - **Real orders** (backend creation, payment, notifications, tracking,
-  Account history, Admin) need their own decision and scope.
+  Customer Account history) need their own decision and scope.
+- **Product scope:** there is no Admin / administrative management panel in
+  the planned GoodCall product. The intended future user-facing area is the
+  Customer Account (Личный кабинет), a future candidate that is not active and
+  has no scope yet.
 
 Search autocomplete, URL-synced filters and cross-category search are not
 scoped.
@@ -4384,9 +4472,13 @@ Each of the following would need its own explicit scope, and none exists:
 - a backend cart;
 - a promo-code engine.
 
-**Product Details Production Integration B — backend content/media contract**
-(likely next Product Details milestone, not started). It becomes necessary when
-a second product needs a page, or when real `product_images` exist.
+**Product Details Production Integration B — Rich Live Product Pages** has
+USER VISUAL/UX PASS, its implementation/regression gates are complete, and it
+passed the final Codex commit-readiness gate; the milestone is complete (see its
+section). Real
+`product_images` support in the gallery, interactive variants, review bodies,
+«Похожие товары», one-click purchase, Compare on Product Details and
+per-product galleries beyond the iPhone remain unscoped.
 
 Product Details Production Integration A and the Route scroll fix are closed.
 They received user visual / UX PASS on 2026-09-27.
@@ -4411,8 +4503,6 @@ exists, and campaign/article media data contracts.
 - Home campaign/banner, article and broader merchandising contracts. The shared
   typed Supabase client exists, and Home popular categories/products are wired,
   but campaign/offers/articles/cinema and deeper merchandising remain local.
-- Product pages beyond the `iphone-15-128` specimen, until a product content
-  and variant contract exists.
 - URL/query state synchronization for Catalog filters, sorting, quick filters
   and pagination.
 - The remaining Header destinations, each until its own page exists.
@@ -4443,3 +4533,5 @@ decisions win over incidental raster differences.
 - `CLAUDE.md` — entry pointer for Claude Code.
 - `README.md` — developer setup and workflow.
 - `docs/current-state.md` — this file.
+- `docs/product-content-sources.md` — source provenance for the local Product
+  Details content registry.

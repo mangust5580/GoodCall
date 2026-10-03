@@ -1,7 +1,7 @@
 import type {
   ProductDetailsSpecification,
   ProductDetailsSpecificationGroup,
-} from './productDetailsFixtures';
+} from './productDetailsView';
 
 interface ProductSpecificationListProps {
   readonly rows: readonly ProductDetailsSpecification[];

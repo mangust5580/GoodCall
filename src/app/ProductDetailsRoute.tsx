@@ -3,18 +3,17 @@ import { Link, useParams } from 'react-router-dom';
 
 import { Container } from '../components/layout';
 import { addCartLine, cartLineId } from '../pages/cart/cartStore';
+import type { CartLineImage } from '../pages/cart/cartStore';
 import { toggleFavorite } from '../pages/favorites/favoritesStore';
 import { useFavoriteItems } from '../pages/favorites/useFavorites';
 import { ProductDetailsPage } from '../pages/product-details';
-import type { ProductDetailsCartSelection } from '../pages/product-details/ProductPurchasePanel';
+import { getProductDetailsContent } from '../pages/product-details/productDetailsContent';
+import type { ProductDetailsContent } from '../pages/product-details/productDetailsContent';
 import { fetchProductDetails } from '../pages/product-details/productDetailsData';
 import type { ProductDetailsDataResult } from '../pages/product-details/productDetailsData';
-import {
-  isProductDetailsSpecimenSlug,
-  productDetailsSpecimenFromLive,
-  productDetailsTitle,
-} from '../pages/product-details/productDetailsFixtures';
-import type { ProductDetailsFixture } from '../pages/product-details/productDetailsFixtures';
+import { PRODUCT_DETAILS_STOREWIDE } from '../pages/product-details/productDetailsStorewide';
+import { buildProductDetailsView } from '../pages/product-details/productDetailsView';
+import type { ProductDetailsView } from '../pages/product-details/productDetailsView';
 import { ProductionShell } from './ProductionShell';
 import { CATALOG_SMARTPHONES_PATH, HOME_PATH, hashHref } from './routes';
 
@@ -22,7 +21,12 @@ import './ProductDetailsRoute.scss';
 
 type ProductDetailsRouteView =
   | { readonly status: 'loading' }
-  | { readonly status: 'ready'; readonly product: ProductDetailsFixture }
+  | {
+      readonly status: 'ready';
+      readonly product: ProductDetailsView;
+      readonly cartImage: CartLineImage;
+      readonly categoryHref?: string;
+    }
   | { readonly status: 'not-found' }
   | { readonly status: 'error' };
 
@@ -31,60 +35,39 @@ interface SettledProductRead {
   readonly view: ProductDetailsRouteView;
 }
 
+const SMARTPHONES_CATEGORY_SLUG = 'smartphones';
+const FALLBACK_CART_IMAGE: CartLineImage = { kind: 'catalog-fallback' };
 const LOADING_VIEW: ProductDetailsRouteView = { status: 'loading' };
 const NOT_FOUND_VIEW: ProductDetailsRouteView = { status: 'not-found' };
 const ERROR_VIEW: ProductDetailsRouteView = { status: 'error' };
 
-function viewFromResult(result: ProductDetailsDataResult): ProductDetailsRouteView {
+function viewFromResult(
+  result: ProductDetailsDataResult,
+  content: ProductDetailsContent,
+): ProductDetailsRouteView {
   if (result.status === 'ready') {
-    const product = productDetailsSpecimenFromLive(result.product);
+    const live = result.product;
 
-    return product === undefined ? NOT_FOUND_VIEW : { status: 'ready', product };
+    if (live.categorySlug !== content.category) {
+      if (import.meta.env.DEV) {
+        console.warn('Product Details content category mismatch', live.slug, live.categorySlug);
+      }
+
+      return NOT_FOUND_VIEW;
+    }
+
+    return {
+      status: 'ready',
+      product: buildProductDetailsView(live, content, PRODUCT_DETAILS_STOREWIDE),
+      cartImage: content.media?.cartImage ?? FALLBACK_CART_IMAGE,
+      categoryHref:
+        live.categorySlug === SMARTPHONES_CATEGORY_SLUG
+          ? hashHref(CATALOG_SMARTPHONES_PATH)
+          : undefined,
+    };
   }
 
   return result.status === 'not-found' ? NOT_FOUND_VIEW : ERROR_VIEW;
-}
-
-function addProductDetailsLine(
-  slug: string,
-  product: ProductDetailsFixture,
-  { colourId, memoryId, quantity }: ProductDetailsCartSelection,
-): number {
-  const colour = product.colours.find((entry) => entry.id === colourId);
-  const memory = product.memories.find((entry) => entry.id === memoryId);
-  const variant = [colour?.label, memory?.label]
-    .filter((part): part is string => part !== undefined)
-    .join(' · ');
-
-  return addCartLine(
-    {
-      id: cartLineId(slug, [colourId, memoryId]),
-      productSlug: slug,
-      title: productDetailsTitle(product, colourId),
-      variant: variant === '' ? undefined : variant,
-      image: { kind: 'product-details', colourId },
-      price: product.priceValue,
-      oldPrice: product.oldPriceValue,
-    },
-    quantity,
-  );
-}
-
-function productDetailsFavoriteToggle(
-  slug: string,
-  product: ProductDetailsFixture,
-  pressed: boolean,
-): void {
-  toggleFavorite(
-    {
-      slug,
-      title: productDetailsTitle(product, product.defaultColourId),
-      image: { kind: 'catalog-fallback' },
-      price: product.priceValue,
-      oldPrice: product.oldPriceValue,
-    },
-    pressed,
-  );
 }
 
 function ProductRouteLoading() {
@@ -140,12 +123,12 @@ function ProductRouteError() {
 
 export function ProductDetailsRoute() {
   const { slug } = useParams();
-  const supported = slug !== undefined && isProductDetailsSpecimenSlug(slug);
+  const content = slug === undefined ? undefined : getProductDetailsContent(slug);
   const [settled, setSettled] = useState<SettledProductRead>();
   const favoriteItems = useFavoriteItems();
 
   useEffect(() => {
-    if (slug === undefined || !isProductDetailsSpecimenSlug(slug)) {
+    if (slug === undefined || content === undefined) {
       return;
     }
 
@@ -160,15 +143,20 @@ export function ProductDetailsRoute() {
         console.warn('Product Details Supabase read failed', result.reason);
       }
 
-      setSettled({ slug, view: viewFromResult(result) });
+      setSettled({ slug, view: viewFromResult(result, content) });
     });
 
     return () => {
       mounted = false;
     };
-  }, [slug]);
+  }, [slug, content]);
 
-  const view = !supported ? NOT_FOUND_VIEW : settled?.slug === slug ? settled.view : LOADING_VIEW;
+  const view =
+    content === undefined
+      ? NOT_FOUND_VIEW
+      : settled !== undefined && settled.slug === slug
+        ? settled.view
+        : LOADING_VIEW;
 
   return (
     <ProductionShell>
@@ -177,15 +165,37 @@ export function ProductDetailsRoute() {
       {view.status === 'error' ? <ProductRouteError /> : null}
       {view.status === 'ready' && slug !== undefined ? (
         <ProductDetailsPage
-          categoryHref={hashHref(CATALOG_SMARTPHONES_PATH)}
+          categoryHref={view.categoryHref}
           homeHref={hashHref(HOME_PATH)}
           favorite={{
             pressed: favoriteItems.some((item) => item.slug === slug),
             onToggle: (pressed) => {
-              productDetailsFavoriteToggle(slug, view.product, pressed);
+              toggleFavorite(
+                {
+                  slug,
+                  title: view.product.title,
+                  image: { kind: 'catalog-fallback' },
+                  price: view.product.priceValue,
+                  oldPrice: view.product.oldPriceValue,
+                },
+                pressed,
+              );
             },
           }}
-          onAddToCart={(selection) => addProductDetailsLine(slug, view.product, selection)}
+          key={slug}
+          onAddToCart={(quantity) =>
+            addCartLine(
+              {
+                id: cartLineId(slug),
+                productSlug: slug,
+                title: view.product.title,
+                image: view.cartImage,
+                price: view.product.priceValue,
+                oldPrice: view.product.oldPriceValue,
+              },
+              quantity,
+            )
+          }
           product={view.product}
         />
       ) : null}

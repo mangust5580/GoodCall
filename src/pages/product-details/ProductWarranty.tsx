@@ -1,11 +1,11 @@
 import { Picture } from '../../components/media';
 import type { PictureSource } from '../../components/media';
 import { Icon } from '../../components/ui';
-import type { ProductDetailsTrustItem } from './productDetailsFixtures';
+import type { ProductDetailsTrustItem } from './productDetailsView';
 
 interface ProductWarrantyProps {
   readonly items: readonly ProductDetailsTrustItem[];
-  readonly image: PictureSource;
+  readonly image?: PictureSource;
   readonly supportPhone: string;
   readonly supportPhoneHref: string;
   readonly supportHours: string;
@@ -22,22 +22,30 @@ export function ProductWarranty({
 }: ProductWarrantyProps) {
   return (
     <div className="product-panel product-warranty">
-      <div className="product-warranty__intro">
+      <div
+        className={
+          image === undefined
+            ? 'product-warranty__intro product-warranty__intro--text'
+            : 'product-warranty__intro'
+        }
+      >
         <div className="product-warranty__copy">
           <h2 className="product-panel__title">Гарантия и возврат</h2>
           <p className="product-warranty__lead">
             Поддержка по гарантии, обмену и возврату доступна ежедневно.
           </p>
         </div>
-        <div className="product-warranty__media">
-          <Picture
-            alt=""
-            className="product-warranty__image"
-            decoding="async"
-            sizes={WARRANTY_IMAGE_SIZES}
-            source={image}
-          />
-        </div>
+        {image === undefined ? null : (
+          <div className="product-warranty__media">
+            <Picture
+              alt=""
+              className="product-warranty__image"
+              decoding="async"
+              sizes={WARRANTY_IMAGE_SIZES}
+              source={image}
+            />
+          </div>
+        )}
       </div>
 
       <ul className="product-warranty__list">

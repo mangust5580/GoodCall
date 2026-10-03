@@ -1,5 +1,5 @@
-import { PRODUCT_DETAILS_FIXTURE } from '../product-details/productDetailsFixtures';
-import type { ProductDetailsColourId } from '../product-details/productDetailsFixtures';
+import { PRODUCT_DETAILS_GALLERY_BY_COLOUR_MEDIA } from '../../assets/media/product-details/productDetailsMedia';
+import type { ProductDetailsColourId } from '../product-details/productDetailsView';
 
 export type CartLineImage =
   | { readonly kind: 'url'; readonly src: string }
@@ -59,7 +59,7 @@ export function toCartLineImage(value: unknown): CartLineImage | undefined {
   if (
     kind === 'product-details' &&
     typeof colourId === 'string' &&
-    Object.hasOwn(PRODUCT_DETAILS_FIXTURE.galleryByColour, colourId)
+    Object.hasOwn(PRODUCT_DETAILS_GALLERY_BY_COLOUR_MEDIA, colourId)
   ) {
     return { kind, colourId: colourId as ProductDetailsColourId };
   }

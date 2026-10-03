@@ -1,132 +1,27 @@
-import paymentMir from '../../assets/commerce/payment-mir.svg';
-import paymentSberpay from '../../assets/commerce/payment-sberpay.svg';
-import paymentSbp from '../../assets/commerce/payment-sbp.svg';
-import paymentTpay from '../../assets/commerce/payment-tpay.svg';
 import {
   PRODUCT_DETAILS_DESCRIPTION_MEDIA,
   PRODUCT_DETAILS_GALLERY_BY_COLOUR_MEDIA,
   PRODUCT_DETAILS_REVIEW_AVATARS,
   PRODUCT_DETAILS_WARRANTY_MEDIA,
 } from '../../assets/media/product-details/productDetailsMedia';
-import type { PictureSource } from '../../components/media';
-import type { IconName } from '../../components/ui';
 import { CATALOG_PRODUCTS } from '../catalog/catalogProductFixtures';
 import type { CatalogProduct } from '../catalog/catalogProductFixtures';
-import type { ProductDetailsLiveProduct } from './productDetailsData';
-
-export type ProductDetailsColourId = 'pink' | 'black' | 'blue';
-
-export type ProductDetailsColourSwatch = ProductDetailsColourId;
-
-export interface ProductDetailsColour {
-  readonly id: ProductDetailsColourId;
-  readonly label: string;
-  readonly swatch: ProductDetailsColourSwatch;
-}
-
-export interface ProductDetailsMemory {
-  readonly id: string;
-  readonly label: string;
-}
-
-export interface ProductDetailsGalleryImage {
-  readonly id: string;
-  readonly source: PictureSource;
-  readonly alt: string;
-}
-
-export interface ProductDetailsService {
-  readonly kind: 'delivery' | 'warranty';
-  readonly title: string;
-  readonly lines: readonly string[];
-  readonly icon: IconName;
-}
-
-export interface ProductDetailsPaymentMethod {
-  readonly id: string;
-  readonly label: string;
-  readonly mark?: {
-    readonly src: string;
-    readonly alt: string;
-    readonly modifier: string;
-  };
-}
-
-export interface ProductDetailsFeature {
-  readonly title: string;
-  readonly text: string;
-  readonly icon: IconName;
-}
-
-export interface ProductDetailsDescription {
-  readonly title: string;
-  readonly paragraphs: readonly string[];
-  readonly features: readonly ProductDetailsFeature[];
-}
-
-export interface ProductDetailsSpecification {
-  readonly label: string;
-  readonly value: string;
-  readonly key?: boolean;
-}
-
-export interface ProductDetailsSpecificationGroup {
-  readonly title: string;
-  readonly rows: readonly ProductDetailsSpecification[];
-}
-
-export interface ProductDetailsReview {
-  readonly id: string;
-  readonly author: string;
-  readonly date: string;
-  readonly rating: number;
-  readonly text: string;
-  readonly avatarSrc?: string;
-}
-
-export interface ProductDetailsTrustItem {
-  readonly title: string;
-  readonly text: string;
-  readonly icon: IconName;
-}
-
-export interface ProductDetailsFixture {
-  readonly baseTitle: string;
-  readonly priceValue: number;
-  readonly oldPriceValue?: number;
-  readonly discount?: string;
-  readonly rating: number;
-  readonly reviewCount: number;
-  readonly sku: string;
-  readonly labels: readonly string[];
-  readonly installmentMonths: number;
-  readonly availability: string;
-  readonly deliveryNote: string;
-  readonly colours: readonly ProductDetailsColour[];
-  readonly defaultColourId: ProductDetailsColourId;
-  readonly memories: readonly ProductDetailsMemory[];
-  readonly defaultMemoryId: string;
-  readonly highlights: readonly string[];
-  readonly bonusPoints: number;
-  readonly galleryByColour: Record<ProductDetailsColourId, readonly ProductDetailsGalleryImage[]>;
-  readonly descriptionImage: PictureSource;
-  readonly warrantyImage: PictureSource;
-  readonly services: readonly ProductDetailsService[];
-  readonly paymentMethods: readonly ProductDetailsPaymentMethod[];
-  readonly description: ProductDetailsDescription;
-  readonly specificationGroups: readonly ProductDetailsSpecificationGroup[];
-  readonly reviews: readonly ProductDetailsReview[];
-  readonly trust: readonly ProductDetailsTrustItem[];
-  readonly supportPhone: string;
-  readonly supportPhoneHref: string;
-  readonly supportHours: string;
-  readonly chatNote: string;
-}
+import {
+  STOREWIDE_PAYMENT_METHODS,
+  STOREWIDE_SUPPORT,
+  STOREWIDE_TRUST,
+  WARRANTY_TEXT,
+} from './productDetailsStorewide';
+import { NEW_PRODUCT_LABEL } from './productDetailsView';
+import type {
+  ProductDetailsColour,
+  ProductDetailsColourId,
+  ProductDetailsGalleryImage,
+  ProductDetailsView,
+} from './productDetailsView';
 
 const REFERENCE_PRODUCT_ID = 'iphone-15-128';
-const NEW_LABEL = 'Новинка';
-const SPECIMEN_LABELS: readonly string[] = ['Хит продаж'];
-const WARRANTY_TEXT = 'Официальная гарантия 12 месяцев';
+const REFERENCE_LABELS: readonly string[] = [NEW_PRODUCT_LABEL, 'Хит продаж'];
 const DEFAULT_COLOUR: ProductDetailsColour = { id: 'pink', label: 'Розовый', swatch: 'pink' };
 const COLOURS: readonly ProductDetailsColour[] = [
   DEFAULT_COLOUR,
@@ -136,19 +31,13 @@ const COLOURS: readonly ProductDetailsColour[] = [
 const TITLE_COLOUR_SEPARATOR = ', ';
 const DEFAULT_COLOUR_SUFFIX = `${TITLE_COLOUR_SEPARATOR}${DEFAULT_COLOUR.label}`;
 
-export function isProductDetailsSpecimenSlug(slug: string): boolean {
-  return slug === REFERENCE_PRODUCT_ID;
-}
-
-export function productDetailsTitle(
-  product: ProductDetailsFixture,
-  colourId: ProductDetailsColourId,
+export function productDetailsVariantTitle(
+  baseTitle: string,
+  colourLabel: string | undefined,
 ): string {
-  const colour = product.colours.find((entry) => entry.id === colourId);
-
-  return colour === undefined
-    ? product.baseTitle
-    : `${product.baseTitle}${TITLE_COLOUR_SEPARATOR}${colour.label}`;
+  return colourLabel === undefined
+    ? baseTitle
+    : `${baseTitle}${TITLE_COLOUR_SEPARATOR}${colourLabel}`;
 }
 
 function referenceCatalogProduct(): CatalogProduct {
@@ -212,25 +101,19 @@ const galleryByColour = Object.fromEntries(
   COLOURS.map((colour) => [colour.id, galleryForColour(colour.id, colour.label)]),
 ) as Record<ProductDetailsColourId, readonly ProductDetailsGalleryImage[]>;
 
-export const PRODUCT_DETAILS_FIXTURE: ProductDetailsFixture = {
-  baseTitle: referenceBaseTitle(catalogProduct.title),
+const baseTitle = referenceBaseTitle(catalogProduct.title);
+
+export const PRODUCT_DETAILS_FIXTURE: ProductDetailsView = {
+  title: productDetailsVariantTitle(baseTitle, DEFAULT_COLOUR.label),
+  categoryTitle: 'Смартфоны',
   priceValue: catalogProduct.priceValue,
   oldPriceValue: catalogProduct.oldPriceValue,
   discount: catalogProduct.badge,
   rating: catalogProduct.rating ?? 0,
   reviewCount: catalogProduct.reviewCount,
-  sku: '213475',
-  labels: [NEW_LABEL, ...SPECIMEN_LABELS],
+  labels: REFERENCE_LABELS,
   installmentMonths: 36,
-  availability: 'В наличии',
-  deliveryNote: 'Доставка завтра',
-  colours: COLOURS,
-  defaultColourId: DEFAULT_COLOUR.id,
-  memories: [
-    { id: '128', label: '128 ГБ' },
-    { id: '256', label: '256 ГБ' },
-  ],
-  defaultMemoryId: '128',
+  attributes: [],
   highlights: [
     'Dynamic Island вместо выреза',
     'Основная камера 48 МП',
@@ -238,42 +121,7 @@ export const PRODUCT_DETAILS_FIXTURE: ProductDetailsFixture = {
     'Процессор A16 Bionic',
     'Дисплей Super Retina XDR 6,1″',
   ],
-  bonusPoints: 800,
-  galleryByColour,
-  descriptionImage: PRODUCT_DETAILS_DESCRIPTION_MEDIA,
-  warrantyImage: PRODUCT_DETAILS_WARRANTY_MEDIA,
-  services: [
-    { kind: 'delivery', title: 'Доставка', lines: ['Завтра, бесплатно'], icon: 'package' },
-    {
-      kind: 'delivery',
-      title: 'Самовывоз',
-      lines: ['Сегодня, бесплатно', 'Из 45 магазинов'],
-      icon: 'map-pin',
-    },
-    { kind: 'warranty', title: 'Гарантия', lines: [WARRANTY_TEXT], icon: 'check' },
-  ],
-  paymentMethods: [
-    {
-      id: 'card',
-      label: 'Банковская карта',
-      mark: { src: paymentMir, alt: 'МИР', modifier: 'mir' },
-    },
-    { id: 'sbp', label: 'СБП', mark: { src: paymentSbp, alt: 'СБП', modifier: 'sbp' } },
-    {
-      id: 'sberpay',
-      label: 'SberPay',
-      mark: { src: paymentSberpay, alt: 'SberPay', modifier: 'sberpay' },
-    },
-    {
-      id: 't-pay',
-      label: 'T-Pay',
-      mark: { src: paymentTpay, alt: 'T-Pay', modifier: 'tpay' },
-    },
-  ],
-  supportPhone: '8 800 100-10-19',
-  supportPhoneHref: 'tel:88001001019',
-  supportHours: 'Ежедневно с 9:00 до 21:00',
-  chatNote: 'Ответим в течение 1 минуты',
+  gallery: { images: galleryByColour[DEFAULT_COLOUR.id], decorative: false },
   description: {
     title: 'Знакомый iPhone, заметно новее',
     paragraphs: [
@@ -308,6 +156,8 @@ export const PRODUCT_DETAILS_FIXTURE: ProductDetailsFixture = {
       },
     ],
   },
+  descriptionImage: PRODUCT_DETAILS_DESCRIPTION_MEDIA,
+  warrantyImage: PRODUCT_DETAILS_WARRANTY_MEDIA,
   specificationGroups: [
     {
       title: 'Экран',
@@ -361,6 +211,33 @@ export const PRODUCT_DETAILS_FIXTURE: ProductDetailsFixture = {
       ],
     },
   ],
+  services: [
+    { kind: 'delivery', title: 'Доставка', lines: ['Завтра, бесплатно'], icon: 'package' },
+    {
+      kind: 'delivery',
+      title: 'Самовывоз',
+      lines: ['Сегодня, бесплатно', 'Из 45 магазинов'],
+      icon: 'map-pin',
+    },
+    { kind: 'warranty', title: 'Гарантия', lines: [WARRANTY_TEXT], icon: 'check' },
+  ],
+  paymentMethods: STOREWIDE_PAYMENT_METHODS,
+  trust: STOREWIDE_TRUST,
+  ...STOREWIDE_SUPPORT,
+  variants: {
+    baseTitle,
+    colours: COLOURS,
+    defaultColourId: DEFAULT_COLOUR.id,
+    memories: [
+      { id: '128', label: '128 ГБ' },
+      { id: '256', label: '256 ГБ' },
+    ],
+    defaultMemoryId: '128',
+    galleryByColour,
+  },
+  sku: '213475',
+  availability: { status: 'В наличии', note: 'Доставка завтра' },
+  bonusPoints: 800,
   reviews: [
     {
       id: 'review-1',
@@ -387,49 +264,5 @@ export const PRODUCT_DETAILS_FIXTURE: ProductDetailsFixture = {
       avatarSrc: PRODUCT_DETAILS_REVIEW_AVATARS.olgaM,
     },
   ],
-  trust: [
-    { title: 'Гарантия', text: WARRANTY_TEXT, icon: 'check' },
-    {
-      title: 'Оригинальная продукция',
-      text: 'Только официальные поставки',
-      icon: 'package',
-    },
-    {
-      title: 'Обмен и возврат',
-      text: 'По условиям законодательства о защите прав потребителей',
-      icon: 'return',
-    },
-  ],
+  oneClickPurchase: true,
 };
-
-function discountLabel(priceValue: number, oldPriceValue: number): string {
-  return `-${String(Math.round(((oldPriceValue - priceValue) / oldPriceValue) * 100))}%`;
-}
-
-export function productDetailsSpecimenFromLive(
-  product: ProductDetailsLiveProduct,
-): ProductDetailsFixture | undefined {
-  if (
-    !isProductDetailsSpecimenSlug(product.slug) ||
-    !product.name.endsWith(DEFAULT_COLOUR_SUFFIX)
-  ) {
-    return undefined;
-  }
-
-  const oldPriceValue =
-    product.oldPriceValue !== undefined && product.oldPriceValue > product.priceValue
-      ? product.oldPriceValue
-      : undefined;
-
-  return {
-    ...PRODUCT_DETAILS_FIXTURE,
-    baseTitle: product.name.slice(0, -DEFAULT_COLOUR_SUFFIX.length),
-    priceValue: product.priceValue,
-    oldPriceValue,
-    discount:
-      oldPriceValue === undefined ? undefined : discountLabel(product.priceValue, oldPriceValue),
-    rating: product.rating,
-    reviewCount: product.reviewCount,
-    labels: product.isNew ? [NEW_LABEL, ...SPECIMEN_LABELS] : SPECIMEN_LABELS,
-  };
-}

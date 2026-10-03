@@ -6,19 +6,16 @@ import { ProductGallery } from './ProductGallery';
 import type { ProductFavoriteBinding } from './ProductGallery';
 import { ProductOfferSummary } from './ProductOfferSummary';
 import { ProductPurchasePanel } from './ProductPurchasePanel';
-import type { ProductDetailsCartSelection } from './ProductPurchasePanel';
-import { PRODUCT_DETAILS_FIXTURE, productDetailsTitle } from './productDetailsFixtures';
-import type { ProductDetailsColourId, ProductDetailsFixture } from './productDetailsFixtures';
+import { PRODUCT_DETAILS_FIXTURE, productDetailsVariantTitle } from './productDetailsFixtures';
+import type { ProductDetailsColourId, ProductDetailsView } from './productDetailsView';
 
 export interface ProductDetailsPageProps {
   readonly homeHref?: string;
   readonly categoryHref?: string;
-  readonly product?: ProductDetailsFixture;
-  readonly onAddToCart?: (selection: ProductDetailsCartSelection) => number;
+  readonly product?: ProductDetailsView;
+  readonly onAddToCart?: (quantity: number) => number;
   readonly favorite?: ProductFavoriteBinding;
 }
-
-const CATEGORY_TITLE = 'Смартфоны';
 
 export function ProductDetailsPage({
   homeHref,
@@ -27,12 +24,20 @@ export function ProductDetailsPage({
   onAddToCart,
   favorite,
 }: ProductDetailsPageProps) {
-  const [selectedColourId, setSelectedColourId] = useState<ProductDetailsColourId>(
-    product.defaultColourId,
+  const variants = product.variants;
+  const [selectedColourId, setSelectedColourId] = useState<ProductDetailsColourId | undefined>(
+    variants?.defaultColourId,
   );
   const [activeGalleryIndex, setActiveGalleryIndex] = useState(0);
-  const gallery = product.galleryByColour[selectedColourId];
-  const title = productDetailsTitle(product, selectedColourId);
+  const selectedColour = variants?.colours.find((entry) => entry.id === selectedColourId);
+  const galleryImages =
+    variants === undefined || selectedColourId === undefined
+      ? product.gallery.images
+      : variants.galleryByColour[selectedColourId];
+  const title =
+    variants === undefined
+      ? product.title
+      : productDetailsVariantTitle(variants.baseTitle, selectedColour?.label);
   const handleColourChange = (colourId: ProductDetailsColourId) => {
     setSelectedColourId(colourId);
     setActiveGalleryIndex(0);
@@ -55,10 +60,10 @@ export function ProductDetailsPage({
             <li className="product-details__crumb">Каталог</li>
             <li className="product-details__crumb">
               {categoryHref === undefined ? (
-                CATEGORY_TITLE
+                product.categoryTitle
               ) : (
                 <a className="product-details__crumb-link" href={categoryHref}>
-                  {CATEGORY_TITLE}
+                  {product.categoryTitle}
                 </a>
               )}
             </li>
@@ -72,9 +77,10 @@ export function ProductDetailsPage({
           <div className="product-details__gallery">
             <ProductGallery
               activeIndex={activeGalleryIndex}
+              decorative={variants === undefined && product.gallery.decorative}
               discount={product.discount}
               favorite={favorite}
-              images={gallery}
+              images={galleryImages}
               onActiveIndexChange={setActiveGalleryIndex}
             />
           </div>

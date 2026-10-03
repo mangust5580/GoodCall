@@ -18,6 +18,7 @@ import pinkRearCamera from './derived/product-details-gallery-pink-rear-camera-g
 import pinkSideProfile from './derived/product-details-gallery-pink-side-profile-gallery.png?w=160;240;320;480;640;960;1254&picture';
 import rearCamera from './derived/product-details-gallery-rear-camera-gallery.png?w=160;240;320;480;640;960;1254&picture';
 import sideProfile from './derived/product-details-gallery-side-profile-gallery.png?w=160;240;320;480;640;960;1254&picture';
+import appleWatchS9Black from './derived/product-details-gallery-apple-watch-s9-black-gallery.png?w=160;240;320;480;640;720&picture';
 import descriptionEditorial from './derived/product-details-description-editorial-editorial.png?w=320;480;640;960;1280;1672&picture';
 import warrantyTrust from './derived/product-details-warranty-trust-trust.png?w=320;480;640;960;1280;1536&picture';
 
@@ -44,6 +45,8 @@ export const PRODUCT_DETAILS_GALLERY_BY_COLOUR_MEDIA = {
     cameraDetail: blueCameraDetail,
   },
 } satisfies Record<string, Record<string, PictureSource>>;
+
+export const PRODUCT_DETAILS_APPLE_WATCH_S9_MEDIA = appleWatchS9Black;
 
 export const PRODUCT_DETAILS_DESCRIPTION_MEDIA = descriptionEditorial;
 
