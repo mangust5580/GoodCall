@@ -23,7 +23,8 @@ import {
   HOME_HERO_SLIDES,
   HOME_PRODUCTS,
 } from './homeFixtures';
-import type { HomeArtwork, HomeCategoryTile, HomeProduct } from './homeFixtures';
+import type { HomeCategoryTile } from './homeFixtures';
+import type { HomeArtwork, HomeProduct } from './homeProduct';
 import { HomeHeroSlider } from './HomeHeroSlider';
 import { HomeMarketingPicture } from './HomeMarketingPicture';
 

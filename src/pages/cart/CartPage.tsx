@@ -1,5 +1,7 @@
 import { useEffect, useRef } from 'react';
 
+import { cartTotals, formatUnitCount } from '../../commerce/cart';
+import type { CartLinesState } from '../../commerce/cart';
 import { BenefitsStrip } from '../../components/content';
 import { Container } from '../../components/layout';
 import { ProductCard } from '../../components/product';
@@ -8,8 +10,6 @@ import { CartEmptyState } from './CartEmptyState';
 import { CartLineItem } from './CartLineItem';
 import { CartOrderSummary } from './CartOrderSummary';
 import { CART_BENEFITS, CART_RECOMMENDATIONS } from './cartFixtures';
-import { cartTotals, formatUnitCount } from './cartPricing';
-import type { CartLinesState } from './useCartLines';
 
 export interface CartPageProps {
   readonly homeHref: string;

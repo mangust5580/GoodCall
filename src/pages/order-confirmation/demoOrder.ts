@@ -1,13 +1,9 @@
-import type { CartTotals } from '../cart/cartPricing';
-import { toCartLineImage } from '../cart/cartStore';
-import type { CartLine, CartLineImage } from '../cart/cartStore';
-import {
-  CHECKOUT_DELIVERY_SLOTS,
-  CHECKOUT_PAYMENT_METHODS,
-  formatCourierAddress,
-} from '../checkout/checkoutFormModel';
-import type { CheckoutFormState } from '../checkout/checkoutFormModel';
-import type { StorePoint } from '../stores';
+import { toCartLineImage } from '../../commerce/cart';
+import type { CartLine, CartLineImage, CartTotals } from '../../commerce/cart';
+import type { StorePoint } from '../../commerce/shops';
+import { CHECKOUT_PAYMENT_METHODS, formatCourierAddress } from '../checkout';
+import type { CheckoutFormState } from '../checkout';
+import { STOREFRONT_DELIVERY_SLOTS } from '../../commerce/storefront';
 
 export interface DemoOrderLine {
   readonly title: string;
@@ -196,7 +192,7 @@ function toDemoOrder(value: unknown): DemoOrder | undefined {
     nonEmptyString(courier.address) &&
     typeof courier.date === 'string' &&
     DATE_PATTERN.test(courier.date) &&
-    CHECKOUT_DELIVERY_SLOTS.some((slot) => slot.value === courier.slot)
+    STOREFRONT_DELIVERY_SLOTS.some((slot) => slot.value === courier.slot)
   ) {
     return {
       ...base,

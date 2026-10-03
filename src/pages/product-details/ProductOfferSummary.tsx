@@ -1,5 +1,5 @@
+import { formatPrice } from '../../commerce/format';
 import { Chip, Icon } from '../../components/ui';
-import { formatPrice } from './productDetailsFormat';
 import type { ProductDetailsView } from './productDetailsView';
 
 interface ProductOfferSummaryProps {

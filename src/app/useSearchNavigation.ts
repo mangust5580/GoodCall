@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 
-import { searchPath } from './routes';
+import { searchPath } from './routePaths';
 
 export function useSearchNavigation(): (value: string) => void {
   const navigate = useNavigate();

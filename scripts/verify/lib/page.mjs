@@ -5,7 +5,7 @@ import { sleep } from './browser.mjs';
 const KEYS = {
   ArrowLeft: { code: 'ArrowLeft', keyCode: 37 },
   ArrowRight: { code: 'ArrowRight', keyCode: 39 },
-  Enter: { code: 'Enter', keyCode: 13 },
+  Enter: { code: 'Enter', keyCode: 13, text: '\r' },
   Tab: { code: 'Tab', keyCode: 9 },
 };
 
@@ -191,9 +191,14 @@ export async function openPage(
     },
     keyboard: {
       async press(key) {
-        const { code, keyCode } = KEYS[key];
+        const { code, keyCode, text } = KEYS[key];
         const event = { key, code, windowsVirtualKeyCode: keyCode };
-        await send('Input.dispatchKeyEvent', { type: 'rawKeyDown', ...event });
+        await send(
+          'Input.dispatchKeyEvent',
+          text === undefined
+            ? { type: 'rawKeyDown', ...event }
+            : { type: 'keyDown', text, ...event },
+        );
         await send('Input.dispatchKeyEvent', { type: 'keyUp', ...event });
       },
     },

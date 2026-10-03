@@ -1,4 +1,4 @@
-import type { ProductDetailsContent } from '../productDetailsContent';
+import type { ProductDetailsContent } from '../productDetailsContent.types';
 
 export const HEADPHONES_CONTENT: readonly ProductDetailsContent[] = [
   {

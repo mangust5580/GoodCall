@@ -1,15 +1,15 @@
-import { CatalogReference } from './CatalogReference';
-import { ComponentsReference } from './ComponentsReference';
-import { FooterReference } from './FooterReference';
-import { FoundationsColorReference } from './FoundationsColorReference';
-import { HeaderReference } from './HeaderReference';
-import { HomeReference } from './HomeReference';
-import { LayoutReference } from './LayoutReference';
-import { LocationReference } from './LocationReference';
-import { NewsletterReference } from './NewsletterReference';
-import { ProductDetailsReference } from './ProductDetailsReference';
+import { CatalogReference } from '../reference/CatalogReference';
+import { ComponentsReference } from '../reference/ComponentsReference';
+import { FooterReference } from '../reference/FooterReference';
+import { FoundationsColorReference } from '../reference/FoundationsColorReference';
+import { HeaderReference } from '../reference/HeaderReference';
+import { HomeReference } from '../reference/HomeReference';
+import { LayoutReference } from '../reference/LayoutReference';
+import { LocationReference } from '../reference/LocationReference';
+import { NewsletterReference } from '../reference/NewsletterReference';
+import { ProductDetailsReference } from '../reference/ProductDetailsReference';
+import { ReferenceIndex } from '../reference/TemporaryReference';
 import { ProductionRouter } from './ProductionRouter';
-import { ReferenceIndex } from './TemporaryReference';
 
 function currentReference(): string | null {
   return new URLSearchParams(window.location.search).get('reference');

@@ -1,8 +1,10 @@
+import { formatPrice } from '../../commerce/format';
 import { supabaseClient } from '../../lib/supabase/client';
 import type { GoodCallSupabaseClient } from '../../lib/supabase/client';
 import type { Database } from '../../lib/supabase/database.types';
 import { HOME_CATEGORY_TILES } from './homeFixtures';
-import type { HomeArtwork, HomeCategoryTile, HomeProduct } from './homeFixtures';
+import type { HomeCategoryTile } from './homeFixtures';
+import type { HomeArtwork, HomeProduct } from './homeProduct';
 
 type CategoryRow = Database['public']['Tables']['categories']['Row'];
 type ProductRow = Database['public']['Tables']['products']['Row'];
@@ -78,16 +80,6 @@ const productPresentationBySlug = new Map<string, HomeProductPresentation>([
     },
   ],
 ]);
-
-const priceFormatter = new Intl.NumberFormat('ru-RU', {
-  style: 'currency',
-  currency: 'RUB',
-  maximumFractionDigits: 0,
-});
-
-function formatPrice(value: number): string {
-  return priceFormatter.format(value);
-}
 
 function groupImagesByProduct(
   images: readonly ProductImageRow[],

@@ -144,8 +144,13 @@ Technically complete:
   owned by React Router using a GitHub Pages-safe hash strategy. See the
   Current routes section below.
 
-Completed visual slice:
+Active visual slice: none.
 
+Completed visual slices:
+
+- **Info A / Customer Help Pages — USER VISUAL/UX PASS granted after manual
+  desktop and mobile review — CLOSED.** `#/delivery`, `#/warranty` and
+  `#/faq`. See the Info A section below.
 - **Product Details Production Integration B / Rich Live Product Pages —
   USER VISUAL/UX PASS granted — implementation/regression gates complete —
   verification harnesses repository-owned and reproducible — final Codex
@@ -166,6 +171,80 @@ section below. **Checkout A / Checkout Page Foundation — USER VISUAL/UX PASS
 on 2026-09-30, CLOSED and published.** See the Checkout A section below. Search C, Favourites A, Commerce B, Commerce A,
 Blog B, Blog A, Home A, Cart A, Cart B, Search A, Search B, 404 A and the
 Product Details production integration are closed.
+
+### Info A — Customer Help Pages
+
+**Status: USER VISUAL/UX PASS granted (manual desktop and mobile review),
+automated gates green, CLOSED.** Evidence: `Payment.png`, `Warranty.png`, `FAQ.png` (page body
+only; the production Global Shell is authoritative).
+
+- **Routes.** `#/delivery` (Доставка и оплата), `#/warranty` (Гарантия и
+  возврат) and `#/faq` (Часто задаваемые вопросы), each inside
+  `ProductionShell`. Route seams live in `src/app/routes/InfoRoutes.tsx`; pages are
+  router-free and take an `InfoLinks` object. Unknown paths still render 404.
+- **Shell navigation.** `SiteFooter` gained optional `helpLinks`,
+  `paymentMarks` and `support` props. Production passes them; reference
+  surfaces pass none and render exactly as before. Only «Доставка и оплата»,
+  «Гарантия и возврат» and «FAQ» became links; every other footer item and the
+  Header stay unwired.
+- **Ownership.** `src/pages/info/` owns the three pages, shared header,
+  highlights (wrapping `BenefitsStrip`), notice, check list, CSS/icon
+  illustration medallion, support CTA, `faqData.ts` and `faqSearch.ts`.
+  `src/commerce/storefront/storefrontFacts.ts` is the single source of truth for
+  cross-page storefront facts: payment methods and Checkout payment options,
+  support identity, warranty term and trust items.
+- **Payment contract.** Canonical methods are the ones Checkout actually
+  offers: Банковская карта (МИР; online or on receipt), СБП (online) and
+  Наличные (on receipt). `CHECKOUT_PAYMENT_METHODS` is derived from
+  `STOREFRONT_PAYMENT_OPTIONS` with identical values, labels and marks.
+  Live Product Details, the production footer and the help pages read the
+  same contract, so SberPay and T-Pay no longer appear in production. The
+  `?reference=product-details` fixture and the default `SiteFooter` keep their
+  raster specimen values, so the frozen reference pixel diff stays at 0.
+- **Demo support identity.** `8 800 100-10-10`, `support@goodcall.example`
+  (reserved domain; `goodcall.ru` resolves to a live server and is not used in
+  production), `Ежедневно с 9:00 до 21:00`. The former Product Details phone
+  `8 800 100-10-19` survives only in the reference fixture.
+- **Content truthfulness.** Delivery uses Checkout facts only: courier
+  (any of the next 7 days from tomorrow, the three Checkout intervals) or pickup
+  from the six `DEMO_STORES`; no delivery fee is charged; payment is not
+  processed. Returns are framed by the consumer-protection law without
+  periods or category lists; warranty names the manufacturer as the source,
+  gives general «обычно» guidance and states that the term is specified for
+  the concrete product (help pages never promise a global duration); repair
+  points to manufacturers' authorized service centres and states GoodCall
+  runs none. FAQ: 18 entries
+  in Заказы, Оплата, Доставка, Возврат и гарантия, Товары. No Account, Auth,
+  bonus, order-tracking or password content.
+- **Warranty contract.** `STOREFRONT_TRUST` (help pages) says «Официальная
+  гарантия — Срок указан для конкретного товара». The 12-month figure is the
+  per-product term Product Details shows (`PRODUCT_WARRANTY_TEXT`,
+  `PRODUCT_TRUST`), currently the same for every catalogue product.
+- **Interaction.** Delivery uses the system `Tabs` (Курьером / Самовывоз,
+  arrow-key navigation). Warranty is one sequential journey — Возврат и обмен →
+  Гарантия → Ремонт и сервисное обслуживание → support — with a «Разделы
+  страницы» button row that scrolls to a section and focuses its heading. FAQ uses `FAQAccordion` (Radix single-open, first answer open),
+  `aria-pressed` topic buttons with counts, a client-side search with ё/е
+  normalization and an empty state with reset. Its «Не нашли ответ?» support
+  block sits under the results, so the workspace height follows the content.
+- **Icons.** `shield`, `credit-card`, `banknote` and `info` were added to the
+  Icon registry. No raster illustrations were generated; the raster's 3D
+  artwork is represented by the CSS/icon medallion.
+- **Deliberate normalizations.** System underline `Tabs` on Delivery instead of
+  the raster's filled segments; Warranty section navigation instead of tabs;
+  the FAQ support card moved from the sidebar to below the results; one bordered `FAQAccordion` surface instead of
+  separate cards; the FAQ topic sidebar and chip row merged into one control
+  (sidebar ≥1024px, scrolling chips below); delivery methods reduced to the
+  two that exist; the raster's prices, 14-day return promise, 24/7 copy,
+  Visa/Mastercard/ЮMoney/QIWI/Tinkoff marks and «Аккаунт и бонусы» omitted.
+- **Verification.** New `info` suite in `npm run verify` (128 checks,
+  including Warranty sequential order and FAQ natural-height assertions).
+  `scripts/verify/lib/page.mjs` sends Enter as a real key press so keyboard
+  activation of buttons can be tested.
+- **Known remaining inconsistencies (out of scope).** Header and footer
+  «Поддержка 24/7» labels and the Checkout benefit «Поддержка 24/7» contradict
+  the 9:00–21:00 hours; the Product Details «Онлайн-чат» item describes a chat
+  that does not exist.
 
 ### Product Details Production Integration B — Rich Live Product Pages
 
@@ -195,7 +274,8 @@ configured-mode form and Search C (not in the runner).
   facts (slug, name, brand, category, prices, rating, review count, `is_new`,
   active). Derived values: discount, «Выгода», 36-month installment, the
   smartphones breadcrumb link, the pickup store count (`DEMO_STORES.length`).
-  A typed local registry (`productDetailsContent.ts` + `content/*.ts`, keyed
+  A typed local registry (`productDetailsContent.ts` + `content/*.ts`, typed by
+  `productDetailsContent.types.ts`, keyed
   by canonical slug; duplicate slugs throw) owns static attributes,
   highlights, original editorial description and features, specification
   groups with key flags, and optional Tier-1 media.
@@ -285,7 +365,7 @@ account rail omitted as in Favorites A); `Modals.png` #1 for the compare
 control paired with ♥. `Catalog.png` and `Product_details.png` show no
 compare control; the Catalog card control is an approved extension.
 
-- **State** (`src/pages/compare/compareStore.ts`, `useCompare.ts`):
+- **State** (`src/commerce/compare/compareStore.ts`, `useCompare.ts`):
   `localStorage` `goodcall.compare.v1` as `{ items }`, product-level slug
   identity plus a minimal snapshot (title, image ref, price, old price,
   rating, review count, brand, storage, colour). Cap `COMPARE_LIMIT = 4`,
@@ -405,7 +485,7 @@ published.** Evidence: `Shops.png`, from which the list-only scope is derived.
 Do not reopen the accepted list-only adaptation, neutral tiles or metadata strip
 without a new explicit requirement.
 
-**Data.** `src/pages/stores/storeData.ts` owns the canonical store identity:
+**Data.** `src/commerce/shops/shopData.ts` owns the canonical store identity:
 `StorePoint { id, name, city, address, hours, metro? }` and the typed local
 **demo** dataset `DEMO_STORES`.
 
@@ -451,7 +531,7 @@ contract, with no availability, pricing or scheduling.
 
 **Route and handoff.**
 
-- `CHECKOUT_PATH` (`/checkout`) routes to `src/app/CheckoutRoute.tsx`, which
+- `CHECKOUT_PATH` (`/checkout`) routes to `src/app/routes/CheckoutRoute.tsx`, which
   renders the router-free `src/pages/checkout/CheckoutPage` inside
   `ProductionShell`. Styles live in `checkout.scss`, loaded through
   `global.scss`.
@@ -465,7 +545,7 @@ contract, with no availability, pricing or scheduling.
   the selected lines. Totals come from `cartTotals` in `cartPricing.ts`, so
   `К оплате` equals the Cart `Итого`.
 - The line image resolver moved unchanged from `CartLineItem` into
-  `src/pages/cart/CartLineMedia.tsx`, now shared by Cart and Checkout.
+  `src/commerce/cart/CartLineMedia.tsx`, now shared by Cart and Checkout.
 - Form state is page-local (`CheckoutForm`, `checkoutFormModel.ts`). There is
   no checkout store and no URL state; the only persistence is the Order
   Confirmation A session snapshot written on a valid submit.
@@ -729,7 +809,7 @@ Evidence: `Favorites.png` (main content). `Account_profile_favorites.png`
 and `Modals.png` #3 are secondary. There is no mobile raster, so mobile
 behaviour is derived from the accepted `ProductCard` and the Catalog grid rule.
 
-**Ownership.** `src/pages/favorites/favoritesStore.ts` is the single owner: a
+**Ownership.** `src/commerce/favorites/favoritesStore.ts` is the single owner: a
 module store with a listener set, read through `useSyncExternalStore` in
 `useFavorites.ts` (`useFavoriteItems`, `useFavoritesCount`). It mirrors the
 Commerce A pattern without sharing code with it. There is no Context,
@@ -760,7 +840,7 @@ dependency or generic persistence layer, and the cart store is untouched.
 
 **Surfaces.**
 
-- **Catalog:** `src/app/useCatalogFavoritesSeam.ts` provides a
+- **Catalog:** `src/app/routes/useCatalogFavoritesSeam.ts` provides a
   `CatalogFavoritesSeam` (`isFavorite`, `toggle`) only after the live read.
   This is the same boundary as links and the cart seam. `CatalogProductGrid`
   lost its grid-local favourites state. Fallback and `?reference=catalog`
@@ -780,7 +860,7 @@ dependency or generic persistence layer, and the cart store is untouched.
     Comparison A.
 
 **`#/favorites` page.** `FAVORITES_PATH` routes to
-`src/app/FavoritesRoute.tsx`, which renders the router-free
+`src/app/routes/FavoritesRoute.tsx`, which renders the router-free
 `src/pages/favorites/FavoritesPage.tsx` inside `ProductionShell`. Styles live
 in `favorites.scss`, loaded through `global.scss`. The page shows:
 
@@ -868,7 +948,7 @@ stepper follows the accepted Catalog pattern. There is no mobile Search
 raster, so mobile behaviour is derived from the accepted horizontal
 `ProductCard`.
 
-**Shared seam.** `src/app/useCatalogCartSeam.ts` is the Commerce A seam
+**Shared seam.** `src/app/routes/useCatalogCartSeam.ts` is the Commerce A seam
 builder extracted unchanged from `CatalogRoute`. It is called with
 `liveProducts: boolean` and returns a `CatalogCartSeam` (`quantityOf`, `add`,
 `setQuantity`) only when that flag is true.
@@ -957,9 +1037,9 @@ derived from the accepted Catalog, Product Details, Cart and shell patterns.
   cards keep their layout with the accepted `ProductCard` `disabled`
   semantics.
 
-**Ownership.** `src/pages/cart/cartStore.ts` is the single cart owner: a
+**Ownership.** `src/commerce/cart/cartStore.ts` is the single cart owner: a
 module store with a listener set, read through `useSyncExternalStore` in
-`src/pages/cart/useCartLines.ts` (`useCartLineList`, `useCartUnitCount`,
+`src/commerce/cart/useCartLines.ts` (`useCartLineList`, `useCartUnitCount`,
 `useCartLines`). There is no Context, provider, reducer framework or
 dependency. Operations:
 
@@ -1009,7 +1089,7 @@ redeploys:
 - `CatalogRoute` builds a `CatalogCartSeam` only after the live read
   succeeds, the same boundary as product links. It passes the seam through
   `CatalogPage` to `CatalogProductGrid`. Since Commerce B, the builder lives
-  in `src/app/useCatalogCartSeam.ts`, shared with Search.
+  in `src/app/routes/useCatalogCartSeam.ts`, shared with Search.
 - `В корзину` adds one unit. The accepted card stepper then reads and writes
   the shared line.
 - Without the seam (fallback or `?reference=catalog`), every card is
@@ -1117,7 +1197,7 @@ architecture exists. Evidence: `Blog_details.png` (1920×3360).
   single-source Blog A corpus for title, category, date and cover.
   `HowToChooseSmartphone2024Body.tsx` owns the bespoke JSX body. There is no
   CMS, MDX, markdown or block renderer. `blogArticleHref()` in
-  `src/app/routes.ts` returns an href only for registered slugs, like
+  `src/app/routePaths.ts` returns an href only for registered slugs, like
   `productDetailsHref()`.
 - Copy is transcribed from the raster. Only obvious raster typos are
   normalized (`Выбрайте`, `робота`, `сьемки`, `SG`). The reading time `8 мин на
@@ -1376,7 +1456,7 @@ obsolete evidence.
 
 **Route and URL ownership.**
 
-- `SEARCH_PATH` (`/search`) and `searchPath(query)` live in `routes.ts`.
+- `SEARCH_PATH` (`/search`) and `searchPath(query)` live in `routePaths.ts`.
 - The URL shape is `#/search?q=<query>[&sort=<cheap|expensive|rating>][&page=<n>]`.
 - The URL owns the query, sort and page. There is no query-state framework:
   `SearchRoute` uses `useSearchParams` directly.
@@ -1449,7 +1529,7 @@ obsolete evidence.
 - No sort or pagination is shown.
 
 **Ownership.** `src/pages/search/` holds `SearchPage.tsx`, `searchResults.ts`,
-`search.scss` and `index.ts`. `src/app/SearchRoute.tsx` is the route seam. No
+`search.scss` and `index.ts`. `src/app/routes/SearchRoute.tsx` is the route seam. No
 Catalog file changed.
 
 **Deferred.**
@@ -1485,12 +1565,13 @@ The PASS covers:
 
 Evidence: `Cart_items.png`.
 
-**Ownership.** All of it lives in `src/pages/cart/`. Commerce A replaced the
-route-local state and the seed with the shared cart (see Commerce A). The
+**Ownership.** The page lives in `src/pages/cart/`; the shared cart state,
+hook, pricing and line media live in `src/commerce/cart/`. Commerce A replaced
+the route-local state and the seed with the shared cart (see Commerce A). The
 visuals and transitions below are unchanged.
 
-- `useCartLines.ts` — now the hook over the shared `cartStore.ts`;
-- `cartPricing.ts` — pure derivation and formatting;
+- `src/commerce/cart/useCartLines.ts` — the hook over the shared `cartStore.ts`;
+- `src/commerce/cart/cartPricing.ts` — pure derivation and unit-count formatting;
 - `CartLineItem.tsx`, `CartOrderSummary.tsx` and `CartEmptyState.tsx` —
   Cart-local components. `CartEmptyState` holds the accepted Cart A markup,
   moved verbatim.
@@ -1585,7 +1666,7 @@ Cart family only.
 
 - `src/pages/cart/` holds `CartPage.tsx`, `cartFixtures.ts`, `cart.scss`
   (loaded through `global.scss`) and `index.ts`.
-- `src/app/CartRoute.tsx` is the route seam; the route is `#/cart`
+- `src/app/routes/CartRoute.tsx` is the route seam; the route is `#/cart`
   (`CART_PATH`).
 - The page is router-free. Its public API is `homeHref` and `catalogHref`.
 
@@ -1634,8 +1715,9 @@ accepted system. The raster maps to the 1440 design space at 1.3333x: its
 content spans x 72–1846, i.e. a 1332px content width, which the accepted 1440px
 `Container` (1376px inner at 1440) carries without a second container system.
 
-**Ownership.** `src/pages/home/` holds `HomePage.tsx`, `homeFixtures.ts`,
-`home.scss` and `index.ts`. `src/app/HomeRoute.tsx` composes it inside
+**Ownership.** `src/pages/home/` holds `HomePage.tsx`, `homeProduct.ts` (the
+`HomeProduct` card contract and `HomeArtwork`, also used by the 404 page),
+`homeFixtures.ts`, `home.scss` and `index.ts`. `src/app/routes/HomeRoute.tsx` composes it inside
 `ProductionShell`, and `?reference=home` renders `HomeReference` for visual
 review. Public API is exactly `smartphonesPath?: string` — the seam that lets
 the route hand Home the one destination that exists.
@@ -1825,7 +1907,7 @@ page `<main>`, breadcrumbs and the three-region grid), `ProductGallery`,
 serves both the full and the key lists), `ProductReviews`,
 `ProductDeliveryPayment`, `ProductWarranty` and `ProductStars` (the half-star
 rating shared by the purchase panel and the reviews). The reference surface
-`src/app/ProductDetailsReference.tsx` composes the accepted shell around it,
+`src/reference/ProductDetailsReference.tsx` composes the accepted shell around it,
 like Catalog and Home. The production route is described in the Product
 Details Production Integration section below. There is no provider, context,
 store or product/variant/offer domain model.
@@ -2020,13 +2102,13 @@ Do not broaden the supported-slug set without a product content contract.
 
 **Route.**
 
-- `routes.ts` owns:
+- `routePaths.ts` (then `routes.ts`) owns:
   - `PRODUCT_PATH` (`/product/:slug`);
   - `productPath(slug)` (URI-encoded);
   - `productDetailsHref(slug)`, which returns a hash href only for specimen
     slugs.
 - The URL shape is `#/product/iphone-15-128`.
-- `src/app/ProductDetailsRoute.tsx` renders inside `ProductionShell` and owns
+- `src/app/routes/ProductDetailsRoute.tsx` renders inside `ProductionShell` and owns
   the route states. `ProductDetailsRoute.scss` sits beside it.
 
 **Read.** `src/pages/product-details/productDetailsData.ts` makes one query:
@@ -2310,8 +2392,12 @@ products or the result count.
 
 **User visual PASS received on 2026-08-30, closed.**
 
-**Ownership.** `src/pages/catalog/` gains `catalogProductFixtures.ts` (product
-shape, 16 specimen products, sort options and comparators, page constants) and
+**Ownership.** `src/pages/catalog/` gains `catalogProduct.ts` (the
+`CatalogProduct` shape, sort values/options/default, comparators and
+`sortCatalogProducts`, and the 12-per-page size), `catalogProducts.ts` (the 16
+demo products: Search/Catalog fallback, live-product badge presentation and the
+Product Details reference product), `catalogProductFixtures.ts` (the specimen
+65-page count and `catalogPageProducts`) and
 `CatalogProductGrid.tsx` (the grid, the in-grid promo and the local card state).
 There is no `src/data/`, `src/api/`, `src/services/`, `src/repositories/`,
 `src/features/products/`, `ProductRepository`, `CatalogApi`, `ProductService`,
@@ -3224,9 +3310,9 @@ Independent audits themselves remain optional. See the AUDIT.md section of
   `emit-vars`).
 - Generic UI SVG icon assets for Components A controls/forms:
   `src/assets/icons/`.
-- Foundations colour reference surface: `src/app/FoundationsColorReference.tsx`
+- Foundations colour reference surface: `src/reference/FoundationsColorReference.tsx`
   with its own reference-only styles.
-- Temporary reference pages: `src/app/TemporaryReference.tsx`.
+- Temporary reference pages: `src/reference/TemporaryReference.tsx`.
 - Canonical layout primitive: `src/components/layout/` — `Container`, with its
   styles in `layout.scss`.
 - Canonical global shell: `src/components/shell/` — `SiteHeader` and
@@ -3264,23 +3350,23 @@ Independent audits themselves remain optional. See the AUDIT.md section of
   `src/assets/social/` — `vk.svg`, `telegram.svg`, `youtube.svg`, `rutube.svg`.
   They are brand assets, not `Icon` registry entries.
 - Components A, B, C, D, E and F reference surface:
-  `src/app/ComponentsReference.tsx`.
-- Global Shell Container reference surface: `src/app/LayoutReference.tsx`, with
+  `src/reference/ComponentsReference.tsx`.
+- Global Shell Container reference surface: `src/reference/LayoutReference.tsx`, with
   its reference-only styles in `LayoutReference.scss`.
-- Global Shell Header reference surface: `src/app/HeaderReference.tsx`, with its
+- Global Shell Header reference surface: `src/reference/HeaderReference.tsx`, with its
   reference-only styles in `HeaderReference.scss`.
 - Global Shell NewsletterBand reference surface:
-  `src/app/NewsletterReference.tsx`, with its reference-only styles in
+  `src/reference/NewsletterReference.tsx`, with its reference-only styles in
   `NewsletterReference.scss`.
-- Global Shell SiteFooter reference surface: `src/app/FooterReference.tsx`, with
+- Global Shell SiteFooter reference surface: `src/reference/FooterReference.tsx`, with
   its reference-only styles in `FooterReference.scss`.
 - First page family: `src/pages/catalog/` — `CatalogPage`, with its styles in
-  `catalog.scss`. Its reference surface is `src/app/CatalogReference.tsx`, with
+  `catalog.scss`. Its reference surface is `src/reference/CatalogReference.tsx`, with
   reference-only styles in `CatalogReference.scss`.
 
 There is no data layer and no feature architecture. The reference surfaces are
 development comparison pages, not product UI; `src/app/ProductionRouter.tsx` and
-`src/app/CatalogRoute.tsx` are the production routing layer beside them.
+`src/app/routes/CatalogRoute.tsx` are the production routing layer beside them.
 
 ### Components A
 
@@ -3807,7 +3893,7 @@ so reference surfaces are unaffected by routing; the bare base URL now belongs t
   opens in its own defaults, which are the state `Catalog.png` shows. No
   `?reference=catalog-filters` or `?reference=catalog-c` surface was added.
 
-Links are built by `src/app/referenceUrl.ts` from `import.meta.env.BASE_URL`, so
+Links are built by `src/reference/referenceUrl.ts` from `import.meta.env.BASE_URL`, so
 they resolve under the GitHub Pages base without hardcoding the repository name,
 and no SPA fallback is needed because the path never changes. Every
 `Back to reference index` link, and the `SiteFooter` brand link inside the
@@ -4124,6 +4210,8 @@ router owns only the fragment. The base path still lives solely in
   (Stores A, closed).
 - `#/checkout` — the Checkout A page over the selected shared-cart lines
   (complete, user visual/UX PASS).
+- `#/delivery`, `#/warranty`, `#/faq` — the Info A customer help pages
+  (Info A, closed).
 - `#/order-confirmation` — the Order Confirmation A thank-you page for the
   session demo order, or «Заказ не найден» (Order Confirmation A, closed).
 - `#/blog/:slug` — the Blog article detail (Blog B, closed),
@@ -4132,8 +4220,8 @@ router owns only the fragment. The base path still lives solely in
 - `*` — the designed 404 (`NotFoundRoute`, 404 A, closed).
   It is not a global error architecture.
 
-Route paths live in `src/app/routes.ts` as `HOME_PATH`,
-`CATALOG_SMARTPHONES_PATH`, `PRODUCT_PATH`, `CART_PATH`, `CHECKOUT_PATH`, `ORDER_CONFIRMATION_PATH`, `FAVORITES_PATH`, `COMPARE_PATH`, `SHOPS_PATH`,
+Route paths live in `src/app/routePaths.ts` as `HOME_PATH`,
+`CATALOG_SMARTPHONES_PATH`, `PRODUCT_PATH`, `CART_PATH`, `CHECKOUT_PATH`, `ORDER_CONFIRMATION_PATH`, `FAVORITES_PATH`, `COMPARE_PATH`, `SHOPS_PATH`, `DELIVERY_PATH`, `WARRANTY_PATH`, `FAQ_PATH`,
 `SEARCH_PATH`, `BLOG_PATH` and `BLOG_ARTICLE_PATH`.
 `hashHref()`, `productDetailsHref()`, `searchPath()`, `blogPath()`,
 `blogArticlePath()` and `blogArticleHref()` serve the `href` and navigation
@@ -4141,13 +4229,23 @@ seams.
 
 ### Ownership
 
-`src/app/ProductionRouter.tsx` holds the `HashRouter` and the eleven routes; it
+`src/app/` keeps app-wide modules only: `App.tsx` (the `?reference=` switch),
+`ProductionRouter.tsx`, `ProductionShell.tsx`, `RouteScrollReset.tsx`,
+`routePaths.ts` (path constants and href builders) and `useSearchNavigation.ts`.
+Production route seams and their route-adapter hooks (`useCatalog*Seam`,
+`useHomeCartSeam`) live in `src/app/routes/`. Reference-only `?reference=`
+surfaces and `referenceUrl.ts` live in `src/reference/`; only `App.tsx` imports
+them, statically as before. Module boundaries and public APIs are described in
+`AGENTS.md` (Module boundaries) and enforced by `no-restricted-imports` in
+`eslint.config.js`.
+
+`src/app/ProductionRouter.tsx` holds the `HashRouter`, fifteen routes and the 404 catch-all; it
 has no local fallback component or stylesheet any more.
-`src/app/HomeRoute.tsx`, `src/app/CatalogRoute.tsx`,
-`src/app/ProductDetailsRoute.tsx`, `src/app/CartRoute.tsx`,
-`src/app/SearchRoute.tsx`, `src/app/BlogRoute.tsx`,
-`src/app/BlogArticleRoute.tsx` and
-`src/app/NotFoundRoute.tsx` are the page seams.
+`src/app/routes/HomeRoute.tsx`, `src/app/routes/CatalogRoute.tsx`,
+`src/app/routes/ProductDetailsRoute.tsx`, `src/app/routes/CartRoute.tsx`,
+`src/app/routes/SearchRoute.tsx`, `src/app/routes/BlogRoute.tsx`,
+`src/app/routes/BlogArticleRoute.tsx` and
+`src/app/routes/NotFoundRoute.tsx` are the page seams.
 `src/app/useSearchNavigation.ts` turns a submitted query into `#/search?q=…`;
 `ProductionShell` uses it for the Header search and `NotFoundRoute` for the 404
 hero search. `src/pages/not-found/` owns the router-free `NotFoundPage`.
@@ -4165,6 +4263,19 @@ components.
 The cart count (Commerce A) and the favourites count (Favourites A) are real.
 The comparison count is real since Comparison A (`useCompareCount()`, linking
 to `#/compare`).
+
+### Commerce ownership
+
+`src/commerce/` owns cross-route commerce state, contracts and facts, each with
+an `index.ts` public API: `cart/` (`cartStore`, `useCartLines`, `cartPricing`,
+`CartLineMedia`), `favorites/`, `compare/`, `storefront/` (storefront facts)
+and `shops/` (`shopData.ts`, the `DEMO_STORES` dataset). `src/commerce/format.ts`
+holds the single `formatPrice` (ru-RU, RUB, no fractional digits) used by every
+production price. `storefront/` also owns `STOREFRONT_DELIVERY_SLOTS`, the three
+courier intervals used by Checkout, Order Confirmation and the help pages. Route families under
+`src/pages/` and the `src/app/` seams consume it; `src/commerce/` never imports
+from `src/pages/` or `src/app/`, and `src/components/` never imports from
+`src/commerce/`. `src/pages/stores/` keeps only the `#/shops` page.
 
 ### Route scroll
 
@@ -4280,7 +4391,7 @@ reference index rather than to production.
 
 `?reference=index` is the explicit reference-index address, and every reference
 surface's `Back to reference index` link now points at it through
-`src/app/referenceUrl.ts` instead of the bare base URL, which production routing
+`src/reference/referenceUrl.ts` instead of the bare base URL, which production routing
 now owns. The `?reference=catalog` and `?reference=footer` surfaces also point
 their `SiteFooter` brand link at the reference index, so a reference surface
 never jumps into the production router.
@@ -4372,6 +4483,7 @@ npm run lint          # eslint .
 npm run lint:styles   # stylelint "src/**/*.scss"
 npm run format        # prettier --write .
 npm run format:check  # prettier --check .
+npm run verify        # repository-owned regression gates (scripts/verify/README.md)
 ```
 
 CI runs install → typecheck → lint → lint:styles → format:check → build.

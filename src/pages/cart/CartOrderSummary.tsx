@@ -1,6 +1,6 @@
+import type { CartTotals } from '../../commerce/cart';
+import { formatPrice } from '../../commerce/format';
 import { Button } from '../../components/ui';
-import type { CartTotals } from './cartPricing';
-import { formatPrice } from './cartPricing';
 
 interface CartOrderSummaryProps {
   readonly totals: CartTotals;

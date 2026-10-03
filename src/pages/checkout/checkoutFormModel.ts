@@ -1,9 +1,9 @@
-import paymentMir from '../../assets/commerce/payment-mir.svg';
-import paymentSbp from '../../assets/commerce/payment-sbp.svg';
+import { findStore } from '../../commerce/shops';
+import type { StorePoint } from '../../commerce/shops';
+import { STOREFRONT_PAYMENT_OPTIONS, storefrontPaymentMethod } from '../../commerce/storefront';
+import type { StorefrontPaymentMark } from '../../commerce/storefront';
 import type { BenefitItem } from '../../components/content';
 import type { CityOption } from '../../components/location';
-import { findStore } from '../stores';
-import type { StorePoint } from '../stores';
 
 export type CheckoutDeliveryMethod = 'courier' | 'pickup';
 
@@ -114,17 +114,7 @@ export interface CheckoutChoice {
   readonly label: string;
 }
 
-export const CHECKOUT_DELIVERY_SLOTS: readonly CheckoutChoice[] = [
-  { value: '10-14', label: '10:00 – 14:00' },
-  { value: '14-18', label: '14:00 – 18:00' },
-  { value: '18-22', label: '18:00 – 22:00' },
-];
-
-export interface CheckoutPaymentMark {
-  readonly src: string;
-  readonly alt: string;
-  readonly modifier: string;
-}
+export type CheckoutPaymentMark = StorefrontPaymentMark;
 
 export interface CheckoutPaymentMethod {
   readonly value: string;
@@ -132,15 +122,12 @@ export interface CheckoutPaymentMethod {
   readonly marks: readonly CheckoutPaymentMark[];
 }
 
-const MIR_MARK: CheckoutPaymentMark = { src: paymentMir, alt: 'МИР', modifier: 'mir' };
-const SBP_MARK: CheckoutPaymentMark = { src: paymentSbp, alt: 'СБП', modifier: 'sbp' };
+export const CHECKOUT_PAYMENT_METHODS: readonly CheckoutPaymentMethod[] =
+  STOREFRONT_PAYMENT_OPTIONS.map((option) => {
+    const { mark } = storefrontPaymentMethod(option.method);
 
-export const CHECKOUT_PAYMENT_METHODS: readonly CheckoutPaymentMethod[] = [
-  { value: 'card-online', label: 'Банковской картой онлайн', marks: [MIR_MARK] },
-  { value: 'sbp', label: 'СБП', marks: [SBP_MARK] },
-  { value: 'card-on-delivery', label: 'При получении картой', marks: [MIR_MARK] },
-  { value: 'cash', label: 'Наличными', marks: [] },
-];
+    return { value: option.value, label: option.label, marks: mark === undefined ? [] : [mark] };
+  });
 
 export const CHECKOUT_BENEFITS: readonly BenefitItem[] = [
   { title: 'Официальная гарантия', note: 'от производителя на все товары', icon: 'check' },

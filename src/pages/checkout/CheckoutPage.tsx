@@ -1,8 +1,8 @@
+import { cartTotals } from '../../commerce/cart';
+import type { CartLine } from '../../commerce/cart';
 import { Container } from '../../components/layout';
 import type { AddressLookupClient, CityLookupClient, CityOption } from '../../components/location';
 import { Icon } from '../../components/ui';
-import { cartTotals } from '../cart/cartPricing';
-import type { CartLine } from '../cart/cartStore';
 import { CheckoutForm } from './CheckoutForm';
 import type { CheckoutFormState } from './checkoutFormModel';
 

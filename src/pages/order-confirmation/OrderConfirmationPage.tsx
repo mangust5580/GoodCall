@@ -1,13 +1,14 @@
 import { useEffect } from 'react';
 
+import { CartLineMedia, formatUnitCount } from '../../commerce/cart';
+import { formatPrice } from '../../commerce/format';
+import { findStore } from '../../commerce/shops';
 import { Container } from '../../components/layout';
 import { Icon } from '../../components/ui';
 import type { IconName } from '../../components/ui';
-import { CartLineMedia } from '../cart/CartLineMedia';
-import { formatPrice, formatUnitCount } from '../cart/cartPricing';
-import { CHECKOUT_DELIVERY_SLOTS, CHECKOUT_PAYMENT_METHODS } from '../checkout/checkoutFormModel';
-import { findStore } from '../stores';
+import { CHECKOUT_PAYMENT_METHODS } from '../checkout';
 import type { DemoOrder } from './demoOrder';
+import { STOREFRONT_DELIVERY_SLOTS } from '../../commerce/storefront';
 
 export interface OrderConfirmationPageProps {
   readonly order: DemoOrder | undefined;
@@ -67,7 +68,7 @@ function deliveryItems(order: DemoOrder): readonly InfoItem[] {
     ];
   }
 
-  const slot = CHECKOUT_DELIVERY_SLOTS.find((choice) => choice.value === order.courier?.slot);
+  const slot = STOREFRONT_DELIVERY_SLOTS.find((choice) => choice.value === order.courier?.slot);
 
   return [
     {

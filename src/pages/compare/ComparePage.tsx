@@ -1,13 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 
+import { CartLineMedia } from '../../commerce/cart';
+import { COMPARE_LIMIT } from '../../commerce/compare';
+import type { CompareItem } from '../../commerce/compare';
+import { formatPrice } from '../../commerce/format';
 import { Container } from '../../components/layout';
 import { ProductRating } from '../../components/product';
 import { Icon } from '../../components/ui';
-import { CartLineMedia } from '../cart/CartLineMedia';
-import { formatPrice } from '../cart/cartPricing';
-import { COMPARE_LIMIT } from './compareStore';
-import type { CompareItem } from './compareStore';
 
 export interface ComparePageProps {
   readonly items: readonly CompareItem[];

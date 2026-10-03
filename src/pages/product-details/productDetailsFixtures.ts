@@ -1,24 +1,50 @@
+import paymentMir from '../../assets/commerce/payment-mir.svg';
+import paymentSberpay from '../../assets/commerce/payment-sberpay.svg';
+import paymentSbp from '../../assets/commerce/payment-sbp.svg';
+import paymentTpay from '../../assets/commerce/payment-tpay.svg';
 import {
   PRODUCT_DETAILS_DESCRIPTION_MEDIA,
   PRODUCT_DETAILS_GALLERY_BY_COLOUR_MEDIA,
   PRODUCT_DETAILS_REVIEW_AVATARS,
   PRODUCT_DETAILS_WARRANTY_MEDIA,
 } from '../../assets/media/product-details/productDetailsMedia';
-import { CATALOG_PRODUCTS } from '../catalog/catalogProductFixtures';
-import type { CatalogProduct } from '../catalog/catalogProductFixtures';
-import {
-  STOREWIDE_PAYMENT_METHODS,
-  STOREWIDE_SUPPORT,
-  STOREWIDE_TRUST,
-  WARRANTY_TEXT,
-} from './productDetailsStorewide';
+import type { CatalogProduct } from '../catalog';
+import { CATALOG_PRODUCTS } from '../catalog';
+import { STOREWIDE_TRUST, WARRANTY_TEXT } from './productDetailsStorewide';
 import { NEW_PRODUCT_LABEL } from './productDetailsView';
 import type {
   ProductDetailsColour,
   ProductDetailsColourId,
   ProductDetailsGalleryImage,
+  ProductDetailsPaymentMethod,
   ProductDetailsView,
 } from './productDetailsView';
+
+const REFERENCE_PAYMENT_METHODS: readonly ProductDetailsPaymentMethod[] = [
+  {
+    id: 'card',
+    label: 'Банковская карта',
+    mark: { src: paymentMir, alt: 'МИР', modifier: 'mir' },
+  },
+  { id: 'sbp', label: 'СБП', mark: { src: paymentSbp, alt: 'СБП', modifier: 'sbp' } },
+  {
+    id: 'sberpay',
+    label: 'SberPay',
+    mark: { src: paymentSberpay, alt: 'SberPay', modifier: 'sberpay' },
+  },
+  {
+    id: 't-pay',
+    label: 'T-Pay',
+    mark: { src: paymentTpay, alt: 'T-Pay', modifier: 'tpay' },
+  },
+];
+
+const REFERENCE_SUPPORT = {
+  supportPhone: '8 800 100-10-19',
+  supportPhoneHref: 'tel:88001001019',
+  supportHours: 'Ежедневно с 9:00 до 21:00',
+  chatNote: 'Ответим в течение 1 минуты',
+} as const;
 
 const REFERENCE_PRODUCT_ID = 'iphone-15-128';
 const REFERENCE_LABELS: readonly string[] = [NEW_PRODUCT_LABEL, 'Хит продаж'];
@@ -221,9 +247,9 @@ export const PRODUCT_DETAILS_FIXTURE: ProductDetailsView = {
     },
     { kind: 'warranty', title: 'Гарантия', lines: [WARRANTY_TEXT], icon: 'check' },
   ],
-  paymentMethods: STOREWIDE_PAYMENT_METHODS,
+  paymentMethods: REFERENCE_PAYMENT_METHODS,
   trust: STOREWIDE_TRUST,
-  ...STOREWIDE_SUPPORT,
+  ...REFERENCE_SUPPORT,
   variants: {
     baseTitle,
     colours: COLOURS,

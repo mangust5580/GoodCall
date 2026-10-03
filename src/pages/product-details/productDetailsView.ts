@@ -6,9 +6,8 @@ import type {
   ProductContentCategory,
   ProductDetailsContent,
   ProductSpecGroup,
-} from './productDetailsContent';
+} from './productDetailsContent.types';
 import type { ProductDetailsLiveProduct } from './productDetailsData';
-import type { ProductDetailsStorewide } from './productDetailsStorewide';
 
 export type ProductDetailsColourId = 'pink' | 'black' | 'blue';
 
@@ -44,6 +43,7 @@ export interface ProductDetailsService {
 export interface ProductDetailsPaymentMethod {
   readonly id: string;
   readonly label: string;
+  readonly icon?: IconName;
   readonly mark?: {
     readonly src: string;
     readonly alt: string;
@@ -80,6 +80,17 @@ export interface ProductDetailsTrustItem {
   readonly title: string;
   readonly text: string;
   readonly icon: IconName;
+}
+
+export interface ProductDetailsStorewide {
+  readonly installmentMonths: number;
+  readonly services: readonly ProductDetailsService[];
+  readonly paymentMethods: readonly ProductDetailsPaymentMethod[];
+  readonly trust: readonly ProductDetailsTrustItem[];
+  readonly supportPhone: string;
+  readonly supportPhoneHref: string;
+  readonly supportHours: string;
+  readonly chatNote: string;
 }
 
 export interface ProductDetailsVariants {

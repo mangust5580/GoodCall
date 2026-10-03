@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 
 import productPhone from '../../assets/products/product-phone.svg';
+import { formatUnitCount } from '../../commerce/cart';
+import type { FavoriteItem } from '../../commerce/favorites';
+import { formatPrice } from '../../commerce/format';
 import { Container } from '../../components/layout';
 import { ProductCard } from '../../components/product';
 import { Chip, Icon } from '../../components/ui';
-import { formatPrice, formatUnitCount } from '../cart/cartPricing';
-import type { FavoriteItem } from './favoritesStore';
 
 export interface FavoritesCartSeam {
   readonly quantityOf: (item: FavoriteItem) => number | undefined;

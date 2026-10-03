@@ -3,7 +3,7 @@ import {
   PRODUCT_DETAILS_GALLERY_BY_COLOUR_MEDIA,
   PRODUCT_DETAILS_WARRANTY_MEDIA,
 } from '../../../assets/media/product-details/productDetailsMedia';
-import type { ProductDetailsContent } from '../productDetailsContent';
+import type { ProductDetailsContent } from '../productDetailsContent.types';
 
 const NITS = 'кд/\u2060м²';
 const IPHONE_15_PINK = PRODUCT_DETAILS_GALLERY_BY_COLOUR_MEDIA.pink;

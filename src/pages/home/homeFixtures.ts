@@ -1,7 +1,6 @@
 import type { BenefitItem } from '../../components/content';
 import type { IconName } from '../../components/ui';
-
-export type HomeArtwork = 'smartphone' | 'earbuds' | 'watch' | 'headphones' | 'laptop' | 'tablet';
+import type { HomeArtwork, HomeProduct } from './homeProduct';
 
 export type HomeHeroMedia = 'heroMainPromo' | 'heroLaptop01' | 'heroAudio02';
 
@@ -33,20 +32,6 @@ export interface HomeCategoryTile {
   readonly slug: string;
   readonly label: string;
   readonly icon: IconName;
-}
-
-export interface HomeProduct {
-  readonly id: string;
-  readonly title: string;
-  readonly imageSrc?: string;
-  readonly imageAlt: string;
-  readonly price: string;
-  readonly priceValue: number;
-  readonly oldPrice?: string;
-  readonly oldPriceValue?: number;
-  readonly badge?: string;
-  readonly badgeTone?: 'sale' | 'new';
-  readonly image: HomeArtwork;
 }
 
 export interface HomeArticle {

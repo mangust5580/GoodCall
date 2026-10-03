@@ -1,7 +1,7 @@
+import { CartLineMedia, lineDiscountPercent, lineListTotal, lineTotal } from '../../commerce/cart';
+import type { CartLine } from '../../commerce/cart';
+import { formatPrice } from '../../commerce/format';
 import { Button, Checkbox, Chip, Icon, QuantityStepper } from '../../components/ui';
-import { CartLineMedia } from './CartLineMedia';
-import type { CartLine } from './cartStore';
-import { formatPrice, lineDiscountPercent, lineListTotal, lineTotal } from './cartPricing';
 
 interface CartLineItemProps {
   readonly line: CartLine;

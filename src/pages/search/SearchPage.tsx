@@ -2,12 +2,15 @@ import { useState, useSyncExternalStore } from 'react';
 import { Select } from 'radix-ui';
 
 import productPhone from '../../assets/products/product-phone.svg';
+import { formatPrice } from '../../commerce/format';
 import { Container } from '../../components/layout';
 import { ProductCard } from '../../components/product';
 import { Button, Chip, Icon, Pagination } from '../../components/ui';
-import type { CatalogCartSeam } from '../catalog/CatalogProductGrid';
-import { CATALOG_SORT_OPTIONS, sortCatalogProducts } from '../catalog/catalogProductFixtures';
-import type { CatalogProduct, CatalogSortValue } from '../catalog/catalogProductFixtures';
+import type { CatalogCartSeam, CatalogProduct, CatalogSortValue } from '../catalog';
+import { CATALOG_SORT_OPTIONS, sortCatalogProducts } from '../catalog';
+import { SearchFilterDialog } from './SearchFilterDialog';
+import { SearchFilters } from './SearchFilters';
+import { SearchResultRow } from './SearchResultRow';
 import {
   EMPTY_SEARCH_FILTERS,
   applySearchFilters,
@@ -17,12 +20,8 @@ import {
   searchFiltersActive,
 } from './searchFacets';
 import type { SearchFilterState } from './searchFacets';
-import { SearchFilterDialog } from './SearchFilterDialog';
-import { SearchFilters } from './SearchFilters';
-import { SearchResultRow } from './SearchResultRow';
 import {
   formatFoundCount,
-  formatSearchPrice,
   matchSearchProducts,
   searchPageCount,
   searchPageSlice,
@@ -173,9 +172,7 @@ export function SearchPage({
               imageSrc={product.imageSrc ?? productPhone}
               layout="horizontal"
               oldPrice={
-                product.oldPriceValue === undefined
-                  ? undefined
-                  : formatSearchPrice(product.oldPriceValue)
+                product.oldPriceValue === undefined ? undefined : formatPrice(product.oldPriceValue)
               }
               onAddToCart={() => {
                 addToCart(product);
@@ -188,7 +185,7 @@ export function SearchPage({
                       changeQuantity(product, value);
                     }
               }
-              price={formatSearchPrice(product.priceValue)}
+              price={formatPrice(product.priceValue)}
               quantity={cart?.quantityOf(product)}
               rating={product.rating}
               reviewCount={product.reviewCount}

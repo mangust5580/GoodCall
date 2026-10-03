@@ -85,6 +85,20 @@
     color: var(--role-text-secondary);
   }
 
+  &__group-link {
+    color: inherit;
+    text-decoration-line: none;
+
+    &:hover {
+      color: var(--role-text-link);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--role-border-focus);
+      outline-offset: 2px;
+    }
+  }
+
   &__contacts {
     display: flex;
     flex-direction: column;

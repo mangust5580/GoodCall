@@ -1,8 +1,8 @@
 import { supabaseClient } from '../../lib/supabase/client';
 import type { GoodCallSupabaseClient } from '../../lib/supabase/client';
 import type { Database } from '../../lib/supabase/database.types';
-import { CATALOG_PRODUCTS } from './catalogProductFixtures';
-import type { CatalogProduct } from './catalogProductFixtures';
+import type { CatalogProduct } from './catalogProduct';
+import { CATALOG_PRODUCTS } from './catalogProducts';
 
 type ProductRow = Database['public']['Tables']['products']['Row'];
 type ProductImageRow = Database['public']['Tables']['product_images']['Row'];

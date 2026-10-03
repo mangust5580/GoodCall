@@ -6,7 +6,7 @@ import type { PictureSource } from '../../components/media';
 import { ProductCard } from '../../components/product';
 import { Chip, Icon, SearchField } from '../../components/ui';
 import type { IconName } from '../../components/ui';
-import type { HomeProduct } from '../home/homeFixtures';
+import type { HomeProduct } from '../home';
 
 export interface NotFoundShortcutTargets {
   readonly smartphones: string;

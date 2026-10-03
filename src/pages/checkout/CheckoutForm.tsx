@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { FormEvent, ReactNode } from 'react';
 
+import type { CartLine, CartTotals } from '../../commerce/cart';
+import { DEMO_STORES, findStore } from '../../commerce/shops';
 import { BenefitsStrip } from '../../components/content';
 import type {
   AddressLookupClient,
@@ -18,14 +20,10 @@ import {
   TextareaField,
 } from '../../components/ui';
 import type { IconName } from '../../components/ui';
-import type { CartTotals } from '../cart/cartPricing';
-import type { CartLine } from '../cart/cartStore';
-import { DEMO_STORES, findStore } from '../stores';
 import { CheckoutAddressCombobox } from './CheckoutAddressCombobox';
 import { CheckoutOrderSummary } from './CheckoutOrderSummary';
 import {
   CHECKOUT_BENEFITS,
-  CHECKOUT_DELIVERY_SLOTS,
   CHECKOUT_FIELD_ORDER,
   CHECKOUT_MAX_LENGTH,
   CHECKOUT_PAYMENT_METHODS,
@@ -42,6 +40,7 @@ import type {
   CheckoutFormState,
   CheckoutValidatedField,
 } from './checkoutFormModel';
+import { STOREFRONT_DELIVERY_SLOTS } from '../../commerce/storefront';
 
 interface CheckoutFormProps {
   readonly lines: readonly CartLine[];
@@ -544,7 +543,7 @@ export function CheckoutForm({
                 >
                   <legend className="checkout-slots__legend">Время</legend>
                   <div className="checkout-slots__list">
-                    {CHECKOUT_DELIVERY_SLOTS.map((slot) => (
+                    {STOREFRONT_DELIVERY_SLOTS.map((slot) => (
                       <label
                         className={
                           errors.deliverySlot

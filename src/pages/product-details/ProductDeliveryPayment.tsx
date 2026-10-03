@@ -1,5 +1,5 @@
+import { formatPrice } from '../../commerce/format';
 import { Icon } from '../../components/ui';
-import { formatPrice } from './productDetailsFormat';
 import type { ProductDetailsPaymentMethod, ProductDetailsService } from './productDetailsView';
 
 interface ProductDeliveryPaymentProps {
@@ -43,7 +43,10 @@ export function ProductDeliveryPayment({
                 <span className="product-payment-methods__label">{method.label}</span>
                 <span className="product-payment-methods__visual">
                   {method.mark === undefined ? (
-                    <Icon className="product-payment-methods__glyph" name="smartphone" />
+                    <Icon
+                      className="product-payment-methods__glyph"
+                      name={method.icon ?? 'smartphone'}
+                    />
                   ) : (
                     <img
                       alt={method.mark.alt === method.label ? '' : method.mark.alt}

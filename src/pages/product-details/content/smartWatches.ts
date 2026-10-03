@@ -1,5 +1,5 @@
 import { PRODUCT_DETAILS_APPLE_WATCH_S9_MEDIA } from '../../../assets/media/product-details/productDetailsMedia';
-import type { ProductDetailsContent } from '../productDetailsContent';
+import type { ProductDetailsContent } from '../productDetailsContent.types';
 
 export const SMART_WATCHES_CONTENT: readonly ProductDetailsContent[] = [
   {

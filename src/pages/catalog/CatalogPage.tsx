@@ -13,15 +13,10 @@ import type {
 } from './CatalogProductGrid';
 import { DEFAULT_CATALOG_FILTER_STATE } from './catalogFilterState';
 import type { CatalogFilterState } from './catalogFilterState';
-import {
-  CATALOG_PAGE_COUNT,
-  CATALOG_PRODUCTS,
-  CATALOG_SORT_OPTIONS,
-  DEFAULT_CATALOG_SORT,
-  catalogPageProducts,
-  sortCatalogProducts,
-} from './catalogProductFixtures';
-import type { CatalogProduct, CatalogSortValue } from './catalogProductFixtures';
+import { CATALOG_SORT_OPTIONS, DEFAULT_CATALOG_SORT, sortCatalogProducts } from './catalogProduct';
+import type { CatalogProduct, CatalogSortValue } from './catalogProduct';
+import { CATALOG_PAGE_COUNT, catalogPageProducts } from './catalogProductFixtures';
+import { CATALOG_PRODUCTS } from './catalogProducts';
 
 export interface CatalogPageProps {
   readonly resultCount?: number;

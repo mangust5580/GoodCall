@@ -1,4 +1,4 @@
-import type { CatalogProduct } from '../catalog/catalogProductFixtures';
+import type { CatalogProduct } from '../catalog';
 
 export interface SearchFacetOption<Value extends string | number> {
   readonly value: Value;

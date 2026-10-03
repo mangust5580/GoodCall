@@ -36,6 +36,32 @@ Stop and report instead of changing files when you find:
 Directories, route families, and abstractions are created when a task needs them,
 not in anticipation of one.
 
+## Module boundaries
+
+| Area                     | Owns                                                                       |
+| ------------------------ | -------------------------------------------------------------------------- |
+| `src/app/`               | bootstrap, router, shell, `routePaths.ts`; `app/routes/` holds route seams |
+| `src/reference/`         | `?reference=` design surfaces only                                         |
+| `src/pages/<family>/`    | one route family's UI and family-local logic/data                          |
+| `src/commerce/<module>/` | cross-route commerce state, facts and formatting                           |
+| `src/components/`        | shared presentation with no route or state knowledge                       |
+| `src/lib/`               | infrastructure (Supabase client)                                           |
+
+Dependencies point down: `app → pages → commerce → components`. Enforced by
+`no-restricted-imports` in `eslint.config.js`:
+
+- `components` must not import `pages`, `app`, `commerce` or `reference`.
+- `commerce` must not import `pages`, `app` or `reference`.
+- `pages` must not import `app` or `reference`.
+- Only `src/app/App.tsx` may import `reference`.
+- From `app` and `pages`, a page family or commerce module is imported through
+  its `index.ts`; `commerce/format.ts` is a standalone module. Inside `commerce`,
+  `compare/compareStore.ts` imports `cart/cartStore.ts` directly so the store
+  graph stays free of UI.
+
+Inside a module, use relative imports and never import the module's own
+`index.ts`. Add to an `index.ts` only symbols that other modules consume.
+
 ## Source priority
 
 When sources conflict, trust them in this order:

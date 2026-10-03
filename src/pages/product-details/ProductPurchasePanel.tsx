@@ -1,8 +1,9 @@
 import { useId, useState } from 'react';
 
+import { formatPrice } from '../../commerce/format';
 import { Button, Chip, Icon, QuantityStepper } from '../../components/ui';
 import { PRODUCT_STAR_COUNT, ProductStars } from './ProductStars';
-import { formatPoints, formatPrice, formatRating, formatReviewCount } from './productDetailsFormat';
+import { formatPoints, formatRating, formatReviewCount } from './productDetailsFormat';
 import type {
   ProductDetailsColourId,
   ProductDetailsVariants,

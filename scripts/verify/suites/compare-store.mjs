@@ -3,7 +3,7 @@ import { register } from 'node:module';
 import { report } from '../lib/suite.mjs';
 
 register(new URL('../lib/ts-hook.mjs', import.meta.url));
-const STORE = new URL('../../../src/pages/compare/compareStore.ts', import.meta.url).href;
+const STORE = new URL('../../../src/commerce/compare/compareStore.ts', import.meta.url).href;
 const KEY = 'goodcall.compare.v1';
 const results = [];
 const check = (name, ok, detail = '') =>

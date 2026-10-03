@@ -1,15 +1,10 @@
-import { CATALOG_PRODUCTS_PER_PAGE, CATALOG_SORT_OPTIONS } from '../catalog/catalogProductFixtures';
-import type { CatalogProduct, CatalogSortValue } from '../catalog/catalogProductFixtures';
+import { CATALOG_PRODUCTS_PER_PAGE, CATALOG_SORT_OPTIONS } from '../catalog';
+import type { CatalogProduct, CatalogSortValue } from '../catalog';
 
 export const SEARCH_RESULTS_PER_PAGE = CATALOG_PRODUCTS_PER_PAGE;
 
 const LOCALE = 'ru-RU';
 const countFormatter = new Intl.NumberFormat(LOCALE);
-const priceFormatter = new Intl.NumberFormat(LOCALE, {
-  style: 'currency',
-  currency: 'RUB',
-  maximumFractionDigits: 0,
-});
 const pluralRules = new Intl.PluralRules(LOCALE);
 
 const PRODUCT_WORDS: Readonly<Record<Intl.LDMLPluralRule, string>> = {
@@ -72,10 +67,6 @@ export function searchPageSlice(
 
 export function searchSavings(price: number, oldPrice: number | undefined): number | undefined {
   return oldPrice !== undefined && oldPrice > price ? oldPrice - price : undefined;
-}
-
-export function formatSearchPrice(value: number): string {
-  return priceFormatter.format(value);
 }
 
 export function formatFoundCount(value: number): string {

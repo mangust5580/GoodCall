@@ -1,9 +1,8 @@
+import { CartLineMedia, formatUnitCount, lineTotal } from '../../commerce/cart';
+import type { CartLine, CartTotals } from '../../commerce/cart';
+import { formatPrice } from '../../commerce/format';
+import type { StorePoint } from '../../commerce/shops';
 import { Button, Icon } from '../../components/ui';
-import { CartLineMedia } from '../cart/CartLineMedia';
-import type { CartTotals } from '../cart/cartPricing';
-import { formatPrice, formatUnitCount, lineTotal } from '../cart/cartPricing';
-import type { CartLine } from '../cart/cartStore';
-import type { StorePoint } from '../stores';
 
 interface CheckoutOrderSummaryProps {
   readonly lines: readonly CartLine[];

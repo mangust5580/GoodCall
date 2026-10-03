@@ -1,9 +1,10 @@
 import productPhone from '../../assets/products/product-phone.svg';
+import { formatPrice } from '../../commerce/format';
 import { AddToCartButton, ProductRating } from '../../components/product';
 import { Chip, QuantityStepper } from '../../components/ui';
-import type { CatalogProduct } from '../catalog/catalogProductFixtures';
+import type { CatalogProduct } from '../catalog';
 import { productColour, productRam, productStorage } from './searchFacets';
-import { formatSearchPrice, searchSavings } from './searchResults';
+import { searchSavings } from './searchResults';
 
 const CART_ACTION_TEXT = 'В корзину';
 
@@ -69,13 +70,13 @@ export function SearchResultRow({
       <div className="search-row__aside">
         <p className="search-row__prices">
           <strong className="product-price search-row__price">
-            {formatSearchPrice(product.priceValue)}
+            {formatPrice(product.priceValue)}
           </strong>
           {product.oldPriceValue === undefined ? null : (
-            <del className="product-price-old">{formatSearchPrice(product.oldPriceValue)}</del>
+            <del className="product-price-old">{formatPrice(product.oldPriceValue)}</del>
           )}
           {savings === undefined ? null : (
-            <span className="search-row__savings">{`Выгода ${formatSearchPrice(savings)}`}</span>
+            <span className="search-row__savings">{`Выгода ${formatPrice(savings)}`}</span>
           )}
         </p>
         <div className="search-row__actions">

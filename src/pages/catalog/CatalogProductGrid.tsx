@@ -1,9 +1,10 @@
 import { Fragment, useState } from 'react';
 
 import productPhone from '../../assets/products/product-phone.svg';
+import { formatPrice } from '../../commerce/format';
 import { PromoBanner } from '../../components/content';
 import { ProductCard } from '../../components/product';
-import type { CatalogProduct } from './catalogProductFixtures';
+import type { CatalogProduct } from './catalogProduct';
 
 export interface CatalogCartSeam {
   readonly quantityOf: (product: CatalogProduct) => number | undefined;
@@ -34,16 +35,6 @@ interface CatalogProductGridProps {
 const PROMO_AFTER_INDEX = 8;
 const PROMO_TITLE = 'Флагманы по выгоде';
 const PROMO_DESCRIPTION = 'Техника премиум-класса со скидками до 50%';
-
-const priceFormatter = new Intl.NumberFormat('ru-RU', {
-  style: 'currency',
-  currency: 'RUB',
-  maximumFractionDigits: 0,
-});
-
-function formatPrice(value: number): string {
-  return priceFormatter.format(value);
-}
 
 export function CatalogProductGrid({
   cart,

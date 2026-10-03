@@ -46,7 +46,11 @@ export type IconName =
   | 'vk'
   | 'telegram'
   | 'whatsapp'
-  | 'x';
+  | 'x'
+  | 'shield'
+  | 'credit-card'
+  | 'banknote'
+  | 'info';
 
 interface IconProps {
   readonly name: IconName;

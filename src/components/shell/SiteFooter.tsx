@@ -10,37 +10,66 @@ import { BrandLogo } from '../brand';
 import { Container } from '../layout';
 import { Icon } from '../ui';
 
+export interface SiteFooterHelpLinks {
+  readonly delivery?: string;
+  readonly warranty?: string;
+  readonly faq?: string;
+}
+
+export interface SiteFooterPaymentMark {
+  readonly name: string;
+  readonly src: string;
+  readonly modifier: string;
+}
+
+export interface SiteFooterSupport {
+  readonly phone: string;
+  readonly phoneHref: string;
+  readonly email: string;
+  readonly emailHref: string;
+  readonly hours: string;
+}
+
 export interface SiteFooterProps {
   readonly homeHref?: string;
+  readonly helpLinks?: SiteFooterHelpLinks;
+  readonly paymentMarks?: readonly SiteFooterPaymentMark[];
+  readonly support?: SiteFooterSupport;
+}
+
+interface FooterItem {
+  readonly label: string;
+  readonly link?: keyof SiteFooterHelpLinks;
 }
 
 interface FooterGroup {
   readonly title: string;
-  readonly items: readonly string[];
+  readonly items: readonly FooterItem[];
 }
 
 const FOOTER_GROUPS: readonly FooterGroup[] = [
   {
     title: 'Покупателям',
-    items: ['Доставка и оплата', 'Гарантия и возврат', 'FAQ', 'Бонусная программа'],
+    items: [
+      { label: 'Доставка и оплата', link: 'delivery' },
+      { label: 'Гарантия и возврат', link: 'warranty' },
+      { label: 'FAQ', link: 'faq' },
+      { label: 'Бонусная программа' },
+    ],
   },
   {
     title: 'Компания',
-    items: ['О нас', 'Контакты', 'Новости', 'Карьера'],
+    items: [{ label: 'О нас' }, { label: 'Контакты' }, { label: 'Новости' }, { label: 'Карьера' }],
   },
   {
     title: 'Помощь',
-    items: ['Поддержка 24/7', 'Статус заказа', 'Сервисные центры'],
+    items: [{ label: 'Поддержка 24/7' }, { label: 'Статус заказа' }, { label: 'Сервисные центры' }],
   },
 ];
 
 interface BrandMark {
   readonly name: string;
   readonly src: string;
-}
-
-interface PaymentMark extends BrandMark {
-  readonly modifier: string;
 }
 
 const SOCIAL_MARKS: readonly BrandMark[] = [
@@ -50,7 +79,7 @@ const SOCIAL_MARKS: readonly BrandMark[] = [
   { name: 'RUTUBE', src: socialRutube },
 ];
 
-const PAYMENT_MARKS: readonly PaymentMark[] = [
+const PAYMENT_MARKS: readonly SiteFooterPaymentMark[] = [
   { name: 'МИР', src: paymentMir, modifier: 'mir' },
   { name: 'СБП', src: paymentSbp, modifier: 'sbp' },
   { name: 'SberPay', src: paymentSberpay, modifier: 'sberpay' },
@@ -63,11 +92,20 @@ const LEGAL_ITEMS: readonly string[] = [
   'Публичная оферта',
 ];
 
-const SUPPORT_PHONE = '8 800 100-10-10';
-const SUPPORT_PHONE_HREF = 'tel:+78001001010';
-const SUPPORT_EMAIL = 'info@goodcall.ru';
+const SUPPORT: SiteFooterSupport = {
+  phone: '8 800 100-10-10',
+  phoneHref: 'tel:+78001001010',
+  email: 'info@goodcall.ru',
+  emailHref: 'mailto:info@goodcall.ru',
+  hours: 'Ежедневно с 9:00 до 21:00',
+};
 
-export function SiteFooter({ homeHref }: SiteFooterProps) {
+export function SiteFooter({
+  homeHref,
+  helpLinks,
+  paymentMarks = PAYMENT_MARKS,
+  support = SUPPORT,
+}: SiteFooterProps) {
   const home = homeHref ?? import.meta.env.BASE_URL;
 
   return (
@@ -92,11 +130,21 @@ export function SiteFooter({ homeHref }: SiteFooterProps) {
             <div className="site-footer__group" key={group.title}>
               <h2 className="site-footer__group-title">{group.title}</h2>
               <ul className="site-footer__group-list">
-                {group.items.map((item) => (
-                  <li className="site-footer__group-item" key={item}>
-                    {item}
-                  </li>
-                ))}
+                {group.items.map((item) => {
+                  const href = item.link === undefined ? undefined : helpLinks?.[item.link];
+
+                  return (
+                    <li className="site-footer__group-item" key={item.label}>
+                      {href === undefined ? (
+                        item.label
+                      ) : (
+                        <a className="site-footer__group-link" href={href}>
+                          {item.label}
+                        </a>
+                      )}
+                    </li>
+                  );
+                })}
               </ul>
             </div>
           ))}
@@ -107,8 +155,8 @@ export function SiteFooter({ homeHref }: SiteFooterProps) {
               <span className="site-footer__contact-tile">
                 <Icon name="phone" />
               </span>
-              <a className="site-footer__contact-value" href={SUPPORT_PHONE_HREF}>
-                {SUPPORT_PHONE}
+              <a className="site-footer__contact-value" href={support.phoneHref}>
+                {support.phone}
               </a>
               <span className="site-footer__contact-note">Звонок по России бесплатный</span>
             </div>
@@ -116,10 +164,10 @@ export function SiteFooter({ homeHref }: SiteFooterProps) {
               <span className="site-footer__contact-tile">
                 <Icon name="mail" />
               </span>
-              <a className="site-footer__contact-value" href={`mailto:${SUPPORT_EMAIL}`}>
-                {SUPPORT_EMAIL}
+              <a className="site-footer__contact-value" href={support.emailHref}>
+                {support.email}
               </a>
-              <span className="site-footer__contact-note">Ежедневно с 9:00 до 21:00</span>
+              <span className="site-footer__contact-note">{support.hours}</span>
             </div>
           </div>
         </div>
@@ -134,7 +182,7 @@ export function SiteFooter({ homeHref }: SiteFooterProps) {
             ))}
           </ul>
           <ul aria-label="Способы оплаты" className="site-footer__payments">
-            {PAYMENT_MARKS.map((mark) => (
+            {paymentMarks.map((mark) => (
               <li className="site-footer__payment" key={mark.name}>
                 <img
                   alt={mark.name}

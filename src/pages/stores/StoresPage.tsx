@@ -1,6 +1,6 @@
+import type { StorePoint } from '../../commerce/shops';
 import { Container } from '../../components/layout';
 import { Icon } from '../../components/ui';
-import type { StorePoint } from './storeData';
 
 export interface StoresPageProps {
   readonly homeHref: string;

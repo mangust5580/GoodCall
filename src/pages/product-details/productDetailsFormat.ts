@@ -1,9 +1,3 @@
-const priceFormatter = new Intl.NumberFormat('ru-RU', {
-  style: 'currency',
-  currency: 'RUB',
-  maximumFractionDigits: 0,
-});
-
 const countFormatter = new Intl.NumberFormat('ru-RU');
 
 const ratingFormatter = new Intl.NumberFormat('ru-RU', {
@@ -21,10 +15,6 @@ const REVIEW_WORDS: Readonly<Record<Intl.LDMLPluralRule, string>> = {
   many: 'отзывов',
   other: 'отзыва',
 };
-
-export function formatPrice(value: number): string {
-  return priceFormatter.format(value);
-}
 
 export function formatPoints(value: number): string {
   return countFormatter.format(value);
