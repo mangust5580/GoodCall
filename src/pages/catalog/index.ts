@@ -9,8 +9,9 @@ export {
 export type { CatalogProduct, CatalogSortValue } from './catalogProduct';
 export { fetchCatalogProducts } from './catalogProductData';
 export { CATALOG_PRODUCTS } from './catalogProducts';
+export { CatalogProductCard } from './CatalogProductCard';
 export type {
   CatalogCartSeam,
   CatalogCompareSeam,
   CatalogFavoritesSeam,
-} from './CatalogProductGrid';
+} from './CatalogProductCard';

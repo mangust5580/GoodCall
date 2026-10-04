@@ -10,7 +10,7 @@ import type {
   CatalogCartSeam,
   CatalogCompareSeam,
   CatalogFavoritesSeam,
-} from './CatalogProductGrid';
+} from './CatalogProductCard';
 import { DEFAULT_CATALOG_FILTER_STATE } from './catalogFilterState';
 import type { CatalogFilterState } from './catalogFilterState';
 import { CATALOG_SORT_OPTIONS, DEFAULT_CATALOG_SORT, sortCatalogProducts } from './catalogProduct';

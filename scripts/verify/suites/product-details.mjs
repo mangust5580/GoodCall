@@ -15,6 +15,19 @@ const smartphones = CATEGORIES.find((c) => c.slug === 'smartphones');
 
 let scenario = {};
 let productRequests = [];
+let categoryRequests = 0;
+
+const RELATED_LIMIT = 8;
+const relatedSmartphones = (currentSlug) =>
+  PRODUCTS.filter((row) => row.is_active && row.category_id === smartphones.id)
+    .sort((a, b) =>
+      a.popularity_score === b.popularity_score
+        ? a.slug.localeCompare(b.slug)
+        : b.popularity_score - a.popularity_score,
+    )
+    .map((row) => row.slug)
+    .filter((slug) => slug !== currentSlug)
+    .slice(0, RELATED_LIMIT);
 
 function tableRows(table) {
   if (table === 'categories') return CATEGORIES;
@@ -84,6 +97,13 @@ function stub(request) {
   const url = new URL(request.url);
   const table = url.pathname.replace('/rest/v1/', '');
   if (table === 'products') productRequests.push(url.search);
+  if (table === 'categories') categoryRequests += 1;
+  if (scenario.catalogListError && table === 'categories') {
+    return {
+      status: 500,
+      body: JSON.stringify({ code: 'XX000', message: 'stub failure', details: null, hint: null }),
+    };
+  }
   if (scenario.productsError && table === 'products') {
     return {
       status: 500,
@@ -484,8 +504,13 @@ console.log('stage: links/cart/favorites', new Date().toISOString());
   await page.waitForFunction(() => document.querySelector('.product-purchase__title'));
   check((await page.textContent('h1')) === 'Google Pixel 8 128 ГБ, Обсидиан', 'compare → PDP');
   check(
-    (await page.count('.product-details [aria-label*="сравнени"]')) === 0,
-    'PDP: no compare control',
+    (await page.evaluate(
+      () =>
+        [...document.querySelectorAll('.product-details [aria-label*="сравнени"]')].filter(
+          (el) => el.closest('.product-related') === null,
+        ).length,
+    )) === 0,
+    'PDP: no compare control outside related rail',
   );
 
   await page.evaluate(() => localStorage.removeItem('goodcall.cart.v1'));
@@ -573,6 +598,204 @@ console.log('stage: links/cart/favorites', new Date().toISOString());
   await page.close();
 }
 
+console.log('stage: related', new Date().toISOString());
+{
+  const relatedFacts = (page) =>
+    page.evaluate(() => {
+      const section = document.querySelector('.product-related');
+      const sections = document.querySelector('.product-sections');
+      const rect = sections?.getBoundingClientRect();
+      const all = section?.querySelector('.product-related__all');
+      return {
+        present: section !== null,
+        heading: section?.querySelector('h2')?.textContent.trim() ?? null,
+        all: all ? [all.textContent.trim(), all.getAttribute('href')] : null,
+        links: section
+          ? [...section.querySelectorAll('.product-card__link')].map((a) => a.getAttribute('href'))
+          : [],
+        cards: section ? section.querySelectorAll('.product-card').length : 0,
+        afterSections:
+          section !== null &&
+          sections !== null &&
+          (sections.compareDocumentPosition(section) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0,
+        insideMain: section !== null && section.closest('main.product-details') !== null,
+        sectionsBox: rect ? [Math.round(rect.top + scrollY), Math.round(rect.height)] : null,
+        error: document.body.innerText.includes('Не удалось'),
+        h1: document.querySelector('h1')?.textContent.trim(),
+      };
+    });
+  const waitRelated = (page) =>
+    page.waitForFunction(
+      () => document.querySelectorAll('.product-related .product-card').length > 0,
+    );
+  const shellCounts = (page) =>
+    page.evaluate(() =>
+      [...document.querySelectorAll('.site-header__action')].map((a) =>
+        a.getAttribute('aria-label'),
+      ),
+    );
+  const cardOf = (slug) =>
+    `.product-related__item:has(.product-card__link[href="#/product/${slug}"])`;
+
+  const page = await newPage(1440, 900);
+  scenario = {};
+  await page.goto(`${NEW}#/`);
+  await page.evaluate(() => localStorage.clear());
+  categoryRequests = 0;
+  await openPdp(page, 'iphone-15-128');
+  await waitRelated(page);
+  let facts = await relatedFacts(page);
+  const expected = relatedSmartphones('iphone-15-128');
+  check(facts.heading === 'Другие смартфоны', `related: heading ${facts.heading}`);
+  check(
+    JSON.stringify(facts.all) === JSON.stringify(['Смотреть все', '#/catalog/smartphones']),
+    `related: all link ${JSON.stringify(facts.all)}`,
+  );
+  check(
+    facts.cards >= 1 && facts.cards <= RELATED_LIMIT && facts.cards === expected.length,
+    `related: count ${facts.cards}`,
+  );
+  check(
+    JSON.stringify(facts.links) === JSON.stringify(expected.map((slug) => `#/product/${slug}`)),
+    `related: canonical order ${JSON.stringify(facts.links)}`,
+  );
+  check(!facts.links.includes('#/product/iphone-15-128'), 'related: current excluded');
+  check(facts.afterSections && facts.insideMain, 'related: placed after sections inside PDP');
+  check(categoryRequests === 1, `related: one catalog read (${categoryRequests})`);
+  const withRelatedBox = facts.sectionsBox;
+
+  const nav = await page.evaluate(() => ({
+    previous: document.querySelector('.product-related__nav--previous')?.disabled,
+    next: document.querySelector('.product-related__nav--next')?.disabled,
+    labels: [...document.querySelectorAll('.product-related__nav')].map((b) =>
+      b.getAttribute('aria-label'),
+    ),
+  }));
+  check(
+    nav.previous === true && nav.next === false && nav.labels.length === 2,
+    `related: initial nav ${JSON.stringify(nav)}`,
+  );
+  const hrefBefore = await page.evaluate(() => location.href);
+  await page.evaluate(() => document.querySelector('.product-related__nav--next').click());
+  await page.waitForFunction(
+    () =>
+      document.querySelector('.product-related__rail').scrollLeft > 0 &&
+      document.querySelector('.product-related__nav--previous')?.disabled === false,
+  );
+  check((await page.evaluate(() => location.href)) === hrefBefore, 'related: nav keeps URL');
+  await page.evaluate(() => {
+    const rail = document.querySelector('.product-related__rail');
+    rail.style.scrollBehavior = 'auto';
+    rail.scrollLeft = 0;
+    rail.style.scrollBehavior = '';
+  });
+
+  const firstSlug = expected[0];
+  const first = cardOf(firstSlug);
+  await page.click(`${first} .product-card__cart`);
+  let cartLines = await page.evaluate(
+    () => JSON.parse(localStorage.getItem('goodcall.cart.v1') ?? '{"lines":[]}').lines,
+  );
+  check(
+    cartLines.length === 1 && cartLines[0].id === firstSlug && cartLines[0].quantity === 1,
+    `related: add to cart ${JSON.stringify(cartLines.map((l) => [l.id, l.quantity]))}`,
+  );
+  check((await shellCounts(page)).includes('Корзина: 1'), 'related: cart shell count');
+  await page.click(`${first} .ui-stepper__button`, { nth: 1 });
+  check(
+    (await page.textContent(`${first} .ui-stepper__value`)) === '2',
+    'related: stepper increase',
+  );
+  await page.click(`${first} .ui-stepper__button`, { nth: 0 });
+  await page.click(`${first} .ui-stepper__button`, { nth: 0 });
+  cartLines = await page.evaluate(
+    () => JSON.parse(localStorage.getItem('goodcall.cart.v1') ?? '{"lines":[]}').lines,
+  );
+  check(cartLines.length === 0, 'related: stepper removes at zero');
+  check((await page.count(`${first} .product-card__cart`)) === 1, 'related: cart button restored');
+
+  await page.click(`${first} .product-card__favorite`);
+  const favorites = await page.evaluate(() =>
+    JSON.parse(localStorage.getItem('goodcall.favorites.v1') ?? '{"items":[]}').items.map(
+      (i) => i.slug,
+    ),
+  );
+  check(
+    JSON.stringify(favorites) === JSON.stringify([firstSlug]),
+    `related: favorite ${favorites}`,
+  );
+  check((await shellCounts(page)).includes('Избранное: 1'), 'related: favorites shell count');
+
+  for (const slug of expected.slice(0, 4)) {
+    await page.evaluate(
+      (selector) => document.querySelector(selector).click(),
+      `${cardOf(slug)} .product-card__compare`,
+    );
+  }
+  const compare = await page.evaluate(
+    (selector) => ({
+      stored: JSON.parse(localStorage.getItem('goodcall.compare.v1') ?? '{"items":[]}').items
+        .length,
+      fifth: [
+        document.querySelector(selector)?.disabled,
+        document.querySelector(selector)?.getAttribute('aria-label'),
+      ],
+    }),
+    `${cardOf(expected[4])} .product-card__compare`,
+  );
+  check(compare.stored === 4, `related: compare stored ${compare.stored}`);
+  check(
+    compare.fifth[0] === true &&
+      (compare.fifth[1] ?? '').startsWith('Сравнение заполнено (4 из 4)'),
+    `related: compare limit ${JSON.stringify(compare.fifth)}`,
+  );
+  check((await shellCounts(page)).includes('Сравнение: 4'), 'related: compare shell count');
+  await page.evaluate(() => localStorage.clear());
+
+  await page.click(`${first} .product-card__link`);
+  await page.waitForFunction(
+    (slug) =>
+      location.hash === `#/product/${slug}` &&
+      document.querySelectorAll('.product-related .product-card').length > 0,
+    firstSlug,
+  );
+  facts = await relatedFacts(page);
+  check(
+    JSON.stringify(facts.links) ===
+      JSON.stringify(relatedSmartphones(firstSlug).map((slug) => `#/product/${slug}`)),
+    `related: next PDP order ${JSON.stringify(facts.links)}`,
+  );
+  check(categoryRequests === 1, `related: list reused across slugs (${categoryRequests})`);
+  await page.close();
+
+  for (const slug of ['apple-watch-series-9-45', 'airpods-pro-2-usb-c']) {
+    const fresh = await newPage(1440, 900);
+    categoryRequests = 0;
+    await openPdp(fresh, slug);
+    await fresh.waitForTimeout(400);
+    const other = await relatedFacts(fresh);
+    check(!other.present, `${slug}: no related section`);
+    check(categoryRequests === 0, `${slug}: no catalog read (${categoryRequests})`);
+    await fresh.close();
+  }
+
+  const failing = await newPage(1440, 900);
+  scenario = { catalogListError: true };
+  await openPdp(failing, 'iphone-15-128');
+  await failing.waitForTimeout(400);
+  facts = await relatedFacts(failing);
+  check(
+    !facts.present && !facts.error && facts.h1 === 'Apple iPhone 15 128 ГБ, Розовый',
+    `related failure: absent, PDP ready ${JSON.stringify(facts)}`,
+  );
+  check(
+    JSON.stringify(facts.sectionsBox) === JSON.stringify(withRelatedBox),
+    `related: geometry above unchanged ${JSON.stringify([facts.sectionsBox, withRelatedBox])}`,
+  );
+  scenario = {};
+  await failing.close();
+}
+
 console.log('stage: reference', new Date().toISOString());
 {
   const page = await newPage();
@@ -590,6 +813,7 @@ console.log('stage: reference', new Date().toISOString());
     thumbs: document.querySelectorAll('.product-gallery__thumb').length,
     attributes: document.querySelectorAll('.product-attributes').length,
     title: document.querySelector('h1').textContent,
+    related: document.querySelector('.product-related') !== null,
   }));
   check(
     ref.radios === 5 &&
@@ -603,6 +827,7 @@ console.log('stage: reference', new Date().toISOString());
     `reference: frozen fixture ${JSON.stringify(ref)}`,
   );
   check(ref.title === 'Apple iPhone 15 128 ГБ, Розовый', 'reference: title');
+  check(!ref.related, 'reference: no related section');
   await page.click('.product-option__swatch', { nth: 1 });
   check(
     (await page.textContent('h1')) === 'Apple iPhone 15 128 ГБ, Чёрный',
@@ -668,6 +893,11 @@ for (const slug of ['iphone-15-128', 'apple-watch-series-9-45', 'airpods-pro-2-u
     const page = await newPage(width, width >= 1024 ? 900 : 844);
     scenario = {};
     await openPdp(page, slug);
+    if (slug === 'iphone-15-128') {
+      await page.waitForFunction(
+        () => document.querySelectorAll('.product-related .product-card').length > 0,
+      );
+    }
     await page.evaluate(async () => {
       await document.fonts.ready;
     });
@@ -709,6 +939,15 @@ for (const slug of ['iphone-15-128', 'apple-watch-series-9-45', 'airpods-pro-2-u
         galleryTop: gallery?.top ?? 0,
         clipped,
         small,
+        relatedVisible: (() => {
+          const rail = document.querySelector('.product-related__rail');
+          if (!rail) return null;
+          const box = rail.getBoundingClientRect();
+          return [...rail.querySelectorAll('.product-related__item')].filter((item) => {
+            const r = item.getBoundingClientRect();
+            return r.left >= box.left - 1 && r.right <= box.right + 1;
+          }).length;
+        })(),
       };
     });
     responsive[`${slug}@${width}`] = metrics;
@@ -719,6 +958,15 @@ for (const slug of ['iphone-15-128', 'apple-watch-series-9-45', 'airpods-pro-2-u
       `${slug}@${width}: empty headings/containers`,
     );
     check(metrics.clipped === 0, `${slug}@${width}: clipped text`);
+    if (slug === 'iphone-15-128') {
+      const expectedVisible = width >= 1200 ? 5 : width >= 768 ? 3 : 1;
+      check(
+        metrics.relatedVisible === expectedVisible,
+        `${slug}@${width}: related visible cards ${metrics.relatedVisible}`,
+      );
+    } else {
+      check(metrics.relatedVisible === null, `${slug}@${width}: no related rail`);
+    }
     if (width === 1440) {
       check(
         metrics.purchaseHeight >= 0.75 * metrics.galleryHeight,

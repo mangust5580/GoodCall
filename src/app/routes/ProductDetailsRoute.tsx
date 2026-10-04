@@ -1,10 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 
 import { addCartLine, cartLineId } from '../../commerce/cart';
 import type { CartLineImage } from '../../commerce/cart';
 import { toggleFavorite, useFavoriteItems } from '../../commerce/favorites';
 import { Container } from '../../components/layout';
+import { fetchCatalogProducts } from '../../pages/catalog';
+import type { CatalogProduct } from '../../pages/catalog';
 import {
   PRODUCT_DETAILS_STOREWIDE,
   ProductDetailsPage,
@@ -18,7 +20,10 @@ import type {
   ProductDetailsView,
 } from '../../pages/product-details';
 import { ProductionShell } from '../ProductionShell';
-import { CATALOG_SMARTPHONES_PATH, HOME_PATH, hashHref } from '../routePaths';
+import { CATALOG_SMARTPHONES_PATH, HOME_PATH, hashHref, productDetailsHref } from '../routePaths';
+import { useCatalogCartSeam } from './useCatalogCartSeam';
+import { useCatalogCompareSeam } from './useCatalogCompareSeam';
+import { useCatalogFavoritesSeam } from './useCatalogFavoritesSeam';
 
 import './ProductDetailsRoute.scss';
 
@@ -29,6 +34,7 @@ type ProductDetailsRouteView =
       readonly product: ProductDetailsView;
       readonly cartImage: CartLineImage;
       readonly categoryHref?: string;
+      readonly smartphone: boolean;
     }
   | { readonly status: 'not-found' }
   | { readonly status: 'error' };
@@ -39,6 +45,7 @@ interface SettledProductRead {
 }
 
 const SMARTPHONES_CATEGORY_SLUG = 'smartphones';
+const RELATED_PRODUCTS_LIMIT = 8;
 const FALLBACK_CART_IMAGE: CartLineImage = { kind: 'catalog-fallback' };
 const LOADING_VIEW: ProductDetailsRouteView = { status: 'loading' };
 const NOT_FOUND_VIEW: ProductDetailsRouteView = { status: 'not-found' };
@@ -59,14 +66,14 @@ function viewFromResult(
       return NOT_FOUND_VIEW;
     }
 
+    const smartphone = live.categorySlug === SMARTPHONES_CATEGORY_SLUG;
+
     return {
       status: 'ready',
       product: buildProductDetailsView(live, content, PRODUCT_DETAILS_STOREWIDE),
       cartImage: content.media?.cartImage ?? FALLBACK_CART_IMAGE,
-      categoryHref:
-        live.categorySlug === SMARTPHONES_CATEGORY_SLUG
-          ? hashHref(CATALOG_SMARTPHONES_PATH)
-          : undefined,
+      categoryHref: smartphone ? hashHref(CATALOG_SMARTPHONES_PATH) : undefined,
+      smartphone,
     };
   }
 
@@ -129,6 +136,11 @@ export function ProductDetailsRoute() {
   const content = slug === undefined ? undefined : getProductDetailsContent(slug);
   const [settled, setSettled] = useState<SettledProductRead>();
   const favoriteItems = useFavoriteItems();
+  const [smartphoneCatalog, setSmartphoneCatalog] = useState<readonly CatalogProduct[] | null>();
+  const smartphoneCatalogRequested = useRef(false);
+  const relatedCart = useCatalogCartSeam(true);
+  const relatedFavorites = useCatalogFavoritesSeam(true);
+  const relatedCompare = useCatalogCompareSeam(true);
 
   useEffect(() => {
     if (slug === undefined || content === undefined) {
@@ -160,6 +172,33 @@ export function ProductDetailsRoute() {
       : settled !== undefined && settled.slug === slug
         ? settled.view
         : LOADING_VIEW;
+  const needsSmartphoneCatalog = view.status === 'ready' && view.smartphone;
+
+  useEffect(() => {
+    if (!needsSmartphoneCatalog || smartphoneCatalogRequested.current) {
+      return;
+    }
+
+    smartphoneCatalogRequested.current = true;
+
+    void fetchCatalogProducts().then((result) => {
+      if (result.status === 'ready') {
+        setSmartphoneCatalog(result.products);
+        return;
+      }
+
+      if (import.meta.env.DEV) {
+        console.warn('Product Details related read failed', result.reason);
+      }
+
+      setSmartphoneCatalog(null);
+    });
+  }, [needsSmartphoneCatalog]);
+
+  const relatedProducts =
+    needsSmartphoneCatalog && smartphoneCatalog !== undefined && smartphoneCatalog !== null
+      ? smartphoneCatalog.filter((product) => product.id !== slug).slice(0, RELATED_PRODUCTS_LIMIT)
+      : [];
 
   return (
     <ProductionShell>
@@ -200,6 +239,18 @@ export function ProductDetailsRoute() {
             )
           }
           product={view.product}
+          related={
+            relatedProducts.length === 0
+              ? undefined
+              : {
+                  products: relatedProducts,
+                  allHref: hashHref(CATALOG_SMARTPHONES_PATH),
+                  productHref: productDetailsHref,
+                  cart: relatedCart,
+                  favorites: relatedFavorites,
+                  compare: relatedCompare,
+                }
+          }
         />
       ) : null}
     </ProductionShell>

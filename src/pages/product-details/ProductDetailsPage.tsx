@@ -6,6 +6,8 @@ import { ProductGallery } from './ProductGallery';
 import type { ProductFavoriteBinding } from './ProductGallery';
 import { ProductOfferSummary } from './ProductOfferSummary';
 import { ProductPurchasePanel } from './ProductPurchasePanel';
+import { ProductRelatedProducts } from './ProductRelatedProducts';
+import type { ProductRelatedProductsBinding } from './ProductRelatedProducts';
 import { PRODUCT_DETAILS_FIXTURE, productDetailsVariantTitle } from './productDetailsFixtures';
 import type { ProductDetailsColourId, ProductDetailsView } from './productDetailsView';
 
@@ -15,6 +17,7 @@ export interface ProductDetailsPageProps {
   readonly product?: ProductDetailsView;
   readonly onAddToCart?: (quantity: number) => number;
   readonly favorite?: ProductFavoriteBinding;
+  readonly related?: ProductRelatedProductsBinding;
 }
 
 export function ProductDetailsPage({
@@ -23,6 +26,7 @@ export function ProductDetailsPage({
   product = PRODUCT_DETAILS_FIXTURE,
   onAddToCart,
   favorite,
+  related,
 }: ProductDetailsPageProps) {
   const variants = product.variants;
   const [selectedColourId, setSelectedColourId] = useState<ProductDetailsColourId | undefined>(
@@ -99,6 +103,8 @@ export function ProductDetailsPage({
         </div>
 
         <ProductDetailsSections product={product} />
+
+        {related === undefined ? null : <ProductRelatedProducts {...related} />}
       </Container>
     </main>
   );

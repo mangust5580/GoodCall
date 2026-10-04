@@ -148,6 +148,8 @@ Active visual slice: none.
 
 Completed visual slices:
 
+- **Product Details C / «Другие смартфоны» — USER VISUAL/UX PASS — CLOSED and
+  published.** Smartphone PDPs. See the Product Details C section below.
 - **About A / О GoodCall — USER VISUAL/UX PASS — CLOSED and published.**
   `#/about`. See the About A section below.
 - **Legal A / Privacy, Terms and Public Offer — USER VISUAL/UX PASS — CLOSED.**
@@ -177,6 +179,36 @@ section below. **Checkout A / Checkout Page Foundation — USER VISUAL/UX PASS
 on 2026-09-30, CLOSED and published.** See the Checkout A section below. Search C, Favourites A, Commerce B, Commerce A,
 Blog B, Blog A, Home A, Cart A, Cart B, Search A, Search B, 404 A and the
 Product Details production integration are closed.
+
+### Product Details C — «Другие смартфоны»
+
+**Status: USER VISUAL/UX PASS (desktop 1440, mobile 390, on `iphone-15-128`) —
+CLOSED and published.** Evidence: the lower row of `Product_details.png`.
+
+- **Surface.** Production smartphone PDPs only: a section after
+  `ProductDetailsSections`, inside the PDP container. The heading is «Другие
+  смартфоны», not the raster's «Похожие товары», because there is no
+  recommendation or similarity contract. «Смотреть все» → `#/catalog/smartphones`.
+- **Data.** `ProductDetailsRoute` reuses `fetchCatalogProducts()` (no new query).
+  It keeps the canonical order, excludes the current slug and takes the first 8
+  (`RELATED_PRODUCTS_LIMIT`). The read runs once per route lifetime, only for a
+  ready smartphone PDP, and is reused across smartphone slugs. Watch and
+  headphones PDPs, read failure or an empty result omit the section; there is no
+  fixture fallback and no error surface.
+- **Ownership.** `ProductRelatedProducts` (`src/pages/product-details/`) renders
+  each item with `CatalogProductCard` (`src/pages/catalog/`, the canonical
+  `ProductCard` mapping shared with `CatalogProductGrid`). Cart, quantity,
+  remove-at-zero, favourites and compare (with `COMPARE_LIMIT`) reuse
+  `useCatalogCartSeam`, `useCatalogFavoritesSeam` and `useCatalogCompareSeam`.
+  The page family imports nothing from `src/commerce`.
+- **Rail.** One horizontal row with native scrolling and scroll-snap: 5 columns
+  from 1200px, 3 from 768px, about 1.25 cards below. Prev/next buttons appear
+  only on overflow at 768px and up, are natively disabled at the edges, and sit
+  below the card toggles. No autoplay, loop, dots or promo card. The rail is the
+  containing block for card descendants, so nothing escapes the scroll area.
+- **Production-only seam.** `ProductDetailsPage.related` is optional and only
+  the route passes it; `?reference=product-details` is unchanged (0-pixel diff
+  at 1440 and 390).
 
 ### About A — О GoodCall
 
@@ -2004,7 +2036,7 @@ global design-system contract changed in the media work.
 reopen accepted visuals. Evidence: `Product_details.png`. A covers the
 primary surface (breadcrumbs through the purchase panel and offer card). B adds
 the lower tabbed content and the key-specification card, above the raster's
-out-of-scope `Похожие товары` row.
+`Похожие товары` row, which Product Details C delivers as «Другие смартфоны».
 
 **Ownership.** `src/pages/product-details/` owns `ProductDetailsPage` (the
 page `<main>`, breadcrumbs and the three-region grid), `ProductGallery`,
@@ -2193,7 +2225,6 @@ direction. Gallery, description and warranty media use the existing `Picture` /
 - A reviews backend, a payment provider (the displayed method set must be
   reconciled with it), and a delivery estimator.
 - Licensed real product imagery and remote `product_images`.
-- `Похожие товары` (Product Details C).
 
 The Home latest-article cover visual debt is unrelated and untouched.
 
@@ -2506,7 +2537,9 @@ products or the result count.
 demo products: Search/Catalog fallback, live-product badge presentation and the
 Product Details reference product), `catalogProductFixtures.ts` (the specimen
 65-page count and `catalogPageProducts`) and
-`CatalogProductGrid.tsx` (the grid, the in-grid promo and the local card state).
+`CatalogProductGrid.tsx` (the grid, the in-grid promo and the local card state)
+and `CatalogProductCard.tsx` (the single `ProductCard` mapping and the seam types,
+shared with the Product Details C rail and exported through `index.ts`).
 There is no `src/data/`, `src/api/`, `src/services/`, `src/repositories/`,
 `src/features/products/`, `ProductRepository`, `CatalogApi`, `ProductService`,
 `ProductProvider` or `CatalogProvider`. The fixtures are page-local specimen
@@ -2527,8 +2560,8 @@ the raster.
 **`2 546 товаров` stays specimen copy** and is never derived from fixture length,
 sorting or pagination.
 
-**ProductCard reuse.** The accepted card renders every result; no
-`CatalogProductCard` exists. Exercised props: `title`, `imageSrc`, `imageAlt`,
+**ProductCard reuse.** The accepted card renders every result through
+`CatalogProductCard`. Exercised props: `title`, `imageSrc`, `imageAlt`,
 `price`, `oldPrice` (10 of 16), `badge` (15 of 16), `rating`, `reviewCount`,
 `favoritePressed`/`onFavoriteToggle`, `onAddToCart`, and
 `quantity`/`onQuantityChange` once a card is added. `availability` is
@@ -4630,6 +4663,10 @@ none of them blocks the closed milestone.
 
 ## Known deferred work
 
+- PDP and product-card media coverage remains incomplete: only `iphone-15-128`
+  has a full gallery and `apple-watch-series-9-45` a single image; every other
+  live SKU uses category artwork on its PDP and the shared `product-phone.svg` on
+  cards.
 - Phone validation, country selection and international formatting are deferred
   until a real product form consumer defines those requirements.
 - Textarea auto-grow remains deferred until a concrete consumer requires it.
@@ -4707,8 +4744,8 @@ USER VISUAL/UX PASS, its implementation/regression gates are complete, and it
 passed the final Codex commit-readiness gate; the milestone is complete (see its
 section). Real
 `product_images` support in the gallery, interactive variants, review bodies,
-«Похожие товары», one-click purchase, Compare on Product Details and
-per-product galleries beyond the iPhone remain unscoped.
+one-click purchase, Compare on the main PDP surface and per-product galleries
+beyond the iPhone remain unscoped.
 
 Product Details Production Integration A and the Route scroll fix are closed.
 They received user visual / UX PASS on 2026-09-27.
