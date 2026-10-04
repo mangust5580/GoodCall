@@ -148,6 +148,9 @@ Active visual slice: none.
 
 Completed visual slices:
 
+- **Product Thumbnail Integration A — USER VISUAL/UX PASS — CLOSED and
+  published.** Product thumbnails on list surfaces. See the Product Thumbnail
+  Integration A section below.
 - **PDP Media Coverage A / Batch 1 — USER VISUAL/UX PASS — CLOSED and
   published.** Five smartphone PDP galleries. See the PDP Media Coverage A
   section below.
@@ -183,6 +186,28 @@ on 2026-09-30, CLOSED and published.** See the Checkout A section below. Search 
 Blog B, Blog A, Home A, Cart A, Cart B, Search A, Search B, 404 A and the
 Product Details production integration are closed.
 
+### Product Thumbnail Integration A
+
+**Status: USER VISUAL/UX PASS — CLOSED and published.** User explicitly granted
+USER VISUAL/UX PASS after reviewing the implemented thumbnail integration.
+
+- **Surfaces.** Catalog grid, Search mobile cards, Search desktop rows, the
+  Product Details C rail (inherited through `CatalogProductCard`; its order,
+  limit, navigation, layout and controls are unchanged) and Home popular
+  products.
+- **Lookup.** `productThumbnail(slug): PictureSource | undefined` in
+  `src/assets/media/product-details/productThumbnailMedia.ts`, with 7 existing
+  production sources: the pink `iphone-15-128` hero, the five Batch 1 heroes and
+  `apple-watch-series-9-45` (Home only). The black and blue iPhone reference
+  sets are excluded. No images were generated and no gallery changed.
+- **Precedence.** Live `product_images` URL, then the local thumbnail, then the
+  existing fallback (`product-phone.svg` in Catalog, Search and the rail;
+  `HOME_DEVICE_MEDIA` on Home). The lookup runs only in the live mappers
+  (`catalogProductData.ts` sets `CatalogProduct.image`; `homeData.ts` sets
+  `HomeProduct.thumbnail`), so fixtures, `?reference=catalog`,
+  `?reference=home` and the Search fixture fallback are unchanged. Search rows
+  render `Picture` when `image` is set, with the same row geometry.
+
 ### PDP Media Coverage A — Batch 1
 
 **Status: USER VISUAL/UX PASS — CLOSED and published.** The user independently
@@ -200,7 +225,8 @@ without an in-chat screenshot comparison.
 - **Unchanged.** `ProductGallery`, the `ProductDetailsContent`/`View` contracts,
   Product Details C, `?reference=product-details` (0-pixel diff), every card and
   thumbnail surface (Catalog, Search, Home, Favourites, Cart, Checkout, Order,
-  Compare) and the persisted commerce image kinds.
+  Compare) and the persisted commerce image kinds. Product Thumbnail Integration
+  A later reuses the heroes on the list surfaces.
 
 ### Product Details C — «Другие смартфоны»
 
@@ -4503,8 +4529,9 @@ review count and popularity come from `products`, and the accepted badge
 presentation temporarily comes from matching fixture slugs. Future remote
 products without fixture presentation metadata render without an invented badge.
 
-`product_images` currently has no rows, so the Catalog still renders the
-accepted local synthetic phone artwork. When image rows exist, the primary image
+`product_images` currently has no rows, so the Catalog renders the local product
+thumbnail for covered slugs (Product Thumbnail Integration A) and the accepted
+synthetic phone artwork otherwise. When image rows exist, the primary image
 is the first ordered image for the product and its public URL is resolved through
 the Supabase Storage bucket API. The visible `2 546` result count, filter
 counts, quick filters, sort labels and 65-page pagination are specimen UI
@@ -4547,7 +4574,8 @@ Current remote Home products resolve in curated order to
 `Apple Watch Series 9 45 мм, Чёрный`.
 
 `product_images` still has no rows, and category merchandising media is still
-null, so Home continues to render local placeholder artwork. `?reference=home`
+null, so Home renders the local product thumbnail for covered slugs (Product
+Thumbnail Integration A) and local placeholder artwork otherwise. `?reference=home`
 calls `HomePage` without remote data and remains deterministic and
 network-independent. Hero, offers, benefits, promo pair, category promo trio,
 cinema, latest articles, NewsletterBand and Footer remain fixture/local. Home
@@ -4688,9 +4716,12 @@ none of them blocks the closed milestone.
 - PDP media coverage is still incomplete for non-batch SKUs: `iphone-15-128`
   and the five PDP Media Coverage A SKUs have galleries,
   `apple-watch-series-9-45` has one image, and the other eleven live SKUs
-  (including AirPods) use category artwork on the PDP. Cross-surface product
-  thumbnails remain deferred: cards still use the shared `product-phone.svg` or
-  Home category art. The iPhone 15 editorial image mismatch is also deferred.
+  (including AirPods) use category artwork on the PDP; AirPods has no product
+  media. The iPhone 15 editorial image mismatch is also deferred.
+- Persisted commerce surfaces (Favourites, Cart, Checkout, Order Confirmation,
+  Compare) still use their existing image contracts and remain a separate future
+  integration; covered products can show their thumbnail on list surfaces and the
+  generic fallback there.
 - Phone validation, country selection and international formatting are deferred
   until a real product form consumer defines those requirements.
 - Textarea auto-grow remains deferred until a concrete consumer requires it.

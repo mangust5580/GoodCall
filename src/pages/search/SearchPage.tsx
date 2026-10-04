@@ -168,6 +168,7 @@ export function SearchPage({
               }
               disabled={cart === undefined}
               href={productHref?.(product.id)}
+              image={product.image}
               imageAlt={product.imageAlt}
               imageSrc={product.imageSrc ?? productPhone}
               layout="horizontal"

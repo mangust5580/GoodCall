@@ -60,6 +60,7 @@ export function CatalogProductCard({
       favoritePressed={favorites?.isFavorite(product) ?? false}
       href={productHref?.(product.id)}
       imageAlt={product.imageAlt}
+      image={product.image}
       imageSrc={product.imageSrc ?? productPhone}
       oldPrice={
         product.oldPriceValue === undefined ? undefined : formatPrice(product.oldPriceValue)

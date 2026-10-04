@@ -213,12 +213,17 @@ check(
   JSON.stringify(order),
 );
 const i15Card = await evaluate(
-  `(() => { const c = ${favCard(I15)}; return [c.querySelector('.product-price').textContent.replace(/\\s/g, ''), c.querySelector('.product-price-old')?.textContent.replace(/\\s/g, ''), c.querySelector('img').getAttribute('src') === ${JSON.stringify(catalogImg)}, c.querySelector('.product-card__favorite').getAttribute('aria-pressed'), Boolean(c.querySelector('.product-rating'))].join('|'); })()`,
+  `(() => { const c = ${favCard(I15)}; return [c.querySelector('.product-price').textContent.replace(/\\s/g, ''), c.querySelector('.product-price-old')?.textContent.replace(/\\s/g, ''), c.querySelector('img').getAttribute('src').includes('phone-back'), c.querySelector('.product-card__favorite').getAttribute('aria-pressed'), Boolean(c.querySelector('.product-rating'))].join('|'); })()`,
 );
 check(
-  'page: same title/price/old/image, ♥ pressed, no rating',
+  'page: same title/price/old, persisted fallback image, ♥ pressed, no rating',
   i15Card === '79990₽|84990₽|true|true|false',
   i15Card,
+);
+check(
+  'catalog: covered product uses local hero thumbnail',
+  catalogImg.includes('product-details-gallery-pink-hero-front-gallery'),
+  catalogImg,
 );
 check(
   'page: h1 + count chip "2 товара" + lead',

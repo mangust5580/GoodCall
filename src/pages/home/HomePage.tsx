@@ -230,7 +230,11 @@ export function HomePage({
                   }
                   disabled={cart === undefined}
                   href={productHref?.(product.id)}
-                  image={product.imageSrc === undefined ? ARTWORK[product.image] : undefined}
+                  image={
+                    product.imageSrc === undefined
+                      ? (product.thumbnail ?? ARTWORK[product.image])
+                      : undefined
+                  }
                   imageAlt={product.imageAlt}
                   imageSizes={PRODUCT_MEDIA_SIZES}
                   imageSrc={product.imageSrc}

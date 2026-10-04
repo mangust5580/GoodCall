@@ -202,6 +202,44 @@ try {
     ),
     'registry throws on duplicate',
   );
+
+  const { productThumbnail } = await server.ssrLoadModule(
+    '/src/assets/media/product-details/productThumbnailMedia.ts',
+  );
+  const { PRODUCT_DETAILS_GALLERY_BY_COLOUR_MEDIA } = await server.ssrLoadModule(
+    '/src/assets/media/product-details/productDetailsMedia.ts',
+  );
+  const THUMBNAIL_SLUGS = [
+    'iphone-15-128',
+    'iphone-15-pro-128',
+    'galaxy-s24-128',
+    'xiaomi-14-256',
+    'pixel-8-128',
+    'oneplus-12-256',
+    'apple-watch-series-9-45',
+  ];
+  const referenceOnly = new Set(
+    ['black', 'blue'].flatMap((colour) =>
+      Object.values(PRODUCT_DETAILS_GALLERY_BY_COLOUR_MEDIA[colour]),
+    ),
+  );
+  for (const record of PRODUCT_DETAILS_CONTENT) {
+    const thumbnail = productThumbnail(record.slug);
+    if (THUMBNAIL_SLUGS.includes(record.slug)) {
+      check(
+        thumbnail !== undefined && thumbnail === record.media?.gallery[0]?.source,
+        `${record.slug}: thumbnail is the production gallery hero`,
+      );
+    } else {
+      check(thumbnail === undefined, `${record.slug}: no thumbnail without product media`);
+    }
+    check(!referenceOnly.has(thumbnail), `${record.slug}: no reference-only thumbnail`);
+  }
+  check(
+    THUMBNAIL_SLUGS.filter((slug) => productThumbnail(slug) !== undefined).length === 7,
+    'thumbnail lookup has exactly 7 entries',
+  );
+  check(productThumbnail('constructor') === undefined, 'thumbnail lookup ignores prototype keys');
 } finally {
   await server.close();
 }

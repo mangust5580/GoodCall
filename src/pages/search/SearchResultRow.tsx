@@ -1,10 +1,13 @@
 import productPhone from '../../assets/products/product-phone.svg';
 import { formatPrice } from '../../commerce/format';
+import { Picture } from '../../components/media';
 import { AddToCartButton, ProductRating } from '../../components/product';
 import { Chip, QuantityStepper } from '../../components/ui';
 import type { CatalogProduct } from '../catalog';
 import { productColour, productRam, productStorage } from './searchFacets';
 import { searchSavings } from './searchResults';
+
+const ROW_IMAGE_SIZES = '136px';
 
 const CART_ACTION_TEXT = 'В корзину';
 
@@ -44,11 +47,20 @@ export function SearchResultRow({
             <Chip variant={product.discounted === true ? 'danger' : 'brand'}>{product.badge}</Chip>
           </div>
         )}
-        <img
-          alt={product.imageAlt}
-          className="search-row__image"
-          src={product.imageSrc ?? productPhone}
-        />
+        {product.image === undefined ? (
+          <img
+            alt={product.imageAlt}
+            className="search-row__image"
+            src={product.imageSrc ?? productPhone}
+          />
+        ) : (
+          <Picture
+            alt={product.imageAlt}
+            className="search-row__image"
+            sizes={ROW_IMAGE_SIZES}
+            source={product.image}
+          />
+        )}
       </div>
 
       <div className="search-row__info">

@@ -507,6 +507,38 @@ check(
   (await evaluate(`document.querySelectorAll('.catalog-grid .ui-stepper').length`)) === 0,
 );
 
+failLive = false;
+await reload();
+await go('#/catalog/smartphones');
+await waitFor(`document.querySelector('.product-card__link')`, 'live catalog for thumbnails');
+const catalogImages = await evaluate(
+  `Object.fromEntries([...document.querySelectorAll('.catalog-grid .product-card')].map((c) => [c.querySelector('.product-card__link')?.getAttribute('href') ?? c.querySelector('.product-card__title').textContent, c.querySelector('img').getAttribute('src')]))`,
+);
+check(
+  'thumb: live catalog covered cards → local heroes',
+  (catalogImages['#/product/galaxy-s24-128'] ?? '').includes(
+    'product-details-galaxy-s24-128-hero-front-gallery',
+  ) &&
+    (catalogImages['#/product/iphone-15-128'] ?? '').includes(
+      'product-details-gallery-pink-hero-front-gallery',
+    ) &&
+    (catalogImages['#/product/xiaomi-14-256'] ?? '').includes(
+      'product-details-xiaomi-14-256-hero-front-gallery',
+    ),
+  JSON.stringify(Object.keys(catalogImages)),
+);
+await send('Page.navigate', { url: `${BASE}?reference=catalog` });
+await sleep(1500);
+const referenceCatalog = await evaluate(
+  `[...document.querySelectorAll('.catalog-grid .product-card img')].map((i) => i.getAttribute('src'))`,
+);
+check(
+  'thumb: ?reference=catalog keeps the fixture SVG only',
+  referenceCatalog.length > 0 &&
+    referenceCatalog.every((src) => src.includes('phone-back') && !src.includes('product-details')),
+  String(referenceCatalog.length),
+);
+
 check('no uncaught errors', consoleErrors.length === 0, consoleErrors.join(' ; '));
 await cdp.close();
 await browser.close();

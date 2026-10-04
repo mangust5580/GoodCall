@@ -61,6 +61,18 @@ function mockBody(url, accept) {
         }))
       : PRODUCTS;
   }
+  if (table === 'product_images')
+    rows = (u.searchParams.get('product_id') ?? '').includes('id-iphone-15-pro-128')
+      ? [
+          {
+            id: 'img-pro',
+            product_id: 'id-iphone-15-pro-128',
+            storage_path: 'stub/pro-live.webp',
+            alt: 'Apple iPhone 15 Pro',
+            position: 1,
+          },
+        ]
+      : [];
   if (accept.includes('vnd.pgrst.object')) return rows[0] ?? null;
   return rows;
 }
@@ -208,12 +220,19 @@ check(
 await go('#/cart');
 await waitFor(`document.querySelector('.cart-line')`, 'cart line');
 const cartLine = await evaluate(
-  `(() => { const l = document.querySelector('.cart-line'); return [l.querySelector('.cart-line__title').textContent, l.querySelector('.cart-line__total').textContent.replace(/\\s/g, ''), l.querySelector('.cart-line__old')?.textContent.replace(/\\s/g, '') ?? '', l.querySelector('img').getAttribute('src') === window.__searchImg].join('|'); })()`,
+  `(() => { const l = document.querySelector('.cart-line'); return [l.querySelector('.cart-line__title').textContent, l.querySelector('.cart-line__total').textContent.replace(/\\s/g, ''), l.querySelector('.cart-line__old')?.textContent.replace(/\\s/g, '') ?? '', l.querySelector('img').getAttribute('src').includes('phone-back')].join('|'); })()`,
 );
 check(
-  'A cart: same title/price/old price/image',
+  'A cart: same title/price/old price; persisted image stays fallback',
   cartLine === `${I15}|79990₽|84990₽|true`,
   cartLine,
+);
+check(
+  'A search row: covered product uses local hero thumbnail',
+  ((await evaluate('window.__searchImg')) ?? '').includes(
+    'product-details-gallery-pink-hero-front-gallery',
+  ),
+  await evaluate('window.__searchImg'),
 );
 
 await go('#/search?q=iphone');
@@ -430,6 +449,61 @@ check(
     '1' && (await badge()) === '1',
 );
 await clearCart();
+
+await viewport(1440, 900, false);
+await go('#/search?q=iphone');
+await waitFor(`document.querySelectorAll('.search-row__link').length > 0`, 'live rows');
+const rowImages = await evaluate(
+  `Object.fromEntries([...document.querySelectorAll('.search-row')].map((r) => [r.querySelector('.search-row__title').textContent, r.querySelector('img').getAttribute('src')]))`,
+);
+check(
+  'thumb row: covered product → local hero',
+  (rowImages[I15] ?? '').includes('product-details-gallery-pink-hero-front-gallery'),
+  rowImages[I15],
+);
+check(
+  'thumb row: live product_images URL wins over local hero',
+  (rowImages[I15PRO] ?? '').endsWith('/storage/v1/object/public/catalog-media/stub/pro-live.webp'),
+  rowImages[I15PRO],
+);
+check(
+  'thumb row: uncovered products keep fallback',
+  Object.entries(rowImages)
+    .filter(([title]) => title.startsWith('Apple iPhone 14'))
+    .every(([, src]) => src.includes('phone-back')),
+);
+const rowGeometry = await evaluate(
+  `[...document.querySelectorAll('.search-row')].map((r) => { const m = r.querySelector('.search-row__media').getBoundingClientRect(); const i = r.querySelector('.search-row__image').getBoundingClientRect(); return [m.width, m.height, i.width, i.height, i.left - m.left, i.top - m.top].map(Math.round).join('x'); })`,
+);
+check(
+  'thumb row: picture and img rows share identical media geometry',
+  new Set(rowGeometry).size === 1,
+  JSON.stringify([...new Set(rowGeometry)]),
+);
+await viewport(390, 844, true);
+await go('#/search?q=iphone');
+await waitFor(`${cardOf(I15)}`, 'mobile cards');
+const cardImages = await evaluate(
+  `Object.fromEntries([...document.querySelectorAll('.search-results .product-card')].map((c) => [c.querySelector('.product-card__title').textContent, c.querySelector('img').getAttribute('src')]))`,
+);
+check(
+  'thumb card: covered product → local hero',
+  (cardImages[I15] ?? '').includes('product-details-gallery-pink-hero-front-gallery'),
+  cardImages[I15],
+);
+check(
+  'thumb card: live URL wins; uncovered keeps fallback',
+  (cardImages[I15PRO] ?? '').includes('/storage/v1/object/public/') &&
+    Object.entries(cardImages)
+      .filter(([title]) => title.startsWith('Apple iPhone 14'))
+      .every(([, src]) => src.includes('phone-back')),
+);
+check(
+  'thumb card: no page overflow at 390',
+  (await evaluate(`document.documentElement.scrollWidth - document.documentElement.clientWidth`)) <=
+    0,
+);
+await viewport(1440, 900, false);
 
 failLive = true;
 await reload();

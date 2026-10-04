@@ -499,6 +499,63 @@ for (const [w, h, m] of [
 }
 await viewport(1440, 900, false);
 
+await openHome();
+await evaluate(
+  `${homeCards}.forEach((c) => c.querySelector('img').setAttribute('loading', 'eager'))`,
+);
+await waitFor(
+  `${homeCards}.every((c) => c.querySelector('img').complete)`,
+  'home card images settled',
+);
+const homeImages = await evaluate(
+  `${homeCards}.map((c) => [c.querySelector('.product-card__title').textContent, c.querySelector('img').getAttribute('src'), c.querySelector('img').naturalWidth > 0])`,
+);
+const homeImage = (i) => homeImages[i]?.[1] ?? '';
+check(
+  'thumb: iPhone 15 → local hero',
+  homeImage(0).includes('product-details-gallery-pink-hero-front-gallery'),
+  homeImage(0),
+);
+check(
+  'thumb: Galaxy S24 → local hero',
+  homeImage(1).includes('product-details-galaxy-s24-128-hero-front-gallery'),
+  homeImage(1),
+);
+check(
+  'thumb: Redmi keeps category art',
+  homeImage(2).includes('home-device-smartphone-card'),
+  homeImage(2),
+);
+check(
+  'thumb: AirPods live product_images URL wins',
+  homeImage(3).includes('/storage/v1/object/public/'),
+  homeImage(3),
+);
+check(
+  'thumb: Watch → local product image',
+  homeImage(4).includes('product-details-gallery-apple-watch-s9-black-gallery'),
+  homeImage(4),
+);
+check(
+  'thumb: all home card images load',
+  homeImages.every(([, , loaded]) => loaded),
+  JSON.stringify(homeImages.map(([title, , loaded]) => [title, loaded])),
+);
+await go('#/');
+await send('Page.navigate', { url: `${BASE}?reference=home` });
+await sleep(1500);
+const referenceHome = await evaluate(
+  `[...document.querySelectorAll('.home-products > .product-card img')].map((i) => i.getAttribute('src'))`,
+);
+check(
+  'thumb: ?reference=home keeps category artwork only',
+  referenceHome.length === 5 &&
+    referenceHome.every((src) => src.includes('home-device-') && !src.includes('product-details')),
+  JSON.stringify(referenceHome),
+);
+await send('Page.navigate', { url: `${BASE}#/` });
+await sleep(1500);
+
 homeFails = true;
 const before = JSON.stringify(await lines());
 await go('#/');
@@ -514,6 +571,12 @@ check(
 );
 await evaluate(`${homeCards}.forEach((c) => c.querySelector('.product-card__cart').click())`);
 await sleep(200);
+check(
+  'thumb: fixture fallback keeps category artwork (no slug leakage)',
+  (await evaluate(`${homeCards}.map((c) => c.querySelector('img').getAttribute('src'))`)).every(
+    (src) => src.includes('home-device-') && !src.includes('product-details'),
+  ),
+);
 check(
   'fallback: clicks cannot mutate cart; no fixture ids inserted',
   JSON.stringify(await lines()) === before &&

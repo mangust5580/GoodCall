@@ -1,7 +1,10 @@
+import type { PictureSource } from '../../components/media';
+
 export interface CatalogProduct {
   readonly id: string;
   readonly title: string;
   readonly imageSrc?: string;
+  readonly image?: PictureSource;
   readonly imageAlt: string;
   readonly priceValue: number;
   readonly oldPriceValue?: number;

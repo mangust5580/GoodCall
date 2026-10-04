@@ -326,6 +326,10 @@
     object-fit: contain;
   }
 
+  &__media picture {
+    display: contents;
+  }
+
   &__info {
     display: flex;
     flex-direction: column;

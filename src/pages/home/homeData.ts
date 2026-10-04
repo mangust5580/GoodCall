@@ -1,3 +1,4 @@
+import { productThumbnail } from '../../assets/media/product-details/productThumbnailMedia';
 import { formatPrice } from '../../commerce/format';
 import { supabaseClient } from '../../lib/supabase/client';
 import type { GoodCallSupabaseClient } from '../../lib/supabase/client';
@@ -143,6 +144,7 @@ function mapProduct(
     id: product.slug,
     title: product.name,
     imageSrc,
+    thumbnail: imageSrc === undefined ? productThumbnail(product.slug) : undefined,
     imageAlt: primaryImage?.alt.trim() || presentation.imageAlt,
     price: formatPrice(product.price),
     priceValue: product.price,

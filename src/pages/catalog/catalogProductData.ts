@@ -1,3 +1,4 @@
+import { productThumbnail } from '../../assets/media/product-details/productThumbnailMedia';
 import { supabaseClient } from '../../lib/supabase/client';
 import type { GoodCallSupabaseClient } from '../../lib/supabase/client';
 import type { Database } from '../../lib/supabase/database.types';
@@ -66,6 +67,7 @@ function mapCatalogProduct(
     id: product.slug,
     title: product.name,
     imageSrc: publicImage,
+    image: publicImage === undefined ? productThumbnail(product.slug) : undefined,
     imageAlt: primaryImage?.alt.trim() || presentation?.imageAlt || `Смартфон ${product.name}`,
     priceValue: product.price,
     oldPriceValue,

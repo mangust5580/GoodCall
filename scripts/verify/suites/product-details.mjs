@@ -25,6 +25,13 @@ const MEDIA_BATCH_SLUGS = [
   'pixel-8-128',
   'oneplus-12-256',
 ];
+const THUMBNAIL_SOURCE = {
+  'iphone-15-128': 'product-details-gallery-pink-hero-front-gallery',
+  ...Object.fromEntries(
+    MEDIA_BATCH_SLUGS.map((slug) => [slug, `product-details-${slug}-hero-front-gallery`]),
+  ),
+};
+const LIVE_IMAGE_PATH = 'stub/live-thumbnail.webp';
 const relatedSmartphones = (currentSlug) =>
   PRODUCTS.filter((row) => row.is_active && row.category_id === smartphones.id)
     .sort((a, b) =>
@@ -39,7 +46,20 @@ const relatedSmartphones = (currentSlug) =>
 function tableRows(table) {
   if (table === 'categories') return CATEGORIES;
   if (table === 'home_popular_products') return HOME;
-  if (table === 'product_images') return [];
+  if (table === 'product_images') {
+    const live = PRODUCTS.find((row) => row.slug === scenario.liveImageSlug);
+    return live
+      ? [
+          {
+            id: 'stub-image',
+            product_id: live.id,
+            storage_path: LIVE_IMAGE_PATH,
+            alt: live.name,
+            position: 1,
+          },
+        ]
+      : [];
+  }
   if (table === 'products') {
     let rows = PRODUCTS.map((row) => ({ ...row }));
     if (scenario.inactiveSlug)
@@ -530,10 +550,14 @@ console.log('stage: media batch', new Date().toISOString());
         source: new URL(image.currentSrc || image.src).pathname.split('/assets/').at(-1),
         alt: image.alt,
       })),
-      cards: [...document.querySelectorAll('.product-related .product-card img')].map((image) => ({
-        source: new URL(image.currentSrc || image.src).pathname.split('/assets/').at(-1),
-        alt: image.alt,
-      })),
+      cards: [...document.querySelectorAll('.product-related .product-card')].map((card) => {
+        const image = card.querySelector('img');
+        return {
+          slug: card.querySelector('.product-card__link')?.getAttribute('href')?.split('/').at(-1),
+          source: new URL(image.currentSrc || image.src).pathname.split('/assets/').at(-1),
+          alt: image.alt,
+        };
+      }),
     }));
   for (const slug of [
     'iphone-15-128',
@@ -565,9 +589,22 @@ console.log('stage: media batch', new Date().toISOString());
       snapshots.push(await surfaceImages(page));
       await page.close();
     }
+    const [headCards, newCards] = snapshots.map((snapshot) => snapshot.cards);
     check(
-      JSON.stringify(snapshots[0].cards) === JSON.stringify(snapshots[1].cards),
-      `${slug}: Product Details C card imagery unchanged from HEAD`,
+      JSON.stringify(headCards.map((card) => card.slug)) ===
+        JSON.stringify(newCards.map((card) => card.slug)),
+      `${slug}: Product Details C card order unchanged from HEAD`,
+    );
+    check(
+      newCards.every((card, index) => {
+        const expected = THUMBNAIL_SOURCE[card.slug];
+        return expected === undefined
+          ? card.source === headCards[index].source && card.source.includes('phone-back')
+          : card.source.startsWith(expected);
+      }),
+      `${slug}: rail thumbnails (covered → hero, uncovered → HEAD fallback) ${JSON.stringify(
+        newCards.map((card) => [card.slug, card.source.slice(0, 48)]),
+      )}`,
     );
     if (!MEDIA_BATCH_SLUGS.includes(slug)) {
       check(
@@ -576,6 +613,32 @@ console.log('stage: media batch', new Date().toISOString());
       );
     }
   }
+
+  const livePage = await newPage();
+  scenario = { liveImageSlug: 'galaxy-s24-128' };
+  await openPdp(livePage, 'iphone-15-128');
+  await livePage.waitForFunction(
+    () => document.querySelectorAll('.product-related .product-card').length > 0,
+  );
+  const liveCards = await livePage.evaluate(() =>
+    Object.fromEntries(
+      [...document.querySelectorAll('.product-related .product-card')].map((card) => [
+        card.querySelector('.product-card__link').getAttribute('href').split('/').at(-1),
+        card.querySelector('img').getAttribute('src'),
+      ]),
+    ),
+  );
+  check(
+    (liveCards['galaxy-s24-128'] ?? '').includes(`/storage/v1/object/public/`) &&
+      liveCards['galaxy-s24-128'].endsWith(LIVE_IMAGE_PATH),
+    `rail: live product_images URL wins (${liveCards['galaxy-s24-128']})`,
+  );
+  check(
+    (liveCards['pixel-8-128'] ?? '').includes(THUMBNAIL_SOURCE['pixel-8-128']),
+    `rail: other covered card keeps local hero (${liveCards['pixel-8-128']})`,
+  );
+  scenario = {};
+  await livePage.close();
 
   const zoomPage = await newPage(720, 450);
   scenario = {};
