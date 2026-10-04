@@ -18,6 +18,13 @@ let productRequests = [];
 let categoryRequests = 0;
 
 const RELATED_LIMIT = 8;
+const MEDIA_BATCH_SLUGS = [
+  'iphone-15-pro-128',
+  'galaxy-s24-128',
+  'xiaomi-14-256',
+  'pixel-8-128',
+  'oneplus-12-256',
+];
 const relatedSmartphones = (currentSlug) =>
   PRODUCTS.filter((row) => row.is_active && row.category_id === smartphones.id)
     .sort((a, b) =>
@@ -269,10 +276,10 @@ console.log('stage: pdp pages', new Date().toISOString());
   await openPdp(page, 'galaxy-s24-128');
   facts = await pdpFacts(page);
   commonPdpChecks('galaxy', facts, 'Samsung Galaxy S24 128 ГБ, Фиолетовый');
-  check(facts.thumbs === 0 && facts.arrows === 0, 'galaxy: single image, no thumbs/arrows');
+  check(facts.thumbs === 3 && facts.arrows === 2, 'galaxy: 3 images + controls');
   check(
-    facts.galleryLabel === 'Изображение товара' && facts.stageAlt === '',
-    'galaxy: tier-2 decorative',
+    facts.galleryLabel === 'Фотографии товара' && facts.stageAlt.includes('Samsung Galaxy S24'),
+    'galaxy: product-specific gallery',
   );
   check(facts.descriptionTextOnly && !facts.descriptionMedia, 'galaxy: text-only description');
   check(facts.warrantyTextOnly && !facts.warrantyMedia, 'galaxy: text-only warranty');
@@ -362,6 +369,226 @@ console.log('stage: pdp pages', new Date().toISOString());
   check(productRequests.length === 0, `unknown: no live read (${productRequests.length})`);
 
   await page.close();
+}
+
+console.log('stage: media batch', new Date().toISOString());
+{
+  const stageImage = async (page) => {
+    await page.waitForFunction(() => {
+      const image = document.querySelector('.product-gallery__stage img');
+      return image?.complete && image.naturalWidth > 0;
+    });
+    return page.evaluate(() => {
+      const image = document.querySelector('.product-gallery__stage img');
+      const stage = document.querySelector('.product-gallery__stage').getBoundingClientRect();
+      const rect = image.getBoundingClientRect();
+      const fit = getComputedStyle(image).objectFit;
+      const canvasWidth = Math.min(
+        rect.width,
+        (rect.height * image.naturalWidth) / image.naturalHeight,
+      );
+      const canvasLeft = rect.left + (rect.width - canvasWidth) / 2;
+      const arrows = [...document.querySelectorAll('.product-gallery__arrow')].map((button) => ({
+        label: button.getAttribute('aria-label'),
+        box: button.getBoundingClientRect(),
+      }));
+      return {
+        source: image.currentSrc,
+        alt: image.alt,
+        fit,
+        inside:
+          rect.left >= stage.left - 1 &&
+          rect.right <= stage.right + 1 &&
+          rect.top >= stage.top - 1 &&
+          rect.bottom <= stage.bottom + 1,
+        arrowsClear: arrows.every(
+          ({ box }) =>
+            box.right <= canvasLeft + canvasWidth * 0.16 ||
+            box.left >= canvasLeft + canvasWidth * 0.84,
+        ),
+        arrowLabels: arrows.map(({ label }) => label),
+        overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+        thumbs: [...document.querySelectorAll('.product-gallery__thumb')].map((button) => {
+          const box = button.getBoundingClientRect();
+          return {
+            label: button.getAttribute('aria-label'),
+            width: box.width,
+            height: box.height,
+            current: button.getAttribute('aria-current'),
+          };
+        }),
+      };
+    });
+  };
+  for (const slug of MEDIA_BATCH_SLUGS) {
+    const widths = slug === 'iphone-15-pro-128' ? [1440, 1280, 1024, 390, 320] : [1440, 390];
+    for (const width of widths) {
+      scenario = {};
+      const page = await newPage(width, width >= 1024 ? 900 : 844);
+      await openPdp(page, slug);
+      await page.waitForFunction(
+        () => document.querySelectorAll('.product-related .product-card').length > 0,
+      );
+      const live = PRODUCTS.find((product) => product.slug === slug);
+      const facts = await pdpFacts(page);
+      check(facts.h1[0] === live.name, `${slug}@${width}: ready`);
+      check(
+        facts.thumbs === 3 && facts.arrows === 2 && facts.galleryLabel === 'Фотографии товара',
+        `${slug}@${width}: 3 non-decorative images`,
+      );
+      check(
+        facts.descriptionTextOnly &&
+          facts.warrantyTextOnly &&
+          !facts.descriptionMedia &&
+          !facts.warrantyMedia,
+        `${slug}@${width}: no editorial/warranty additions`,
+      );
+      const sources = [];
+      for (let index = 0; index < 3; index += 1) {
+        await page.click('.product-gallery__thumb', { nth: index });
+        await page.waitForFunction(
+          (number) =>
+            document
+              .querySelector('.product-gallery__stage img')
+              ?.alt.endsWith(`фото ${number} из 3`),
+          index + 1,
+        );
+        const image = await stageImage(page);
+        sources.push(image.source);
+        const model = live.name.split(/\s\d+(?:\/\d+)?\sГБ/)[0];
+        const colour = live.name.split(',').at(-1).trim().toLowerCase();
+        const angle =
+          index === 0
+            ? 'вид спереди под углом'
+            : index === 1
+              ? 'вид сзади под углом'
+              : 'спереди и сзади';
+        check(
+          image.alt.includes(model) && image.alt.includes(colour) && image.alt.includes(angle),
+          `${slug}@${width}/${index}: informative alt`,
+        );
+        check(
+          image.source.includes(`product-details-${slug}-`),
+          `${slug}@${width}/${index}: SKU asset loaded`,
+        );
+        check(
+          image.inside && image.fit === 'contain' && image.arrowsClear && image.overflow <= 0,
+          `${slug}@${width}/${index}: image inside stage, arrows clear, no overflow`,
+        );
+        check(
+          image.thumbs.length === 3 &&
+            image.thumbs.every(
+              (thumb, nth) =>
+                thumb.width >= 24 &&
+                thumb.height >= 24 &&
+                thumb.label === `Показать фото ${nth + 1} из 3`,
+            ) &&
+            image.thumbs[index].current === 'true',
+          `${slug}@${width}/${index}: usable labelled thumbnails`,
+        );
+        check(
+          JSON.stringify(image.arrowLabels) ===
+            JSON.stringify(['Предыдущее фото', 'Следующее фото']),
+          `${slug}@${width}/${index}: arrow labels preserved`,
+        );
+      }
+      check(new Set(sources).size === 3, `${slug}@${width}: thumbnail changes active asset`);
+      await page.click('.product-gallery__arrow--next');
+      check(
+        (await stageImage(page)).source === sources[0],
+        `${slug}@${width}: next wraps to front`,
+      );
+      await page.click('.product-gallery__arrow--previous');
+      check(
+        (await stageImage(page)).source === sources[2],
+        `${slug}@${width}: previous wraps to pair`,
+      );
+      await page.focus('.product-gallery__thumb');
+      await page.keyboard.press('Enter');
+      check((await stageImage(page)).source === sources[0], `${slug}@${width}: keyboard thumbnail`);
+      await page.focus('.product-gallery__arrow--next');
+      await page.keyboard.press('Enter');
+      check((await stageImage(page)).source === sources[1], `${slug}@${width}: keyboard arrow`);
+      if (width === 1440) {
+        await page.click('.product-purchase__cart');
+        const imageKind = await page.evaluate(
+          (id) =>
+            JSON.parse(localStorage.getItem('goodcall.cart.v1')).lines.find(
+              (line) => line.id === id,
+            )?.image.kind,
+          slug,
+        );
+        check(imageKind === 'catalog-fallback', `${slug}: commerce image remains catalog-fallback`);
+      }
+      await page.close();
+    }
+  }
+
+  const surfaceImages = (page) =>
+    page.evaluate(() => ({
+      gallery: [...document.querySelectorAll('.product-gallery img')].map((image) => ({
+        source: new URL(image.currentSrc || image.src).pathname.split('/assets/').at(-1),
+        alt: image.alt,
+      })),
+      cards: [...document.querySelectorAll('.product-related .product-card img')].map((image) => ({
+        source: new URL(image.currentSrc || image.src).pathname.split('/assets/').at(-1),
+        alt: image.alt,
+      })),
+    }));
+  for (const slug of [
+    'iphone-15-128',
+    'apple-watch-series-9-45',
+    'airpods-pro-2-usb-c',
+    'tecno-camon-30-256',
+    ...MEDIA_BATCH_SLUGS,
+  ]) {
+    const snapshots = [];
+    for (const base of [HEAD, NEW]) {
+      scenario = {};
+      const page = await newPage();
+      await page.goto(`${base}#/product/${slug}`);
+      await page.waitForSelector('.product-gallery__stage img');
+      if (slug !== 'apple-watch-series-9-45' && slug !== 'airpods-pro-2-usb-c') {
+        await page.waitForFunction(
+          () => document.querySelectorAll('.product-related .product-card').length > 0,
+        );
+      }
+      await page.evaluate(async () => {
+        for (const image of document.querySelectorAll('.product-gallery img, .product-related img'))
+          image.loading = 'eager';
+      });
+      await page.waitForFunction(() =>
+        [...document.querySelectorAll('.product-gallery img, .product-related img')].every(
+          (image) => image.complete && image.naturalWidth > 0,
+        ),
+      );
+      snapshots.push(await surfaceImages(page));
+      await page.close();
+    }
+    check(
+      JSON.stringify(snapshots[0].cards) === JSON.stringify(snapshots[1].cards),
+      `${slug}: Product Details C card imagery unchanged from HEAD`,
+    );
+    if (!MEDIA_BATCH_SLUGS.includes(slug)) {
+      check(
+        JSON.stringify(snapshots[0].gallery) === JSON.stringify(snapshots[1].gallery),
+        `${slug}: protected gallery/fallback unchanged from HEAD`,
+      );
+    }
+  }
+
+  const zoomPage = await newPage(720, 450);
+  scenario = {};
+  await openPdp(zoomPage, 'iphone-15-pro-128');
+  for (let index = 0; index < 3; index += 1) {
+    await zoomPage.click('.product-gallery__thumb', { nth: index });
+    const image = await stageImage(zoomPage);
+    check(
+      image.inside && image.overflow <= 0 && image.thumbs.every((thumb) => thumb.width >= 24),
+      `200% zoom reflow (1440 to 720 CSS px)/${index}: gallery usable`,
+    );
+  }
+  await zoomPage.close();
 }
 
 console.log('stage: route states', new Date().toISOString());

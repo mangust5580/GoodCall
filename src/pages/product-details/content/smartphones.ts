@@ -1,6 +1,7 @@
 import {
   PRODUCT_DETAILS_DESCRIPTION_MEDIA,
   PRODUCT_DETAILS_GALLERY_BY_COLOUR_MEDIA,
+  PRODUCT_DETAILS_GALLERY_BY_SLUG,
   PRODUCT_DETAILS_WARRANTY_MEDIA,
 } from '../../../assets/media/product-details/productDetailsMedia';
 import type { ProductDetailsContent } from '../productDetailsContent.types';
@@ -162,6 +163,26 @@ export const SMARTPHONES_CONTENT: readonly ProductDetailsContent[] = [
   {
     slug: 'iphone-15-pro-128',
     category: 'smartphones',
+    media: {
+      gallery: [
+        {
+          id: 'iphone-15-pro-128-hero-front',
+          source: PRODUCT_DETAILS_GALLERY_BY_SLUG['iphone-15-pro-128'].heroFront,
+          alt: 'Apple iPhone 15 Pro, натуральный титан, вид спереди под углом',
+        },
+        {
+          id: 'iphone-15-pro-128-rear-camera',
+          source: PRODUCT_DETAILS_GALLERY_BY_SLUG['iphone-15-pro-128'].rearCamera,
+          alt: 'Apple iPhone 15 Pro, натуральный титан, вид сзади под углом',
+        },
+        {
+          id: 'iphone-15-pro-128-front-rear-pair',
+          source: PRODUCT_DETAILS_GALLERY_BY_SLUG['iphone-15-pro-128'].frontRearPair,
+          alt: 'Apple iPhone 15 Pro, натуральный титан, спереди и сзади',
+        },
+      ],
+      cartImage: { kind: 'catalog-fallback' },
+    },
     attributes: [
       { label: 'Цвет', value: 'Натуральный титан' },
       { label: 'Память', value: '128 ГБ' },
@@ -273,6 +294,26 @@ export const SMARTPHONES_CONTENT: readonly ProductDetailsContent[] = [
   {
     slug: 'galaxy-s24-128',
     category: 'smartphones',
+    media: {
+      gallery: [
+        {
+          id: 'galaxy-s24-128-hero-front',
+          source: PRODUCT_DETAILS_GALLERY_BY_SLUG['galaxy-s24-128'].heroFront,
+          alt: 'Samsung Galaxy S24, фиолетовый, вид спереди под углом',
+        },
+        {
+          id: 'galaxy-s24-128-rear-camera',
+          source: PRODUCT_DETAILS_GALLERY_BY_SLUG['galaxy-s24-128'].rearCamera,
+          alt: 'Samsung Galaxy S24, фиолетовый, вид сзади под углом',
+        },
+        {
+          id: 'galaxy-s24-128-front-rear-pair',
+          source: PRODUCT_DETAILS_GALLERY_BY_SLUG['galaxy-s24-128'].frontRearPair,
+          alt: 'Samsung Galaxy S24, фиолетовый, спереди и сзади',
+        },
+      ],
+      cartImage: { kind: 'catalog-fallback' },
+    },
     attributes: [
       { label: 'Цвет', value: 'Фиолетовый' },
       { label: 'Память', value: '128 ГБ' },
@@ -467,6 +508,26 @@ export const SMARTPHONES_CONTENT: readonly ProductDetailsContent[] = [
   {
     slug: 'pixel-8-128',
     category: 'smartphones',
+    media: {
+      gallery: [
+        {
+          id: 'pixel-8-128-hero-front',
+          source: PRODUCT_DETAILS_GALLERY_BY_SLUG['pixel-8-128'].heroFront,
+          alt: 'Google Pixel 8, обсидиан, вид спереди под углом',
+        },
+        {
+          id: 'pixel-8-128-rear-camera',
+          source: PRODUCT_DETAILS_GALLERY_BY_SLUG['pixel-8-128'].rearCamera,
+          alt: 'Google Pixel 8, обсидиан, вид сзади под углом',
+        },
+        {
+          id: 'pixel-8-128-front-rear-pair',
+          source: PRODUCT_DETAILS_GALLERY_BY_SLUG['pixel-8-128'].frontRearPair,
+          alt: 'Google Pixel 8, обсидиан, спереди и сзади',
+        },
+      ],
+      cartImage: { kind: 'catalog-fallback' },
+    },
     attributes: [
       { label: 'Цвет', value: 'Обсидиан' },
       { label: 'Память', value: '128 ГБ' },
@@ -569,6 +630,26 @@ export const SMARTPHONES_CONTENT: readonly ProductDetailsContent[] = [
   {
     slug: 'xiaomi-14-256',
     category: 'smartphones',
+    media: {
+      gallery: [
+        {
+          id: 'xiaomi-14-256-hero-front',
+          source: PRODUCT_DETAILS_GALLERY_BY_SLUG['xiaomi-14-256'].heroFront,
+          alt: 'Xiaomi 14, чёрный, вид спереди под углом',
+        },
+        {
+          id: 'xiaomi-14-256-rear-camera',
+          source: PRODUCT_DETAILS_GALLERY_BY_SLUG['xiaomi-14-256'].rearCamera,
+          alt: 'Xiaomi 14, чёрный, вид сзади под углом',
+        },
+        {
+          id: 'xiaomi-14-256-front-rear-pair',
+          source: PRODUCT_DETAILS_GALLERY_BY_SLUG['xiaomi-14-256'].frontRearPair,
+          alt: 'Xiaomi 14, чёрный, спереди и сзади',
+        },
+      ],
+      cartImage: { kind: 'catalog-fallback' },
+    },
     attributes: [
       { label: 'Цвет', value: 'Чёрный' },
       { label: 'ОЗУ', value: '12 ГБ' },
@@ -868,6 +949,26 @@ export const SMARTPHONES_CONTENT: readonly ProductDetailsContent[] = [
   {
     slug: 'oneplus-12-256',
     category: 'smartphones',
+    media: {
+      gallery: [
+        {
+          id: 'oneplus-12-256-hero-front',
+          source: PRODUCT_DETAILS_GALLERY_BY_SLUG['oneplus-12-256'].heroFront,
+          alt: 'OnePlus 12, сланец, вид спереди под углом',
+        },
+        {
+          id: 'oneplus-12-256-rear-camera',
+          source: PRODUCT_DETAILS_GALLERY_BY_SLUG['oneplus-12-256'].rearCamera,
+          alt: 'OnePlus 12, сланец, вид сзади под углом',
+        },
+        {
+          id: 'oneplus-12-256-front-rear-pair',
+          source: PRODUCT_DETAILS_GALLERY_BY_SLUG['oneplus-12-256'].frontRearPair,
+          alt: 'OnePlus 12, сланец, спереди и сзади',
+        },
+      ],
+      cartImage: { kind: 'catalog-fallback' },
+    },
     attributes: [
       { label: 'Цвет', value: 'Сланец' },
       { label: 'ОЗУ', value: '12 ГБ' },

@@ -1,5 +1,21 @@
 import type { PictureSource } from '../../../components/media';
 
+import iphone15ProHeroFront from './derived/product-details-iphone-15-pro-128-hero-front-gallery.png?w=160;240;320;480;640;960;1254&picture';
+import iphone15ProRearCamera from './derived/product-details-iphone-15-pro-128-rear-camera-gallery.png?w=160;240;320;480;640;960;1254&picture';
+import iphone15ProFrontRearPair from './derived/product-details-iphone-15-pro-128-front-rear-pair-gallery.png?w=160;240;320;480;640;960;1254&picture';
+import galaxyS24HeroFront from './derived/product-details-galaxy-s24-128-hero-front-gallery.png?w=160;240;320;480;640;960;1254&picture';
+import galaxyS24RearCamera from './derived/product-details-galaxy-s24-128-rear-camera-gallery.png?w=160;240;320;480;640;960;1254&picture';
+import galaxyS24FrontRearPair from './derived/product-details-galaxy-s24-128-front-rear-pair-gallery.png?w=160;240;320;480;640;960;1254&picture';
+import xiaomi14HeroFront from './derived/product-details-xiaomi-14-256-hero-front-gallery.png?w=160;240;320;480;640;960;1254&picture';
+import xiaomi14RearCamera from './derived/product-details-xiaomi-14-256-rear-camera-gallery.png?w=160;240;320;480;640;960;1254&picture';
+import xiaomi14FrontRearPair from './derived/product-details-xiaomi-14-256-front-rear-pair-gallery.png?w=160;240;320;480;640;960;1254&picture';
+import pixel8HeroFront from './derived/product-details-pixel-8-128-hero-front-gallery.png?w=160;240;320;480;640;960;1254&picture';
+import pixel8RearCamera from './derived/product-details-pixel-8-128-rear-camera-gallery.png?w=160;240;320;480;640;960;1254&picture';
+import pixel8FrontRearPair from './derived/product-details-pixel-8-128-front-rear-pair-gallery.png?w=160;240;320;480;640;960;1254&picture';
+import oneplus12HeroFront from './derived/product-details-oneplus-12-256-hero-front-gallery.png?w=160;240;320;480;640;960;1254&picture';
+import oneplus12RearCamera from './derived/product-details-oneplus-12-256-rear-camera-gallery.png?w=160;240;320;480;640;960;1254&picture';
+import oneplus12FrontRearPair from './derived/product-details-oneplus-12-256-front-rear-pair-gallery.png?w=160;240;320;480;640;960;1254&picture';
+
 import reviewAvatarAnnaK from './reviews/review-avatar-anna-k.webp';
 import reviewAvatarDmitryS from './reviews/review-avatar-dmitry-s.webp';
 import reviewAvatarOlgaM from './reviews/review-avatar-olga-m.webp';
@@ -47,6 +63,34 @@ export const PRODUCT_DETAILS_GALLERY_BY_COLOUR_MEDIA = {
 } satisfies Record<string, Record<string, PictureSource>>;
 
 export const PRODUCT_DETAILS_APPLE_WATCH_S9_MEDIA = appleWatchS9Black;
+
+export const PRODUCT_DETAILS_GALLERY_BY_SLUG = {
+  'iphone-15-pro-128': {
+    heroFront: iphone15ProHeroFront,
+    rearCamera: iphone15ProRearCamera,
+    frontRearPair: iphone15ProFrontRearPair,
+  },
+  'galaxy-s24-128': {
+    heroFront: galaxyS24HeroFront,
+    rearCamera: galaxyS24RearCamera,
+    frontRearPair: galaxyS24FrontRearPair,
+  },
+  'xiaomi-14-256': {
+    heroFront: xiaomi14HeroFront,
+    rearCamera: xiaomi14RearCamera,
+    frontRearPair: xiaomi14FrontRearPair,
+  },
+  'pixel-8-128': {
+    heroFront: pixel8HeroFront,
+    rearCamera: pixel8RearCamera,
+    frontRearPair: pixel8FrontRearPair,
+  },
+  'oneplus-12-256': {
+    heroFront: oneplus12HeroFront,
+    rearCamera: oneplus12RearCamera,
+    frontRearPair: oneplus12FrontRearPair,
+  },
+} satisfies Record<string, Record<string, PictureSource>>;
 
 export const PRODUCT_DETAILS_DESCRIPTION_MEDIA = descriptionEditorial;
 

@@ -10,6 +10,81 @@ const derivedDir = path.join(rootDir, 'src/assets/media/product-details/derived'
 
 const assets = [
   {
+    id: 'product-details-iphone-15-pro-128-hero-front',
+    variant: 'gallery',
+    widths: [160, 240, 320, 480, 640, 960, 1254],
+  },
+  {
+    id: 'product-details-iphone-15-pro-128-rear-camera',
+    variant: 'gallery',
+    widths: [160, 240, 320, 480, 640, 960, 1254],
+  },
+  {
+    id: 'product-details-iphone-15-pro-128-front-rear-pair',
+    variant: 'gallery',
+    widths: [160, 240, 320, 480, 640, 960, 1254],
+  },
+  {
+    id: 'product-details-galaxy-s24-128-hero-front',
+    variant: 'gallery',
+    widths: [160, 240, 320, 480, 640, 960, 1254],
+  },
+  {
+    id: 'product-details-galaxy-s24-128-rear-camera',
+    variant: 'gallery',
+    widths: [160, 240, 320, 480, 640, 960, 1254],
+  },
+  {
+    id: 'product-details-galaxy-s24-128-front-rear-pair',
+    variant: 'gallery',
+    widths: [160, 240, 320, 480, 640, 960, 1254],
+  },
+  {
+    id: 'product-details-xiaomi-14-256-hero-front',
+    variant: 'gallery',
+    widths: [160, 240, 320, 480, 640, 960, 1254],
+  },
+  {
+    id: 'product-details-xiaomi-14-256-rear-camera',
+    variant: 'gallery',
+    widths: [160, 240, 320, 480, 640, 960, 1254],
+  },
+  {
+    id: 'product-details-xiaomi-14-256-front-rear-pair',
+    variant: 'gallery',
+    widths: [160, 240, 320, 480, 640, 960, 1254],
+  },
+  {
+    id: 'product-details-pixel-8-128-hero-front',
+    variant: 'gallery',
+    widths: [160, 240, 320, 480, 640, 960, 1254],
+  },
+  {
+    id: 'product-details-pixel-8-128-rear-camera',
+    variant: 'gallery',
+    widths: [160, 240, 320, 480, 640, 960, 1254],
+  },
+  {
+    id: 'product-details-pixel-8-128-front-rear-pair',
+    variant: 'gallery',
+    widths: [160, 240, 320, 480, 640, 960, 1254],
+  },
+  {
+    id: 'product-details-oneplus-12-256-hero-front',
+    variant: 'gallery',
+    widths: [160, 240, 320, 480, 640, 960, 1254],
+  },
+  {
+    id: 'product-details-oneplus-12-256-rear-camera',
+    variant: 'gallery',
+    widths: [160, 240, 320, 480, 640, 960, 1254],
+  },
+  {
+    id: 'product-details-oneplus-12-256-front-rear-pair',
+    variant: 'gallery',
+    widths: [160, 240, 320, 480, 640, 960, 1254],
+  },
+  {
     id: 'product-details-gallery-pink-hero-front',
     variant: 'gallery',
     widths: [160, 240, 320, 480, 640, 960, 1254],

@@ -148,6 +148,9 @@ Active visual slice: none.
 
 Completed visual slices:
 
+- **PDP Media Coverage A / Batch 1 — USER VISUAL/UX PASS — CLOSED and
+  published.** Five smartphone PDP galleries. See the PDP Media Coverage A
+  section below.
 - **Product Details C / «Другие смартфоны» — USER VISUAL/UX PASS — CLOSED and
   published.** Smartphone PDPs. See the Product Details C section below.
 - **About A / О GoodCall — USER VISUAL/UX PASS — CLOSED and published.**
@@ -179,6 +182,25 @@ section below. **Checkout A / Checkout Page Foundation — USER VISUAL/UX PASS
 on 2026-09-30, CLOSED and published.** See the Checkout A section below. Search C, Favourites A, Commerce B, Commerce A,
 Blog B, Blog A, Home A, Cart A, Cart B, Search A, Search B, 404 A and the
 Product Details production integration are closed.
+
+### PDP Media Coverage A — Batch 1
+
+**Status: USER VISUAL/UX PASS — CLOSED and published.** The user independently
+reviewed the generated gallery media and explicitly granted USER VISUAL/UX PASS
+without an in-chat screenshot comparison.
+
+- **Scope.** `iphone-15-pro-128`, `galaxy-s24-128`, `xiaomi-14-256`,
+  `pixel-8-128` and `oneplus-12-256` each have three product-specific gallery
+  images: `heroFront`, `rearCamera` and `frontRearPair`.
+- **Ownership.** 15 masters in `src/assets/media/product-details/masters/`,
+  derivatives from the existing `npm run media:product-details`, exported as
+  `PRODUCT_DETAILS_GALLERY_BY_SLUG` in `productDetailsMedia.ts` (the colour sets
+  are unchanged). The five content records gained `media.gallery` only; no
+  editorial or warranty image, and `cartImage` stays `catalog-fallback`.
+- **Unchanged.** `ProductGallery`, the `ProductDetailsContent`/`View` contracts,
+  Product Details C, `?reference=product-details` (0-pixel diff), every card and
+  thumbnail surface (Catalog, Search, Home, Favourites, Cart, Checkout, Order,
+  Compare) and the persisted commerce image kinds.
 
 ### Product Details C — «Другие смартфоны»
 
@@ -4663,10 +4685,12 @@ none of them blocks the closed milestone.
 
 ## Known deferred work
 
-- PDP and product-card media coverage remains incomplete: only `iphone-15-128`
-  has a full gallery and `apple-watch-series-9-45` a single image; every other
-  live SKU uses category artwork on its PDP and the shared `product-phone.svg` on
-  cards.
+- PDP media coverage is still incomplete for non-batch SKUs: `iphone-15-128`
+  and the five PDP Media Coverage A SKUs have galleries,
+  `apple-watch-series-9-45` has one image, and the other eleven live SKUs
+  (including AirPods) use category artwork on the PDP. Cross-surface product
+  thumbnails remain deferred: cards still use the shared `product-phone.svg` or
+  Home category art. The iPhone 15 editorial image mismatch is also deferred.
 - Phone validation, country selection and international formatting are deferred
   until a real product form consumer defines those requirements.
 - Textarea auto-grow remains deferred until a concrete consumer requires it.
@@ -4744,8 +4768,8 @@ USER VISUAL/UX PASS, its implementation/regression gates are complete, and it
 passed the final Codex commit-readiness gate; the milestone is complete (see its
 section). Real
 `product_images` support in the gallery, interactive variants, review bodies,
-one-click purchase, Compare on the main PDP surface and per-product galleries
-beyond the iPhone remain unscoped.
+one-click purchase, Compare on the main PDP surface and galleries for SKUs
+beyond iPhone 15 and PDP Media Coverage A Batch 1 remain unscoped.
 
 Product Details Production Integration A and the Route scroll fix are closed.
 They received user visual / UX PASS on 2026-09-27.
