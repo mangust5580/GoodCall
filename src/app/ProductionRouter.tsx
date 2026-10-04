@@ -13,10 +13,13 @@ import {
   FAQ_PATH,
   FAVORITES_PATH,
   HOME_PATH,
+  OFFER_PATH,
   ORDER_CONFIRMATION_PATH,
+  PRIVACY_PATH,
   PRODUCT_PATH,
   SEARCH_PATH,
   SHOPS_PATH,
+  TERMS_PATH,
   WARRANTY_PATH,
 } from './routePaths';
 import { BlogArticleRoute } from './routes/BlogArticleRoute';
@@ -27,7 +30,15 @@ import { CheckoutRoute } from './routes/CheckoutRoute';
 import { CompareRoute } from './routes/CompareRoute';
 import { FavoritesRoute } from './routes/FavoritesRoute';
 import { HomeRoute } from './routes/HomeRoute';
-import { ContactsRoute, DeliveryRoute, FaqRoute, WarrantyRoute } from './routes/InfoRoutes';
+import {
+  ContactsRoute,
+  DeliveryRoute,
+  FaqRoute,
+  OfferRoute,
+  PrivacyRoute,
+  TermsRoute,
+  WarrantyRoute,
+} from './routes/InfoRoutes';
 import { NotFoundRoute } from './routes/NotFoundRoute';
 import { OrderConfirmationRoute } from './routes/OrderConfirmationRoute';
 import { ProductDetailsRoute } from './routes/ProductDetailsRoute';
@@ -53,6 +64,9 @@ export function ProductionRouter() {
         <Route element={<WarrantyRoute />} path={WARRANTY_PATH} />
         <Route element={<FaqRoute />} path={FAQ_PATH} />
         <Route element={<ContactsRoute />} path={CONTACTS_PATH} />
+        <Route element={<PrivacyRoute />} path={PRIVACY_PATH} />
+        <Route element={<TermsRoute />} path={TERMS_PATH} />
+        <Route element={<OfferRoute />} path={OFFER_PATH} />
         <Route element={<BlogRoute />} path={BLOG_PATH} />
         <Route element={<BlogArticleRoute />} path={BLOG_ARTICLE_PATH} />
         <Route element={<NotFoundRoute />} path="*" />

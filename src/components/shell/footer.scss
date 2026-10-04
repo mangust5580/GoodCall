@@ -187,6 +187,20 @@
     color: var(--role-text-muted);
   }
 
+  &__legal-link {
+    color: inherit;
+    text-decoration-line: none;
+
+    &:hover {
+      color: var(--role-text-link);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--role-border-focus);
+      outline-offset: 2px;
+    }
+  }
+
   &__payments {
     display: flex;
     flex-flow: row wrap;

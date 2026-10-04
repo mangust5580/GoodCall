@@ -13,7 +13,10 @@ import {
   FAQ_PATH,
   FAVORITES_PATH,
   HOME_PATH,
+  OFFER_PATH,
+  PRIVACY_PATH,
   SHOPS_PATH,
+  TERMS_PATH,
   WARRANTY_PATH,
   hashHref,
 } from './routePaths';
@@ -30,6 +33,12 @@ const FOOTER_HELP_LINKS = {
   faq: hashHref(FAQ_PATH),
   contacts: CONTACTS_HREF,
   support: CONTACTS_HREF,
+};
+
+const FOOTER_LEGAL_LINKS = {
+  privacy: hashHref(PRIVACY_PATH),
+  terms: hashHref(TERMS_PATH),
+  offer: hashHref(OFFER_PATH),
 };
 
 const FOOTER_PAYMENT_MARKS = STOREFRONT_PAYMENT_MARKS.map((mark) => ({
@@ -72,6 +81,7 @@ export function ProductionShell({ children }: ProductionShellProps) {
       <SiteFooter
         helpLinks={FOOTER_HELP_LINKS}
         homeHref={home}
+        legalLinks={FOOTER_LEGAL_LINKS}
         paymentMarks={FOOTER_PAYMENT_MARKS}
         support={STOREFRONT_SUPPORT}
         supportLabel={SUPPORT_LABEL}

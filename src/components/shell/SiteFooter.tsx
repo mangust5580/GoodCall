@@ -18,6 +18,12 @@ export interface SiteFooterHelpLinks {
   readonly support?: string;
 }
 
+export interface SiteFooterLegalLinks {
+  readonly privacy?: string;
+  readonly terms?: string;
+  readonly offer?: string;
+}
+
 export interface SiteFooterPaymentMark {
   readonly name: string;
   readonly src: string;
@@ -35,6 +41,7 @@ export interface SiteFooterSupport {
 export interface SiteFooterProps {
   readonly homeHref?: string;
   readonly helpLinks?: SiteFooterHelpLinks;
+  readonly legalLinks?: SiteFooterLegalLinks;
   readonly paymentMarks?: readonly SiteFooterPaymentMark[];
   readonly support?: SiteFooterSupport;
   readonly supportLabel?: string;
@@ -98,10 +105,15 @@ const PAYMENT_MARKS: readonly SiteFooterPaymentMark[] = [
   { name: 'T-Pay', src: paymentTpay, modifier: 'tpay' },
 ];
 
-const LEGAL_ITEMS: readonly string[] = [
-  'Политика конфиденциальности',
-  'Пользовательское соглашение',
-  'Публичная оферта',
+interface FooterLegalItem {
+  readonly label: string;
+  readonly link: keyof SiteFooterLegalLinks;
+}
+
+const LEGAL_ITEMS: readonly FooterLegalItem[] = [
+  { label: 'Политика конфиденциальности', link: 'privacy' },
+  { label: 'Пользовательское соглашение', link: 'terms' },
+  { label: 'Публичная оферта', link: 'offer' },
 ];
 
 const SUPPORT: SiteFooterSupport = {
@@ -115,6 +127,7 @@ const SUPPORT: SiteFooterSupport = {
 export function SiteFooter({
   homeHref,
   helpLinks,
+  legalLinks,
   paymentMarks = PAYMENT_MARKS,
   support = SUPPORT,
   supportLabel,
@@ -192,11 +205,21 @@ export function SiteFooter({
         <div className="site-footer__bottom">
           <p className="site-footer__copyright">© 2024 GOODCALL. Все права защищены</p>
           <ul className="site-footer__legal">
-            {LEGAL_ITEMS.map((item) => (
-              <li className="site-footer__legal-item" key={item}>
-                {item}
-              </li>
-            ))}
+            {LEGAL_ITEMS.map((item) => {
+              const href = legalLinks?.[item.link];
+
+              return (
+                <li className="site-footer__legal-item" key={item.label}>
+                  {href === undefined ? (
+                    item.label
+                  ) : (
+                    <a className="site-footer__legal-link" href={href}>
+                      {item.label}
+                    </a>
+                  )}
+                </li>
+              );
+            })}
           </ul>
           <ul aria-label="Способы оплаты" className="site-footer__payments">
             {paymentMarks.map((mark) => (

@@ -4,4 +4,7 @@ export { FaqPage } from './FaqPage';
 export { FAQ_CATEGORIES, FAQ_ENTRIES } from './faqData';
 export type { FaqCategory, FaqCategoryId, FaqEntry } from './faqData';
 export type { InfoLinkKey, InfoLinks } from './infoLinks';
+export { OfferPage } from './OfferPage';
+export { PrivacyPage } from './PrivacyPage';
+export { TermsPage } from './TermsPage';
 export { WarrantyPage } from './WarrantyPage';

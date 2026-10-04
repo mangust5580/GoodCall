@@ -148,6 +148,8 @@ Active visual slice: none.
 
 Completed visual slices:
 
+- **Legal A / Privacy, Terms and Public Offer — USER VISUAL/UX PASS — CLOSED.**
+  `#/privacy`, `#/terms`, `#/offer`. See the Legal A section below.
 - **Contacts A / Customer Contacts Page — USER VISUAL/UX PASS — CLOSED.**
   `#/contacts`. See the Contacts A section below.
 - **Info A / Customer Help Pages — USER VISUAL/UX PASS granted after manual
@@ -173,6 +175,42 @@ section below. **Checkout A / Checkout Page Foundation — USER VISUAL/UX PASS
 on 2026-09-30, CLOSED and published.** See the Checkout A section below. Search C, Favourites A, Commerce B, Commerce A,
 Blog B, Blog A, Home A, Cart A, Cart B, Search A, Search B, 404 A and the
 Product Details production integration are closed.
+
+### Legal A — Privacy, Terms and Public Offer
+
+**Status: USER VISUAL/UX PASS — CLOSED.** Evidence: `Privacy_terms.png`,
+`Offer.png` (page body only; the production Global Shell is authoritative).
+
+- **Routes.** `#/privacy` (`PRIVACY_PATH`), `#/terms` (`TERMS_PATH`) and
+  `#/offer` (`OFFER_PATH`); seams `PrivacyRoute`, `TermsRoute` and `OfferRoute`
+  in `src/app/routes/InfoRoutes.tsx`. The pages live in `src/pages/info/`.
+- **Shared pattern.** `LegalDocumentPage` (`LegalParts.tsx`) renders all three:
+  `InfoPageHeader`, a «Содержание» nav card beside one document card of
+  numbered sections (icon tile, `h2`, text, divider) and an update note. Offer
+  adds a disclaimer callout (`intro`) and a «Статус демонстрационного проекта»
+  block (`outro`). Contents buttons scroll to and focus the section heading;
+  they never touch the URL (no fragment anchors under `HashRouter`) and there is
+  no scroll-spy.
+- **Sticky contents.** From 1024px the «Содержание» card is `position: sticky`
+  below the sticky header (`$legal-sticky-top` 112px, 92px between 1024 and
+  1080px, matching the header's height switch). Below 1024px it is a normal
+  block above the document. No internal scroller was needed.
+- **Truthful content.** Privacy describes only what the code does: local
+  storage for cart, favourites, comparison and city; session storage for the
+  demo order (no name, phone, e-mail or comments); DaData suggestions, IP city
+  detection and opt-in geolocation when configured; read-only Supabase catalogue
+  reads; no cookies, analytics or newsletter backend. Terms describe a demo
+  storefront with no registration, payment, real order or obligation. Offer
+  states that the demo is not a public offer and concludes no sale contract.
+  These texts must change when that behaviour changes.
+- **Deliberate raster deviations.** Current shell instead of the raster shell;
+  no seller, legal entity, address, INN/OGRN, bank or requisites (replaced by
+  the demo-status block); no «Правовая информация» breadcrumb level; no cookie,
+  152-ФЗ or registration sections; Offer uses the shared vertical document
+  pattern instead of the raster's two-column accordion; «Публичная оферта» has
+  no forced line break.
+- **Footer.** `SiteFooter.legalLinks` wires the three legal labels in
+  production; reference surfaces pass no `legalLinks` and keep plain text.
 
 ### Contacts A — Customer Contacts Page
 
@@ -2641,11 +2679,11 @@ legal row and link semantics are unchanged, the footer still reads quieter than
 never overlays the fixed `MobileActionBar`. The rest of the Footer polish pass
 stays deferred to the end-of-project integrated review.
 
-**Public API is exactly `homeHref?: string`**, defaulting to
-`import.meta.env.BASE_URL` like `SiteHeader`. It exists only because the brand
-lockup is a real home link. There is no `columns`, `links`, `contacts`,
+**Public API:** `homeHref?` (defaulting to `import.meta.env.BASE_URL` like
+`SiteHeader`), the production seams `helpLinks?`, `legalLinks?`, `support?`,
+`supportLabel?` and `paymentMarks?`. There is no `columns`, `links`, `contacts`,
 `socials`, `payments`, `copyright`, `variant`, `theme`, `compact`,
-`showNewsletter`, `legalLinks` or `companyInfo` prop, and no footer CMS model,
+`showNewsletter` or `companyInfo` prop, and no footer CMS model,
 site-settings service or JSON data layer.
 
 **Anatomy.** `<footer class="site-footer">` → accepted `Container` → a
@@ -2667,12 +2705,14 @@ incidental. Its address, the app-download block and the store badges are
 single-raster traits and were **not** implemented; no QR block exists, because no
 footer raster shows one.
 
-**Link policy.** The pages behind the footer navigation and legal labels do not
-exist, so they render as **non-interactive text**, not fake links. There is no `href="#"`, no
+**Link policy.** Footer labels whose page does not exist render as
+**non-interactive text**, not fake links. In production, `helpLinks` wires
+Доставка и оплата, Гарантия и возврат, FAQ, Контакты and Поддержка, and
+`legalLinks` wires the three legal labels (Legal A); reference surfaces pass
+neither and keep plain text. There is no `href="#"`, no
 link pointing at the repository root merely to be clickable, and no no-op click
-handler. Only three real anchors exist: the brand home link, `tel:+78001001010`
-and `mailto:info@goodcall.ru`. Route wiring — and the `<nav>` landmarks that
-should accompany it — is deferred to page-family implementation.
+handler. Production support contacts come from `STOREFRONT_SUPPORT`; the
+remaining unwired labels get a link only when their page exists.
 
 **Contact conflict, open.** The email `info@goodcall.ru` is unanimous across all
 five rasters. The phone is **not**: Home shows `8 800 100-10-47`, Blog
@@ -2772,8 +2812,9 @@ Newsletter-local and built only from accepted `--color-brand-purple-*`
 primitives; no Foundations token was added for it. The submit control keeps the
 accepted pill Button rather than the raster's rounded rectangle, because
 Components is closed and user-accepted. Still omitted: the Shops black button,
-and any privacy/consent copy or policy link — no raster shows one, and no
-destination route exists to invent.
+and any privacy/consent copy or policy link — no raster shows one. `#/privacy`
+now exists (Legal A); adding a consent link to the band is a separate,
+unscoped decision.
 
 **Form semantics.** A plain uncontrolled form. Submission is read with
 `FormData`, `event.preventDefault()` stops navigation, the value is trimmed and
@@ -4246,6 +4287,7 @@ router owns only the fragment. The base path still lives solely in
 - `#/delivery`, `#/warranty`, `#/faq` — the Info A customer help pages
   (Info A, closed).
 - `#/contacts` — the Contacts A page (Contacts A, closed).
+- `#/privacy`, `#/terms`, `#/offer` — the Legal A pages (Legal A, closed).
 - `#/order-confirmation` — the Order Confirmation A thank-you page for the
   session demo order, or «Заказ не найден» (Order Confirmation A, closed).
 - `#/blog/:slug` — the Blog article detail (Blog B, closed),
@@ -4256,7 +4298,7 @@ router owns only the fragment. The base path still lives solely in
 
 Route paths live in `src/app/routePaths.ts` as `HOME_PATH`,
 `CATALOG_SMARTPHONES_PATH`, `PRODUCT_PATH`, `CART_PATH`, `CHECKOUT_PATH`, `ORDER_CONFIRMATION_PATH`, `FAVORITES_PATH`, `COMPARE_PATH`, `SHOPS_PATH`, `DELIVERY_PATH`, `WARRANTY_PATH`, `FAQ_PATH`,
-`SEARCH_PATH`, `BLOG_PATH` and `BLOG_ARTICLE_PATH`.
+`CONTACTS_PATH`, `PRIVACY_PATH`, `TERMS_PATH`, `OFFER_PATH`, `SEARCH_PATH`, `BLOG_PATH` and `BLOG_ARTICLE_PATH`.
 `hashHref()`, `productDetailsHref()`, `searchPath()`, `blogPath()`,
 `blogArticlePath()` and `blogArticleHref()` serve the `href` and navigation
 seams.
@@ -4273,7 +4315,7 @@ them, statically as before. Module boundaries and public APIs are described in
 `AGENTS.md` (Module boundaries) and enforced by `no-restricted-imports` in
 `eslint.config.js`.
 
-`src/app/ProductionRouter.tsx` holds the `HashRouter`, sixteen routes and the 404 catch-all; it
+`src/app/ProductionRouter.tsx` holds the `HashRouter`, nineteen routes and the 404 catch-all; it
 has no local fallback component or stylesheet any more.
 `src/app/routes/HomeRoute.tsx`, `src/app/routes/CatalogRoute.tsx`,
 `src/app/routes/ProductDetailsRoute.tsx`, `src/app/routes/CartRoute.tsx`,

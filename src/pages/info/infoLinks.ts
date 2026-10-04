@@ -8,6 +8,10 @@ export interface InfoLinks {
   readonly catalog: string;
   readonly compare: string;
   readonly favorites: string;
+  readonly contacts: string;
+  readonly privacy: string;
+  readonly terms: string;
+  readonly offer: string;
 }
 
 export type InfoLinkKey = keyof InfoLinks;
