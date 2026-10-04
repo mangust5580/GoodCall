@@ -10,6 +10,7 @@ import {
 import { Picture } from '../../components/media';
 import type { PictureSource } from '../../components/media';
 import { BenefitsStrip } from '../../components/content';
+import type { BenefitItem } from '../../components/content';
 import { Container } from '../../components/layout';
 import { ProductCard } from '../../components/product';
 import { Icon } from '../../components/ui';
@@ -40,6 +41,7 @@ export interface HomePageProps {
   readonly products?: readonly HomeProduct[];
   readonly productHref?: (slug: string) => string | undefined;
   readonly cart?: HomeCartSeam;
+  readonly benefits?: readonly BenefitItem[];
 }
 
 const SMARTPHONES_SLUG = 'smartphones';
@@ -74,6 +76,7 @@ export function HomePage({
   products = HOME_PRODUCTS,
   productHref,
   cart,
+  benefits = HOME_BENEFITS,
 }: HomePageProps) {
   const [announcement, setAnnouncement] = useState('');
   const categoryLink = (slug: string, content: ReactNode, className: string) => {
@@ -117,7 +120,7 @@ export function HomePage({
           </ul>
         </section>
 
-        <BenefitsStrip items={HOME_BENEFITS} label="Преимущества GoodCall" />
+        <BenefitsStrip items={benefits} label="Преимущества GoodCall" />
 
         <div className="home-promos">
           <section className="home-promo home-promo--light">

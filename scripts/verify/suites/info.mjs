@@ -88,13 +88,15 @@ for (const route of ROUTES) {
         ['Доставка и оплата', '#/delivery'],
         ['Гарантия и возврат', '#/warranty'],
         ['FAQ', '#/faq'],
+        ['Контакты', '#/contacts'],
+        ['Поддержка', '#/contacts'],
       ]),
     `${tag}: footer help links ${JSON.stringify(facts.footer)}`,
   );
   check(
     facts.footerPlain.includes('Бонусная программа') &&
       facts.footerPlain.includes('Сервисные центры') &&
-      facts.footerPlain.includes('Контакты'),
+      facts.footerPlain.includes('Карьера'),
     `${tag}: unrelated footer items stay plain text`,
   );
   check(

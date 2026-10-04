@@ -1,6 +1,10 @@
 import { findStore } from '../../commerce/shops';
 import type { StorePoint } from '../../commerce/shops';
-import { STOREFRONT_PAYMENT_OPTIONS, storefrontPaymentMethod } from '../../commerce/storefront';
+import {
+  STOREFRONT_PAYMENT_OPTIONS,
+  STOREFRONT_SUPPORT,
+  storefrontPaymentMethod,
+} from '../../commerce/storefront';
 import type { StorefrontPaymentMark } from '../../commerce/storefront';
 import type { BenefitItem } from '../../components/content';
 import type { CityOption } from '../../components/location';
@@ -133,7 +137,7 @@ export const CHECKOUT_BENEFITS: readonly BenefitItem[] = [
   { title: 'Официальная гарантия', note: 'от производителя на все товары', icon: 'check' },
   { title: 'Быстрая доставка', note: 'от 1 дня по всей России', icon: 'package' },
   { title: 'Удобная оплата', note: 'онлайн или при получении', icon: 'scan-qr' },
-  { title: 'Поддержка 24/7', note: 'ответим на вопросы в любое время', icon: 'headset' },
+  { title: 'Поддержка', note: STOREFRONT_SUPPORT.hours, icon: 'headset' },
 ];
 
 const DELIVERY_DAY_COUNT = 7;

@@ -1,3 +1,4 @@
+import { STOREFRONT_SUPPORT } from '../../commerce/storefront';
 import type { BenefitItem } from '../../components/content';
 import type { IconName } from '../../components/ui';
 import type { HomeArtwork, HomeProduct } from './homeProduct';
@@ -96,7 +97,7 @@ export const HOME_BENEFITS: readonly BenefitItem[] = [
   { title: 'Гарантия до 24 месяцев', note: 'на все товары', icon: 'check' },
   { title: 'Оригинальная продукция', note: 'только официальные поставки', icon: 'package' },
   { title: 'Быстрая доставка', note: 'от 1 дня по всей России', icon: 'store' },
-  { title: 'Поддержка 24/7', note: 'мы всегда на связи', icon: 'headset' },
+  { title: 'Поддержка', note: STOREFRONT_SUPPORT.hours, icon: 'headset' },
 ];
 
 export const HOME_CATEGORY_PROMOS: readonly HomeCategoryPromo[] = [

@@ -1,4 +1,4 @@
-import { DeliveryPage, FaqPage, WarrantyPage } from '../../pages/info';
+import { ContactsPage, DeliveryPage, FaqPage, WarrantyPage } from '../../pages/info';
 import type { InfoLinks } from '../../pages/info';
 import { ProductionShell } from '../ProductionShell';
 import {
@@ -46,6 +46,14 @@ export function FaqRoute() {
   return (
     <ProductionShell>
       <FaqPage links={INFO_LINKS} />
+    </ProductionShell>
+  );
+}
+
+export function ContactsRoute() {
+  return (
+    <ProductionShell>
+      <ContactsPage links={INFO_LINKS} />
     </ProductionShell>
   );
 }

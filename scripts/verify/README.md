@@ -57,6 +57,7 @@ nothing reaches a backend.
 | `order`             | Order Confirmation. It seeds its own cart and places its own order; it does not depend on another suite.                                                                                                                                          | order                       |
 | `form-unconfigured` | Checkout field rules in manual-address (no DaData) mode. It asserts the city field is plain text.                                                                                                                                                 | form-unconfigured           |
 | `info`              | Help pages `#/delivery`, `#/warranty`, `#/faq`: routes, footer links, canonical payment/support facts, tabs, Warranty sequential sections + section navigation, FAQ accordion/filter/search/empty state and natural height, 404, responsive smoke | info                        |
+| `contacts`          | `#/contacts`: canonical support facts, no section navigation, stores from DEMO_STORES, no form/map/address, shell support links, no 24/7 claims, Home benefits (production truthful, `?reference=home` specimen), 404, responsive smoke           | contacts                    |
 
 `fixtures/catalog.json` is a static snapshot of the public demo catalog
 (categories, products, home popular), served as the mocked Supabase response.

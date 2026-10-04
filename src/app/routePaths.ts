@@ -13,6 +13,7 @@ export const SHOPS_PATH = '/shops';
 export const DELIVERY_PATH = '/delivery';
 export const WARRANTY_PATH = '/warranty';
 export const FAQ_PATH = '/faq';
+export const CONTACTS_PATH = '/contacts';
 export const SEARCH_PATH = '/search';
 export const SEARCH_QUERY_PARAM = 'q';
 export const BLOG_PATH = '/blog';

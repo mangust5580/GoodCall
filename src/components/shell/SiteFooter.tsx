@@ -14,6 +14,8 @@ export interface SiteFooterHelpLinks {
   readonly delivery?: string;
   readonly warranty?: string;
   readonly faq?: string;
+  readonly contacts?: string;
+  readonly support?: string;
 }
 
 export interface SiteFooterPaymentMark {
@@ -35,6 +37,7 @@ export interface SiteFooterProps {
   readonly helpLinks?: SiteFooterHelpLinks;
   readonly paymentMarks?: readonly SiteFooterPaymentMark[];
   readonly support?: SiteFooterSupport;
+  readonly supportLabel?: string;
 }
 
 interface FooterItem {
@@ -59,11 +62,20 @@ const FOOTER_GROUPS: readonly FooterGroup[] = [
   },
   {
     title: 'Компания',
-    items: [{ label: 'О нас' }, { label: 'Контакты' }, { label: 'Новости' }, { label: 'Карьера' }],
+    items: [
+      { label: 'О нас' },
+      { label: 'Контакты', link: 'contacts' },
+      { label: 'Новости' },
+      { label: 'Карьера' },
+    ],
   },
   {
     title: 'Помощь',
-    items: [{ label: 'Поддержка 24/7' }, { label: 'Статус заказа' }, { label: 'Сервисные центры' }],
+    items: [
+      { label: 'Поддержка 24/7', link: 'support' },
+      { label: 'Статус заказа' },
+      { label: 'Сервисные центры' },
+    ],
   },
 ];
 
@@ -105,6 +117,7 @@ export function SiteFooter({
   helpLinks,
   paymentMarks = PAYMENT_MARKS,
   support = SUPPORT,
+  supportLabel,
 }: SiteFooterProps) {
   const home = homeHref ?? import.meta.env.BASE_URL;
 
@@ -132,14 +145,18 @@ export function SiteFooter({
               <ul className="site-footer__group-list">
                 {group.items.map((item) => {
                   const href = item.link === undefined ? undefined : helpLinks?.[item.link];
+                  const label =
+                    item.link === 'support' && supportLabel !== undefined
+                      ? supportLabel
+                      : item.label;
 
                   return (
                     <li className="site-footer__group-item" key={item.label}>
                       {href === undefined ? (
-                        item.label
+                        label
                       ) : (
                         <a className="site-footer__group-link" href={href}>
-                          {item.label}
+                          {label}
                         </a>
                       )}
                     </li>

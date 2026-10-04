@@ -1,3 +1,4 @@
+export { ContactsPage } from './ContactsPage';
 export { DeliveryPage } from './DeliveryPage';
 export { FaqPage } from './FaqPage';
 export { FAQ_CATEGORIES, FAQ_ENTRIES } from './faqData';

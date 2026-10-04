@@ -21,6 +21,7 @@ export interface SiteHeaderProps extends Omit<ShellActionInput, 'fallbackHref'> 
   readonly catalogHref?: string;
   readonly storesHref?: string;
   readonly supportHref?: string;
+  readonly supportLabel?: string;
   readonly cityLookupClient?: CityLookupClient;
   readonly cityLookupConfigured?: boolean;
   readonly categories?: readonly SiteHeaderCategory[];
@@ -100,6 +101,7 @@ export function SiteHeader({
   catalogHref,
   storesHref,
   supportHref,
+  supportLabel = 'Поддержка 24/7',
   cityLookupClient,
   cityLookupConfigured,
   categories,
@@ -138,7 +140,7 @@ export function SiteHeader({
           </a>
           <a className="site-header__utility-link site-header__support" href={supportHref ?? base}>
             <Icon name="headset" />
-            Поддержка 24/7
+            {supportLabel}
           </a>
         </Container>
       </div>

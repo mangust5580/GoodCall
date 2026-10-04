@@ -8,6 +8,7 @@ import {
   CATALOG_SMARTPHONES_PATH,
   CHECKOUT_PATH,
   COMPARE_PATH,
+  CONTACTS_PATH,
   DELIVERY_PATH,
   FAQ_PATH,
   FAVORITES_PATH,
@@ -26,7 +27,7 @@ import { CheckoutRoute } from './routes/CheckoutRoute';
 import { CompareRoute } from './routes/CompareRoute';
 import { FavoritesRoute } from './routes/FavoritesRoute';
 import { HomeRoute } from './routes/HomeRoute';
-import { DeliveryRoute, FaqRoute, WarrantyRoute } from './routes/InfoRoutes';
+import { ContactsRoute, DeliveryRoute, FaqRoute, WarrantyRoute } from './routes/InfoRoutes';
 import { NotFoundRoute } from './routes/NotFoundRoute';
 import { OrderConfirmationRoute } from './routes/OrderConfirmationRoute';
 import { ProductDetailsRoute } from './routes/ProductDetailsRoute';
@@ -51,6 +52,7 @@ export function ProductionRouter() {
         <Route element={<DeliveryRoute />} path={DELIVERY_PATH} />
         <Route element={<WarrantyRoute />} path={WARRANTY_PATH} />
         <Route element={<FaqRoute />} path={FAQ_PATH} />
+        <Route element={<ContactsRoute />} path={CONTACTS_PATH} />
         <Route element={<BlogRoute />} path={BLOG_PATH} />
         <Route element={<BlogArticleRoute />} path={BLOG_ARTICLE_PATH} />
         <Route element={<NotFoundRoute />} path="*" />

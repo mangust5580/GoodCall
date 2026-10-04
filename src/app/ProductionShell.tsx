@@ -8,6 +8,7 @@ import { MobileActionBar, NewsletterBand, SiteFooter, SiteHeader } from '../comp
 import {
   CART_PATH,
   COMPARE_PATH,
+  CONTACTS_PATH,
   DELIVERY_PATH,
   FAQ_PATH,
   FAVORITES_PATH,
@@ -20,10 +21,15 @@ import { useSearchNavigation } from './useSearchNavigation';
 
 import './ProductionShell.scss';
 
+const CONTACTS_HREF = hashHref(CONTACTS_PATH);
+const SUPPORT_LABEL = 'Поддержка';
+
 const FOOTER_HELP_LINKS = {
   delivery: hashHref(DELIVERY_PATH),
   warranty: hashHref(WARRANTY_PATH),
   faq: hashHref(FAQ_PATH),
+  contacts: CONTACTS_HREF,
+  support: CONTACTS_HREF,
 };
 
 const FOOTER_PAYMENT_MARKS = STOREFRONT_PAYMENT_MARKS.map((mark) => ({
@@ -58,6 +64,8 @@ export function ProductionShell({ children }: ProductionShellProps) {
         homeHref={home}
         onSearchSubmit={handleSearchSubmit}
         storesHref={hashHref(SHOPS_PATH)}
+        supportHref={CONTACTS_HREF}
+        supportLabel={SUPPORT_LABEL}
       />
       {children}
       <NewsletterBand />
@@ -66,6 +74,7 @@ export function ProductionShell({ children }: ProductionShellProps) {
         homeHref={home}
         paymentMarks={FOOTER_PAYMENT_MARKS}
         support={STOREFRONT_SUPPORT}
+        supportLabel={SUPPORT_LABEL}
       />
       <MobileActionBar
         cartCount={cartCount}

@@ -148,6 +148,8 @@ Active visual slice: none.
 
 Completed visual slices:
 
+- **Contacts A / Customer Contacts Page — USER VISUAL/UX PASS — CLOSED.**
+  `#/contacts`. See the Contacts A section below.
 - **Info A / Customer Help Pages — USER VISUAL/UX PASS granted after manual
   desktop and mobile review — CLOSED.** `#/delivery`, `#/warranty` and
   `#/faq`. See the Info A section below.
@@ -171,6 +173,37 @@ section below. **Checkout A / Checkout Page Foundation — USER VISUAL/UX PASS
 on 2026-09-30, CLOSED and published.** See the Checkout A section below. Search C, Favourites A, Commerce B, Commerce A,
 Blog B, Blog A, Home A, Cart A, Cart B, Search A, Search B, 404 A and the
 Product Details production integration are closed.
+
+### Contacts A — Customer Contacts Page
+
+**Status: USER VISUAL/UX PASS — CLOSED.** Evidence: `Contacts.png` (page body only; the production Global Shell is
+authoritative).
+
+- **Route.** `#/contacts` (`CONTACTS_PATH`), `ContactsRoute` in
+  `src/app/routes/InfoRoutes.tsx`; `ContactsPage` lives in `src/pages/info/`.
+- **Content.** Breadcrumb, one `h1` and lead (the shared `InfoPageHeader`), a
+  full-width contact card (phone, e-mail,
+  support hours from `STOREFRONT_SUPPORT`, and the shop count/hours from
+  `DEMO_STORES`) beside the decorative store-interior photo
+  (`src/assets/media/contacts/contacts-store-interior.webp`), and «Наши
+  магазины» with the first three `DEMO_STORES` and a «Все магазины» link to
+  `#/shops`.
+- **Deliberate raster deviations.** No feedback form, no map, no head-office
+  address and no social links — none of these exist
+  truthfully. The raster's «Информация» sidebar is omitted: the help pages do
+  not share section navigation (FAQ keeps only its own topic filter).
+- **Shell.** Header «Поддержка», footer «Контакты» and footer «Поддержка» link to
+  `#/contacts`. `SiteHeader.supportLabel` and `SiteFooter.supportLabel` carry the
+  production label; reference surfaces keep their raster copy.
+- **Support hours.** Production no longer claims 24/7: the shell label is
+  «Поддержка», and the Home, Cart and Checkout benefit item is «Поддержка —
+  Ежедневно с 9:00 до 21:00» from `STOREFRONT_SUPPORT.hours`.
+- **Reference Home.** `HomePage` takes an optional `benefits` prop defaulting
+  to the truthful production `HOME_BENEFITS`; `?reference=home` passes its own
+  `HOME_SPECIMEN_BENEFITS` (in `src/reference/HomeReference.tsx`) and keeps the
+  accepted «Поддержка 24/7 — мы всегда на связи» specimen copy.
+- **Verification.** `contacts` suite in `npm run verify`, including production
+  vs `?reference=home` benefit copy.
 
 ### Info A — Customer Help Pages
 
@@ -241,10 +274,9 @@ only; the production Global Shell is authoritative).
   including Warranty sequential order and FAQ natural-height assertions).
   `scripts/verify/lib/page.mjs` sends Enter as a real key press so keyboard
   activation of buttons can be tested.
-- **Known remaining inconsistencies (out of scope).** Header and footer
-  «Поддержка 24/7» labels and the Checkout benefit «Поддержка 24/7» contradict
-  the 9:00–21:00 hours; the Product Details «Онлайн-чат» item describes a chat
-  that does not exist.
+- **Known remaining inconsistency (out of scope).** The Product Details
+  «Онлайн-чат» item describes a chat that does not exist. The former 24/7 support
+  claims were resolved by Contacts A.
 
 ### Product Details Production Integration B — Rich Live Product Pages
 
@@ -3025,7 +3057,8 @@ Anatomy — three full-width regions, each placing its content in the accepted
 `Container`, so all three rows share the same inner horizontal edges:
 
 - **UtilityBar** — brand-purple surface carrying the normalized service content:
-  location (`Москва`), `Доставка по всей России`, `Магазины`, `Поддержка 24/7`.
+  location (`Москва`), `Доставка по всей России`, `Магазины`, `Поддержка`
+  (production links it to `#/contacts`; reference surfaces keep `Поддержка 24/7`).
   Page-specific geo banners and campaign copy are deliberately excluded.
 - **MainHeader** — brand lockup, prominent purple catalog entry, the reused
   `SearchField`, and — at 768px and above — the four user actions Compare /
@@ -4212,6 +4245,7 @@ router owns only the fragment. The base path still lives solely in
   (complete, user visual/UX PASS).
 - `#/delivery`, `#/warranty`, `#/faq` — the Info A customer help pages
   (Info A, closed).
+- `#/contacts` — the Contacts A page (Contacts A, closed).
 - `#/order-confirmation` — the Order Confirmation A thank-you page for the
   session demo order, or «Заказ не найден» (Order Confirmation A, closed).
 - `#/blog/:slug` — the Blog article detail (Blog B, closed),
@@ -4239,7 +4273,7 @@ them, statically as before. Module boundaries and public APIs are described in
 `AGENTS.md` (Module boundaries) and enforced by `no-restricted-imports` in
 `eslint.config.js`.
 
-`src/app/ProductionRouter.tsx` holds the `HashRouter`, fifteen routes and the 404 catch-all; it
+`src/app/ProductionRouter.tsx` holds the `HashRouter`, sixteen routes and the 404 catch-all; it
 has no local fallback component or stylesheet any more.
 `src/app/routes/HomeRoute.tsx`, `src/app/routes/CatalogRoute.tsx`,
 `src/app/routes/ProductDetailsRoute.tsx`, `src/app/routes/CartRoute.tsx`,
