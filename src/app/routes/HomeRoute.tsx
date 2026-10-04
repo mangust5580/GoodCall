@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { HomePage, fetchHomeData } from '../../pages/home';
 import type { HomeCategoryTile, HomeProduct } from '../../pages/home';
 import { ProductionShell } from '../ProductionShell';
-import { CATALOG_SMARTPHONES_PATH, productDetailsHref } from '../routePaths';
+import { BLOG_PATH, CATALOG_SMARTPHONES_PATH, productDetailsHref } from '../routePaths';
 import { useHomeCartSeam } from './useHomeCartSeam';
 
 interface HomeRouteData {
@@ -38,6 +38,7 @@ export function HomeRoute() {
   return (
     <ProductionShell>
       <HomePage
+        articlesPath={BLOG_PATH}
         cart={cart}
         categories={homeData?.categories}
         productHref={homeData === undefined ? undefined : productDetailsHref}

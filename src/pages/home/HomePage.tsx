@@ -37,6 +37,7 @@ export interface HomeCartSeam {
 
 export interface HomePageProps {
   readonly smartphonesPath?: string;
+  readonly articlesPath?: string;
   readonly categories?: readonly HomeCategoryTile[];
   readonly products?: readonly HomeProduct[];
   readonly productHref?: (slug: string) => string | undefined;
@@ -72,6 +73,7 @@ const ARTICLE_MEDIA: Readonly<Record<string, PictureSource>> = {
 
 export function HomePage({
   smartphonesPath,
+  articlesPath,
   categories = HOME_CATEGORY_TILES,
   products = HOME_PRODUCTS,
   productHref,
@@ -290,6 +292,11 @@ export function HomePage({
             <h2 className="home-section__title" id="home-articles-title">
               Последние статьи
             </h2>
+            {articlesPath === undefined ? null : (
+              <Link className="home-section__link" to={articlesPath}>
+                Читать все статьи
+              </Link>
+            )}
           </header>
           <ul className="home-articles">
             {HOME_ARTICLES.map((article) => (

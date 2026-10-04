@@ -486,6 +486,22 @@ $home-sale-badge-surface: #dc2626;
     line-height: 1.2;
     color: var(--role-text-primary);
   }
+
+  &__link {
+    flex: none;
+    font-size: 15px;
+    font-weight: 600;
+    text-decoration-line: none;
+
+    &:hover {
+      text-decoration-line: underline;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--role-border-focus);
+      outline-offset: 2px;
+    }
+  }
 }
 
 .home-tiles {

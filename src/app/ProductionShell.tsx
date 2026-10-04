@@ -7,6 +7,7 @@ import { STOREFRONT_PAYMENT_MARKS, STOREFRONT_SUPPORT } from '../commerce/storef
 import { MobileActionBar, NewsletterBand, SiteFooter, SiteHeader } from '../components/shell';
 import {
   CART_PATH,
+  CATALOG_SMARTPHONES_PATH,
   COMPARE_PATH,
   CONTACTS_PATH,
   DELIVERY_PATH,
@@ -72,6 +73,7 @@ export function ProductionShell({ children }: ProductionShellProps) {
         favoritesHref={favorites}
         homeHref={home}
         onSearchSubmit={handleSearchSubmit}
+        smartphonesHref={hashHref(CATALOG_SMARTPHONES_PATH)}
         storesHref={hashHref(SHOPS_PATH)}
         supportHref={CONTACTS_HREF}
         supportLabel={SUPPORT_LABEL}

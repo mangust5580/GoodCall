@@ -1831,9 +1831,11 @@ repository, service, store or query layer.
 
 **Deliberately deferred:**
 
-- Section-level affordances (`Смотреть все`, `Читать все статьи`), the hero CTA
-  `Смотреть все акции`, the promo CTAs and the three `Выбрать` buttons are
-  **omitted**, because none of their destinations exists. This follows the
+- `Читать все статьи` in `Последние статьи` links to `#/blog` through the
+  narrow `articlesPath` seam (production only; `?reference=home` omits it).
+  The popular-products `Смотреть все`, the hero CTA `Смотреть все акции`, the
+  promo CTAs and the three `Выбрать` buttons remain **omitted**, because none
+  of their destinations exists. This follows the
   accepted Catalog decision to drop the raster's `Смотреть подборку` button for
   the same reason. They return as real links when their routes exist.
 - **Hero promotional slider.** The main hero banner is a real Embla slider owned
@@ -4480,12 +4482,13 @@ never jumps into the production router.
   `Смартфоны` keeps `aria-current="page"`. No `/catalog` landing route was
   invented to make a breadcrumb clickable.
 - **Header and Footer brand links** now point at `#/`, because Home is real.
-  Everything else in the Header is still deliberately unwired: the utility
-  links (except «Магазины», which links to `#/shops`), three of the four
-  actions (`Корзина` now links to `#/cart` in both
-  `SiteHeader` and `MobileActionBar`; the Header search submits to
-  `#/search?q=…`), `Каталог товаров`, `Ещё` and all nine category links
-  keep the existing consumer-injected fallback to the app base. No unavailable
+  The utility links («Магазины» → `#/shops`, «Поддержка» → `#/contacts`), the
+  Сравнение/Избранное/Корзина actions and the search are wired. `Войти`,
+  `Каталог товаров`, `Ещё` and eight of the nine category links keep the
+  consumer-injected fallback to the app base. The `Смартфоны` category links to
+  `#/catalog/smartphones` through the narrow `SiteHeader.smartphonesHref` seam
+  (production only); `Каталог товаров` is deliberately not pointed at the
+  smartphones-only route. No unavailable
   destination received a fake route and no category label became semantically
   false. Each gets a real route when its page exists.
 - **`ProductCard`.** Live product cards whose slug has Product Details content
