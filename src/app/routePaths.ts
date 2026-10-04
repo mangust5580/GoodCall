@@ -14,6 +14,7 @@ export const DELIVERY_PATH = '/delivery';
 export const WARRANTY_PATH = '/warranty';
 export const FAQ_PATH = '/faq';
 export const CONTACTS_PATH = '/contacts';
+export const ABOUT_PATH = '/about';
 export const PRIVACY_PATH = '/privacy';
 export const TERMS_PATH = '/terms';
 export const OFFER_PATH = '/offer';

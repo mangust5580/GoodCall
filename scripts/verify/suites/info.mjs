@@ -88,6 +88,7 @@ for (const route of ROUTES) {
         ['Доставка и оплата', '#/delivery'],
         ['Гарантия и возврат', '#/warranty'],
         ['FAQ', '#/faq'],
+        ['О нас', '#/about'],
         ['Контакты', '#/contacts'],
         ['Поддержка', '#/contacts'],
       ]),

@@ -2,6 +2,7 @@ import { HashRouter, Route, Routes } from 'react-router-dom';
 
 import { RouteScrollReset } from './RouteScrollReset';
 import {
+  ABOUT_PATH,
   BLOG_ARTICLE_PATH,
   BLOG_PATH,
   CART_PATH,
@@ -31,6 +32,7 @@ import { CompareRoute } from './routes/CompareRoute';
 import { FavoritesRoute } from './routes/FavoritesRoute';
 import { HomeRoute } from './routes/HomeRoute';
 import {
+  AboutRoute,
   ContactsRoute,
   DeliveryRoute,
   FaqRoute,
@@ -64,6 +66,7 @@ export function ProductionRouter() {
         <Route element={<WarrantyRoute />} path={WARRANTY_PATH} />
         <Route element={<FaqRoute />} path={FAQ_PATH} />
         <Route element={<ContactsRoute />} path={CONTACTS_PATH} />
+        <Route element={<AboutRoute />} path={ABOUT_PATH} />
         <Route element={<PrivacyRoute />} path={PRIVACY_PATH} />
         <Route element={<TermsRoute />} path={TERMS_PATH} />
         <Route element={<OfferRoute />} path={OFFER_PATH} />

@@ -18,6 +18,10 @@ export interface SiteFooterHelpLinks {
   readonly support?: string;
 }
 
+export interface SiteFooterCompanyLinks {
+  readonly about?: string;
+}
+
 export interface SiteFooterLegalLinks {
   readonly privacy?: string;
   readonly terms?: string;
@@ -41,6 +45,7 @@ export interface SiteFooterSupport {
 export interface SiteFooterProps {
   readonly homeHref?: string;
   readonly helpLinks?: SiteFooterHelpLinks;
+  readonly companyLinks?: SiteFooterCompanyLinks;
   readonly legalLinks?: SiteFooterLegalLinks;
   readonly paymentMarks?: readonly SiteFooterPaymentMark[];
   readonly support?: SiteFooterSupport;
@@ -50,6 +55,7 @@ export interface SiteFooterProps {
 interface FooterItem {
   readonly label: string;
   readonly link?: keyof SiteFooterHelpLinks;
+  readonly companyLink?: keyof SiteFooterCompanyLinks;
 }
 
 interface FooterGroup {
@@ -70,7 +76,7 @@ const FOOTER_GROUPS: readonly FooterGroup[] = [
   {
     title: 'Компания',
     items: [
-      { label: 'О нас' },
+      { label: 'О нас', companyLink: 'about' },
       { label: 'Контакты', link: 'contacts' },
       { label: 'Новости' },
       { label: 'Карьера' },
@@ -127,6 +133,7 @@ const SUPPORT: SiteFooterSupport = {
 export function SiteFooter({
   homeHref,
   helpLinks,
+  companyLinks,
   legalLinks,
   paymentMarks = PAYMENT_MARKS,
   support = SUPPORT,
@@ -157,7 +164,12 @@ export function SiteFooter({
               <h2 className="site-footer__group-title">{group.title}</h2>
               <ul className="site-footer__group-list">
                 {group.items.map((item) => {
-                  const href = item.link === undefined ? undefined : helpLinks?.[item.link];
+                  const href =
+                    item.link !== undefined
+                      ? helpLinks?.[item.link]
+                      : item.companyLink !== undefined
+                        ? companyLinks?.[item.companyLink]
+                        : undefined;
                   const label =
                     item.link === 'support' && supportLabel !== undefined
                       ? supportLabel

@@ -6,6 +6,7 @@ import { useFavoritesCount } from '../commerce/favorites';
 import { STOREFRONT_PAYMENT_MARKS, STOREFRONT_SUPPORT } from '../commerce/storefront';
 import { MobileActionBar, NewsletterBand, SiteFooter, SiteHeader } from '../components/shell';
 import {
+  ABOUT_PATH,
   CART_PATH,
   CATALOG_SMARTPHONES_PATH,
   COMPARE_PATH,
@@ -34,6 +35,10 @@ const FOOTER_HELP_LINKS = {
   faq: hashHref(FAQ_PATH),
   contacts: CONTACTS_HREF,
   support: CONTACTS_HREF,
+};
+
+const FOOTER_COMPANY_LINKS = {
+  about: hashHref(ABOUT_PATH),
 };
 
 const FOOTER_LEGAL_LINKS = {
@@ -83,6 +88,7 @@ export function ProductionShell({ children }: ProductionShellProps) {
       <SiteFooter
         helpLinks={FOOTER_HELP_LINKS}
         homeHref={home}
+        companyLinks={FOOTER_COMPANY_LINKS}
         legalLinks={FOOTER_LEGAL_LINKS}
         paymentMarks={FOOTER_PAYMENT_MARKS}
         support={STOREFRONT_SUPPORT}

@@ -1,3 +1,4 @@
+export { AboutPage } from './AboutPage';
 export { ContactsPage } from './ContactsPage';
 export { DeliveryPage } from './DeliveryPage';
 export { FaqPage } from './FaqPage';

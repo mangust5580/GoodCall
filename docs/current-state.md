@@ -148,6 +148,8 @@ Active visual slice: none.
 
 Completed visual slices:
 
+- **About A / О GoodCall — USER VISUAL/UX PASS — CLOSED and published.**
+  `#/about`. See the About A section below.
 - **Legal A / Privacy, Terms and Public Offer — USER VISUAL/UX PASS — CLOSED.**
   `#/privacy`, `#/terms`, `#/offer`. See the Legal A section below.
 - **Contacts A / Customer Contacts Page — USER VISUAL/UX PASS — CLOSED.**
@@ -175,6 +177,40 @@ section below. **Checkout A / Checkout Page Foundation — USER VISUAL/UX PASS
 on 2026-09-30, CLOSED and published.** See the Checkout A section below. Search C, Favourites A, Commerce B, Commerce A,
 Blog B, Blog A, Home A, Cart A, Cart B, Search A, Search B, 404 A and the
 Product Details production integration are closed.
+
+### About A — О GoodCall
+
+**Status: USER VISUAL/UX PASS (desktop 1440, mobile 390) — CLOSED and
+published.** Evidence: `About.png` (page body only; the production Global Shell
+is authoritative).
+
+- **Route.** `#/about` (`ABOUT_PATH`), `AboutRoute` in
+  `src/app/routes/InfoRoutes.tsx`; `AboutPage` lives in `src/pages/info/`. It
+  renders `InfoBreadcrumbs` (the breadcrumb extracted from `InfoPageHeader`,
+  which still renders it) so the hero can sit between breadcrumb and `h1`.
+- **Sections.** Breadcrumb «Главная › О нас», wide hero, `h1` «О GoodCall» with
+  the intro, «Как устроен GoodCall», «Что можно сделать на сайте», the «Задача
+  проекта» callout, «Возможности сайта» with six cards (Каталог и поиск,
+  Сравнение товаров, Избранное, Корзина и демо-заказ, Магазины и самовывоз,
+  Поддержка) and a CTA strip: «Связаться с нами» → `#/contacts`, «Перейти в
+  каталог» → `#/catalog/smartphones`.
+- **Truthful content.** Framed as «демонстрационный интернет-магазин
+  электроники» describing only existing flows. The compare limit comes from
+  `COMPARE_LIMIT`, the store count from `DEMO_STORES.length` and support hours
+  from `STOREFRONT_SUPPORT.hours`. There is no About-specific Supabase read and
+  no product, brand or category statistic.
+- **Deliberate raster deviations.** Current shell; no «Информация» sidebar or
+  breadcrumb level; no company history, customer counts, team or people
+  imagery, distributors, partnerships, awards, legal identity, 24/7 or blanket
+  warranty claims; the raster's «Наша миссия» and «Наши преимущества» become
+  «Задача проекта» and «Возможности сайта».
+- **Media.** `src/assets/media/about/` (`aboutMedia.ts`): `about-hero.webp`
+  (hero), `about-products.webp` («Что можно сделать на сайте») and
+  `about-project.webp` («Задача проекта»); «Как устроен GoodCall» reuses
+  `contacts/contacts-store-interior.webp`. All are decorative (`alt=""`).
+- **Footer.** `SiteFooter.companyLinks` wires only «О нас» in production;
+  «Новости» and «Карьера» stay plain, and reference surfaces pass no
+  `companyLinks`.
 
 ### Legal A — Privacy, Terms and Public Offer
 
@@ -2682,7 +2718,8 @@ never overlays the fixed `MobileActionBar`. The rest of the Footer polish pass
 stays deferred to the end-of-project integrated review.
 
 **Public API:** `homeHref?` (defaulting to `import.meta.env.BASE_URL` like
-`SiteHeader`), the production seams `helpLinks?`, `legalLinks?`, `support?`,
+`SiteHeader`), the production seams `helpLinks?`, `companyLinks?`,
+`legalLinks?`, `support?`,
 `supportLabel?` and `paymentMarks?`. There is no `columns`, `links`, `contacts`,
 `socials`, `payments`, `copyright`, `variant`, `theme`, `compact`,
 `showNewsletter` or `companyInfo` prop, and no footer CMS model,
@@ -2709,9 +2746,10 @@ footer raster shows one.
 
 **Link policy.** Footer labels whose page does not exist render as
 **non-interactive text**, not fake links. In production, `helpLinks` wires
-Доставка и оплата, Гарантия и возврат, FAQ, Контакты and Поддержка, and
+Доставка и оплата, Гарантия и возврат, FAQ, Контакты and Поддержка,
+`companyLinks` wires «О нас» (About A; «Новости» and «Карьера» stay plain), and
 `legalLinks` wires the three legal labels (Legal A); reference surfaces pass
-neither and keep plain text. There is no `href="#"`, no
+none of them and keep plain text. There is no `href="#"`, no
 link pointing at the repository root merely to be clickable, and no no-op click
 handler. Production support contacts come from `STOREFRONT_SUPPORT`; the
 remaining unwired labels get a link only when their page exists.
@@ -4290,6 +4328,7 @@ router owns only the fragment. The base path still lives solely in
   (Info A, closed).
 - `#/contacts` — the Contacts A page (Contacts A, closed).
 - `#/privacy`, `#/terms`, `#/offer` — the Legal A pages (Legal A, closed).
+- `#/about` — the About A page (About A, closed).
 - `#/order-confirmation` — the Order Confirmation A thank-you page for the
   session demo order, or «Заказ не найден» (Order Confirmation A, closed).
 - `#/blog/:slug` — the Blog article detail (Blog B, closed),
@@ -4300,7 +4339,7 @@ router owns only the fragment. The base path still lives solely in
 
 Route paths live in `src/app/routePaths.ts` as `HOME_PATH`,
 `CATALOG_SMARTPHONES_PATH`, `PRODUCT_PATH`, `CART_PATH`, `CHECKOUT_PATH`, `ORDER_CONFIRMATION_PATH`, `FAVORITES_PATH`, `COMPARE_PATH`, `SHOPS_PATH`, `DELIVERY_PATH`, `WARRANTY_PATH`, `FAQ_PATH`,
-`CONTACTS_PATH`, `PRIVACY_PATH`, `TERMS_PATH`, `OFFER_PATH`, `SEARCH_PATH`, `BLOG_PATH` and `BLOG_ARTICLE_PATH`.
+`CONTACTS_PATH`, `ABOUT_PATH`, `PRIVACY_PATH`, `TERMS_PATH`, `OFFER_PATH`, `SEARCH_PATH`, `BLOG_PATH` and `BLOG_ARTICLE_PATH`.
 `hashHref()`, `productDetailsHref()`, `searchPath()`, `blogPath()`,
 `blogArticlePath()` and `blogArticleHref()` serve the `href` and navigation
 seams.
@@ -4317,7 +4356,7 @@ them, statically as before. Module boundaries and public APIs are described in
 `AGENTS.md` (Module boundaries) and enforced by `no-restricted-imports` in
 `eslint.config.js`.
 
-`src/app/ProductionRouter.tsx` holds the `HashRouter`, nineteen routes and the 404 catch-all; it
+`src/app/ProductionRouter.tsx` holds the `HashRouter`, twenty routes and the 404 catch-all; it
 has no local fallback component or stylesheet any more.
 `src/app/routes/HomeRoute.tsx`, `src/app/routes/CatalogRoute.tsx`,
 `src/app/routes/ProductDetailsRoute.tsx`, `src/app/routes/CartRoute.tsx`,

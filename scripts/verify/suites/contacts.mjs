@@ -221,7 +221,7 @@ check(
   `home: reference specimen benefits preserved ${JSON.stringify(referenceBenefits)}`,
 );
 
-for (const path of ['/contacts/extra', '/contact', '/about']) {
+for (const path of ['/contacts/extra', '/contact', '/about/extra']) {
   await page.goto(`${BASE}#${path}`);
   await page.waitForSelector('main h1');
   check((await page.textContent('main h1')).trim() === 'Страница не найдена', `404: ${path}`);

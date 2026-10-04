@@ -1,4 +1,5 @@
 import {
+  AboutPage,
   ContactsPage,
   DeliveryPage,
   FaqPage,
@@ -62,6 +63,14 @@ export function FaqRoute() {
   return (
     <ProductionShell>
       <FaqPage links={INFO_LINKS} />
+    </ProductionShell>
+  );
+}
+
+export function AboutRoute() {
+  return (
+    <ProductionShell>
+      <AboutPage links={INFO_LINKS} />
     </ProductionShell>
   );
 }
