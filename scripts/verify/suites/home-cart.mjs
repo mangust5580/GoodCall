@@ -556,6 +556,45 @@ check(
 await send('Page.navigate', { url: `${BASE}#/` });
 await sleep(1500);
 
+await evaluate(`localStorage.removeItem('${CART}')`);
+await reload();
+await openHome();
+for (const index of [1, 3, 4]) {
+  await evaluate(`${card(index)}.querySelector('.product-card__cart').click()`);
+  await sleep(150);
+}
+const homeKinds = Object.fromEntries((await lines()).map((l) => [l.productSlug, l.image.kind]));
+check(
+  'b1: Home-added lines store catalog-fallback (Galaxy, Watch) and url (AirPods)',
+  homeKinds['galaxy-s24-128'] === 'catalog-fallback' &&
+    homeKinds['apple-watch-series-9-45'] === 'catalog-fallback' &&
+    homeKinds['airpods-pro-2-usb-c'] === 'url',
+  JSON.stringify(homeKinds),
+);
+const storedHomeCart = await evaluate(`localStorage.getItem('${CART}')`);
+await go('#/cart');
+await waitFor(`document.querySelectorAll('.cart-line').length === 3`, 'b1 home cart lines');
+const homeCartImages = await evaluate(
+  `Object.fromEntries([...document.querySelectorAll('.cart-line')].map((l) => [l.querySelector('.cart-line__title').textContent, l.querySelector('img').getAttribute('src')]))`,
+);
+const homeCartImage = (prefix) =>
+  Object.entries(homeCartImages).find(([title]) => title.startsWith(prefix))?.[1] ?? '';
+check(
+  'b1: cart renders Galaxy and Watch local images, AirPods stored URL',
+  homeCartImage('Samsung Galaxy S24').includes(
+    'product-details-galaxy-s24-128-hero-front-gallery',
+  ) &&
+    homeCartImage('Apple Watch').includes('product-details-gallery-apple-watch-s9-black-gallery') &&
+    homeCartImage('Apple AirPods').includes('/storage/v1/object/public/'),
+  JSON.stringify(homeCartImages),
+);
+check(
+  'b1: cart render leaves stored JSON unchanged',
+  (await evaluate(`localStorage.getItem('${CART}')`)) === storedHomeCart,
+);
+await evaluate(`localStorage.removeItem('${CART}')`);
+await reload();
+
 homeFails = true;
 const before = JSON.stringify(await lines());
 await go('#/');

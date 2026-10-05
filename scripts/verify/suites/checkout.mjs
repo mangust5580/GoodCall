@@ -696,6 +696,41 @@ check(
 check('no uncaught errors', consoleErrors.length === 0, consoleErrors.join(' ; '));
 await evaluate(`localStorage.removeItem('${CART}')`);
 
+const B1_CART =
+  '{"lines":[{"id":"pixel-8-128","productSlug":"pixel-8-128","title":"Google Pixel 8 128 ГБ, Обсидиан","image":{"kind":"catalog-fallback"},"price":53990,"quantity":1,"selected":true},{"id":"realme-gt6-256","productSlug":"realme-gt6-256","title":"realme GT 6 12/256 ГБ, Серебристый","image":{"kind":"catalog-fallback"},"price":44990,"quantity":1,"selected":true},{"id":"oneplus-12-256","productSlug":"oneplus-12-256","title":"OnePlus 12 12/256 ГБ, Сланец","image":{"kind":"url","src":"https://mock-goodcall.supabase.co/storage/v1/object/public/catalog-media/stub/oneplus-live.webp"},"price":64990,"quantity":1,"selected":true},{"id":"iphone-15-128|pink|128","productSlug":"iphone-15-128","title":"Apple iPhone 15 128 ГБ, Розовый","variant":"Розовый · 128 ГБ","image":{"kind":"product-details","colourId":"pink"},"price":79990,"quantity":1,"selected":true},{"id":"iphone-15-128|black|128","productSlug":"iphone-15-128","title":"Apple iPhone 15 128 ГБ, Чёрный","variant":"Чёрный · 128 ГБ","image":{"kind":"product-details","colourId":"black"},"price":79990,"quantity":1,"selected":true},{"id":"iphone-15-128|blue|128","productSlug":"iphone-15-128","title":"Apple iPhone 15 128 ГБ, Голубой","variant":"Голубой · 128 ГБ","image":{"kind":"product-details","colourId":"blue"},"price":79990,"quantity":1,"selected":true}]}';
+const B1_EXPECT = {
+  'Google Pixel 8 128 ГБ, Обсидиан': (src) =>
+    src.includes('product-details-pixel-8-128-hero-front-gallery'),
+  'realme GT 6 12/256 ГБ, Серебристый': (src) => src.includes('phone-back'),
+  'OnePlus 12 12/256 ГБ, Сланец': (src) =>
+    src ===
+    'https://mock-goodcall.supabase.co/storage/v1/object/public/catalog-media/stub/oneplus-live.webp',
+  'Apple iPhone 15 128 ГБ, Розовый': (src) =>
+    src.includes('product-details-gallery-pink-hero-front-gallery'),
+  'Apple iPhone 15 128 ГБ, Чёрный': (src) =>
+    src.includes('product-details-gallery-hero-front-gallery'),
+  'Apple iPhone 15 128 ГБ, Голубой': (src) =>
+    src.includes('product-details-gallery-blue-hero-front-gallery'),
+};
+const b1Mismatches = (images) =>
+  Object.entries(B1_EXPECT)
+    .filter(([title, ok]) => !ok(images[title] ?? ''))
+    .map(([title]) => [title, (images[title] ?? '').slice(0, 70)]);
+await evaluate(`localStorage.setItem('${CART}', ${JSON.stringify(B1_CART)})`);
+await reload();
+await go('#/checkout');
+await waitFor(`document.querySelectorAll('.checkout-line').length === 6`, 'b1 checkout lines');
+const b1Summary = await evaluate(
+  `Object.fromEntries([...document.querySelectorAll('.checkout-line')].map((l) => [l.querySelector('.checkout-line__title')?.textContent ?? l.textContent, l.querySelector('img').getAttribute('src')]))`,
+);
+check(
+  'b1 checkout: summary inherits cart precedence',
+  b1Mismatches(b1Summary).length === 0,
+  JSON.stringify(b1Mismatches(b1Summary)),
+);
+check('b1 checkout: stored cart unchanged', (await cartRaw()) === B1_CART);
+await evaluate(`localStorage.removeItem('${CART}')`);
+
 await cdp.close();
 await browser.close();
 report(results);

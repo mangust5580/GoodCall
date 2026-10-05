@@ -148,6 +148,9 @@ Active visual slice: none.
 
 Completed visual slices:
 
+- **Persisted Product Image Integration B1 — USER VISUAL/UX PASS — CLOSED and
+  published.** Product thumbnails on Favourites, Cart, Checkout and Compare. See
+  the Persisted Product Image Integration B1 section below.
 - **Product Thumbnail Integration A — USER VISUAL/UX PASS — CLOSED and
   published.** Product thumbnails on list surfaces. See the Product Thumbnail
   Integration A section below.
@@ -185,6 +188,26 @@ section below. **Checkout A / Checkout Page Foundation — USER VISUAL/UX PASS
 on 2026-09-30, CLOSED and published.** See the Checkout A section below. Search C, Favourites A, Commerce B, Commerce A,
 Blog B, Blog A, Home A, Cart A, Cart B, Search A, Search B, 404 A and the
 Product Details production integration are closed.
+
+### Persisted Product Image Integration B1
+
+**Status: USER VISUAL/UX PASS — CLOSED and published.** User explicitly granted
+USER VISUAL/UX PASS after reviewing the B1 persisted-surface thumbnail
+rendering.
+
+- **Surfaces.** Favourites, Cart, Checkout and Compare, render-time only.
+- **Precedence.** Matched on the stored image kind: stored `url`, then stored
+  `product-details` colour hero (legacy pink, black and blue lines stay valid),
+  then `productThumbnail(slug)` for a stored `catalog-fallback`, then
+  `product-phone.svg`.
+- **Wiring.** `CartLineMedia` takes an optional `productSlug` (Cart and Checkout
+  pass `line.productSlug`, Compare passes `item.slug`); `FavoritesPage` sets
+  `ProductCard.image` only for `catalog-fallback` items.
+- **Unchanged.** `CartLine`, `CartLineImage`, `FavoriteItem`, `FavoriteImage`,
+  `CompareItem`, `DemoOrderLine`, the storage keys, parsers and legacy parsing,
+  and every write path. Rendering and reload never rewrite stored JSON (asserted
+  by the cart, favorites and compare gates).
+- **Order Confirmation** is unchanged and deferred to B2.
 
 ### Product Thumbnail Integration A
 
@@ -226,7 +249,8 @@ without an in-chat screenshot comparison.
   Product Details C, `?reference=product-details` (0-pixel diff), every card and
   thumbnail surface (Catalog, Search, Home, Favourites, Cart, Checkout, Order,
   Compare) and the persisted commerce image kinds. Product Thumbnail Integration
-  A later reuses the heroes on the list surfaces.
+  A later reuses the heroes on the list surfaces, and Persisted Product Image
+  Integration B1 on Favourites, Cart, Checkout and Compare.
 
 ### Product Details C — «Другие смартфоны»
 
@@ -4718,10 +4742,10 @@ none of them blocks the closed milestone.
   `apple-watch-series-9-45` has one image, and the other eleven live SKUs
   (including AirPods) use category artwork on the PDP; AirPods has no product
   media. The iPhone 15 editorial image mismatch is also deferred.
-- Persisted commerce surfaces (Favourites, Cart, Checkout, Order Confirmation,
-  Compare) still use their existing image contracts and remain a separate future
-  integration; covered products can show their thumbnail on list surfaces and the
-  generic fallback there.
+- Order Confirmation still lacks product identity on `DemoOrderLine` and remains
+  a separate step (Persisted Product Image Integration B2): a covered order line
+  stored as `catalog-fallback` still renders the generic fallback. Stale stored
+  URLs have no fallback handling.
 - Phone validation, country selection and international formatting are deferred
   until a real product form consumer defines those requirements.
 - Textarea auto-grow remains deferred until a concrete consumer requires it.

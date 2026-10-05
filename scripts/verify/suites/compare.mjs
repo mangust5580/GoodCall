@@ -634,6 +634,66 @@ check(
   'direct route with no items: «Сравнение пусто»',
   (await evaluate(`document.querySelector('h1').textContent`)) === 'Сравнение пусто',
 );
+const B1_COMPARE =
+  '{"items":[{"slug":"pixel-8-128","title":"Google Pixel 8 128 ГБ, Обсидиан","image":{"kind":"catalog-fallback"},"price":53990,"reviewCount":10},{"slug":"realme-gt6-256","title":"realme GT 6 12/256 ГБ, Серебристый","image":{"kind":"catalog-fallback"},"price":44990,"reviewCount":10},{"slug":"oneplus-12-256","title":"OnePlus 12 12/256 ГБ, Сланец","image":{"kind":"url","src":"https://mock-goodcall.supabase.co/storage/v1/object/public/catalog-media/stub/oneplus-live.webp"},"price":64990,"reviewCount":10},{"slug":"iphone-15-128","title":"Apple iPhone 15 128 ГБ, Розовый","image":{"kind":"product-details","colourId":"pink"},"price":79990,"reviewCount":10}]}';
+const B1_EXPECT = {
+  'Google Pixel 8 128 ГБ, Обсидиан': (src) =>
+    src.includes('product-details-pixel-8-128-hero-front-gallery'),
+  'realme GT 6 12/256 ГБ, Серебристый': (src) => src.includes('phone-back'),
+  'OnePlus 12 12/256 ГБ, Сланец': (src) =>
+    src ===
+    'https://mock-goodcall.supabase.co/storage/v1/object/public/catalog-media/stub/oneplus-live.webp',
+  'Apple iPhone 15 128 ГБ, Розовый': (src) =>
+    src.includes('product-details-gallery-pink-hero-front-gallery'),
+  'Apple iPhone 15 128 ГБ, Чёрный': (src) =>
+    src.includes('product-details-gallery-hero-front-gallery'),
+  'Apple iPhone 15 128 ГБ, Голубой': (src) =>
+    src.includes('product-details-gallery-blue-hero-front-gallery'),
+};
+const b1Mismatches = (images) =>
+  Object.entries(B1_EXPECT)
+    .filter(([title, ok]) => !ok(images[title] ?? ''))
+    .map(([title]) => [title, (images[title] ?? '').slice(0, 70)]);
+const compareImages = () =>
+  evaluate(
+    `Object.fromEntries([...document.querySelectorAll('.compare-product')].map((p) => [p.querySelector('.compare-product__title').textContent.trim(), p.querySelector('img').getAttribute('src')]))`,
+  );
+await evaluate(
+  `localStorage.removeItem('${CART}'); localStorage.setItem('${COMPARE}', ${JSON.stringify(B1_COMPARE)})`,
+);
+await reload();
+await go('#/compare');
+await waitFor(`document.querySelectorAll('.compare-product').length === 4`, 'b1 compare');
+const b1Compare = await compareImages();
+const b1CompareMismatch = b1Mismatches(b1Compare).filter(([title]) => title in b1Compare);
+check(
+  'b1 compare: url / colour / local hero / SVG precedence',
+  Object.keys(b1Compare).length === 4 && b1CompareMismatch.length === 0,
+  JSON.stringify(b1CompareMismatch),
+);
+check(
+  'b1 compare: stored JSON unchanged by render',
+  (await evaluate(`localStorage.getItem('${COMPARE}')`)) === B1_COMPARE,
+);
+await evaluate(
+  `document.querySelector('button[aria-label="В корзину: Google Pixel 8 128 ГБ, Обсидиан"]').click()`,
+);
+await sleep(150);
+check(
+  'b1 compare → cart copies stored kind unchanged',
+  JSON.parse(await evaluate(`localStorage.getItem('${CART}')`)).lines.find(
+    (l) => l.productSlug === 'pixel-8-128',
+  )?.image.kind === 'catalog-fallback',
+);
+await reload();
+await go('#/compare');
+await waitFor(`document.querySelectorAll('.compare-product').length === 4`, 'b1 compare reload');
+check(
+  'b1 compare: reload keeps stored JSON',
+  (await evaluate(`localStorage.getItem('${COMPARE}')`)) === B1_COMPARE,
+);
+await evaluate(`localStorage.removeItem('${CART}'); localStorage.removeItem('${COMPARE}')`);
+
 check('no uncaught errors', consoleErrors.length === 0, consoleErrors.join(' ; '));
 await cdp.close();
 await browser.close();

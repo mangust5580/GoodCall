@@ -483,6 +483,22 @@ for (const [w, h, m] of [
   );
   if (w === 390) await shot('order-courier-390');
 }
+await evaluate(`location.hash = '#/order-confirmation'`);
+await sleep(400);
+const orderImages = await evaluate(
+  `[...document.querySelectorAll('.order-line')].map((l) => [l.querySelector('.order-line__title').textContent, l.querySelector('img').getAttribute('src')])`,
+);
+const orderImage = (title) => orderImages.find(([t]) => t === title)?.[1] ?? '';
+check(
+  'b2 deferral: covered catalog-fallback order line still renders SVG',
+  orderImage('Apple iPhone 15 Pro 128 ГБ, Натуральный титан').includes('phone-back'),
+  orderImage('Apple iPhone 15 Pro 128 ГБ, Натуральный титан').slice(0, 60),
+);
+check(
+  'b2 deferral: stored order lines carry no slug',
+  ((await stored())?.lines ?? []).every((line) => !('productSlug' in line)),
+);
+
 check('no uncaught errors', errors.length === 0, errors.join(' ; '));
 await cdp.close();
 await browser.close();

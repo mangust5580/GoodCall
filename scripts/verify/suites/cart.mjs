@@ -309,10 +309,10 @@ const lineInfo = await evaluate(
   `[...document.querySelectorAll('.cart-line')].map((l) => [l.querySelector('.cart-line__title').textContent, l.querySelector('.cart-line__variant')?.textContent ?? '', l.querySelector('output').textContent, Boolean(l.querySelector('picture')), Boolean(l.querySelector('img'))].join(' | '))`,
 );
 check(
-  'cart: PD lines rendered canonically (title, no variant, qty, Tier-1 iPhone picture, image for others)',
-  lineInfo.includes(`${S24} |  | 3 | false | true`) &&
+  'cart: PD lines rendered canonically (title, no variant, qty, covered products render a picture)',
+  lineInfo.includes(`${S24} |  | 3 | true | true`) &&
     lineInfo.includes(`${I15} |  | 6 | true | true`) &&
-    lineInfo.includes(`${X14} |  | 2 | false | true`),
+    lineInfo.includes(`${X14} |  | 2 | true | true`),
   JSON.stringify(lineInfo),
 );
 check(
@@ -538,6 +538,65 @@ check(
     referenceCatalog.every((src) => src.includes('phone-back') && !src.includes('product-details')),
   String(referenceCatalog.length),
 );
+
+const B1_CART =
+  '{"lines":[{"id":"pixel-8-128","productSlug":"pixel-8-128","title":"Google Pixel 8 128 ГБ, Обсидиан","image":{"kind":"catalog-fallback"},"price":53990,"quantity":1,"selected":true},{"id":"realme-gt6-256","productSlug":"realme-gt6-256","title":"realme GT 6 12/256 ГБ, Серебристый","image":{"kind":"catalog-fallback"},"price":44990,"quantity":1,"selected":true},{"id":"oneplus-12-256","productSlug":"oneplus-12-256","title":"OnePlus 12 12/256 ГБ, Сланец","image":{"kind":"url","src":"https://mock-goodcall.supabase.co/storage/v1/object/public/catalog-media/stub/oneplus-live.webp"},"price":64990,"quantity":1,"selected":true},{"id":"iphone-15-128|pink|128","productSlug":"iphone-15-128","title":"Apple iPhone 15 128 ГБ, Розовый","variant":"Розовый · 128 ГБ","image":{"kind":"product-details","colourId":"pink"},"price":79990,"quantity":1,"selected":true},{"id":"iphone-15-128|black|128","productSlug":"iphone-15-128","title":"Apple iPhone 15 128 ГБ, Чёрный","variant":"Чёрный · 128 ГБ","image":{"kind":"product-details","colourId":"black"},"price":79990,"quantity":1,"selected":true},{"id":"iphone-15-128|blue|128","productSlug":"iphone-15-128","title":"Apple iPhone 15 128 ГБ, Голубой","variant":"Голубой · 128 ГБ","image":{"kind":"product-details","colourId":"blue"},"price":79990,"quantity":1,"selected":true}]}';
+const B1_EXPECT = {
+  'Google Pixel 8 128 ГБ, Обсидиан': (src) =>
+    src.includes('product-details-pixel-8-128-hero-front-gallery'),
+  'realme GT 6 12/256 ГБ, Серебристый': (src) => src.includes('phone-back'),
+  'OnePlus 12 12/256 ГБ, Сланец': (src) =>
+    src ===
+    'https://mock-goodcall.supabase.co/storage/v1/object/public/catalog-media/stub/oneplus-live.webp',
+  'Apple iPhone 15 128 ГБ, Розовый': (src) =>
+    src.includes('product-details-gallery-pink-hero-front-gallery'),
+  'Apple iPhone 15 128 ГБ, Чёрный': (src) =>
+    src.includes('product-details-gallery-hero-front-gallery'),
+  'Apple iPhone 15 128 ГБ, Голубой': (src) =>
+    src.includes('product-details-gallery-blue-hero-front-gallery'),
+};
+const b1Mismatches = (images) =>
+  Object.entries(B1_EXPECT)
+    .filter(([title, ok]) => !ok(images[title] ?? ''))
+    .map(([title]) => [title, (images[title] ?? '').slice(0, 70)]);
+const cartLineImages = () =>
+  evaluate(
+    `Object.fromEntries([...document.querySelectorAll('.cart-line')].map((l) => [l.querySelector('.cart-line__title').textContent, l.querySelector('img').getAttribute('src')]))`,
+  );
+await send('Page.navigate', { url: `${BASE}#/` });
+await sleep(1500);
+await evaluate(`localStorage.setItem('${KEY}', ${JSON.stringify(B1_CART)})`);
+await reload();
+await go('#/cart');
+await waitFor(`document.querySelectorAll('.cart-line').length === 6`, 'b1 cart lines');
+let b1Images = await cartLineImages();
+check(
+  'b1 cart: url / colour / local hero / SVG precedence (incl. legacy black, blue)',
+  b1Mismatches(b1Images).length === 0,
+  JSON.stringify(b1Mismatches(b1Images)),
+);
+check('b1 cart: stored JSON unchanged by render', (await stored()) === B1_CART);
+await reload();
+await go('#/cart');
+await waitFor(`document.querySelectorAll('.cart-line').length === 6`, 'b1 cart reload');
+b1Images = await cartLineImages();
+check(
+  'b1 cart: reload keeps stored JSON and rendering',
+  (await stored()) === B1_CART && b1Mismatches(b1Images).length === 0,
+);
+check(
+  'b1 cart: stored kinds unchanged',
+  JSON.stringify(JSON.parse(await stored()).lines.map((l) => l.image.kind)) ===
+    JSON.stringify([
+      'catalog-fallback',
+      'catalog-fallback',
+      'url',
+      'product-details',
+      'product-details',
+      'product-details',
+    ]),
+);
+await evaluate(`localStorage.removeItem('${KEY}')`);
 
 check('no uncaught errors', consoleErrors.length === 0, consoleErrors.join(' ; '));
 await cdp.close();

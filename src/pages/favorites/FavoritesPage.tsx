@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 
+import { productThumbnail } from '../../assets/media/product-details/productThumbnailMedia';
 import productPhone from '../../assets/products/product-phone.svg';
 import { formatUnitCount } from '../../commerce/cart';
 import type { FavoriteItem } from '../../commerce/favorites';
@@ -107,6 +108,11 @@ export function FavoritesPage({
                   <ProductCard
                     favoritePressed
                     href={productHref(item.slug)}
+                    image={
+                      item.image.kind === 'catalog-fallback'
+                        ? productThumbnail(item.slug)
+                        : undefined
+                    }
                     imageAlt=""
                     imageSizes={PRODUCT_MEDIA_SIZES}
                     imageSrc={item.image.kind === 'url' ? item.image.src : productPhone}

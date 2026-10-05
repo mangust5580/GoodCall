@@ -210,6 +210,7 @@ export function ComparePage({
                             <CartLineMedia
                               className="compare-product__image"
                               image={item.image}
+                              productSlug={item.slug}
                               sizes={MEDIA_SIZES}
                             />
                           </span>

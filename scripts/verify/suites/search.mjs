@@ -220,11 +220,11 @@ check(
 await go('#/cart');
 await waitFor(`document.querySelector('.cart-line')`, 'cart line');
 const cartLine = await evaluate(
-  `(() => { const l = document.querySelector('.cart-line'); return [l.querySelector('.cart-line__title').textContent, l.querySelector('.cart-line__total').textContent.replace(/\\s/g, ''), l.querySelector('.cart-line__old')?.textContent.replace(/\\s/g, '') ?? '', l.querySelector('img').getAttribute('src').includes('phone-back')].join('|'); })()`,
+  `(() => { const l = document.querySelector('.cart-line'); return [l.querySelector('.cart-line__title').textContent, l.querySelector('.cart-line__total').textContent.replace(/\\s/g, ''), l.querySelector('.cart-line__old')?.textContent.replace(/\\s/g, '') ?? '', l.querySelector('img').getAttribute('src').includes('product-details-gallery-pink-hero-front-gallery'), JSON.parse(localStorage.getItem('goodcall.cart.v1')).lines[0].image.kind === 'catalog-fallback'].join('|'); })()`,
 );
 check(
-  'A cart: same title/price/old price; persisted image stays fallback',
-  cartLine === `${I15}|79990₽|84990₽|true`,
+  'A cart: same title/price/old price; stored kind catalog-fallback, rendered local hero',
+  cartLine === `${I15}|79990₽|84990₽|true|true`,
   cartLine,
 );
 check(

@@ -27,7 +27,12 @@ export function CartLineItem({ line, onToggle, onQuantityChange, onRemove }: Car
       </div>
 
       <div className="cart-line__media">
-        <CartLineMedia className="cart-line__image" image={line.image} sizes={LINE_MEDIA_SIZES} />
+        <CartLineMedia
+          className="cart-line__image"
+          image={line.image}
+          productSlug={line.productSlug}
+          sizes={LINE_MEDIA_SIZES}
+        />
       </div>
 
       <div className="cart-line__info">

@@ -213,10 +213,10 @@ check(
   JSON.stringify(order),
 );
 const i15Card = await evaluate(
-  `(() => { const c = ${favCard(I15)}; return [c.querySelector('.product-price').textContent.replace(/\\s/g, ''), c.querySelector('.product-price-old')?.textContent.replace(/\\s/g, ''), c.querySelector('img').getAttribute('src').includes('phone-back'), c.querySelector('.product-card__favorite').getAttribute('aria-pressed'), Boolean(c.querySelector('.product-rating'))].join('|'); })()`,
+  `(() => { const c = ${favCard(I15)}; return [c.querySelector('.product-price').textContent.replace(/\\s/g, ''), c.querySelector('.product-price-old')?.textContent.replace(/\\s/g, ''), c.querySelector('img').getAttribute('src').includes('product-details-gallery-pink-hero-front-gallery'), c.querySelector('.product-card__favorite').getAttribute('aria-pressed'), Boolean(c.querySelector('.product-rating'))].join('|'); })()`,
 );
 check(
-  'page: same title/price/old, persisted fallback image, ♥ pressed, no rating',
+  'page: same title/price/old, fallback item renders local hero, ♥ pressed, no rating',
   i15Card === '79990₽|84990₽|true|true|false',
   i15Card,
 );
@@ -533,6 +533,62 @@ check(
   'reference PD: ♥ disabled (no local fake state)',
   await evaluate(`document.querySelector('.product-gallery__favorite')?.disabled === true`),
 );
+const B1_FAV =
+  '{"items":[{"slug":"pixel-8-128","title":"Google Pixel 8 128 ГБ, Обсидиан","image":{"kind":"catalog-fallback"},"price":53990},{"slug":"realme-gt6-256","title":"realme GT 6 12/256 ГБ, Серебристый","image":{"kind":"catalog-fallback"},"price":44990},{"slug":"oneplus-12-256","title":"OnePlus 12 12/256 ГБ, Сланец","image":{"kind":"url","src":"https://mock-goodcall.supabase.co/storage/v1/object/public/catalog-media/stub/oneplus-live.webp"},"price":64990}]}';
+const B1_EXPECT = {
+  'Google Pixel 8 128 ГБ, Обсидиан': (src) =>
+    src.includes('product-details-pixel-8-128-hero-front-gallery'),
+  'realme GT 6 12/256 ГБ, Серебристый': (src) => src.includes('phone-back'),
+  'OnePlus 12 12/256 ГБ, Сланец': (src) =>
+    src ===
+    'https://mock-goodcall.supabase.co/storage/v1/object/public/catalog-media/stub/oneplus-live.webp',
+  'Apple iPhone 15 128 ГБ, Розовый': (src) =>
+    src.includes('product-details-gallery-pink-hero-front-gallery'),
+  'Apple iPhone 15 128 ГБ, Чёрный': (src) =>
+    src.includes('product-details-gallery-hero-front-gallery'),
+  'Apple iPhone 15 128 ГБ, Голубой': (src) =>
+    src.includes('product-details-gallery-blue-hero-front-gallery'),
+};
+const b1Mismatches = (images) =>
+  Object.entries(B1_EXPECT)
+    .filter(([title, ok]) => !ok(images[title] ?? ''))
+    .map(([title]) => [title, (images[title] ?? '').slice(0, 70)]);
+const favImages = () =>
+  evaluate(
+    `Object.fromEntries([...document.querySelectorAll('.favorites-grid .product-card')].map((c) => [c.querySelector('.product-card__title').textContent, c.querySelector('img').getAttribute('src')]))`,
+  );
+await send('Page.navigate', { url: `${BASE}#/` });
+await sleep(1500);
+await evaluate(`localStorage.setItem('${FAV}', ${JSON.stringify(B1_FAV)})`);
+await reload();
+await go('#/favorites');
+await waitFor(
+  `document.querySelectorAll('.favorites-grid .product-card').length === 3`,
+  'b1 favorites',
+);
+const b1Fav = await favImages();
+const b1FavMismatch = b1Mismatches(b1Fav).filter(([title]) => title in b1Fav);
+check(
+  'b1 favorites: url / local hero / SVG precedence',
+  Object.keys(b1Fav).length === 3 && b1FavMismatch.length === 0,
+  JSON.stringify(b1FavMismatch),
+);
+check(
+  'b1 favorites: stored JSON unchanged by render',
+  (await evaluate(`localStorage.getItem('${FAV}')`)) === B1_FAV,
+);
+await reload();
+await go('#/favorites');
+await waitFor(
+  `document.querySelectorAll('.favorites-grid .product-card').length === 3`,
+  'b1 favorites reload',
+);
+check(
+  'b1 favorites: reload keeps stored JSON',
+  (await evaluate(`localStorage.getItem('${FAV}')`)) === B1_FAV,
+);
+await evaluate(`localStorage.removeItem('${FAV}')`);
+
 check('no uncaught errors', consoleErrors.length === 0, consoleErrors.join(' ; '));
 await evaluate(
   `localStorage.removeItem('goodcall.verify.marker'); localStorage.removeItem('${CART}')`,
