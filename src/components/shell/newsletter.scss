@@ -114,6 +114,16 @@
     flex: none;
   }
 
+  &__status {
+    flex: 1 1 100%;
+    min-width: 0;
+    margin: 0;
+    font-size: 15px;
+    line-height: 1.45;
+    color: var(--role-text-inverse);
+    overflow-wrap: anywhere;
+  }
+
   &__art {
     position: absolute;
     right: -12px;

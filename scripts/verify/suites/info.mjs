@@ -544,6 +544,204 @@ for (const width of [1440, 390, 320]) {
   await shot.close();
 }
 
+const NEWSLETTER_STATUS = 'Подписка пока не подключена: адрес никуда не отправлен и не сохранён.';
+const NEWSLETTER_FALSE_CLAIMS =
+  /вы подписаны|подписка оформлена|подписка подтверждена|проверьте почту|письмо отправлено|спасибо за подписку/i;
+
+const newsletterFacts = (target) =>
+  target.evaluate(() => {
+    const band = document.querySelector('.newsletter-band');
+    const statuses = band.querySelectorAll('[role="status"]');
+    const status = statuses[0];
+    const art = band.querySelector('.newsletter-band__art');
+    const input = band.querySelector('input[type="email"]');
+    const button = band.querySelector('button[type="submit"]');
+    const rect = (el) => {
+      const r = el.getBoundingClientRect();
+      return { x: r.x, y: r.y + scrollY, w: r.width, h: r.height };
+    };
+    const s = status.getBoundingClientRect();
+    const a = art.getBoundingClientRect();
+    const artVisible = getComputedStyle(art).display !== 'none';
+    const storage = (store) =>
+      JSON.stringify(
+        Object.fromEntries(Object.keys(store).map((key) => [key, store.getItem(key)])),
+      );
+    return {
+      statusCount: statuses.length,
+      atomic: status.getAttribute('aria-atomic'),
+      text: status.textContent,
+      hidden: status.classList.contains('ui-visually-hidden'),
+      clipped:
+        status.scrollWidth > status.clientWidth + 1 ||
+        status.scrollHeight > status.clientHeight + 1,
+      status: rect(status),
+      content: rect(band.querySelector('.newsletter-band__content')),
+      input: rect(input),
+      button: rect(button),
+      value: input.value,
+      buttonText: button.textContent.trim(),
+      disabled: button.disabled,
+      busy: band.querySelector('[aria-busy], [aria-disabled="true"], .ui-spinner') !== null,
+      artVisible,
+      overlap:
+        artVisible &&
+        !(s.right <= a.left || s.left >= a.right || s.bottom <= a.top || s.top >= a.bottom),
+      overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      formDirection: getComputedStyle(band.querySelector('.newsletter-band__form')).flexDirection,
+      bandText: band.innerText,
+      url: location.href,
+      storage: `${storage(localStorage)}|${storage(sessionStorage)}`,
+      focusInStatus: status.contains(document.activeElement),
+    };
+  });
+const fillNewsletter = (target, value) =>
+  target.evaluate((next) => {
+    const input = document.querySelector('.newsletter-band input[type="email"]');
+    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(input, next);
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+  }, value);
+const submitNewsletter = async (target) => {
+  const valid = await target.evaluate(() => {
+    const form = document.querySelector('.newsletter-band__form');
+    const ok = form.checkValidity();
+    form.requestSubmit();
+    return ok;
+  });
+  await target.waitForTimeout(150);
+  return valid;
+};
+const sameRect = (left, right) =>
+  ['x', 'y', 'w', 'h'].every((key) => Math.abs(left[key] - right[key]) <= 0.5);
+const idleNewsletter = (facts) =>
+  facts.statusCount === 1 && facts.atomic === 'true' && facts.text === '' && facts.hidden;
+const shownNewsletter = (facts) =>
+  facts.statusCount === 1 &&
+  facts.atomic === 'true' &&
+  facts.text === NEWSLETTER_STATUS &&
+  !facts.hidden &&
+  !NEWSLETTER_FALSE_CLAIMS.test(facts.bandText);
+
+for (const [width, height] of [
+  [1440, 900],
+  [390, 844],
+]) {
+  const nl = await newPage(width, height);
+  for (const path of ['/', '/delivery']) {
+    const tag = `newsletter ${path}@${width}`;
+    await nl.goto(`${BASE}#${path}`);
+    await nl.waitForSelector('.newsletter-band');
+    await nl.waitForTimeout(300);
+    const idle = await newsletterFacts(nl);
+    check(idleNewsletter(idle), `${tag}: one empty, visually hidden role=status aria-atomic node`);
+
+    await fillNewsletter(nl, '');
+    const emptyValid = await submitNewsletter(nl);
+    const afterEmpty = await newsletterFacts(nl);
+    await fillNewsletter(nl, 'abc');
+    const invalidValid = await submitNewsletter(nl);
+    const afterInvalid = await newsletterFacts(nl);
+    check(
+      !emptyValid && !invalidValid && idleNewsletter(afterEmpty) && idleNewsletter(afterInvalid),
+      `${tag}: empty and malformed input are blocked natively with no status`,
+    );
+    check(
+      sameRect(afterInvalid.content, idle.content),
+      `${tag}: idle band geometry unchanged by blocked submits`,
+    );
+
+    await fillNewsletter(nl, 'user@example.com');
+    const beforeSubmit = await newsletterFacts(nl);
+    const valid = await submitNewsletter(nl);
+    const shown = await newsletterFacts(nl);
+    check(valid && shownNewsletter(shown), `${tag}: valid submit shows the exact truthful status`);
+    check(
+      shown.value === 'user@example.com' &&
+        shown.buttonText === 'Подписаться' &&
+        !shown.disabled &&
+        !shown.busy &&
+        !shown.focusInStatus,
+      `${tag}: field kept, button unchanged and enabled, no busy state, no focus move`,
+    );
+    check(
+      shown.url === beforeSubmit.url && shown.storage === beforeSubmit.storage,
+      `${tag}: no navigation and no storage write on submit`,
+    );
+    check(
+      sameRect(shown.input, idle.input) && sameRect(shown.button, idle.button),
+      `${tag}: input and button rects unchanged by the status`,
+    );
+    check(
+      Math.abs(shown.content.w - idle.content.w) <= 0.5 &&
+        Math.abs(shown.content.x - idle.content.x) <= 0.5 &&
+        shown.content.h > idle.content.h &&
+        shown.content.h - idle.content.h <= shown.status.h + 21,
+      `${tag}: band grows only vertically by the status line (${idle.content.h}→${shown.content.h})`,
+    );
+    check(
+      shown.overflow <= 0 && !shown.clipped && !shown.overlap,
+      `${tag}: no overflow, clipping or gift overlap (${JSON.stringify(shown.status)})`,
+    );
+    if (width === 390) {
+      check(
+        shown.formDirection === 'column' &&
+          !shown.artVisible &&
+          Math.abs(shown.input.w - shown.button.w) <= 0.5 &&
+          shown.button.y > shown.input.y,
+        `${tag}: form stays stacked full width and the gift stays hidden`,
+      );
+    }
+
+    await submitNewsletter(nl);
+    const repeated = await newsletterFacts(nl);
+    check(
+      shownNewsletter(repeated) &&
+        repeated.value === 'user@example.com' &&
+        !repeated.disabled &&
+        sameRect(repeated.content, shown.content),
+      `${tag}: repeated submit keeps one unchanged status`,
+    );
+
+    await fillNewsletter(nl, 'user2@example.com');
+    const edited = await newsletterFacts(nl);
+    await submitNewsletter(nl);
+    const resubmitted = await newsletterFacts(nl);
+    check(
+      idleNewsletter(edited) && shownNewsletter(resubmitted),
+      `${tag}: editing hides the status and the next valid submit shows it again`,
+    );
+  }
+
+  await nl.evaluate(() => {
+    location.hash = '#/';
+  });
+  await nl.waitForTimeout(500);
+  check(
+    idleNewsletter(await newsletterFacts(nl)),
+    `newsletter@${width}: status resets after navigating to another route`,
+  );
+  await nl.close();
+}
+
+const reference = await newPage();
+await reference.goto(`${BASE}?reference=newsletter`);
+await reference.waitForSelector('.newsletter-band');
+await fillNewsletter(reference, '  user@example.com  ');
+await submitNewsletter(reference);
+const referenceFacts = await newsletterFacts(reference);
+const referenceProof = await reference.evaluate(
+  () => document.querySelector('.newsletter-reference__status').textContent,
+);
+check(
+  referenceProof === 'Отправлено: user@example.com',
+  `newsletter reference: onSubscribe receives the trimmed email (${referenceProof})`,
+);
+check(
+  idleNewsletter(referenceFacts) && !referenceFacts.bandText.includes(NEWSLETTER_STATUS),
+  'newsletter reference: built-in demo status stays hidden when onSubscribe is supplied',
+);
+await reference.close();
+
 await browser.close();
 console.log(JSON.stringify({ responsive }, null, 1));
 reportCounts(passed, failures);

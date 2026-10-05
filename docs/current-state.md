@@ -148,6 +148,9 @@ Active visual slice: none.
 
 Completed visual slices:
 
+- **Newsletter Feedback A — USER VISUAL/UX PASS — CLOSED and published.** A
+  valid production Newsletter submit shows a truthful local demo
+  acknowledgement. See the Newsletter Feedback A section below.
 - **Catalog URL State A — USER VISUAL/UX PASS — CLOSED and published.** Live
   `#/catalog/smartphones` applied state lives in the URL. See the Catalog URL
   State A section below.
@@ -197,6 +200,38 @@ section below. **Checkout A / Checkout Page Foundation — USER VISUAL/UX PASS
 on 2026-09-30, CLOSED and published.** See the Checkout A section below. Search C, Favourites A, Commerce B, Commerce A,
 Blog B, Blog A, Home A, Cart A, Cart B, Search A, Search B, 404 A and the
 Product Details production integration are closed.
+
+### Newsletter Feedback A
+
+**Status: USER VISUAL/UX PASS — CLOSED and published.** The user visually
+reviewed the production Newsletter post-submit state and explicitly granted
+USER VISUAL/UX PASS. Desktop post-submit visual evidence was provided; no
+separate mobile screenshot was supplied. Responsive mobile correctness is
+covered by the verify suite and the explicit user pass.
+
+- **Production.** `NewsletterBand` is still rendered globally through
+  `ProductionShell` (unchanged) with no `onSubscribe`. A valid native submit
+  shows exactly «Подписка пока не подключена: адрес никуда не отправлен и не
+  сохранён.» No email is sent or stored. The input stays uncontrolled and keeps
+  its value; the button stays enabled and unchanged; there is no focus move.
+- **State.** The only new state is local `statusVisible` in `NewsletterBand`.
+  Editing the input hides the status; a repeat submit keeps one unchanged
+  status; the next valid submit shows it again. Feedback is ephemeral: it resets
+  on route remount and reload. No storage, URL state, context or global store.
+- **Accessibility.** One always-mounted `<p role="status" aria-atomic="true">`;
+  idle it is empty, `.ui-visually-hidden` and layout-neutral. Native
+  `required` / `type="email"` validation remains the only invalid-input
+  mechanism; no custom validation, error copy or `role="alert"`.
+- **Callback mode.** The API stays `onSubscribe?: (email: string) => void`;
+  the callback receives the trimmed email and the built-in demo claim stays
+  hidden — the caller owns the outcome (`?reference=newsletter`).
+- **Visual.** The status is a full-width in-flow line below the input/button row
+  inside `.newsletter-band__content` (`newsletter.scss` only). Idle Newsletter
+  remains reference-identical; the shown state is verified at 1440 and 390 —
+  input/button rects unchanged, vertical growth only, no overflow, clipping or
+  gift overlap.
+- No async, loading, error, backend, Supabase change, storage, persistence or
+  new dependency.
 
 ### Catalog URL State A
 
@@ -3076,12 +3111,13 @@ unscoped decision.
 
 **Form semantics.** A plain uncontrolled form. Submission is read with
 `FormData`, `event.preventDefault()` stops navigation, the value is trimmed and
-handed to `onSubscribe`. Browser-native validation gates submission —
+handed to `onSubscribe` when one is supplied. Browser-native validation gates submission —
 `type="email"`, `required`, `autocomplete="email"`, `inputMode="email"`, and
 `noValidate` is never set. There is **no** backend, `fetch`, endpoint,
 newsletter/marketing SDK, `localStorage`, cookie, loading state, retry,
-analytics, validation schema, form library or React form state. No success or
-failure UI exists inside the production component.
+analytics, validation schema, form library or React form state. Without
+`onSubscribe` (production today) a valid submit shows the truthful local demo
+acknowledgement from Newsletter Feedback A; there is no success or failure UI.
 
 **Surface and artwork.** `newsletter-band__content` stacks three background
 layers: one restrained white radial glow at the upper left, a dedicated right
@@ -4861,7 +4897,8 @@ none of them blocks the closed milestone.
   handling.
 - Catalog count noun inflection: the UI can show forms such as «2 товаров»;
   separate content polish, not part of Catalog URL State A.
-- Newsletter submit has no user feedback.
+- Newsletter backend remains intentionally absent; production submit shows only
+  a local demo acknowledgement.
 - No header catalog landing page or additional category routes.
 - Account/Login awaits a demo-identity decision.
 - Product Details Back/Forward does not restore scroll position.

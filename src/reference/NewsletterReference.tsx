@@ -23,8 +23,10 @@ export function NewsletterReference() {
         <p className="newsletter-reference__note">
           It is a real form with a native <code>type=&quot;email&quot;</code> input, a visually
           hidden label and a real submit button. Browser-native validation gates submission; there
-          is no subscription backend, network request, persistence, loading state or success UI.
-          Footer is not implemented.
+          is no subscription backend, network request, persistence or loading state. Without{' '}
+          <code>onSubscribe</code> (production) a valid submit shows a local demo acknowledgement;
+          when <code>onSubscribe</code> is supplied, as here, the caller owns the outcome. Footer is
+          not implemented.
         </p>
       </Container>
 

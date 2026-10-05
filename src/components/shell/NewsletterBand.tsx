@@ -1,9 +1,11 @@
-import { useId } from 'react';
+import { useId, useState } from 'react';
 import type { FormEvent } from 'react';
 
 import newsletterGift from '../../assets/marketing/newsletter-gift.svg';
 import { Container } from '../layout';
 import { Button, Icon } from '../ui';
+
+const DEMO_STATUS = 'Подписка пока не подключена: адрес никуда не отправлен и не сохранён.';
 
 export interface NewsletterBandProps {
   readonly onSubscribe?: (email: string) => void;
@@ -12,6 +14,7 @@ export interface NewsletterBandProps {
 export function NewsletterBand({ onSubscribe }: NewsletterBandProps) {
   const titleId = useId();
   const emailId = useId();
+  const [statusVisible, setStatusVisible] = useState(false);
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -22,7 +25,12 @@ export function NewsletterBand({ onSubscribe }: NewsletterBandProps) {
       return;
     }
 
-    onSubscribe?.(email.trim());
+    if (onSubscribe === undefined) {
+      setStatusVisible(true);
+      return;
+    }
+
+    onSubscribe(email.trim());
   };
 
   return (
@@ -52,6 +60,9 @@ export function NewsletterBand({ onSubscribe }: NewsletterBandProps) {
               id={emailId}
               inputMode="email"
               name="email"
+              onInput={() => {
+                setStatusVisible(false);
+              }}
               placeholder="Ваш e-mail"
               required
               type="email"
@@ -60,6 +71,13 @@ export function NewsletterBand({ onSubscribe }: NewsletterBandProps) {
               Подписаться
             </Button>
           </form>
+          <p
+            aria-atomic="true"
+            className={statusVisible ? 'newsletter-band__status' : 'ui-visually-hidden'}
+            role="status"
+          >
+            {statusVisible ? DEMO_STATUS : null}
+          </p>
           <img alt="" aria-hidden="true" className="newsletter-band__art" src={newsletterGift} />
         </div>
       </Container>
