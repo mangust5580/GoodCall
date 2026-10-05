@@ -148,6 +148,9 @@ Active visual slice: none.
 
 Completed visual slices:
 
+- **Persisted Product Image Integration B2 / Order Confirmation — USER VISUAL/UX
+  PASS — CLOSED and published.** Product thumbnails on Order Confirmation. See
+  the Persisted Product Image Integration B2 section below.
 - **Persisted Product Image Integration B1 — USER VISUAL/UX PASS — CLOSED and
   published.** Product thumbnails on Favourites, Cart, Checkout and Compare. See
   the Persisted Product Image Integration B1 section below.
@@ -189,6 +192,26 @@ on 2026-09-30, CLOSED and published.** See the Checkout A section below. Search 
 Blog B, Blog A, Home A, Cart A, Cart B, Search A, Search B, 404 A and the
 Product Details production integration are closed.
 
+### Persisted Product Image Integration B2 — Order Confirmation
+
+**Status: USER VISUAL/UX PASS — CLOSED and published.** User explicitly granted
+USER VISUAL/UX PASS after reviewing the Order Confirmation thumbnail
+integration.
+
+- **Contract.** `DemoOrderLine` gains optional `productSlug`;
+  `createDemoOrder` copies `CartLine.productSlug`. `toOrderLine` accepts it with
+  the existing optional-field convention (missing → accepted; a present empty or
+  non-string value rejects the order, like `variant`).
+- **Rendering.** `OrderConfirmationPage` passes the slug to the unchanged
+  `CartLineMedia`, inheriting the B1 precedence: stored `url`, stored
+  `product-details` colour, `productThumbnail(slug)` for a stored
+  `catalog-fallback`, then the SVG. Old session orders without a slug still parse
+  and keep the SVG.
+- **Storage.** `goodcall.lastOrder.v1` is unchanged: no version bump, no
+  migration, and rendering or reload never rewrite the stored order (asserted by
+  the order gate). New orders carry `productSlug` on each line. B1 surfaces,
+  media and references are unchanged.
+
 ### Persisted Product Image Integration B1
 
 **Status: USER VISUAL/UX PASS — CLOSED and published.** User explicitly granted
@@ -207,7 +230,7 @@ rendering.
   `CompareItem`, `DemoOrderLine`, the storage keys, parsers and legacy parsing,
   and every write path. Rendering and reload never rewrite stored JSON (asserted
   by the cart, favorites and compare gates).
-- **Order Confirmation** is unchanged and deferred to B2.
+- **Order Confirmation** was left to B2 (see the B2 section).
 
 ### Product Thumbnail Integration A
 
@@ -4742,10 +4765,8 @@ none of them blocks the closed milestone.
   `apple-watch-series-9-45` has one image, and the other eleven live SKUs
   (including AirPods) use category artwork on the PDP; AirPods has no product
   media. The iPhone 15 editorial image mismatch is also deferred.
-- Order Confirmation still lacks product identity on `DemoOrderLine` and remains
-  a separate step (Persisted Product Image Integration B2): a covered order line
-  stored as `catalog-fallback` still renders the generic fallback. Stale stored
-  URLs have no fallback handling.
+- Stale stored image URLs on persisted commerce surfaces have no fallback
+  handling.
 - Phone validation, country selection and international formatting are deferred
   until a real product form consumer defines those requirements.
 - Textarea auto-grow remains deferred until a concrete consumer requires it.

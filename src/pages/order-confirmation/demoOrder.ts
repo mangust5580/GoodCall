@@ -6,6 +6,7 @@ import type { CheckoutFormState } from '../checkout';
 import { STOREFRONT_DELIVERY_SLOTS } from '../../commerce/storefront';
 
 export interface DemoOrderLine {
+  readonly productSlug?: string;
   readonly title: string;
   readonly variant?: string;
   readonly image: CartLineImage;
@@ -71,7 +72,8 @@ export function createDemoOrder({ form, lines, totals, now }: DemoOrderInput): D
   const base = {
     number: `GC-${compactDate(now)}-${orderSuffix()}`,
     createdAt: now.toISOString(),
-    lines: lines.map(({ title, variant, image, price, oldPrice, quantity }) => ({
+    lines: lines.map(({ productSlug, title, variant, image, price, oldPrice, quantity }) => ({
+      productSlug,
       title,
       ...(variant === undefined ? {} : { variant }),
       image,
@@ -124,10 +126,11 @@ function toOrderLine(value: unknown): DemoOrderLine | undefined {
     return undefined;
   }
 
-  const { title, variant, image, price, oldPrice, quantity } = value;
+  const { productSlug, title, variant, image, price, oldPrice, quantity } = value;
   const lineImage = toCartLineImage(image);
 
   if (
+    (productSlug !== undefined && !nonEmptyString(productSlug)) ||
     !nonEmptyString(title) ||
     (variant !== undefined && !nonEmptyString(variant)) ||
     lineImage === undefined ||
@@ -140,6 +143,7 @@ function toOrderLine(value: unknown): DemoOrderLine | undefined {
   }
 
   return {
+    ...(productSlug === undefined ? {} : { productSlug }),
     title,
     ...(variant === undefined ? {} : { variant }),
     image: lineImage,

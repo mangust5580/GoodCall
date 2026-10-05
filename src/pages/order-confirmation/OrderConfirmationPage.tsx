@@ -197,6 +197,7 @@ export function OrderConfirmationPage({
                         <CartLineMedia
                           className="order-line__image"
                           image={line.image}
+                          productSlug={line.productSlug}
                           sizes={LINE_MEDIA_SIZES}
                         />
                       </div>

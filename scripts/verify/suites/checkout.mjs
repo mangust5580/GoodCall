@@ -472,6 +472,12 @@ check(
   (await evaluate(`location.hash`)) === '#/order-confirmation',
 );
 check(
+  'valid: demo order lines preserve productSlug from cart lines',
+  await evaluate(
+    `(() => { const lines = JSON.parse(sessionStorage.getItem('goodcall.lastOrder.v1') ?? '{"lines":[]}').lines; return lines.length > 0 && lines.every((l) => typeof l.productSlug === 'string' && l.productSlug !== ''); })()`,
+  ),
+);
+check(
   'valid: demo order stored in session',
   await evaluate(
     `/^GC-\\d{8}-[0-9A-Z]{4}$/.test(JSON.parse(sessionStorage.getItem('goodcall.lastOrder.v1') ?? '{}').number ?? '')`,

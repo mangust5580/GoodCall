@@ -489,15 +489,82 @@ const orderImages = await evaluate(
   `[...document.querySelectorAll('.order-line')].map((l) => [l.querySelector('.order-line__title').textContent, l.querySelector('img').getAttribute('src')])`,
 );
 const orderImage = (title) => orderImages.find(([t]) => t === title)?.[1] ?? '';
+const PRO_TITLE = 'Apple iPhone 15 Pro 128 ГБ, Натуральный титан';
+const placedOrder = await stored();
 check(
-  'b2 deferral: covered catalog-fallback order line still renders SVG',
-  orderImage('Apple iPhone 15 Pro 128 ГБ, Натуральный титан').includes('phone-back'),
-  orderImage('Apple iPhone 15 Pro 128 ГБ, Натуральный титан').slice(0, 60),
+  'b2: placed order lines persist productSlug',
+  placedOrder.lines.every(
+    (line) => typeof line.productSlug === 'string' && line.productSlug !== '',
+  ) && placedOrder.lines.some((line) => line.productSlug === 'iphone-15-pro-128'),
+  JSON.stringify(placedOrder.lines.map((line) => line.productSlug)),
 );
 check(
-  'b2 deferral: stored order lines carry no slug',
-  ((await stored())?.lines ?? []).every((line) => !('productSlug' in line)),
+  'b2: covered catalog-fallback order line renders local hero',
+  orderImage(PRO_TITLE).includes('product-details-iphone-15-pro-128-hero-front-gallery'),
+  orderImage(PRO_TITLE).slice(0, 70),
 );
+check(
+  'b2: product-details colour line keeps its colour hero',
+  orderImages.some(([, src]) => src.includes('product-details-gallery-hero-front-gallery')),
+  JSON.stringify(orderImages.map(([title, src]) => [title, src.slice(0, 50)])),
+);
+const placedRaw = await evaluate(`sessionStorage.getItem('${ORDER}')`);
+await reload();
+await sleep(300);
+check(
+  'b2: render and reload do not rewrite stored order',
+  (await evaluate(`sessionStorage.getItem('${ORDER}')`)) === placedRaw &&
+    (await evaluate(`document.querySelectorAll('.order-line').length`)) ===
+      placedOrder.lines.length,
+);
+
+const seedOrder = async (mapLine) => {
+  const next = JSON.stringify({ ...placedOrder, lines: placedOrder.lines.map(mapLine) });
+  await evaluate(`sessionStorage.setItem('${ORDER}', ${JSON.stringify(next)})`);
+  await reload();
+  await sleep(300);
+  return next;
+};
+const proImage = () =>
+  evaluate(
+    `[...document.querySelectorAll('.order-line')].find((l) => l.querySelector('.order-line__title').textContent === ${JSON.stringify(PRO_TITLE)})?.querySelector('img').getAttribute('src') ?? ''`,
+  );
+const isPro = (line) => line.productSlug === 'iphone-15-pro-128';
+
+let seeded = await seedOrder(({ productSlug, ...line }) => line);
+check(
+  'b2: old order without productSlug still parses, covered fallback stays SVG',
+  (await proImage()).includes('phone-back') &&
+    (await evaluate(`sessionStorage.getItem('${ORDER}')`)) === seeded,
+);
+const LIVE_URL =
+  'https://mock-goodcall.supabase.co/storage/v1/object/public/catalog-media/stub/order-live.webp';
+seeded = await seedOrder((line) =>
+  isPro(line) ? { ...line, image: { kind: 'url', src: LIVE_URL } } : line,
+);
+check('b2: stored URL beats local thumbnail', (await proImage()) === LIVE_URL);
+seeded = await seedOrder((line) =>
+  isPro(line) ? { ...line, image: { kind: 'product-details', colourId: 'pink' } } : line,
+);
+check(
+  'b2: product-details:pink beats local thumbnail',
+  (await proImage()).includes('product-details-gallery-pink-hero-front-gallery'),
+);
+seeded = await seedOrder((line) =>
+  isPro(line) ? { ...line, productSlug: 'realme-gt6-256' } : line,
+);
+check('b2: uncovered valid slug keeps SVG', (await proImage()).includes('phone-back'));
+for (const [label, value] of [
+  ['empty', ''],
+  ['non-string', 42],
+]) {
+  await seedOrder((line) => (isPro(line) ? { ...line, productSlug: value } : line));
+  check(
+    `b2: ${label} productSlug rejects the order like other invalid optional fields`,
+    (await text('h1'))?.includes('Заказ не найден') &&
+      (await evaluate(`sessionStorage.getItem('${ORDER}')`)) === null,
+  );
+}
 
 check('no uncaught errors', errors.length === 0, errors.join(' ; '));
 await cdp.close();
