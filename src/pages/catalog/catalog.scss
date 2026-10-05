@@ -443,6 +443,15 @@ $catalog-swatches: (
     min-width: 0;
   }
 
+  &__colour-rows {
+    clear: both;
+    min-width: 0;
+  }
+
+  &__swatches + &__colour-rows {
+    margin-top: 8px;
+  }
+
   &__swatch {
     display: inline-flex;
     cursor: pointer;

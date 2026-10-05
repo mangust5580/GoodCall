@@ -5,14 +5,21 @@ import { Button, Icon } from '../../components/ui';
 import { CatalogFilters } from './CatalogFilters';
 import { DEFAULT_CATALOG_FILTER_STATE, countActiveCatalogFilters } from './catalogFilterState';
 import type { CatalogFilterState } from './catalogFilterState';
+import type { CatalogLiveFacets } from './catalogFacets';
 
 interface CatalogFilterDialogProps {
   readonly value: CatalogFilterState;
   readonly onApply: (next: CatalogFilterState) => void;
   readonly totalCount: number;
+  readonly liveFacets?: CatalogLiveFacets;
 }
 
-export function CatalogFilterDialog({ value, onApply, totalCount }: CatalogFilterDialogProps) {
+export function CatalogFilterDialog({
+  value,
+  onApply,
+  totalCount,
+  liveFacets,
+}: CatalogFilterDialogProps) {
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState<CatalogFilterState>(value);
   const activeCount = countActiveCatalogFilters(value);
@@ -47,6 +54,7 @@ export function CatalogFilterDialog({ value, onApply, totalCount }: CatalogFilte
           <div className="catalog-filter-dialog__body">
             <CatalogFilters
               layout="dialog"
+              liveFacets={liveFacets}
               onChange={setDraft}
               totalCount={totalCount}
               value={draft}

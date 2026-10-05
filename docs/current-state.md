@@ -148,6 +148,9 @@ Active visual slice: none.
 
 Completed visual slices:
 
+- **Catalog Live Results A — USER VISUAL/UX PASS — CLOSED and published.**
+  Live `#/catalog/smartphones` count, pagination, filters and quick filters. See
+  the Catalog Live Results A section below.
 - **Persisted Product Image Integration B2 / Order Confirmation — USER VISUAL/UX
   PASS — CLOSED and published.** Product thumbnails on Order Confirmation. See
   the Persisted Product Image Integration B2 section below.
@@ -191,6 +194,46 @@ section below. **Checkout A / Checkout Page Foundation — USER VISUAL/UX PASS
 on 2026-09-30, CLOSED and published.** See the Checkout A section below. Search C, Favourites A, Commerce B, Commerce A,
 Blog B, Blog A, Home A, Cart A, Cart B, Search A, Search B, 404 A and the
 Product Details production integration are closed.
+
+### Catalog Live Results A
+
+**Status: USER VISUAL/UX PASS — CLOSED and published.** The user visually
+reviewed the implemented Catalog states and explicitly granted USER VISUAL/UX
+PASS. No screenshot evidence is claimed for every mobile filter-dialog state
+(in particular, none for the dialog after colour expansion).
+
+- **Mode.** `CatalogPage` takes `mode: 'specimen' | 'live'` (default
+  `specimen`). `CatalogRoute` passes `live` only after `fetchCatalogProducts()`
+  is `ready`; before that, on fallback and on `?reference=catalog` the accepted
+  specimen stays (`2 546 товаров`, 65 cycling pages, fixture groups, counts and
+  all 7 quick chips).
+- **Live pipeline.** products → `applyCatalogLiveFilters` →
+  `sortCatalogProducts` → matches. The count is the match count; pages are
+  `max(1, ceil(n / 12))` with normal non-cycling slices; the page is clamped
+  after results shrink and reset to 1 on any filter or quick-chip change.
+  Pagination hides at one page.
+- **Live filters.** Brand (first title word), price (`priceValue`), memory
+  (storage, so `12/256 ГБ` is 256), colour (exact title suffix after the last
+  comma) and rating (≥ the lowest selected threshold). Facet values and counts
+  come from the full live source set (no disjunctive faceting).
+- **Colour facet.** Every parseable live colour is an option. Colours whose
+  exact label matches the existing palette keep the swatch; others render as a
+  text checkbox row with label and count. No guessed colours, families or
+  normalisation; «Показать ещё» covers the full live list.
+- **Quick filters.** `Все смартфоны`, `Со скидкой` (`oldPriceValue > priceValue`),
+  `До 15 000 ₽` (< 15 000), `15 000 – 30 000 ₽` (≥ 15 000 and < 30 000),
+  `30 000 ₽ и выше` (≥ 30 000).
+- **Hidden in live mode:** `Серия`, `Диагональ`, `Новинки`, `Хиты продаж`
+  (still present in specimen/reference).
+- **Empty state and reset.** Zero matches show «Ничего не найдено» with
+  «Сбросить фильтры». Sidebar and empty-state reset clear filters, quick chip
+  and page. The mobile dialog «Сбросить» still resets the draft only; the
+  external quick chip is untouched. Desktop and mobile use the same live facets.
+- **Ownership.** `src/pages/catalog/catalogFacets.ts` owns the pure product
+  derivation helpers (moved from Search) and the Catalog live helpers. Search
+  imports them from `../catalog`; Search behaviour is unchanged.
+- No new dependency, query, schema, storage or `CatalogProduct` change; the
+  commerce seams and media are untouched.
 
 ### Persisted Product Image Integration B2 — Order Confirmation
 
@@ -2576,7 +2619,8 @@ flags and the dialog draft live in component state. There is no URL sync, no
 `localStorage`, no context, no store, no request, no filtering engine and no
 analytics. **`2 546 товаров` never reacts to a filter**, no `Найдено …` line
 exists, and there is no loading, empty or no-results state. Catalog C and the
-data slice own real results.
+data slice own real results. (Specimen mode only: on the live route Catalog
+Live Results A makes the count, filters and empty state real.)
 
 **Desktop.** From 1024px the accepted geometry is untouched — 250px sidebar,
 32px gap, heading in the results column. The desktop grid now uses
@@ -2619,8 +2663,8 @@ deliberately excluded from the count. Nothing about the count touches
 `resultCount`.
 
 Catalog C replaced the sort indicator with a real control and filled the
-results region; the filter state itself is unchanged and still never touches
-products or the result count.
+results region; in specimen mode the filter state still never touches products
+or the result count (live mode: see Catalog Live Results A).
 
 ### Catalog C — Product Grid + Pagination + Sorting
 
@@ -2735,7 +2779,8 @@ visibly change results without claiming thousands of local products.
 still change only their own selection or presentation state; they never reorder,
 filter or count products. Sorting and pagination do act on the fixtures, because
 Catalog C explicitly owns those presentation behaviours. That asymmetry is
-deliberate and holds until a real catalogue and facet contract exists.
+deliberate and holds in specimen mode; the live route filters, counts and
+paginates real products (see Catalog Live Results A).
 
 **Rating rows use compact `★N` threshold markers.** Each row is
 `checkbox | ★4,5 | и выше`: a single 16px `--role-state-warning` star and the
@@ -4580,9 +4625,10 @@ products without fixture presentation metadata render without an invented badge.
 thumbnail for covered slugs (Product Thumbnail Integration A) and the accepted
 synthetic phone artwork otherwise. When image rows exist, the primary image
 is the first ordered image for the product and its public URL is resolved through
-the Supabase Storage bucket API. The visible `2 546` result count, filter
-counts, quick filters, sort labels and 65-page pagination are specimen UI
-contracts, not current database row counts.
+the Supabase Storage bucket API. Once the live read is `ready`, the count,
+filter options and counts, quick filters and pagination are derived from the
+live products (Catalog Live Results A); the `2 546` count, fixture counts and
+65-page pagination remain the specimen/fallback contract.
 
 The Supabase GitHub Actions variables are configured. Pages rerun attempt 2 for
 Integration A succeeded, the compiled Pages artifact was verified to contain the
@@ -4767,6 +4813,11 @@ none of them blocks the closed milestone.
   media. The iPhone 15 editorial image mismatch is also deferred.
 - Stale stored image URLs on persisted commerce surfaces have no fallback
   handling.
+- Catalog filters, sort and page are not URL-synced.
+- Newsletter submit has no user feedback.
+- No header catalog landing page or additional category routes.
+- Account/Login awaits a demo-identity decision.
+- Product Details Back/Forward does not restore scroll position.
 - Phone validation, country selection and international formatting are deferred
   until a real product form consumer defines those requirements.
 - Textarea auto-grow remains deferred until a concrete consumer requires it.
@@ -4792,9 +4843,9 @@ none of them blocks the closed milestone.
   that do not match them (`Только со скидкой` / `Сначала от 1%` and
   `Быстрая доставка` / `Доставка сегодня`). Both are implemented verbatim; the
   copy correction is a user decision, not an agent one.
-- Options behind the brand and colour `Показать ещё` buttons are fixtures. The
-  raster shows only the collapsed lists, so the hidden values are specimen data
-  until a real catalogue source exists.
+- In specimen mode, options behind the brand and colour `Показать ещё` buttons
+  are fixtures (the raster shows only the collapsed lists). The live route
+  derives them from live products.
 - The smartphone filter and product fixtures are **not** the future universal
   category contract. GoodCall will hold many technical categories with different
   filter inventories, and the trigger for designing common-versus-category-

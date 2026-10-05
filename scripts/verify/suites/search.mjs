@@ -7,6 +7,7 @@ const MOCK_HOST = 'mock-goodcall.supabase.co';
 const KEY = 'goodcall.cart.v1';
 const results = [];
 let failLive = false;
+let catalogRows = false;
 
 const row = (slug, name, brand, price, oldPrice, pop) => ({
   id: `id-${slug}`,
@@ -46,6 +47,28 @@ const PRODUCTS = [
   ),
 ];
 
+const CATALOG_ROWS = [
+  ['cat-iphone-15-pro', 'Apple iPhone 15 Pro 128 ГБ, Натуральный титан', 109990, 124990, 4.9],
+  ['cat-galaxy-s24', 'Samsung Galaxy S24 128 ГБ, Фиолетовый', 75990, null, 4.8],
+  ['cat-xiaomi-14', 'Xiaomi 14 12/256 ГБ, Чёрный', 64990, 69990, 4.7],
+  ['cat-pixel-8', 'Google Pixel 8 128 ГБ, Обсидиан', 53990, null, 4.6],
+  ['cat-redmi-note', 'Xiaomi Redmi Note 13 Pro 256 ГБ, Синий', 29990, 32990, 4.4],
+  ['cat-poco-x6', 'POCO X6 256 ГБ, Чёрный', 30000, null, 4.3],
+  ['cat-realme-c67', 'realme C67 128 ГБ, Зелёный', 15000, null, 4.1],
+  ['cat-tecno-spark', 'Tecno Spark 20 128 ГБ, Золотой', 14990, 16990, 3.8],
+  ['cat-infinix-hot', 'Infinix Hot 40 256 ГБ, Серебристый', 12990, null, 3.5],
+  ['cat-honor-x8b', 'HONOR X8b 128 ГБ, Изумрудный', 19990, null, 4.0],
+  ['cat-nothing-2a', 'Nothing Phone (2a) 256 ГБ, Чёрный', 32990, null, 4.5],
+  ['cat-vivo-y36', 'vivo Y36 128 ГБ, Розовый', 17990, null, 4.2],
+  ['cat-oppo-a79', 'OPPO A79 256 ГБ, Лиловый', 21990, 23990, 4.4],
+  ['cat-galaxy-a15', 'Samsung Galaxy A15 128 ГБ, Сланец', 16990, null, 3.9],
+  ['cat-iphone-13', 'Apple iPhone 13 128 ГБ, Розовый', 59990, null, 4.8],
+  ['cat-motorola-edge', 'Motorola Edge 40 256 ГБ', 34990, null, null],
+].map(([slug, name, price, oldPrice, rating], index) => ({
+  ...row(slug, name, name.split(' ')[0], price, oldPrice, 200 - index),
+  rating,
+}));
+
 function mockBody(url, accept) {
   const u = new URL(url);
   const table = u.pathname.split('/').pop();
@@ -59,7 +82,9 @@ function mockBody(url, accept) {
           ...p,
           categories: { slug: 'smartphones', name: 'Смартфоны' },
         }))
-      : PRODUCTS;
+      : catalogRows
+        ? CATALOG_ROWS
+        : PRODUCTS;
   }
   if (table === 'product_images')
     rows = (u.searchParams.get('product_id') ?? '').includes('id-iphone-15-pro-128')
@@ -504,6 +529,495 @@ check(
     0,
 );
 await viewport(1440, 900, false);
+
+await viewport(1440, 900, false);
+catalogRows = true;
+await reload();
+await go('#/catalog/smartphones');
+await waitFor(
+  `document.querySelector('.catalog-page__count')?.textContent.includes('16')`,
+  'live catalog count',
+);
+const catalogState = () =>
+  evaluate(`(() => ({
+    count: document.querySelector('.catalog-page__count').textContent.replace(/\\s/g, ' ').trim(),
+    titles: [...document.querySelectorAll('.catalog-grid .product-card__title')].map((t) => t.textContent),
+    empty: document.querySelector('.catalog-page__results .empty-state h3')?.textContent ?? null,
+    pages: [...document.querySelectorAll('.catalog-page__pagination .ui-pagination__item:not(.ui-pagination__item--arrow)')].map((b) => b.textContent),
+    current: document.querySelector('.catalog-page__pagination [aria-current="page"]')?.textContent ?? null,
+    quick: [...document.querySelectorAll('.catalog-page__quick-filter')].map((b) => [b.textContent, b.getAttribute('aria-pressed')]),
+  }))()`);
+const clickQuick = (label) =>
+  evaluate(
+    `[...document.querySelectorAll('.catalog-page__quick-filter')].find((b) => b.textContent === ${JSON.stringify(label)}).click()`,
+  );
+const sidebarOption = (scope, label) =>
+  `[...document.querySelectorAll('${scope} .ui-choice')].find((l) => l.querySelector('.catalog-filters__option-name, .ui-visually-hidden')?.textContent === ${JSON.stringify(label)})`;
+const toggleSidebar = async (label) => {
+  await evaluate(
+    `${sidebarOption('.catalog-page__sidebar', label)}.querySelector('input').click()`,
+  );
+  await sleep(150);
+};
+const toggleColour = async (scope, label) => {
+  await evaluate(
+    `[...document.querySelectorAll('${scope} .catalog-filters__swatch')].find((s) => s.textContent.trim().split(' (')[0] === ${JSON.stringify(label)}).querySelector('input').click()`,
+  );
+  await sleep(150);
+};
+const resetSidebar = async () => {
+  await evaluate(
+    `document.querySelector('.catalog-page__sidebar .catalog-filters__reset').click()`,
+  );
+  await sleep(150);
+};
+const setPrice = async (label, value) => {
+  await evaluate(
+    `document.querySelector('.catalog-page__sidebar input[aria-label="${label}: значение"]').focus()`,
+  );
+  await sleep(50);
+  await evaluate(`(() => {
+    const input = document.querySelector('.catalog-page__sidebar input[aria-label="${label}: значение"]');
+    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(input, '${value}');
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+  })()`);
+  await sleep(50);
+  await evaluate(
+    `document.querySelector('.catalog-page__sidebar input[aria-label="${label}: значение"]').blur()`,
+  );
+  await sleep(200);
+};
+const countOf = (state) => Number(state.count.replace(/\D/g, ''));
+
+let state = await catalogState();
+check('catalog live: truthful count 16', countOf(state) === 16, state.count);
+check(
+  'catalog live: 2 truthful pages, 12 on page 1',
+  JSON.stringify(state.pages) === JSON.stringify(['1', '2']) && state.titles.length === 12,
+  JSON.stringify(state.pages),
+);
+const pageOne = state.titles;
+await evaluate(
+  `[...document.querySelectorAll('.catalog-page__pagination .ui-pagination__item')].find((b) => b.textContent === '2').click()`,
+);
+await sleep(200);
+state = await catalogState();
+check(
+  'catalog live: page 2 has the remaining 4, no repeats',
+  state.titles.length === 4 &&
+    state.titles.every((t) => !pageOne.includes(t)) &&
+    state.current === '2',
+  JSON.stringify(state.titles),
+);
+await clickQuick('Все смартфоны');
+await sleep(150);
+state = await catalogState();
+check(
+  'catalog live: quick change resets to page 1',
+  state.current === '1' && state.titles.length === 12,
+);
+
+check(
+  'catalog live: unsupported controls hidden',
+  JSON.stringify(state.quick.map(([label]) => label)) ===
+    JSON.stringify([
+      'Все смартфоны',
+      'Со скидкой',
+      'До 15 000 ₽',
+      '15 000 – 30 000 ₽',
+      '30 000 ₽ и выше',
+    ]) &&
+    !(await evaluate(
+      `[...document.querySelectorAll('.catalog-page__sidebar legend')].some((l) => ['Серия', 'Диагональ'].includes(l.textContent))`,
+    )),
+  JSON.stringify(state.quick),
+);
+const brandOptions = await evaluate(
+  `[...document.querySelectorAll('.catalog-page__sidebar fieldset:first-of-type .catalog-filters__option')].map((o) => o.textContent.replace(/\\s/g, ' '))`,
+);
+check(
+  'catalog live: brand options and counts are live',
+  brandOptions.includes('Все бренды16') &&
+    brandOptions.includes('Apple2') &&
+    brandOptions.includes('Samsung2') &&
+    brandOptions.includes('Xiaomi2') &&
+    !brandOptions.some((o) => o.includes('830')),
+  JSON.stringify(brandOptions),
+);
+const memoryOptions = await evaluate(
+  `[...document.querySelectorAll('.catalog-page__sidebar fieldset')].find((f) => f.querySelector('legend')?.textContent === 'Память').querySelectorAll('.catalog-filters__option-name').length`,
+);
+check('catalog live: memory options only 128 and 256', memoryOptions === 2);
+const colourGroup = (scope) =>
+  `[...document.querySelectorAll('${scope} fieldset')].find((f) => f.querySelector('legend')?.textContent === 'Цвет')`;
+const colourFacet = (scope) =>
+  evaluate(`(() => {
+    const group = ${colourGroup(scope)};
+    return {
+      swatches: [...group.querySelectorAll('.catalog-filters__swatch')].map((s) => [s.querySelector('.ui-visually-hidden').textContent, s.querySelector('.catalog-filters__swatch-dot').className.split('--')[1], s.querySelector('input').type]),
+      rows: [...group.querySelectorAll('.catalog-filters__colour-rows .ui-choice')].map((l) => [l.querySelector('.catalog-filters__option-name').textContent, l.querySelector('.catalog-filters__option-count').textContent, l.querySelector('input')?.type ?? null, Boolean(l.querySelector('.catalog-filters__swatch-dot'))]),
+      more: group.querySelector('.catalog-filters__more')?.getAttribute('aria-expanded') ?? null,
+    };
+  })()`);
+const expandColours = async (scope) => {
+  await evaluate(`${colourGroup(scope)}.querySelector('.catalog-filters__more').click()`);
+  await sleep(150);
+};
+const colourCounts = (facet) =>
+  Object.fromEntries([
+    ...facet.swatches.map(([label]) => [
+      label.split(' (')[0],
+      Number(label.split(' (')[1]?.replace(')', '')),
+    ]),
+    ...facet.rows.map(([name, count]) => [name, Number(count)]),
+  ]);
+const expectedColourCounts = {};
+for (const product of CATALOG_ROWS) {
+  const index = product.name.lastIndexOf(',');
+  if (index !== -1) {
+    const colour = product.name.slice(index + 1).trim();
+    expectedColourCounts[colour] = (expectedColourCounts[colour] ?? 0) + 1;
+  }
+}
+const expectedColourNames = Object.keys(expectedColourCounts).sort();
+const PALETTE_SWATCHES = {
+  Чёрный: 'black',
+  Розовый: 'pink',
+  Зелёный: 'green',
+  Золотой: 'gold',
+  Синий: 'blue',
+  Фиолетовый: 'violet',
+};
+
+const collapsedColours = await colourFacet('.catalog-page__sidebar');
+check(
+  'catalog live colour: collapsed shows 7 options (count desc, then name) and a real «Показать ещё»',
+  collapsedColours.swatches.length + collapsedColours.rows.length === 7 &&
+    collapsedColours.more === 'false' &&
+    JSON.stringify(collapsedColours.swatches.map(([label]) => label)) ===
+      JSON.stringify(['Чёрный (3)', 'Розовый (2)', 'Зелёный (1)', 'Золотой (1)']) &&
+    JSON.stringify(collapsedColours.rows.map(([name]) => name)) ===
+      JSON.stringify(['Изумрудный', 'Лиловый', 'Натуральный титан']),
+  JSON.stringify(collapsedColours),
+);
+await expandColours('.catalog-page__sidebar');
+const sidebarColours = await colourFacet('.catalog-page__sidebar');
+const sidebarCounts = colourCounts(sidebarColours);
+check(
+  'catalog live colour: every parseable live colour is exposed after expansion',
+  expectedColourNames.length === 12 &&
+    sidebarColours.more === 'true' &&
+    JSON.stringify(Object.keys(sidebarCounts).sort()) === JSON.stringify(expectedColourNames) &&
+    [
+      'Чёрный',
+      'Розовый',
+      'Обсидиан',
+      'Натуральный титан',
+      'Серебристый',
+      'Лиловый',
+      'Изумрудный',
+      'Сланец',
+    ].every((colour) => colour in sidebarCounts),
+  JSON.stringify(Object.keys(sidebarCounts)),
+);
+check(
+  'catalog live colour: palette colours keep the existing swatch path',
+  sidebarColours.swatches.length === 6 &&
+    sidebarColours.swatches.every(
+      ([label, dot, type]) => PALETTE_SWATCHES[label.split(' (')[0]] === dot && type === 'checkbox',
+    ),
+  JSON.stringify(sidebarColours.swatches),
+);
+check(
+  'catalog live colour: non-palette colours render text checkbox rows without a fake swatch',
+  JSON.stringify(sidebarColours.rows.map(([name]) => name)) ===
+    JSON.stringify([
+      'Изумрудный',
+      'Лиловый',
+      'Натуральный титан',
+      'Обсидиан',
+      'Серебристый',
+      'Сланец',
+    ]) && sidebarColours.rows.every(([, , type, dot]) => type === 'checkbox' && !dot),
+  JSON.stringify(sidebarColours.rows),
+);
+check(
+  'catalog live colour: counts match the mock source set',
+  expectedColourNames.every((colour) => sidebarCounts[colour] === expectedColourCounts[colour]),
+  JSON.stringify(sidebarCounts),
+);
+const colourRowsLayout = await evaluate(`(() => {
+  const group = ${colourGroup('.catalog-page__sidebar')};
+  const swatches = group.querySelector('.catalog-filters__swatches').getBoundingClientRect();
+  const rows = group.querySelector('.catalog-filters__colour-rows').getBoundingClientRect();
+  return { gap: rows.top - swatches.bottom, overflow: group.scrollWidth - group.clientWidth };
+})()`);
+check(
+  'catalog live colour: mixed swatches and rows stack without overlap or overflow',
+  colourRowsLayout.gap >= 4 && colourRowsLayout.gap <= 16 && colourRowsLayout.overflow <= 0,
+  JSON.stringify(colourRowsLayout),
+);
+
+await toggleSidebar('Samsung');
+state = await catalogState();
+check(
+  'catalog live: brand filter narrows grid and count',
+  countOf(state) === 2 &&
+    state.titles.every((t) => t.startsWith('Samsung')) &&
+    state.pages.length === 0,
+  JSON.stringify(state.titles),
+);
+const firstCartButton = await evaluate(
+  `Boolean(document.querySelector('.catalog-grid .product-card__cart:not([disabled])'))`,
+);
+await evaluate(`localStorage.removeItem('${KEY}')`);
+await evaluate(`document.querySelector('.catalog-grid .product-card__cart').click()`);
+await sleep(150);
+check(
+  'catalog live: filtered card keeps the cart seam',
+  firstCartButton &&
+    JSON.parse((await evaluate(`localStorage.getItem('${KEY}')`)) ?? '{"lines":[]}').lines
+      .length === 1,
+);
+await evaluate(`localStorage.removeItem('${KEY}')`);
+await resetSidebar();
+
+await toggleSidebar('256 ГБ');
+state = await catalogState();
+check(
+  'catalog live: memory 256 (12/256 counts as 256)',
+  countOf(state) === 7 && state.titles.includes('Xiaomi 14 12/256 ГБ, Чёрный'),
+  `${state.count} ${JSON.stringify(state.titles)}`,
+);
+await resetSidebar();
+
+await toggleColour('.catalog-page__sidebar', 'Чёрный');
+state = await catalogState();
+check(
+  'catalog live: colour filter (Чёрный → 3); uncoloured product does not crash',
+  countOf(state) === 3 && state.titles.every((t) => t.endsWith(', Чёрный')),
+  state.count,
+);
+await resetSidebar();
+
+await toggleSidebar('Обсидиан');
+state = await catalogState();
+check(
+  'catalog live colour: non-palette Обсидиан filters to its exact products',
+  countOf(state) === 1 &&
+    JSON.stringify(state.titles) === JSON.stringify(['Google Pixel 8 128 ГБ, Обсидиан']),
+  JSON.stringify(state.titles),
+);
+await resetSidebar();
+
+await toggleColour('.catalog-page__sidebar', 'Розовый');
+state = await catalogState();
+check(
+  'catalog live colour: palette Розовый filters to its exact products',
+  countOf(state) === 2 && state.titles.every((t) => t.endsWith(', Розовый')),
+  JSON.stringify(state.titles),
+);
+await resetSidebar();
+
+await toggleSidebar('Лиловый');
+state = await catalogState();
+check(
+  'catalog live colour: Лиловый stays distinct from Фиолетовый',
+  countOf(state) === 1 && state.titles[0] === 'OPPO A79 256 ГБ, Лиловый',
+  JSON.stringify(state.titles),
+);
+await resetSidebar();
+
+await toggleSidebar('Сланец');
+const slateChecked = await evaluate(
+  `${sidebarOption('.catalog-page__sidebar', 'Сланец')}.querySelector('input').checked`,
+);
+await resetSidebar();
+state = await catalogState();
+check(
+  'catalog live colour: reset clears a selected non-palette colour and restores 16',
+  slateChecked &&
+    countOf(state) === 16 &&
+    !(await evaluate(
+      `${sidebarOption('.catalog-page__sidebar', 'Сланец')}?.querySelector('input').checked ?? false`,
+    )),
+  state.count,
+);
+await resetSidebar();
+
+await evaluate(
+  `[...document.querySelectorAll('.catalog-page__sidebar .ui-choice')].find((l) => l.textContent.includes('Рейтинг 4,5 и выше')).querySelector('input').click()`,
+);
+await sleep(150);
+state = await catalogState();
+check('catalog live: rating ≥ 4.5 → 6', countOf(state) === 6, state.count);
+await resetSidebar();
+
+await setPrice('Цена от', '60000');
+state = await catalogState();
+check('catalog live: price from 60 000 → 3', countOf(state) === 3, state.count);
+await resetSidebar();
+
+for (const [label, expected] of [
+  ['Со скидкой', 5],
+  ['До 15 000 ₽', 2],
+  ['15 000 – 30 000 ₽', 6],
+  ['30 000 ₽ и выше', 8],
+]) {
+  await clickQuick(label);
+  await sleep(150);
+  state = await catalogState();
+  check(`catalog live: quick «${label}» → ${expected}`, countOf(state) === expected, state.count);
+}
+const boundaries = await evaluate(
+  `[...document.querySelectorAll('.catalog-grid .product-card__title')].map((t) => t.textContent)`,
+);
+check(
+  'catalog live: 30 000 belongs to «30 000 ₽ и выше»',
+  boundaries.includes('POCO X6 256 ГБ, Чёрный'),
+);
+await clickQuick('15 000 – 30 000 ₽');
+await sleep(150);
+check(
+  'catalog live: 15 000 belongs to the middle band',
+  (
+    await evaluate(
+      `[...document.querySelectorAll('.catalog-grid .product-card__title')].map((t) => t.textContent)`,
+    )
+  ).includes('realme C67 128 ГБ, Зелёный'),
+);
+
+await toggleSidebar('Samsung');
+await toggleColour('.catalog-page__sidebar', 'Золотой');
+state = await catalogState();
+check(
+  'catalog live: empty state with no grid and no pagination',
+  countOf(state) === 0 &&
+    state.empty === 'Ничего не найдено' &&
+    state.titles.length === 0 &&
+    state.pages.length === 0,
+  JSON.stringify(state),
+);
+await evaluate(`document.querySelector('.catalog-page__results .empty-state button').click()`);
+await sleep(150);
+state = await catalogState();
+check(
+  'catalog live: empty-state reset restores filters, quick chip and page',
+  countOf(state) === 16 && state.current === '1' && state.quick[0][1] === 'true',
+  JSON.stringify(state.quick),
+);
+await clickQuick('Со скидкой');
+await toggleSidebar('Apple');
+await resetSidebar();
+state = await catalogState();
+check(
+  'catalog live: sidebar reset also resets the quick filter',
+  countOf(state) === 16 && state.quick[0][1] === 'true',
+);
+
+await viewport(390, 844, true);
+await go('#/catalog/smartphones');
+await sleep(300);
+await evaluate(`document.querySelector('.catalog-filter-trigger').click()`);
+await waitFor(`document.querySelector('.catalog-filter-dialog')`, 'catalog dialog');
+const dialog = await evaluate(`(() => ({
+  legends: [...document.querySelectorAll('.catalog-filter-dialog legend')].map((l) => l.textContent),
+  brands: [...document.querySelectorAll('.catalog-filter-dialog fieldset:first-of-type .catalog-filters__option')].map((o) => o.textContent.replace(/\\s/g, ' ')),
+}))()`);
+check(
+  'catalog live mobile: dialog has the same live groups and options',
+  !dialog.legends.includes('Серия') &&
+    !dialog.legends.includes('Диагональ') &&
+    JSON.stringify(dialog.brands.slice(0, 8)) === JSON.stringify(brandOptions.slice(0, 8)),
+  JSON.stringify(dialog),
+);
+await evaluate(
+  `${sidebarOption('.catalog-filter-dialog', 'Samsung')}.querySelector('input').click()`,
+);
+await sleep(100);
+await evaluate(
+  `[...document.querySelectorAll('.catalog-filter-dialog__action')].find((b) => b.textContent === 'Показать').click()`,
+);
+await sleep(250);
+state = await catalogState();
+check(
+  'catalog live mobile: applying the dialog filters the results',
+  countOf(state) === 2 &&
+    (await evaluate(
+      `document.documentElement.scrollWidth - document.documentElement.clientWidth`,
+    )) <= 0,
+  state.count,
+);
+
+await evaluate(`document.querySelector('.catalog-filter-trigger').click()`);
+await waitFor(`document.querySelector('.catalog-filter-dialog')`, 'catalog dialog');
+await expandColours('.catalog-filter-dialog');
+const dialogColours = await colourFacet('.catalog-filter-dialog');
+const dialogLayout = await evaluate(`(() => {
+  const dialog = document.querySelector('.catalog-filter-dialog');
+  const group = ${colourGroup('.catalog-filter-dialog')};
+  const box = dialog.getBoundingClientRect();
+  const clipped = [...group.querySelectorAll('.catalog-filters__swatch, .catalog-filters__colour-rows .ui-choice')].some((el) => {
+    const rect = el.getBoundingClientRect();
+    return rect.left < box.left - 0.5 || rect.right > box.right + 0.5 || rect.width === 0;
+  });
+  return { clipped, overflow: dialog.scrollWidth - dialog.clientWidth, page: document.documentElement.scrollWidth - document.documentElement.clientWidth };
+})()`);
+check(
+  'catalog live mobile colour: dialog exposes the same live colours, swatches and fallback rows',
+  JSON.stringify(dialogColours.swatches) === JSON.stringify(sidebarColours.swatches) &&
+    JSON.stringify(dialogColours.rows) === JSON.stringify(sidebarColours.rows),
+  JSON.stringify(dialogColours),
+);
+check(
+  'catalog live mobile colour: no clipped colour controls, no horizontal overflow at 390',
+  !dialogLayout.clipped && dialogLayout.overflow <= 0 && dialogLayout.page <= 0,
+  JSON.stringify(dialogLayout),
+);
+await evaluate(
+  `${sidebarOption('.catalog-filter-dialog', 'Samsung')}.querySelector('input').click()`,
+);
+await sleep(100);
+await evaluate(
+  `${sidebarOption('.catalog-filter-dialog', 'Натуральный титан')}.querySelector('input').click()`,
+);
+await sleep(100);
+await evaluate(
+  `[...document.querySelectorAll('.catalog-filter-dialog__action')].find((b) => b.textContent === 'Показать').click()`,
+);
+await sleep(250);
+state = await catalogState();
+check(
+  'catalog live mobile colour: applying a non-palette colour filters the results',
+  countOf(state) === 1 && state.titles[0] === 'Apple iPhone 15 Pro 128 ГБ, Натуральный титан',
+  JSON.stringify(state.titles),
+);
+await clickQuick('Со скидкой');
+await sleep(150);
+await evaluate(`document.querySelector('.catalog-filter-trigger').click()`);
+await waitFor(`document.querySelector('.catalog-filter-dialog')`, 'catalog dialog');
+await evaluate(
+  `[...document.querySelectorAll('.catalog-filter-dialog__action')].find((b) => b.textContent === 'Сбросить').click()`,
+);
+await sleep(100);
+const draftCleared = await evaluate(
+  `![...document.querySelectorAll('.catalog-filter-dialog input[type="checkbox"]')].some((i) => i.checked && !i.closest('.ui-choice')?.textContent.includes('Все бренды'))`,
+);
+await evaluate(
+  `[...document.querySelectorAll('.catalog-filter-dialog__action')].find((b) => b.textContent === 'Показать').click()`,
+);
+await sleep(250);
+state = await catalogState();
+check(
+  'catalog live mobile colour: dialog reset clears the colour draft; external quick chip stays as shown',
+  draftCleared &&
+    countOf(state) === 5 &&
+    state.quick.find(([label]) => label === 'Со скидкой')[1] === 'true',
+  `${state.count} ${JSON.stringify(state.quick)}`,
+);
+await viewport(1440, 900, false);
+catalogRows = false;
+await reload();
 
 failLive = true;
 await reload();

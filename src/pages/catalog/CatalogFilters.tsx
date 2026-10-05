@@ -10,6 +10,7 @@ import {
   toggleCatalogFilterValue,
 } from './catalogFilterState';
 import type { CatalogFilterListKey, CatalogFilterState } from './catalogFilterState';
+import type { CatalogLiveFacets } from './catalogFacets';
 
 interface CatalogFilterOption {
   readonly value: string;
@@ -20,6 +21,8 @@ interface CatalogFilterOption {
 interface CatalogColourOption {
   readonly value: string;
   readonly label: string;
+  readonly swatch?: string;
+  readonly count?: number;
 }
 
 interface CatalogRatingOption {
@@ -91,6 +94,19 @@ const ALL_BRAND_OPTIONS: readonly CatalogFilterOption[] = [
   ...BRAND_EXTRA_OPTIONS,
 ];
 
+const ALL_COLOUR_OPTIONS: readonly CatalogColourOption[] = [
+  ...COLOUR_OPTIONS,
+  ...COLOUR_EXTRA_OPTIONS,
+];
+
+const PALETTE_SWATCHES: Readonly<Partial<Record<string, string>>> = Object.fromEntries(
+  ALL_COLOUR_OPTIONS.map((option) => [option.label, option.value]),
+);
+
+const MEMORY_LABELS: Readonly<Partial<Record<string, string>>> = Object.fromEntries(
+  MEMORY_OPTIONS.map((option) => [option.value, option.label]),
+);
+
 const SHOW_MORE_LABEL = 'Показать ещё';
 const SHOW_LESS_LABEL = 'Свернуть';
 const BRAND_SEARCH_LABEL = 'Поиск бренда';
@@ -149,6 +165,50 @@ export interface CatalogFiltersProps {
   readonly onChange: (next: CatalogFilterState) => void;
   readonly totalCount: number;
   readonly layout?: 'sidebar' | 'dialog';
+  readonly liveFacets?: CatalogLiveFacets;
+  readonly onReset?: () => void;
+}
+
+interface CatalogFilterOptionSets {
+  readonly brands: readonly CatalogFilterOption[];
+  readonly extraBrands: readonly CatalogFilterOption[];
+  readonly memory: readonly CatalogFilterOption[];
+  readonly colours: readonly CatalogColourOption[];
+  readonly extraColours: readonly CatalogColourOption[];
+}
+
+const SPECIMEN_OPTION_SETS: CatalogFilterOptionSets = {
+  brands: BRAND_OPTIONS,
+  extraBrands: BRAND_EXTRA_OPTIONS,
+  memory: MEMORY_OPTIONS,
+  colours: COLOUR_OPTIONS.map((option) => ({ ...option, swatch: option.value })),
+  extraColours: COLOUR_EXTRA_OPTIONS.map((option) => ({ ...option, swatch: option.value })),
+};
+
+function liveOptionSets(facets: CatalogLiveFacets): CatalogFilterOptionSets {
+  const brands = facets.brands.map((brand) => ({
+    value: brand.value,
+    label: brand.value,
+    count: brand.count,
+  }));
+  const colours = facets.colours.map((colour) => ({
+    value: colour.value,
+    label: colour.value,
+    swatch: PALETTE_SWATCHES[colour.value],
+    count: colour.count,
+  }));
+
+  return {
+    brands: brands.slice(0, BRAND_OPTIONS.length),
+    extraBrands: brands.slice(BRAND_OPTIONS.length),
+    memory: facets.storages.map((storage) => ({
+      value: String(storage.value),
+      label: MEMORY_LABELS[String(storage.value)] ?? `${String(storage.value)} ГБ`,
+      count: storage.count,
+    })),
+    colours: colours.slice(0, COLOUR_OPTIONS.length),
+    extraColours: colours.slice(COLOUR_OPTIONS.length),
+  };
 }
 
 export function CatalogFilters({
@@ -156,14 +216,19 @@ export function CatalogFilters({
   onChange,
   totalCount,
   layout = 'sidebar',
+  liveFacets,
+  onReset,
 }: CatalogFiltersProps) {
+  const live = liveFacets !== undefined;
+  const options = live ? liveOptionSets(liveFacets) : SPECIMEN_OPTION_SETS;
+  const searchableBrands = live ? [...options.brands, ...options.extraBrands] : ALL_BRAND_OPTIONS;
   const [brandsExpanded, setBrandsExpanded] = useState(false);
   const [coloursExpanded, setColoursExpanded] = useState(false);
   const [brandQuery, setBrandQuery] = useState('');
 
   const normalizedBrandQuery = brandQuery.trim().toLowerCase();
   const brandSearchActive = normalizedBrandQuery.length > 0;
-  const matchingBrands = ALL_BRAND_OPTIONS.filter((option) =>
+  const matchingBrands = searchableBrands.filter((option) =>
     option.label.toLowerCase().includes(normalizedBrandQuery),
   );
 
@@ -187,8 +252,8 @@ export function CatalogFilters({
       </div>
     ));
 
-  const renderColourSwatches = (options: readonly CatalogColourOption[]): ReactNode =>
-    options.map((option) => (
+  const renderColourSwatches = (swatches: readonly CatalogColourOption[]): ReactNode =>
+    swatches.map((option) => (
       <label className="catalog-filters__swatch" key={option.value}>
         <input
           checked={value.colours.includes(option.value)}
@@ -202,13 +267,23 @@ export function CatalogFilters({
           type="checkbox"
         />
         <span
-          className={`catalog-filters__swatch-dot catalog-filters__swatch-dot--${option.value}`}
+          className={`catalog-filters__swatch-dot catalog-filters__swatch-dot--${option.swatch ?? ''}`}
         >
           <Icon className="catalog-filters__swatch-mark" name="check" />
         </span>
-        <span className="ui-visually-hidden">{option.label}</span>
+        <span className="ui-visually-hidden">
+          {option.count === undefined
+            ? option.label
+            : `${option.label} (${countFormatter.format(option.count)})`}
+        </span>
       </label>
     ));
+
+  const shownColours = coloursExpanded
+    ? [...options.colours, ...options.extraColours]
+    : options.colours;
+  const colourSwatches = shownColours.filter((option) => option.swatch !== undefined);
+  const colourRows = shownColours.filter((option) => option.swatch === undefined);
 
   const panelClass =
     layout === 'dialog' ? 'catalog-filters catalog-filters--plain' : 'catalog-filters';
@@ -247,28 +322,34 @@ export function CatalogFilters({
           )
         ) : (
           <>
-            {renderCheckboxGroup('brands', BRAND_OPTIONS)}
-            {brandsExpanded ? renderCheckboxGroup('brands', BRAND_EXTRA_OPTIONS) : null}
-            <ShowMoreButton
-              expanded={brandsExpanded}
-              groupLabel="бренды"
-              onToggle={() => {
-                setBrandsExpanded(!brandsExpanded);
-              }}
-            />
+            {renderCheckboxGroup('brands', options.brands)}
+            {brandsExpanded ? renderCheckboxGroup('brands', options.extraBrands) : null}
+            {options.extraBrands.length > 0 ? (
+              <ShowMoreButton
+                expanded={brandsExpanded}
+                groupLabel="бренды"
+                onToggle={() => {
+                  setBrandsExpanded(!brandsExpanded);
+                }}
+              />
+            ) : null}
           </>
         )}
       </fieldset>
 
-      <fieldset className="catalog-filters__group">
-        <legend className="catalog-filters__legend">Серия</legend>
-        {renderCheckboxGroup('series', SERIES_OPTIONS)}
-      </fieldset>
+      {live ? null : (
+        <>
+          <fieldset className="catalog-filters__group">
+            <legend className="catalog-filters__legend">Серия</legend>
+            {renderCheckboxGroup('series', SERIES_OPTIONS)}
+          </fieldset>
 
-      <fieldset className="catalog-filters__group">
-        <legend className="catalog-filters__legend">Диагональ</legend>
-        {renderCheckboxGroup('diagonal', DIAGONAL_OPTIONS)}
-      </fieldset>
+          <fieldset className="catalog-filters__group">
+            <legend className="catalog-filters__legend">Диагональ</legend>
+            {renderCheckboxGroup('diagonal', DIAGONAL_OPTIONS)}
+          </fieldset>
+        </>
+      )}
 
       <fieldset className="catalog-filters__group">
         <legend className="catalog-filters__legend">Рейтинг</legend>
@@ -305,22 +386,28 @@ export function CatalogFilters({
 
       <fieldset className="catalog-filters__group">
         <legend className="catalog-filters__legend">Память</legend>
-        {renderCheckboxGroup('memory', MEMORY_OPTIONS)}
+        {renderCheckboxGroup('memory', options.memory)}
       </fieldset>
 
       <fieldset className="catalog-filters__group">
         <legend className="catalog-filters__legend">Цвет</legend>
-        <div className="catalog-filters__swatches">
-          {renderColourSwatches(COLOUR_OPTIONS)}
-          {coloursExpanded ? renderColourSwatches(COLOUR_EXTRA_OPTIONS) : null}
-        </div>
-        <ShowMoreButton
-          expanded={coloursExpanded}
-          groupLabel="цвета"
-          onToggle={() => {
-            setColoursExpanded(!coloursExpanded);
-          }}
-        />
+        {colourSwatches.length > 0 ? (
+          <div className="catalog-filters__swatches">{renderColourSwatches(colourSwatches)}</div>
+        ) : null}
+        {colourRows.length > 0 ? (
+          <div className="catalog-filters__colour-rows">
+            {renderCheckboxGroup('colours', colourRows)}
+          </div>
+        ) : null}
+        {options.extraColours.length > 0 ? (
+          <ShowMoreButton
+            expanded={coloursExpanded}
+            groupLabel="цвета"
+            onToggle={() => {
+              setColoursExpanded(!coloursExpanded);
+            }}
+          />
+        ) : null}
       </fieldset>
 
       {layout === 'sidebar' ? (
@@ -329,7 +416,12 @@ export function CatalogFilters({
             className="catalog-filters__reset"
             onClick={() => {
               setBrandQuery('');
-              onChange(DEFAULT_CATALOG_FILTER_STATE);
+
+              if (onReset === undefined) {
+                onChange(DEFAULT_CATALOG_FILTER_STATE);
+              } else {
+                onReset();
+              }
             }}
             type="button"
           >

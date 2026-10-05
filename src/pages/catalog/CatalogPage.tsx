@@ -1,6 +1,7 @@
 import { Select } from 'radix-ui';
 import { useState } from 'react';
 
+import { EmptyState } from '../../components/feedback';
 import { Container } from '../../components/layout';
 import { Icon, Pagination } from '../../components/ui';
 import { CatalogFilterDialog } from './CatalogFilterDialog';
@@ -11,6 +12,13 @@ import type {
   CatalogCompareSeam,
   CatalogFavoritesSeam,
 } from './CatalogProductCard';
+import {
+  applyCatalogLiveFilters,
+  buildCatalogLiveFacets,
+  catalogLivePageCount,
+  catalogLivePageSlice,
+} from './catalogFacets';
+import type { CatalogQuickFilterValue } from './catalogFacets';
 import { DEFAULT_CATALOG_FILTER_STATE } from './catalogFilterState';
 import type { CatalogFilterState } from './catalogFilterState';
 import { CATALOG_SORT_OPTIONS, DEFAULT_CATALOG_SORT, sortCatalogProducts } from './catalogProduct';
@@ -18,7 +26,10 @@ import type { CatalogProduct, CatalogSortValue } from './catalogProduct';
 import { CATALOG_PAGE_COUNT, catalogPageProducts } from './catalogProductFixtures';
 import { CATALOG_PRODUCTS } from './catalogProducts';
 
+export type CatalogPageMode = 'specimen' | 'live';
+
 export interface CatalogPageProps {
+  readonly mode?: CatalogPageMode;
   readonly resultCount?: number;
   readonly homeHref?: string;
   readonly products?: readonly CatalogProduct[];
@@ -29,13 +40,13 @@ export interface CatalogPageProps {
 }
 
 interface QuickFilter {
-  readonly value: string;
+  readonly value: CatalogQuickFilterValue;
   readonly label: string;
 }
 
 const CATEGORY_TITLE = 'Смартфоны';
 const DEFAULT_RESULT_COUNT = 2546;
-const DEFAULT_QUICK_FILTER = 'all';
+const DEFAULT_QUICK_FILTER: CatalogQuickFilterValue = 'all';
 const SORT_LABEL = 'Сортировка';
 
 const QUICK_FILTERS: readonly QuickFilter[] = [
@@ -48,9 +59,15 @@ const QUICK_FILTERS: readonly QuickFilter[] = [
   { value: 'over-30000', label: '30 000 ₽ и выше' },
 ];
 
+const LIVE_HIDDEN_QUICK_FILTERS: readonly CatalogQuickFilterValue[] = ['new', 'bestsellers'];
+const LIVE_QUICK_FILTERS = QUICK_FILTERS.filter(
+  (item) => !LIVE_HIDDEN_QUICK_FILTERS.includes(item.value),
+);
+
 const countFormatter = new Intl.NumberFormat('ru-RU');
 
 export function CatalogPage({
+  mode = 'specimen',
   resultCount = DEFAULT_RESULT_COUNT,
   homeHref,
   products = CATALOG_PRODUCTS,
@@ -60,11 +77,37 @@ export function CatalogPage({
   compare,
 }: CatalogPageProps) {
   const [filters, setFilters] = useState<CatalogFilterState>(DEFAULT_CATALOG_FILTER_STATE);
-  const [quickFilter, setQuickFilter] = useState(DEFAULT_QUICK_FILTER);
+  const [quickFilter, setQuickFilter] = useState<CatalogQuickFilterValue>(DEFAULT_QUICK_FILTER);
   const [sort, setSort] = useState<CatalogSortValue>(DEFAULT_CATALOG_SORT);
   const [page, setPage] = useState(1);
 
-  const visibleProducts = catalogPageProducts(sortCatalogProducts(products, sort), page);
+  const live = mode === 'live';
+  const liveFacets = live ? buildCatalogLiveFacets(products) : undefined;
+  const liveMatches = live
+    ? sortCatalogProducts(applyCatalogLiveFilters(products, filters, quickFilter), sort)
+    : [];
+  const pageCount = live ? catalogLivePageCount(liveMatches.length) : CATALOG_PAGE_COUNT;
+  const currentPage = live ? Math.min(page, pageCount) : page;
+  const visibleProducts = live
+    ? catalogLivePageSlice(liveMatches, currentPage)
+    : catalogPageProducts(sortCatalogProducts(products, sort), page);
+  const displayedCount = live ? liveMatches.length : resultCount;
+  const quickFilters = live ? LIVE_QUICK_FILTERS : QUICK_FILTERS;
+  const emptyResults = live && liveMatches.length === 0;
+
+  const updateFilters = (next: CatalogFilterState): void => {
+    setFilters(next);
+
+    if (live) {
+      setPage(1);
+    }
+  };
+
+  const resetLiveResults = (): void => {
+    setFilters(DEFAULT_CATALOG_FILTER_STATE);
+    setQuickFilter(DEFAULT_QUICK_FILTER);
+    setPage(1);
+  };
 
   return (
     <main className="catalog-page">
@@ -91,7 +134,9 @@ export function CatalogPage({
           <header className="catalog-page__heading">
             <div className="catalog-page__heading-group">
               <h1 className="catalog-page__title">{CATEGORY_TITLE}</h1>
-              <p className="catalog-page__count">{countFormatter.format(resultCount)} товаров</p>
+              <p aria-live={live ? 'polite' : undefined} className="catalog-page__count">
+                {countFormatter.format(displayedCount)} товаров
+              </p>
             </div>
 
             <Select.Root
@@ -135,16 +180,27 @@ export function CatalogPage({
           </header>
 
           <aside aria-label="Фильтры каталога" className="catalog-page__sidebar">
-            <CatalogFilters onChange={setFilters} totalCount={resultCount} value={filters} />
+            <CatalogFilters
+              liveFacets={liveFacets}
+              onChange={updateFilters}
+              onReset={live ? resetLiveResults : undefined}
+              totalCount={live ? products.length : resultCount}
+              value={filters}
+            />
           </aside>
 
           <section aria-label="Товары каталога" className="catalog-page__results">
             <div className="catalog-page__filter-bar">
-              <CatalogFilterDialog onApply={setFilters} totalCount={resultCount} value={filters} />
+              <CatalogFilterDialog
+                liveFacets={liveFacets}
+                onApply={updateFilters}
+                totalCount={live ? products.length : resultCount}
+                value={filters}
+              />
             </div>
 
             <div aria-label="Быстрые фильтры" className="catalog-page__quick-filters" role="group">
-              {QUICK_FILTERS.map((item) => {
+              {quickFilters.map((item) => {
                 const selected = item.value === quickFilter;
                 const className = selected
                   ? 'catalog-page__quick-filter catalog-page__quick-filter--selected'
@@ -157,6 +213,10 @@ export function CatalogPage({
                     key={item.value}
                     onClick={() => {
                       setQuickFilter(item.value);
+
+                      if (live) {
+                        setPage(1);
+                      }
                     }}
                     type="button"
                   >
@@ -166,22 +226,32 @@ export function CatalogPage({
               })}
             </div>
 
-            <CatalogProductGrid
-              cart={cart}
-              favorites={favorites}
-              compare={compare}
-              productHref={productHref}
-              products={visibleProducts}
-            />
-
-            <div className="catalog-page__pagination">
-              <Pagination
-                label="Страницы каталога"
-                onChange={setPage}
-                page={page}
-                pageCount={CATALOG_PAGE_COUNT}
+            {emptyResults ? (
+              <EmptyState
+                action={{ label: 'Сбросить фильтры', onClick: resetLiveResults }}
+                message="По выбранным фильтрам товаров нет."
+                title="Ничего не найдено"
               />
-            </div>
+            ) : (
+              <CatalogProductGrid
+                cart={cart}
+                favorites={favorites}
+                compare={compare}
+                productHref={productHref}
+                products={visibleProducts}
+              />
+            )}
+
+            {live && pageCount <= 1 ? null : (
+              <div className="catalog-page__pagination">
+                <Pagination
+                  label="Страницы каталога"
+                  onChange={setPage}
+                  page={currentPage}
+                  pageCount={pageCount}
+                />
+              </div>
+            )}
           </section>
         </div>
       </Container>

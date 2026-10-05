@@ -15,3 +15,11 @@ export type {
   CatalogCompareSeam,
   CatalogFavoritesSeam,
 } from './CatalogProductCard';
+export {
+  byCountThenName,
+  countFacetValues,
+  productBrand,
+  productColour,
+  productRam,
+  productStorage,
+} from './catalogFacets';

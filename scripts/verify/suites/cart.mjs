@@ -532,6 +532,25 @@ await sleep(1500);
 const referenceCatalog = await evaluate(
   `[...document.querySelectorAll('.catalog-grid .product-card img')].map((i) => i.getAttribute('src'))`,
 );
+const referenceCatalog2 = await evaluate(`(() => ({
+  count: document.querySelector('.catalog-page__count')?.textContent.replace(/\\s/g, ' ').trim(),
+  pages: [...document.querySelectorAll('.catalog-page__pagination .ui-pagination__item:not(.ui-pagination__item--arrow)')].map((b) => b.textContent),
+  legends: [...document.querySelectorAll('.catalog-page__sidebar legend')].map((l) => l.textContent),
+  quick: [...document.querySelectorAll('.catalog-page__quick-filter')].map((b) => b.textContent),
+  xiaomi: [...document.querySelectorAll('.catalog-page__sidebar .catalog-filters__option')].map((o) => o.textContent.replace(/\\s/g, ' ')).find((o) => o.startsWith('Xiaomi')),
+}))()`);
+check(
+  'reference catalog: specimen count, 65 pages, Серия/Диагональ, all 7 quick chips, fixture counts',
+  referenceCatalog2.count === '2 546 товаров' &&
+    referenceCatalog2.pages.includes('65') &&
+    referenceCatalog2.legends.includes('Серия') &&
+    referenceCatalog2.legends.includes('Диагональ') &&
+    referenceCatalog2.quick.length === 7 &&
+    referenceCatalog2.quick.includes('Новинки') &&
+    referenceCatalog2.quick.includes('Хиты продаж') &&
+    referenceCatalog2.xiaomi === 'Xiaomi830',
+  JSON.stringify(referenceCatalog2),
+);
 check(
   'thumb: ?reference=catalog keeps the fixture SVG only',
   referenceCatalog.length > 0 &&

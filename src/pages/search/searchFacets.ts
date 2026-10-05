@@ -1,4 +1,13 @@
+import {
+  byCountThenName,
+  countFacetValues,
+  productBrand,
+  productColour,
+  productStorage,
+} from '../catalog';
 import type { CatalogProduct } from '../catalog';
+
+export { productBrand, productColour, productRam, productStorage } from '../catalog';
 
 export interface SearchFacetOption<Value extends string | number> {
   readonly value: Value;
@@ -27,56 +36,6 @@ export const EMPTY_SEARCH_FILTERS: SearchFilterState = {
   storages: [],
 };
 
-const STORAGE_PATTERN = /(\d+)\s*ГБ/u;
-const RAM_STORAGE_PATTERN = /(\d+)\/\d+\s*ГБ/u;
-
-export function productBrand(product: CatalogProduct): string | undefined {
-  return product.title.split(' ')[0] || undefined;
-}
-
-export function productStorage(product: CatalogProduct): number | undefined {
-  const match = STORAGE_PATTERN.exec(product.title);
-
-  return match === null ? undefined : Number(match[1]);
-}
-
-export function productRam(product: CatalogProduct): number | undefined {
-  const match = RAM_STORAGE_PATTERN.exec(product.title);
-
-  return match === null ? undefined : Number(match[1]);
-}
-
-export function productColour(product: CatalogProduct): string | undefined {
-  const index = product.title.lastIndexOf(',');
-
-  return index === -1 ? undefined : product.title.slice(index + 1).trim() || undefined;
-}
-
-function countValues<Value extends string | number>(
-  values: readonly (Value | undefined)[],
-): Map<Value, number> {
-  const counts = new Map<Value, number>();
-
-  for (const value of values) {
-    if (value !== undefined) {
-      counts.set(value, (counts.get(value) ?? 0) + 1);
-    }
-  }
-
-  return counts;
-}
-
-function byCountThenName<Value extends string | number>(
-  counts: Map<Value, number>,
-): SearchFacetOption<Value>[] {
-  return [...counts]
-    .map(([value, count]) => ({ value, count }))
-    .sort(
-      (left, right) =>
-        right.count - left.count || String(left.value).localeCompare(String(right.value), 'ru'),
-    );
-}
-
 export function buildSearchFacetOptions(products: readonly CatalogProduct[]): SearchFacetOptions {
   const prices = products.map((product) => product.priceValue);
   const minPrice = Math.floor(Math.min(...prices) / SEARCH_PRICE_STEP) * SEARCH_PRICE_STEP;
@@ -84,9 +43,9 @@ export function buildSearchFacetOptions(products: readonly CatalogProduct[]): Se
 
   return {
     priceBounds: prices.length > 0 && maxPrice > minPrice ? [minPrice, maxPrice] : undefined,
-    brands: byCountThenName(countValues(products.map(productBrand))),
-    colours: byCountThenName(countValues(products.map(productColour))),
-    storages: [...countValues(products.map(productStorage))]
+    brands: byCountThenName(countFacetValues(products.map(productBrand))),
+    colours: byCountThenName(countFacetValues(products.map(productColour))),
+    storages: [...countFacetValues(products.map(productStorage))]
       .map(([value, count]) => ({ value, count }))
       .sort((left, right) => left.value - right.value),
   };

@@ -41,6 +41,7 @@ export function CatalogRoute() {
         compare={compare}
         favorites={favorites}
         homeHref={hashHref(HOME_PATH)}
+        mode={products === undefined ? 'specimen' : 'live'}
         productHref={products === undefined ? undefined : productDetailsHref}
         products={products}
       />
