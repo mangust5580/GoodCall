@@ -20,11 +20,13 @@ import {
 } from './catalogFacets';
 import type { CatalogQuickFilterValue } from './catalogFacets';
 import { DEFAULT_CATALOG_FILTER_STATE } from './catalogFilterState';
-import type { CatalogFilterState } from './catalogFilterState';
+import type { CatalogFilterListKey, CatalogFilterState } from './catalogFilterState';
 import { CATALOG_SORT_OPTIONS, DEFAULT_CATALOG_SORT, sortCatalogProducts } from './catalogProduct';
 import type { CatalogProduct, CatalogSortValue } from './catalogProduct';
 import { CATALOG_PAGE_COUNT, catalogPageProducts } from './catalogProductFixtures';
 import { CATALOG_PRODUCTS } from './catalogProducts';
+import { DEFAULT_CATALOG_QUICK_FILTER } from './catalogUrlState';
+import type { CatalogAppliedState, CatalogHistoryMode } from './catalogUrlState';
 
 export type CatalogPageMode = 'specimen' | 'live';
 
@@ -37,6 +39,8 @@ export interface CatalogPageProps {
   readonly cart?: CatalogCartSeam;
   readonly favorites?: CatalogFavoritesSeam;
   readonly compare?: CatalogCompareSeam;
+  readonly applied?: CatalogAppliedState;
+  readonly onAppliedChange?: (next: CatalogAppliedState, history: CatalogHistoryMode) => void;
 }
 
 interface QuickFilter {
@@ -46,7 +50,6 @@ interface QuickFilter {
 
 const CATEGORY_TITLE = 'Смартфоны';
 const DEFAULT_RESULT_COUNT = 2546;
-const DEFAULT_QUICK_FILTER: CatalogQuickFilterValue = 'all';
 const SORT_LABEL = 'Сортировка';
 
 const QUICK_FILTERS: readonly QuickFilter[] = [
@@ -64,7 +67,24 @@ const LIVE_QUICK_FILTERS = QUICK_FILTERS.filter(
   (item) => !LIVE_HIDDEN_QUICK_FILTERS.includes(item.value),
 );
 
+const FILTER_LIST_KEYS: readonly CatalogFilterListKey[] = [
+  'brands',
+  'series',
+  'diagonal',
+  'rating',
+  'memory',
+  'colours',
+];
+
 const countFormatter = new Intl.NumberFormat('ru-RU');
+
+function sameValues(left: readonly string[], right: readonly string[]): boolean {
+  return left.length === right.length && left.every((value, index) => value === right[index]);
+}
+
+function isPriceOnlyChange(previous: CatalogFilterState, next: CatalogFilterState): boolean {
+  return FILTER_LIST_KEYS.every((key) => sameValues(previous[key], next[key]));
+}
 
 export function CatalogPage({
   mode = 'specimen',
@@ -75,13 +95,26 @@ export function CatalogPage({
   cart,
   favorites,
   compare,
+  applied,
+  onAppliedChange,
 }: CatalogPageProps) {
-  const [filters, setFilters] = useState<CatalogFilterState>(DEFAULT_CATALOG_FILTER_STATE);
-  const [quickFilter, setQuickFilter] = useState<CatalogQuickFilterValue>(DEFAULT_QUICK_FILTER);
-  const [sort, setSort] = useState<CatalogSortValue>(DEFAULT_CATALOG_SORT);
-  const [page, setPage] = useState(1);
+  const [localFilters, setFilters] = useState<CatalogFilterState>(DEFAULT_CATALOG_FILTER_STATE);
+  const [localQuickFilter, setQuickFilter] = useState<CatalogQuickFilterValue>(
+    DEFAULT_CATALOG_QUICK_FILTER,
+  );
+  const [localSort, setSort] = useState<CatalogSortValue>(DEFAULT_CATALOG_SORT);
+  const [localPage, setPage] = useState(1);
 
   const live = mode === 'live';
+  const controlled = live && applied !== undefined && onAppliedChange !== undefined;
+  const filters = controlled ? applied.filters : localFilters;
+  const quickFilter = controlled ? applied.quickFilter : localQuickFilter;
+  const sort = controlled ? applied.sort : localSort;
+  const page = controlled ? applied.page : localPage;
+
+  const commit = (next: Partial<CatalogAppliedState>, history: CatalogHistoryMode): void => {
+    onAppliedChange?.({ filters, quickFilter, sort, page, ...next }, history);
+  };
   const liveFacets = live ? buildCatalogLiveFacets(products) : undefined;
   const liveMatches = live
     ? sortCatalogProducts(applyCatalogLiveFilters(products, filters, quickFilter), sort)
@@ -96,6 +129,11 @@ export function CatalogPage({
   const emptyResults = live && liveMatches.length === 0;
 
   const updateFilters = (next: CatalogFilterState): void => {
+    if (controlled) {
+      commit({ filters: next, page: 1 }, isPriceOnlyChange(filters, next) ? 'replace' : 'push');
+      return;
+    }
+
     setFilters(next);
 
     if (live) {
@@ -103,10 +141,63 @@ export function CatalogPage({
     }
   };
 
+  const applyDialogFilters = (next: CatalogFilterState): void => {
+    if (controlled) {
+      commit({ filters: next, page: 1 }, 'push');
+      return;
+    }
+
+    updateFilters(next);
+  };
+
   const resetLiveResults = (): void => {
+    if (controlled) {
+      commit(
+        {
+          filters: DEFAULT_CATALOG_FILTER_STATE,
+          quickFilter: DEFAULT_CATALOG_QUICK_FILTER,
+          page: 1,
+        },
+        'push',
+      );
+      return;
+    }
+
     setFilters(DEFAULT_CATALOG_FILTER_STATE);
-    setQuickFilter(DEFAULT_QUICK_FILTER);
+    setQuickFilter(DEFAULT_CATALOG_QUICK_FILTER);
     setPage(1);
+  };
+
+  const changeSort = (next: CatalogSortValue): void => {
+    if (controlled) {
+      commit({ sort: next, page: 1 }, 'push');
+      return;
+    }
+
+    setSort(next);
+    setPage(1);
+  };
+
+  const changeQuickFilter = (next: CatalogQuickFilterValue): void => {
+    if (controlled) {
+      commit({ quickFilter: next, page: 1 }, 'push');
+      return;
+    }
+
+    setQuickFilter(next);
+
+    if (live) {
+      setPage(1);
+    }
+  };
+
+  const changePage = (next: number): void => {
+    if (controlled) {
+      commit({ page: next }, 'push');
+      return;
+    }
+
+    setPage(next);
   };
 
   return (
@@ -141,8 +232,7 @@ export function CatalogPage({
 
             <Select.Root
               onValueChange={(value: CatalogSortValue) => {
-                setSort(value);
-                setPage(1);
+                changeSort(value);
               }}
               value={sort}
             >
@@ -193,7 +283,7 @@ export function CatalogPage({
             <div className="catalog-page__filter-bar">
               <CatalogFilterDialog
                 liveFacets={liveFacets}
-                onApply={updateFilters}
+                onApply={applyDialogFilters}
                 totalCount={live ? products.length : resultCount}
                 value={filters}
               />
@@ -212,11 +302,7 @@ export function CatalogPage({
                     className={className}
                     key={item.value}
                     onClick={() => {
-                      setQuickFilter(item.value);
-
-                      if (live) {
-                        setPage(1);
-                      }
+                      changeQuickFilter(item.value);
                     }}
                     type="button"
                   >
@@ -246,7 +332,7 @@ export function CatalogPage({
               <div className="catalog-page__pagination">
                 <Pagination
                   label="Страницы каталога"
-                  onChange={setPage}
+                  onChange={changePage}
                   page={currentPage}
                   pageCount={pageCount}
                 />

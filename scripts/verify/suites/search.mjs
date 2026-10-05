@@ -48,7 +48,7 @@ const PRODUCTS = [
 ];
 
 const CATALOG_ROWS = [
-  ['cat-iphone-15-pro', 'Apple iPhone 15 Pro 128 ГБ, Натуральный титан', 109990, 124990, 4.9],
+  ['iphone-15-pro-128', 'Apple iPhone 15 Pro 128 ГБ, Натуральный титан', 109990, 124990, 4.9],
   ['cat-galaxy-s24', 'Samsung Galaxy S24 128 ГБ, Фиолетовый', 75990, null, 4.8],
   ['cat-xiaomi-14', 'Xiaomi 14 12/256 ГБ, Чёрный', 64990, 69990, 4.7],
   ['cat-pixel-8', 'Google Pixel 8 128 ГБ, Обсидиан', 53990, null, 4.6],
@@ -1016,6 +1016,481 @@ check(
   `${state.count} ${JSON.stringify(state.quick)}`,
 );
 await viewport(1440, 900, false);
+const CATALOG_HASH = '#/catalog/smartphones';
+const urlQuery = () =>
+  evaluate(
+    `location.hash.includes('?') ? location.hash.slice(location.hash.indexOf('?') + 1) : ''`,
+  );
+const expectQuery = (entries) => new URLSearchParams(entries).toString();
+const navIndex = () => evaluate(`navigation.currentEntry.index`);
+const navLength = () => evaluate(`navigation.entries().length`);
+const freshHistory = async () => {
+  await send('Page.resetNavigationHistory', {});
+  await sleep(100);
+};
+const goCatalog = async (query) => {
+  await go(query === '' ? CATALOG_HASH : `${CATALOG_HASH}?${query}`);
+  await sleep(150);
+};
+const appliedUi = () =>
+  evaluate(`(() => {
+    const sidebar = document.querySelector('.catalog-page__sidebar');
+    const checked = [...sidebar.querySelectorAll('input[type="checkbox"]:checked')]
+      .map((input) => {
+        const label = input.closest('.ui-choice, .catalog-filters__swatch');
+        return (label.querySelector('.catalog-filters__option-name') ?? label.querySelector('.ui-visually-hidden'))?.textContent.split(' (')[0];
+      })
+      .filter((label) => label !== 'Все бренды');
+    return {
+      checked,
+      from: sidebar.querySelector('input[aria-label="Цена от: значение"]').value.replace(/\\s/g, ''),
+      to: sidebar.querySelector('input[aria-label="Цена до: значение"]').value.replace(/\\s/g, ''),
+      sort: document.querySelector('.catalog-page__sort').textContent,
+    };
+  })()`);
+const pressedQuick = (state) => state.quick.find(([, pressed]) => pressed === 'true')?.[0];
+const chooseSort = async (label) => {
+  await evaluate(
+    `document.querySelector('.catalog-page__sort').dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }))`,
+  );
+  await waitFor(`document.querySelector('.ui-select-content__item')`, 'sort options');
+  await sleep(150);
+  await evaluate(
+    `[...document.querySelectorAll('.ui-select-content__item')].find((i) => i.textContent === ${JSON.stringify(label)}).dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }))`,
+  );
+  await sleep(250);
+};
+const clickPage = async (label) => {
+  await evaluate(
+    `[...document.querySelectorAll('.catalog-page__pagination .ui-pagination__item')].find((b) => b.textContent === ${JSON.stringify(label)}).click()`,
+  );
+  await sleep(200);
+};
+
+await goCatalog(
+  'brand=Apple&brand=Samsung&memory=128&colour=%D0%9D%D0%B0%D1%82%D1%83%D1%80%D0%B0%D0%BB%D1%8C%D0%BD%D1%8B%D0%B9%20%D1%82%D0%B8%D1%82%D0%B0%D0%BD&colour=Розовый&rating=4.5&price_from=50000&price_to=200000&quick=over-30000&sort=cheap&page=3',
+);
+const directQuery = await urlQuery();
+let urlState = await catalogState();
+let ui = await appliedUi();
+check(
+  'catalog url: direct URL applies every param (Cyrillic + space colour, %20 form)',
+  countOf(urlState) === 2 &&
+    JSON.stringify(urlState.titles) ===
+      JSON.stringify([
+        'Apple iPhone 13 128 ГБ, Розовый',
+        'Apple iPhone 15 Pro 128 ГБ, Натуральный титан',
+      ]) &&
+    JSON.stringify([...ui.checked].sort()) ===
+      JSON.stringify(
+        ['128 ГБ', 'Apple', 'Samsung', 'Натуральный титан', 'Розовый', 'Рейтинг 4,5 и выше'].sort(),
+      ) &&
+    ui.from === '50000' &&
+    ui.to === '200000' &&
+    ui.sort === 'Сначала дешевле' &&
+    pressedQuick(urlState) === '30 000 ₽ и выше',
+  JSON.stringify({ urlState, ui }),
+);
+check(
+  'catalog url: out-of-range page renders clamped without rewriting the URL',
+  urlState.pages.length === 0 && urlState.titles.length === 2 && (await urlQuery()) === directQuery,
+  directQuery,
+);
+
+await reload();
+await waitFor(
+  `document.querySelector('.catalog-page__count')?.textContent.replace(/\\s/g, ' ') === '2 товаров'`,
+  'catalog url reload',
+);
+const reloadedState = await catalogState();
+const reloadedUi = await appliedUi();
+check(
+  'catalog url: reload / shared link restores the same applied state',
+  JSON.stringify(reloadedState.titles) === JSON.stringify(urlState.titles) &&
+    JSON.stringify([...reloadedUi.checked].sort()) === JSON.stringify([...ui.checked].sort()) &&
+    reloadedUi.sort === ui.sort &&
+    reloadedUi.from === ui.from &&
+    (await urlQuery()) === directQuery,
+  JSON.stringify(reloadedUi),
+);
+
+for (const [query, expected, detail] of [
+  ['sort=popular', { sort: 'Сначала популярные', count: 16 }],
+  ['sort=cheap', { sort: 'Сначала дешевле', count: 16 }],
+  ['sort=expensive', { sort: 'Сначала дороже', count: 16 }],
+  ['sort=rating', { sort: 'По рейтингу', count: 16 }],
+  ['sort=price-asc', { sort: 'Сначала популярные', count: 16 }],
+  ['sort=price-desc', { sort: 'Сначала популярные', count: 16 }],
+  ['sort=x', { sort: 'Сначала популярные', count: 16 }],
+  ['quick=new', { quick: 'Все смартфоны', count: 16 }],
+  ['quick=bestsellers', { quick: 'Все смартфоны', count: 16 }],
+  ['quick=zzz', { quick: 'Все смартфоны', count: 16 }],
+  ['quick=discounted', { quick: 'Со скидкой', count: 5 }],
+  ['page=abc', { page: '1', count: 16 }],
+  ['page=0', { page: '1', count: 16 }],
+  ['page=-1', { page: '1', count: 16 }],
+  ['page=1.5', { page: '1', count: 16 }],
+  ['page=2', { page: '2', count: 16 }],
+  ['brand=Nokia', { checked: [], count: 16 }],
+  ['colour=Красный', { checked: [], count: 16 }],
+  ['memory=64&memory=abc', { checked: [], count: 16 }],
+  ['rating=5&rating=x', { checked: [], count: 16 }],
+  ['price_from=abc&price_to=zzz', { from: '3000', to: '250000', count: 16 }],
+  ['price_from=100', { from: '3000', count: 16 }],
+  ['price_to=999999', { to: '250000', count: 16 }],
+  ['price_from=60000&price_to=20000', { from: '20000', to: '60000', count: 7 }],
+  ['price_from=20499', { from: '20000', count: 10 }],
+  ['brand=Apple&brand=Apple', { checked: ['Apple'], count: 2 }],
+]) {
+  await goCatalog(query);
+  const s = await catalogState();
+  const u = await appliedUi();
+  const ok =
+    countOf(s) === expected.count &&
+    (expected.sort === undefined || u.sort === expected.sort) &&
+    (expected.quick === undefined || pressedQuick(s) === expected.quick) &&
+    (expected.page === undefined || s.current === expected.page) &&
+    (expected.checked === undefined ||
+      JSON.stringify(u.checked) === JSON.stringify(expected.checked)) &&
+    (expected.from === undefined || u.from === expected.from) &&
+    (expected.to === undefined || u.to === expected.to) &&
+    expectQuery(await urlQuery()) === expectQuery(query);
+  check(
+    `catalog url parse: ${query}`,
+    ok,
+    `${detail ?? ''} ${JSON.stringify({ s: s.count, current: s.current, u })}`,
+  );
+}
+
+await goCatalog(
+  'utm=keep&brand=Nokia&brand=Apple&colour=%D0%9A%D1%80%D0%B0%D1%81%D0%BD%D1%8B%D0%B9&memory=64&rating=5&rating=4.5&price_from=abc&price_to=999999&quick=new&sort=price-asc&page=1.5',
+);
+check(
+  'catalog url: combined invalid URL resolves to valid values only',
+  countOf(await catalogState()) === 2,
+);
+await freshHistory();
+await clickQuick('Со скидкой');
+await sleep(200);
+check(
+  'catalog url: next write cleans invalid Catalog params and preserves the unrelated key',
+  (await urlQuery()) ===
+    expectQuery([
+      ['utm', 'keep'],
+      ['brand', 'Apple'],
+      ['rating', '4.5'],
+      ['quick', 'discounted'],
+    ]) && countOf(await catalogState()) === 1,
+  await urlQuery(),
+);
+
+await goCatalog('utm=keep');
+await freshHistory();
+const startIndex = await navIndex();
+await toggleSidebar('Samsung');
+const afterBrand = [await urlQuery(), await navIndex()];
+await toggleSidebar('Apple');
+await toggleSidebar('Натуральный титан');
+await clickQuick('Со скидкой');
+await sleep(150);
+await chooseSort('Сначала дороже');
+const serialized = await urlQuery();
+check(
+  'catalog url: UI writes a minimal, ordered query with repeated keys and + for spaces',
+  afterBrand[0] ===
+    expectQuery([
+      ['utm', 'keep'],
+      ['brand', 'Samsung'],
+    ]) &&
+    serialized ===
+      expectQuery([
+        ['utm', 'keep'],
+        ['brand', 'Samsung'],
+        ['brand', 'Apple'],
+        ['colour', 'Натуральный титан'],
+        ['quick', 'discounted'],
+        ['sort', 'expensive'],
+      ]) &&
+    serialized.includes('+') &&
+    countOf(await catalogState()) === 1,
+  serialized,
+);
+check(
+  'catalog url: checkbox, quick chip and sort each push exactly one history entry',
+  afterBrand[1] === startIndex + 1 && (await navIndex()) === startIndex + 5,
+  `${startIndex} ${afterBrand[1]} ${await navIndex()}`,
+);
+
+await resetSidebar();
+check(
+  'catalog url: sidebar reset clears filters, quick and page but keeps the non-default sort',
+  (await urlQuery()) ===
+    expectQuery([
+      ['utm', 'keep'],
+      ['sort', 'expensive'],
+    ]) &&
+    countOf(await catalogState()) === 16 &&
+    (await appliedUi()).sort === 'Сначала дороже',
+  await urlQuery(),
+);
+
+await goCatalog('');
+check(
+  'catalog url: default state emits no Catalog params',
+  (await urlQuery()) === '' &&
+    countOf(await catalogState()) === 16 &&
+    !(await evaluate(`location.hash.includes('?')`)),
+);
+await freshHistory();
+await toggleSidebar('Samsung');
+await toggleSidebar('Samsung');
+check(
+  'catalog url: toggling back to defaults omits quick=all, sort=popular, page=1, price and empty lists',
+  (await urlQuery()) === '',
+  await urlQuery(),
+);
+
+const pageResetCases = [
+  ['brand checkbox', async () => toggleSidebar('Apple'), 'push'],
+  ['price input', async () => setPrice('Цена от', '5000'), 'replace'],
+  ['quick chip', async () => clickQuick('До 15 000 ₽'), 'push'],
+  ['sort', async () => chooseSort('По рейтингу'), 'push'],
+];
+for (const [label, action, mode] of pageResetCases) {
+  await goCatalog('page=2');
+  await freshHistory();
+  const before = await navIndex();
+  await action();
+  await sleep(200);
+  const query = await urlQuery();
+  const after = await navIndex();
+  check(
+    `catalog url: ${label} removes page and uses ${mode}`,
+    !new URLSearchParams(query).has('page') &&
+      query !== '' &&
+      after === (mode === 'push' ? before + 1 : before),
+    `${query} ${before}→${after}`,
+  );
+}
+await goCatalog('page=2&quick=discounted&sort=rating');
+await freshHistory();
+await resetSidebar();
+check(
+  'catalog url: reset from page 2 removes page and quick, keeps sort',
+  (await urlQuery()) === expectQuery([['sort', 'rating']]),
+  await urlQuery(),
+);
+await goCatalog(
+  'sort=rating&brand=Samsung&colour=%D0%97%D0%BE%D0%BB%D0%BE%D1%82%D0%BE%D0%B9&quick=discounted',
+);
+await evaluate(`document.querySelector('.catalog-page__results .empty-state button').click()`);
+await sleep(200);
+check(
+  'catalog url: empty-state reset keeps the non-default sort',
+  (await urlQuery()) === expectQuery([['sort', 'rating']]) && countOf(await catalogState()) === 16,
+  await urlQuery(),
+);
+
+await goCatalog('');
+await freshHistory();
+const pageIndex = await navIndex();
+await clickPage('2');
+check(
+  'catalog url: pagination pushes page=2, and page 1 removes it',
+  (await urlQuery()) === 'page=2' && (await navIndex()) === pageIndex + 1,
+  await urlQuery(),
+);
+await clickPage('1');
+check(
+  'catalog url: page 1 is omitted',
+  (await urlQuery()) === '' && (await navIndex()) === pageIndex + 2,
+);
+
+await goCatalog('');
+await freshHistory();
+const sliderIndex = await navIndex();
+await evaluate(`document.querySelector('.catalog-page__sidebar [role="slider"]').focus()`);
+for (let step = 0; step < 6; step += 1) {
+  await evaluate(
+    `document.activeElement.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }))`,
+  );
+  await sleep(60);
+}
+await sleep(200);
+check(
+  'catalog url: six slider steps replace in place (no history spam)',
+  (await urlQuery()) === 'price_from=9000' &&
+    (await navIndex()) === sliderIndex &&
+    (await navLength()) === 1,
+  `${await urlQuery()} ${await navIndex()} ${await navLength()}`,
+);
+
+await goCatalog('');
+await freshHistory();
+await toggleSidebar('Apple');
+await chooseSort('Сначала дешевле');
+await clickQuick('Со скидкой');
+await sleep(150);
+const historyLength = await navLength();
+await evaluate('history.back()');
+await sleep(400);
+urlState = await catalogState();
+ui = await appliedUi();
+check(
+  'catalog url: Back restores the previous applied state from the URL',
+  (await urlQuery()) ===
+    expectQuery([
+      ['brand', 'Apple'],
+      ['sort', 'cheap'],
+    ]) &&
+    JSON.stringify(urlState.titles) ===
+      JSON.stringify([
+        'Apple iPhone 13 128 ГБ, Розовый',
+        'Apple iPhone 15 Pro 128 ГБ, Натуральный титан',
+      ]) &&
+    pressedQuick(urlState) === 'Все смартфоны' &&
+    ui.sort === 'Сначала дешевле' &&
+    JSON.stringify(ui.checked) === JSON.stringify(['Apple']),
+  JSON.stringify({ q: await urlQuery(), urlState, ui }),
+);
+await evaluate('history.back()');
+await sleep(400);
+ui = await appliedUi();
+check(
+  'catalog url: second Back restores popular sort',
+  (await urlQuery()) === 'brand=Apple' && ui.sort === 'Сначала популярные',
+  await urlQuery(),
+);
+await evaluate('history.forward()');
+await sleep(400);
+await sleep(200);
+check(
+  'catalog url: Forward restores cheap sort without synthetic history writes',
+  (await urlQuery()) ===
+    expectQuery([
+      ['brand', 'Apple'],
+      ['sort', 'cheap'],
+    ]) &&
+    (await appliedUi()).sort === 'Сначала дешевле' &&
+    (await navLength()) === historyLength,
+  `${await urlQuery()} ${await navLength()}/${historyLength}`,
+);
+
+await goCatalog('');
+await freshHistory();
+await setPrice('Цена от', '12000');
+await chooseSort('Сначала дешевле');
+await clickPage('2');
+const beforePdp = await urlQuery();
+const beforePdpState = await catalogState();
+await evaluate(
+  `[...document.querySelectorAll('.catalog-grid .product-card')].find((c) => c.querySelector('.product-card__title')?.textContent === 'Apple iPhone 15 Pro 128 ГБ, Натуральный титан').querySelector('.product-card__title a').click()`,
+);
+await waitFor(`location.hash.startsWith('#/product/')`, 'catalog → PDP');
+await sleep(600);
+const pdpHash = await evaluate('location.hash');
+await evaluate('history.back()');
+await waitFor(`location.hash.startsWith('#/catalog/smartphones')`, 'PDP → catalog');
+await waitFor(
+  `document.querySelector('.catalog-page__count')?.textContent.replace(/\\s/g, ' ').startsWith('16 ')`,
+  'catalog live after Back',
+);
+await sleep(300);
+const afterPdpState = await catalogState();
+const afterPdpUi = await appliedUi();
+check(
+  'catalog url: Catalog → PDP → Back restores filters, sort, page and results',
+  beforePdp ===
+    expectQuery([
+      ['price_from', '12000'],
+      ['sort', 'cheap'],
+      ['page', '2'],
+    ]) &&
+    pdpHash === '#/product/iphone-15-pro-128' &&
+    (await urlQuery()) === beforePdp &&
+    afterPdpState.current === '2' &&
+    JSON.stringify(afterPdpState.titles) === JSON.stringify(beforePdpState.titles) &&
+    afterPdpUi.from === '12000' &&
+    afterPdpUi.sort === 'Сначала дешевле',
+  JSON.stringify({ beforePdp, pdpHash, after: await urlQuery(), afterPdpState }),
+);
+
+await viewport(390, 844, true);
+await goCatalog('page=2');
+await freshHistory();
+const dialogIndex = await navIndex();
+await evaluate(`document.querySelector('.catalog-filter-trigger').click()`);
+await waitFor(`document.querySelector('.catalog-filter-dialog')`, 'catalog dialog');
+await evaluate(
+  `${sidebarOption('.catalog-filter-dialog', 'Samsung')}.querySelector('input').click()`,
+);
+await sleep(100);
+const draftQuery = await urlQuery();
+await evaluate(
+  `[...document.querySelectorAll('.catalog-filter-dialog__action')].find((b) => b.textContent === 'Сбросить').click()`,
+);
+await sleep(100);
+const resetDraftQuery = await urlQuery();
+await evaluate(
+  `${sidebarOption('.catalog-filter-dialog', 'Apple')}.querySelector('input').click()`,
+);
+await sleep(100);
+await evaluate(
+  `[...document.querySelectorAll('.catalog-filter-dialog__action')].find((b) => b.textContent === 'Показать').click()`,
+);
+await sleep(300);
+check(
+  'catalog url mobile: dialog draft and draft reset do not write the URL; Показать writes once and drops page',
+  draftQuery === 'page=2' &&
+    resetDraftQuery === 'page=2' &&
+    (await urlQuery()) === 'brand=Apple' &&
+    (await navIndex()) === dialogIndex + 1 &&
+    countOf(await catalogState()) === 2,
+  `${draftQuery} ${resetDraftQuery} ${await urlQuery()} ${await navIndex()}`,
+);
+await clickQuick('Со скидкой');
+await sleep(200);
+await evaluate(`document.querySelector('.catalog-filter-trigger').click()`);
+await waitFor(`document.querySelector('.catalog-filter-dialog')`, 'catalog dialog');
+await evaluate(
+  `[...document.querySelectorAll('.catalog-filter-dialog__action')].find((b) => b.textContent === 'Сбросить').click()`,
+);
+await sleep(100);
+await evaluate(
+  `[...document.querySelectorAll('.catalog-filter-dialog__action')].find((b) => b.textContent === 'Показать').click()`,
+);
+await sleep(300);
+urlState = await catalogState();
+check(
+  'catalog url mobile: dialog reset + Показать keeps the external quick chip and pushes once',
+  (await urlQuery()) === 'quick=discounted' &&
+    countOf(urlState) === 5 &&
+    pressedQuick(urlState) === 'Со скидкой' &&
+    (await navIndex()) === dialogIndex + 3 &&
+    (await evaluate(
+      `document.documentElement.scrollWidth - document.documentElement.clientWidth`,
+    )) <= 0,
+  `${await urlQuery()} ${await navIndex()}`,
+);
+await viewport(1440, 900, false);
+await goCatalog('');
+
+failLive = true;
+await reload();
+await go(`${CATALOG_HASH}?brand=Apple&quick=discounted&sort=cheap&page=3`);
+await sleep(1500);
+urlState = await catalogState();
+check(
+  'catalog url: specimen fallback ignores Catalog params and leaves the URL untouched',
+  urlState.count === '2 546 товаров' &&
+    pressedQuick(urlState) === 'Все смартфоны' &&
+    urlState.quick.length === 7 &&
+    (await appliedUi()).sort === 'Сначала популярные' &&
+    (await urlQuery()) === 'brand=Apple&quick=discounted&sort=cheap&page=3',
+  JSON.stringify(urlState),
+);
+failLive = false;
+await go(CATALOG_HASH);
 catalogRows = false;
 await reload();
 

@@ -148,6 +148,9 @@ Active visual slice: none.
 
 Completed visual slices:
 
+- **Catalog URL State A — USER VISUAL/UX PASS — CLOSED and published.** Live
+  `#/catalog/smartphones` applied state lives in the URL. See the Catalog URL
+  State A section below.
 - **Catalog Live Results A — USER VISUAL/UX PASS — CLOSED and published.**
   Live `#/catalog/smartphones` count, pagination, filters and quick filters. See
   the Catalog Live Results A section below.
@@ -194,6 +197,48 @@ section below. **Checkout A / Checkout Page Foundation — USER VISUAL/UX PASS
 on 2026-09-30, CLOSED and published.** See the Checkout A section below. Search C, Favourites A, Commerce B, Commerce A,
 Blog B, Blog A, Home A, Cart A, Cart B, Search A, Search B, 404 A and the
 Product Details production integration are closed.
+
+### Catalog URL State A
+
+**Status: USER VISUAL/UX PASS — CLOSED and published.** The user visually
+reviewed the Catalog URL-state milestone and explicitly granted USER VISUAL/UX
+PASS. The milestone intentionally introduced no visual redesign; history,
+reload and PDP round-trip behaviour is covered by the verify suite, not by
+per-state screenshots.
+
+- **Ownership.** On live `#/catalog/smartphones` the URL is canonical for the
+  applied state (filters, quick filter, sort, page). `CatalogRoute` parses
+  `useSearchParams()` against the live facets once products are `ready` and
+  passes `applied` + `onAppliedChange` to `CatalogPage`; the page keeps no
+  second live copy. Specimen, pre-ready, fallback and `?reference=catalog` keep
+  local state and ignore Catalog params (left untouched).
+- **Params** (pure `src/pages/catalog/catalogUrlState.ts`): repeated `brand`,
+  `memory`, `colour`, `rating`; `price_from`, `price_to`, `quick`, `sort`,
+  `page`. Sort is exactly `popular | cheap | expensive | rating` (no aliases);
+  quick is `discounted | under-15000 | 15000-30000 | over-30000`.
+- **Validation.** Brand, memory and colour must be exact live facet values;
+  rating must be in `CATALOG_RATING_VALUES` (`catalogFilterState.ts`, also the
+  source of the sidebar rating options). Prices default when missing or
+  invalid, snap to the 1000 step, clamp to 3000–250000 and order ascending.
+  Page is a positive integer, else 1; an out-of-range page renders clamped
+  without a URL rewrite. Invalid values are ignored; there is no auto-clean on
+  load; unrelated params are always preserved.
+- **Serialization.** Fixed order brand, memory, colour, rating, price_from,
+  price_to, quick, sort, page; list values keep selection order, de-duplicated;
+  native `URLSearchParams` encoding (Cyrillic round-trips, space as `+`).
+  Defaults (empty lists, 3000/250000, `quick=all`, `sort=popular`, `page=1`) are
+  omitted, so the default is the bare route.
+- **History.** Checkbox/list changes, quick chips, sort, pagination, resets and
+  mobile «Показать» push; sidebar price-only changes (slider, inputs) replace.
+  Identical queries are not written. Every refinement drops `page`.
+  Back/Forward, reload, shared links and Catalog → PDP → Back restore the
+  applied state; render derives from the URL with no write-back effect. No
+  custom scroll restoration.
+- **Reset** (sidebar and empty state) clears filters, quick filter and page and
+  preserves the current sort. The mobile dialog draft stays local; its
+  «Сбросить» is draft-only and «Показать» writes once.
+- Search URL behaviour is unchanged (no Catalog → Search import). No new
+  dependency, query, schema, storage or `CatalogProduct` change.
 
 ### Catalog Live Results A
 
@@ -3532,8 +3577,9 @@ visual PASS and is closed.
 The RangeSlider post-PASS interaction hardening is applied. It now uses the
 already-installed Radix Slider primitive and supports direct lower/upper numeric
 entry, drag, keyboard and click/tap track interaction while remaining a generic
-container-driven numeric range primitive. Catalog URL state, backend commits and
-filter/search architecture remain deferred feature-level work. Components A
+container-driven numeric range primitive. Catalog URL state is delivered by
+Catalog URL State A; backend commits and filter/search architecture remain
+deferred feature-level work. Components A
 remains closed after the user-accepted RangeSlider regression validation.
 
 The shared cross-component polish is technically complete: Pagination renders the
@@ -4709,9 +4755,9 @@ never jumps into the production router.
 - **`ProductCard`.** Live product cards whose slug has Product Details content
   have a title link (Integration B). Fixture-fallback cards remain non-links.
   There is no whole-card link and no `Link` inside `ProductCard`.
-- **URL state.** Catalog filters, sorting, quick filters and pagination stay
-  local UI state. No `?page=`, `?sort=` or `?brand=` synchronization was added;
-  that belongs with the real Catalog data and facet contract.
+- **URL state.** The live Catalog applied state (filters, quick filter, sort,
+  page) is canonical in the query string since Catalog URL State A; specimen
+  and reference Catalog keep local UI state.
 - **Document titles.** No route-level title system was introduced.
 
 ## Current dependencies
@@ -4813,7 +4859,8 @@ none of them blocks the closed milestone.
   media. The iPhone 15 editorial image mismatch is also deferred.
 - Stale stored image URLs on persisted commerce surfaces have no fallback
   handling.
-- Catalog filters, sort and page are not URL-synced.
+- Catalog count noun inflection: the UI can show forms such as «2 товаров»;
+  separate content polish, not part of Catalog URL State A.
 - Newsletter submit has no user feedback.
 - No header catalog landing page or additional category routes.
 - Account/Login awaits a demo-identity decision.

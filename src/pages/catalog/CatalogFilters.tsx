@@ -6,6 +6,7 @@ import {
   CATALOG_PRICE_MAX,
   CATALOG_PRICE_MIN,
   CATALOG_PRICE_STEP,
+  CATALOG_RATING_VALUES,
   DEFAULT_CATALOG_FILTER_STATE,
   toggleCatalogFilterValue,
 } from './catalogFilterState';
@@ -57,13 +58,10 @@ const DIAGONAL_OPTIONS: readonly CatalogFilterOption[] = [
   { value: 'delivery-today', label: 'Доставка сегодня' },
 ];
 
-const RATING_OPTIONS: readonly CatalogRatingOption[] = [
-  { value: '4.5', label: '4,5' },
-  { value: '4', label: '4' },
-  { value: '3', label: '3' },
-  { value: '2', label: '2' },
-  { value: '1', label: '1' },
-];
+const RATING_OPTIONS: readonly CatalogRatingOption[] = CATALOG_RATING_VALUES.map((value) => ({
+  value,
+  label: value.replace('.', ','),
+}));
 
 const MEMORY_OPTIONS: readonly CatalogFilterOption[] = [
   { value: '128', label: '128 ГБ' },

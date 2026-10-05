@@ -14,6 +14,8 @@ export const CATALOG_PRICE_MIN = 3000;
 export const CATALOG_PRICE_MAX = 250000;
 export const CATALOG_PRICE_STEP = 1000;
 
+export const CATALOG_RATING_VALUES: readonly string[] = ['4.5', '4', '3', '2', '1'];
+
 export const DEFAULT_CATALOG_FILTER_STATE: CatalogFilterState = {
   brands: [],
   series: [],

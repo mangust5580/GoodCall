@@ -10,6 +10,9 @@ export type { CatalogProduct, CatalogSortValue } from './catalogProduct';
 export { fetchCatalogProducts } from './catalogProductData';
 export { CATALOG_PRODUCTS } from './catalogProducts';
 export { CatalogProductCard } from './CatalogProductCard';
+export { buildCatalogLiveFacets } from './catalogFacets';
+export { parseCatalogUrlState, serializeCatalogUrlState } from './catalogUrlState';
+export type { CatalogAppliedState, CatalogHistoryMode } from './catalogUrlState';
 export type {
   CatalogCartSeam,
   CatalogCompareSeam,
