@@ -1,13 +1,47 @@
+import { DEMO_ACCOUNT_PERSONA } from './accountPersona';
+import type { DemoAccountProfile } from './accountPersona';
+import { normalizeAccountProfile, toStoredAccountProfile } from './accountProfile';
+
 export const ACCOUNT_STORAGE_KEY = 'goodcall.account.v1';
 
 const ACCOUNT_STORAGE_VERSION = 1;
 
+interface AccountState {
+  readonly signedIn: boolean;
+  readonly profile?: DemoAccountProfile;
+}
+
 type Listener = () => void;
 
+const SIGNED_OUT: AccountState = { signedIn: false };
 const listeners = new Set<Listener>();
-let signedIn: boolean | undefined;
+let state: AccountState | undefined;
 
-function parseStoredSignedIn(raw: string): boolean | undefined {
+function storedValue(next: AccountState): string {
+  return JSON.stringify(
+    next.profile === undefined
+      ? { version: ACCOUNT_STORAGE_VERSION, signedIn: true }
+      : { version: ACCOUNT_STORAGE_VERSION, signedIn: true, profile: next.profile },
+  );
+}
+
+function removeStoredAccount(): void {
+  try {
+    window.localStorage.removeItem(ACCOUNT_STORAGE_KEY);
+  } catch {
+    return;
+  }
+}
+
+function writeStoredAccount(next: AccountState): void {
+  try {
+    window.localStorage.setItem(ACCOUNT_STORAGE_KEY, storedValue(next));
+  } catch {
+    return;
+  }
+}
+
+function parseStoredAccount(raw: string): AccountState | undefined {
   let parsed: unknown;
 
   try {
@@ -20,57 +54,64 @@ function parseStoredSignedIn(raw: string): boolean | undefined {
     return undefined;
   }
 
-  const { version, signedIn: storedSignedIn } = parsed as Record<string, unknown>;
+  const record = parsed as Record<string, unknown>;
 
-  return version === ACCOUNT_STORAGE_VERSION && storedSignedIn === true ? true : undefined;
-}
-
-function removeStoredAccount(): void {
-  try {
-    window.localStorage.removeItem(ACCOUNT_STORAGE_KEY);
-  } catch {
-    return;
+  if (record.version !== ACCOUNT_STORAGE_VERSION || record.signedIn !== true) {
+    return undefined;
   }
+
+  if (!('profile' in record)) {
+    return { signedIn: true };
+  }
+
+  const profile = toStoredAccountProfile(record.profile);
+
+  if (profile === undefined) {
+    const recovered: AccountState = { signedIn: true };
+
+    writeStoredAccount(recovered);
+
+    return recovered;
+  }
+
+  return { signedIn: true, profile };
 }
 
-function readStoredSignedIn(): boolean {
+function readStoredAccount(): AccountState {
   let raw: string | null;
 
   try {
     raw = window.localStorage.getItem(ACCOUNT_STORAGE_KEY);
   } catch {
-    return false;
+    return SIGNED_OUT;
   }
 
   if (raw === null) {
-    return false;
+    return SIGNED_OUT;
   }
 
-  if (parseStoredSignedIn(raw) === undefined) {
+  const stored = parseStoredAccount(raw);
+
+  if (stored === undefined) {
     removeStoredAccount();
 
-    return false;
+    return SIGNED_OUT;
   }
 
-  return true;
+  return stored;
 }
 
-function writeStoredSignedIn(): void {
-  try {
-    window.localStorage.setItem(
-      ACCOUNT_STORAGE_KEY,
-      JSON.stringify({ version: ACCOUNT_STORAGE_VERSION, signedIn: true }),
-    );
-  } catch {
-    return;
-  }
+function currentState(): AccountState {
+  state ??= readStoredAccount();
+
+  return state;
 }
 
-function commit(next: boolean): void {
-  signedIn = next;
+function commit(next: AccountState): void {
+  state = next;
 
-  if (next) {
-    writeStoredSignedIn();
+  if (next.signedIn) {
+    writeStoredAccount(next);
   } else {
     removeStoredAccount();
   }
@@ -89,15 +130,30 @@ export function subscribeAccount(listener: Listener): () => void {
 }
 
 export function isAccountSignedIn(): boolean {
-  signedIn ??= readStoredSignedIn();
+  return currentState().signedIn;
+}
 
-  return signedIn;
+export function getAccountProfile(): DemoAccountProfile {
+  return currentState().profile ?? DEMO_ACCOUNT_PERSONA;
 }
 
 export function signInDemoAccount(): void {
-  commit(true);
+  commit({ signedIn: true });
 }
 
 export function signOutDemoAccount(): void {
-  commit(false);
+  commit(SIGNED_OUT);
+}
+
+export function saveAccountProfile(profile: DemoAccountProfile): boolean {
+  const current = currentState();
+  const normalized = toStoredAccountProfile(normalizeAccountProfile(profile));
+
+  if (!current.signedIn || normalized === undefined) {
+    return false;
+  }
+
+  commit({ signedIn: true, profile: normalized });
+
+  return true;
 }

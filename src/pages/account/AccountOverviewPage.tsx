@@ -1,13 +1,13 @@
-import { useEffect } from 'react';
-
-import type { DemoAccountPersona } from '../../commerce/account';
+import { formatAccountBirthDate } from '../../commerce/account';
+import type { DemoAccountProfile } from '../../commerce/account';
 import { formatUnitCount } from '../../commerce/cart';
 import { formatPrice } from '../../commerce/format';
-import { AccountNavigation, AccountStats } from '../../components/account';
-import type { AccountNavigationItem, AccountStatsMetric } from '../../components/account';
-import { Container } from '../../components/layout';
+import { AccountStats } from '../../components/account';
+import type { AccountStatsMetric } from '../../components/account';
 import { Chip, Icon } from '../../components/ui';
 import type { IconName } from '../../components/ui';
+import { AccountLayout, AccountOrdersEmpty } from './AccountParts';
+import type { AccountLinks } from './AccountParts';
 
 export interface AccountRecentOrder {
   readonly number: string;
@@ -17,13 +17,8 @@ export interface AccountRecentOrder {
 }
 
 export interface AccountOverviewPageProps {
-  readonly homeHref: string;
-  readonly accountHref: string;
-  readonly favoritesHref: string;
-  readonly compareHref: string;
-  readonly catalogHref: string;
-  readonly orderHref: string;
-  readonly persona: DemoAccountPersona;
+  readonly links: AccountLinks;
+  readonly profile: DemoAccountProfile;
   readonly favoritesCount: number;
   readonly compareCount: number;
   readonly order?: AccountRecentOrder;
@@ -36,8 +31,6 @@ interface PersonalDetail {
   readonly value: string;
   readonly icon: IconName;
 }
-
-const TITLE_ID = 'account-title';
 
 const createdAtFormatter = new Intl.DateTimeFormat('ru-RU', {
   day: 'numeric',
@@ -94,30 +87,14 @@ function RecentOrder({
 }
 
 export function AccountOverviewPage({
-  homeHref,
-  accountHref,
-  favoritesHref,
-  compareHref,
-  catalogHref,
-  orderHref,
-  persona,
+  links,
+  profile,
   favoritesCount,
   compareCount,
   order,
   onSignOut,
   focusTitle = false,
 }: AccountOverviewPageProps) {
-  useEffect(() => {
-    if (focusTitle) {
-      document.getElementById(TITLE_ID)?.focus({ preventScroll: true });
-    }
-  }, [focusTitle]);
-
-  const navigation: readonly AccountNavigationItem[] = [
-    { id: 'profile', label: 'Профиль', icon: 'person', href: accountHref },
-    { id: 'favorites', label: 'Избранное', icon: 'heart', href: favoritesHref },
-    { id: 'compare', label: 'Сравнение', icon: 'compare', href: compareHref },
-  ];
   const metrics: readonly AccountStatsMetric[] = [
     {
       id: 'orders',
@@ -125,6 +102,7 @@ export function AccountOverviewPage({
       label: 'Заказы',
       value: String(order === undefined ? 0 : 1),
       note: 'В этой сессии',
+      link: { href: links.orders, label: 'Подробнее' },
     },
     {
       id: 'favorites',
@@ -132,7 +110,7 @@ export function AccountOverviewPage({
       label: 'Избранное',
       value: formatUnitCount(favoritesCount),
       note: 'В списке',
-      link: { href: favoritesHref, label: 'Смотреть все' },
+      link: { href: links.favorites, label: 'Смотреть все' },
     },
     {
       id: 'compare',
@@ -140,120 +118,85 @@ export function AccountOverviewPage({
       label: 'Сравнение',
       value: formatUnitCount(compareCount),
       note: 'В сравнении',
-      link: { href: compareHref, label: 'Смотреть все' },
+      link: { href: links.compare, label: 'Смотреть все' },
     },
   ];
   const details: readonly PersonalDetail[] = [
-    { label: 'Имя', value: `${persona.firstName} ${persona.lastName}`, icon: 'person' },
-    { label: 'Телефон', value: persona.phone, icon: 'phone' },
-    { label: 'E-mail', value: persona.email, icon: 'mail' },
-    { label: 'Дата рождения', value: persona.birthDate, icon: 'calendar' },
+    { label: 'Имя', value: `${profile.firstName} ${profile.lastName}`, icon: 'person' },
+    { label: 'Телефон', value: profile.phone, icon: 'phone' },
+    { label: 'E-mail', value: profile.email, icon: 'mail' },
+    {
+      label: 'Дата рождения',
+      value: formatAccountBirthDate(profile.birthDate),
+      icon: 'calendar',
+    },
   ];
 
   return (
-    <main className="account-page">
-      <Container>
-        <nav aria-label="Хлебные крошки" className="account-crumbs">
-          <ol className="account-crumbs__list">
-            <li className="account-crumbs__item">
-              <a className="account-crumbs__link" href={homeHref}>
-                Главная
-              </a>
-            </li>
-            <li aria-current="page" className="account-crumbs__item">
-              Аккаунт
-            </li>
-          </ol>
-        </nav>
-
-        <h1 className="account-page__title" id={TITLE_ID} tabIndex={-1}>
-          Личный кабинет
-        </h1>
-
-        <div className="account-page__layout">
-          <div className="account-page__rail">
-            <AccountNavigation
-              currentId="profile"
-              items={navigation}
-              label="Личный кабинет"
-              onSignOut={onSignOut}
-              signOutLabel="Выход"
-            />
+    <AccountLayout
+      focusTitle={focusTitle}
+      links={links}
+      onSignOut={onSignOut}
+      section="overview"
+      title="Личный кабинет"
+    >
+      <section aria-labelledby="account-greeting-title" className="account-greeting">
+        <div className="account-greeting__text">
+          <div className="account-greeting__title-row">
+            <h2 className="account-greeting__title" id="account-greeting-title">
+              Здравствуйте, <span className="account-greeting__name">{profile.firstName}</span>!
+            </h2>
+            <Chip>Демо-профиль</Chip>
           </div>
-
-          <div className="account-page__main">
-            <section aria-labelledby="account-greeting-title" className="account-greeting">
-              <div className="account-greeting__text">
-                <div className="account-greeting__title-row">
-                  <h2 className="account-greeting__title" id="account-greeting-title">
-                    Здравствуйте,{' '}
-                    <span className="account-greeting__name">{persona.firstName}</span>!
-                  </h2>
-                  <Chip>Демо-профиль</Chip>
-                </div>
-                <p className="account-greeting__lead">
-                  Добро пожаловать в демо-кабинет GoodCall. Здесь собраны ваше избранное, сравнение
-                  и заказ, оформленный в этой сессии.
-                </p>
-              </div>
-              <span aria-hidden="true" className="account-greeting__visual">
-                <Icon className="account-greeting__icon" name="person" />
-              </span>
-            </section>
-
-            <section aria-labelledby="account-summary-title" className="account-page__summary">
-              <h2 className="ui-visually-hidden" id="account-summary-title">
-                Сводка
-              </h2>
-              <AccountStats layout="tiles" metrics={metrics} />
-            </section>
-
-            <div className="account-page__cards">
-              <section aria-labelledby="account-personal-title" className="account-card">
-                <h2 className="account-card__title" id="account-personal-title">
-                  Личные данные
-                </h2>
-                <dl className="account-details">
-                  {details.map((detail) => (
-                    <div className="account-details__row" key={detail.label}>
-                      <dt className="account-details__term">
-                        <Icon className="account-details__icon" name={detail.icon} />
-                        {detail.label}
-                      </dt>
-                      <dd className="account-details__value">{detail.value}</dd>
-                    </div>
-                  ))}
-                </dl>
-              </section>
-
-              <section aria-labelledby="account-orders-title" className="account-card">
-                <h2 className="account-card__title" id="account-orders-title">
-                  Последние заказы
-                </h2>
-                {order === undefined ? (
-                  <div className="account-orders-empty">
-                    <span aria-hidden="true" className="account-orders-empty__glyph">
-                      <Icon className="account-orders-empty__icon" name="package" />
-                    </span>
-                    <h3 className="account-orders-empty__title">В этой сессии заказов пока нет</h3>
-                    <p className="account-orders-empty__message">
-                      Оформите заказ в каталоге — он появится здесь до конца сессии браузера.
-                    </p>
-                    <a
-                      className="ui-button ui-button--secondary account-orders-empty__action"
-                      href={catalogHref}
-                    >
-                      Перейти в каталог
-                    </a>
-                  </div>
-                ) : (
-                  <RecentOrder order={order} orderHref={orderHref} />
-                )}
-              </section>
-            </div>
-          </div>
+          <p className="account-greeting__lead">
+            Добро пожаловать в демо-кабинет GoodCall. Здесь собраны ваше избранное, сравнение и
+            заказ, оформленный в этой сессии.
+          </p>
         </div>
-      </Container>
-    </main>
+        <span aria-hidden="true" className="account-greeting__visual">
+          <Icon className="account-greeting__icon" name="person" />
+        </span>
+      </section>
+
+      <section aria-labelledby="account-summary-title" className="account-page__summary">
+        <h2 className="ui-visually-hidden" id="account-summary-title">
+          Сводка
+        </h2>
+        <AccountStats layout="tiles" metrics={metrics} />
+      </section>
+
+      <div className="account-page__cards">
+        <section aria-labelledby="account-personal-title" className="account-card">
+          <h2 className="account-card__title" id="account-personal-title">
+            Личные данные
+          </h2>
+          <dl className="account-details">
+            {details.map((detail) => (
+              <div className="account-details__row" key={detail.label}>
+                <dt className="account-details__term">
+                  <Icon className="account-details__icon" name={detail.icon} />
+                  {detail.label}
+                </dt>
+                <dd className="account-details__value">{detail.value}</dd>
+              </div>
+            ))}
+          </dl>
+          <a className="ui-button ui-button--secondary account-card__action" href={links.profile}>
+            Редактировать профиль
+          </a>
+        </section>
+
+        <section aria-labelledby="account-orders-title" className="account-card">
+          <h2 className="account-card__title" id="account-orders-title">
+            Последние заказы
+          </h2>
+          {order === undefined ? (
+            <AccountOrdersEmpty catalogHref={links.catalog} headingLevel="h3" />
+          ) : (
+            <RecentOrder order={order} orderHref={links.orderConfirmation} />
+          )}
+        </section>
+      </div>
+    </AccountLayout>
   );
 }

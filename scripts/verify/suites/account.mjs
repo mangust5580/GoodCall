@@ -1,7 +1,20 @@
+import { register } from 'node:module';
+
 import { MOCK_SUPABASE_HOST } from '../lib/build.mjs';
 import { launchBrowser } from '../lib/browser.mjs';
 import { openPage } from '../lib/page.mjs';
 import { appBase, outputDir, reportCounts } from '../lib/suite.mjs';
+
+register(new URL('../lib/ts-hook.mjs', import.meta.url));
+const { accountProfileErrors } = await import(
+  new URL('../../../src/commerce/account/accountProfile.ts', import.meta.url).href
+);
+const { DEMO_STORES } = await import(
+  new URL('../../../src/commerce/shops/shopData.ts', import.meta.url).href
+);
+const { STOREFRONT_PAYMENT_OPTIONS } = await import(
+  new URL('../../../src/commerce/storefront/storefrontFacts.ts', import.meta.url).href
+);
 
 const BASE = appBase();
 const SHOTS = outputDir();
@@ -176,6 +189,139 @@ const shellGeometry = (page) =>
     };
   });
 
+const COURIER_ORDER_VALUE = JSON.stringify({
+  number: 'GC-20261008-CUR1',
+  createdAt: '2026-10-08T09:15:00.000Z',
+  lines: [
+    {
+      productSlug: 'galaxy-s24-128',
+      title: 'Samsung Galaxy S24 128 ГБ, Фиолетовый',
+      image: { kind: 'catalog-fallback' },
+      price: 75990,
+      quantity: 1,
+    },
+  ],
+  totals: { unitCount: 1, listTotal: 75990, discount: 0, total: 75990 },
+  deliveryMethod: 'courier',
+  courier: { address: 'Москва, Тверская улица, 7, кв. 12', date: '2026-10-09', slot: '10-14' },
+  payment: 'card-online',
+});
+const PICKUP_STORE = DEMO_STORES.find((store) => store.id === 'moscow-aviapark');
+const paymentLabel = (value) =>
+  STOREFRONT_PAYMENT_OPTIONS.find((option) => option.value === value)?.label;
+const railState = (page) =>
+  page.evaluate(() =>
+    [...document.querySelectorAll('.account-navigation__row')].map((row) => [
+      row.textContent.trim(),
+      row.getAttribute('aria-current'),
+    ]),
+  );
+const activeRail = async (page) =>
+  (await railState(page))
+    .filter(([, current]) => current === 'page')
+    .map(([text]) => text)
+    .join('|');
+const crumbs = (page) =>
+  page.evaluate(() =>
+    [...document.querySelectorAll('.account-crumbs li')].map((li) => [
+      li.textContent.trim(),
+      li.querySelector('a')?.getAttribute('href') ?? null,
+      li.getAttribute('aria-current'),
+    ]),
+  );
+const fieldState = (page, label) =>
+  page.evaluate((text) => {
+    const labelEl = [...document.querySelectorAll('main label')].find(
+      (node) => node.textContent.trim() === text,
+    );
+    const el = labelEl ? document.getElementById(labelEl.htmlFor) : null;
+    if (!el) return null;
+    const described = (el.getAttribute('aria-describedby') ?? '')
+      .split(' ')
+      .filter(Boolean)
+      .map((id) => document.getElementById(id)?.textContent.trim() ?? '')
+      .join(' ');
+    return {
+      id: el.id,
+      tag: el.tagName,
+      value: el.tagName === 'INPUT' ? el.value : el.textContent.trim(),
+      invalid: el.getAttribute('aria-invalid'),
+      described,
+    };
+  }, label);
+const setField = (page, label, value) =>
+  page.evaluate(
+    ({ text, next }) => {
+      const labelEl = [...document.querySelectorAll('main label')].find(
+        (node) => node.textContent.trim() === text,
+      );
+      const el = document.getElementById(labelEl.htmlFor);
+      el.focus();
+      const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set;
+      setter.call(el, next);
+      el.dispatchEvent(new Event('input', { bubbles: true }));
+    },
+    { text: label, next: value },
+  );
+const chooseGender = async (page, label) => {
+  const { id } = await fieldState(page, 'Пол');
+  await page.click(`[id="${id}"]`);
+  await page.click('.ui-select-content__item', { hasText: label });
+  await page.waitForTimeout(150);
+};
+const profileStatus = (page) =>
+  page.evaluate(() => document.querySelector('.account-profile__status')?.textContent ?? null);
+const submitProfile = async (page) => {
+  await page.click('.account-profile__submit');
+  await page.waitForTimeout(150);
+};
+const sessionCard = (page) =>
+  page.evaluate(() => {
+    const card = document.querySelector('.account-session-order');
+    if (!card) return null;
+    const facts = Object.fromEntries(
+      [...card.querySelectorAll('.account-session-order__fact')].map((fact) => [
+        fact.querySelector('dt').textContent.trim(),
+        fact.querySelector('dd').textContent.trim(),
+      ]),
+    );
+    const link = card.querySelector('.account-session-order__details');
+    return {
+      number: card.querySelector('.account-session-order__number').textContent.trim(),
+      status: card.querySelector('.ui-chip').textContent.trim(),
+      date: card.querySelector('.account-session-order__date').textContent.trim(),
+      count: card
+        .querySelector('.account-session-order__count')
+        .textContent.replace(/\s/g, ' ')
+        .trim(),
+      total: card.querySelector('.account-session-order__total').textContent.replace(/\s/g, ' '),
+      facts,
+      href: link.getAttribute('href'),
+      linkName: link.textContent.trim(),
+      image: Boolean(card.querySelector('img')),
+    };
+  });
+const ordersChrome = (page) =>
+  page.evaluate(() => {
+    const main = document.querySelector('main');
+    const text = main.innerText;
+    return {
+      cards: document.querySelectorAll('.account-session-order').length,
+      pagination: document.querySelectorAll('main .ui-pagination').length,
+      filters: /Все заказы|Ожидают оплаты|Отменены/.test(text),
+      pay: /Оплатить|Повторить заказ|Распечатать/.test(text),
+      orderRows: document.querySelectorAll('main .order-row').length,
+      disabled: main.querySelectorAll('[disabled], [aria-disabled="true"]').length,
+    };
+  });
+const enterDemo = async (page) => {
+  await page.click('main button', { hasText: 'Войти в демо-аккаунт' });
+};
+const logoutFromRail = async (page) => {
+  await page.click('.account-navigation button', { hasText: 'Выход' });
+  await page.waitForFunction(() => location.hash === '#/login');
+};
+
 const FORBIDDEN = [
   /Забыли пароль/i,
   /Запомнить меня/i,
@@ -186,10 +332,8 @@ const FORBIDDEN = [
   /Уведомлени/i,
   /Безопасность|двухфактор|Активные сессии/i,
   /Недавно просмотренн/i,
-  /Мои заказы/,
   /Адреса доставки|Адрес доставки/,
   /Настройки/,
-  /Редактировать профиль/,
 ];
 
 const page = await newPage();
@@ -357,6 +501,7 @@ check(
     JSON.stringify(view.rail.rows.map((r) => [r.tag, r.text, r.href])) ===
       JSON.stringify([
         ['A', 'Профиль', '#/account'],
+        ['A', 'Мои заказы', '#/account/orders'],
         ['A', 'Избранное', '#/favorites'],
         ['A', 'Сравнение', '#/compare'],
         ['BUTTON', 'Выход', null],
@@ -424,7 +569,7 @@ check(
 await fresh(page, '/login');
 await page.waitForFunction(() => location.hash === '#/account');
 check((await hash(page)) === '#/account', 'route: signed-in #/login → #/account');
-for (const path of ['/account/orders', '/account/anything']) {
+for (const path of ['/account/settings', '/account/anything', '/account/orders/1']) {
   await open(page, path);
   check(
     (await page.textContent('main h1')).trim() === 'Страница не найдена' &&
@@ -536,6 +681,403 @@ for (const raw of [
   );
 }
 
+const PROFILE_BASE = {
+  firstName: 'Иван',
+  lastName: 'Иванов',
+  email: 'demo@goodcall.example',
+  phone: '+7 (900) 000-00-00',
+  birthDate: '1996-04-12',
+  gender: 'unspecified',
+};
+const ruleErrors = (patch) => accountProfileErrors({ ...PROFILE_BASE, ...patch }, '2026-10-08');
+check(
+  Object.keys(ruleErrors({})).length === 0 &&
+    ruleErrors({ birthDate: '2026-10-09' }).birthDate === 'Укажите дату не позже сегодняшней' &&
+    ruleErrors({ birthDate: '2026-10-08' }).birthDate === undefined &&
+    ruleErrors({ birthDate: '1899-12-31' }).birthDate === 'Укажите корректную дату рождения' &&
+    ruleErrors({ birthDate: '2001-02-30' }).birthDate === 'Укажите корректную дату рождения' &&
+    ruleErrors({ birthDate: '' }).birthDate === 'Укажите дату рождения' &&
+    ruleErrors({ firstName: 'Анна1' }).firstName ===
+      'Имя может содержать буквы, пробел, дефис и апостроф' &&
+    ruleErrors({ gender: 'other' }).gender !== undefined,
+  'validation rules: future/min/invalid birth date, name chars, gender allow-list',
+);
+
+await page.evaluate(() => {
+  localStorage.clear();
+  sessionStorage.clear();
+});
+for (const path of ['/account/orders', '/account/profile']) {
+  await fresh(page, path);
+  await page.waitForFunction(() => location.hash === '#/login');
+  const lengthBefore = await historyLength(page);
+  await enterDemo(page);
+  await page.waitForFunction((target) => location.hash === `#${target}`, path);
+  await page.waitForSelector('main h1');
+  const arrived = await pageFacts(page);
+  check(
+    arrived.focused === 'account-title' && (await historyLength(page)) === lengthBefore,
+    `deep link: signed-out ${path} → login → back to ${path} (focus ${arrived.focused})`,
+  );
+  await page.waitForTimeout(100);
+  check(
+    (await page.evaluate(() => JSON.stringify(history.state?.usr ?? null))) === 'null',
+    `deep link: ${path} one-time return state cleared`,
+  );
+  await logoutFromRail(page);
+}
+await fresh(page, '/login');
+await page.evaluate(() => {
+  history.replaceState(
+    { usr: { accountReturn: '/checkout' }, key: 'probe', idx: 0 },
+    '',
+    location.href,
+  );
+});
+await page.reload();
+await page.waitForSelector('main h1');
+await enterDemo(page);
+await page.waitForFunction(() => location.hash === '#/account');
+await page.waitForSelector('.account-greeting');
+check(
+  (await hash(page)) === '#/account',
+  'deep link: non-allow-listed return falls back to #/account',
+);
+check((await activeRail(page)) === 'Профиль', 'rail: /account → Профиль active');
+const overviewLinks = await page.evaluate(() => ({
+  edit: [...document.querySelectorAll('main a')]
+    .filter((a) => a.textContent.trim() === 'Редактировать профиль')
+    .map((a) => a.getAttribute('href')),
+  orders: [...document.querySelectorAll('.account-stats__metric')]
+    .find((m) => m.querySelector('.account-stats__name')?.textContent === 'Заказы')
+    ?.querySelector('.account-stats__link')
+    ?.getAttribute('href'),
+  allOrders: /Все заказы/.test(document.querySelector('main').innerText),
+}));
+check(
+  JSON.stringify(overviewLinks.edit) === '["#/account/profile"]' &&
+    overviewLinks.orders === '#/account/orders' &&
+    !overviewLinks.allOrders,
+  `overview: bounded links only ${JSON.stringify(overviewLinks)}`,
+);
+
+await open(page, '/account/orders');
+check(
+  (await page.textContent('main h1')) === 'Мои заказы' && (await activeRail(page)) === 'Мои заказы',
+  'orders: h1 + Мои заказы active',
+);
+check(
+  JSON.stringify(await crumbs(page)) ===
+    JSON.stringify([
+      ['Главная', '#/', null],
+      ['Аккаунт', '#/account', null],
+      ['Мои заказы', null, 'page'],
+    ]),
+  `orders: breadcrumbs ${JSON.stringify(await crumbs(page))}`,
+);
+let ordersView = await ordersChrome(page);
+facts = await pageFacts(page);
+check(
+  ordersView.cards === 0 &&
+    /В этой сессии заказов пока нет/.test(facts.text) &&
+    /Заказы, оформленные в этой сессии браузера/.test(facts.text) &&
+    /не сохраняются после завершения сессии браузера/.test(facts.text) &&
+    (await page.getAttribute('.account-orders-empty__action', 'href')) === '#/catalog/smartphones',
+  'orders: honest empty session state',
+);
+check(
+  !ordersView.filters &&
+    ordersView.pagination === 0 &&
+    !ordersView.pay &&
+    ordersView.orderRows === 0 &&
+    ordersView.disabled === 0,
+  `orders: no filters/pagination/pay/reorder/OrderRow/disabled ${JSON.stringify(ordersView)}`,
+);
+check(
+  facts.mains === 1 && facts.h1.length === 1 && facts.overflow <= 0,
+  'orders: main/h1/overflow',
+);
+await page.screenshot({ path: `${SHOTS}/account-orders-empty-1440.png`, fullPage: true });
+
+await page.evaluate((values) => sessionStorage.setItem(values.ORDER, values.ORDER_VALUE), {
+  ORDER,
+  ORDER_VALUE,
+});
+await page.reload();
+await page.waitForSelector('.account-session-order');
+let card = await sessionCard(page);
+ordersView = await ordersChrome(page);
+check(ordersView.cards === 1, 'orders: exactly one session-order card');
+check(
+  card.number === `Демо-заказ №${ORDER_NUMBER}` &&
+    card.status === 'Оформлен' &&
+    /7 октября 2026/.test(card.date) &&
+    card.count === '2 товара на сумму' &&
+    card.total === ORDER_TOTAL_TEXT &&
+    card.image,
+  `orders: number/date/count/total ${JSON.stringify(card)}`,
+);
+check(
+  card.facts['Способ оплаты'] === paymentLabel('cash') &&
+    card.facts['Способ получения'] === 'Самовывоз' &&
+    card.facts['Адрес'] === `${PICKUP_STORE.name}, ${PICKUP_STORE.address}`,
+  `orders: pickup payment/fulfilment/address ${JSON.stringify(card.facts)}`,
+);
+check(
+  card.href === '#/order-confirmation' &&
+    card.linkName.startsWith('Подробнее') &&
+    card.linkName.includes(ORDER_NUMBER),
+  `orders: Подробнее → order confirmation with number (${card.linkName})`,
+);
+check(
+  !ordersView.filters && ordersView.pagination === 0 && !ordersView.pay,
+  'orders: populated state still without filters/pagination/pay',
+);
+await page.screenshot({ path: `${SHOTS}/account-orders-populated-1440.png`, fullPage: true });
+await page.evaluate((values) => sessionStorage.setItem(values.ORDER, values.COURIER_ORDER_VALUE), {
+  ORDER,
+  COURIER_ORDER_VALUE,
+});
+await page.reload();
+await page.waitForSelector('.account-session-order');
+card = await sessionCard(page);
+check(
+  card.facts['Способ оплаты'] === paymentLabel('card-online') &&
+    card.facts['Способ получения'] === 'Курьером' &&
+    card.facts['Адрес'] === 'Москва, Тверская улица, 7, кв. 12' &&
+    card.count === '1 товар на сумму',
+  `orders: courier mapping ${JSON.stringify(card.facts)}`,
+);
+await page.evaluate((values) => sessionStorage.setItem(values.ORDER, values.ORDER_VALUE), {
+  ORDER,
+  ORDER_VALUE,
+});
+
+await open(page, '/account/profile');
+check(
+  (await page.textContent('main h1')) === 'Профиль' && (await activeRail(page)) === 'Профиль',
+  'profile: h1 + Профиль active',
+);
+check(
+  JSON.stringify((await crumbs(page)).map(([text]) => text)) ===
+    JSON.stringify(['Главная', 'Аккаунт', 'Профиль']),
+  'profile: breadcrumbs',
+);
+const defaults = {
+  first: await fieldState(page, 'Имя'),
+  last: await fieldState(page, 'Фамилия'),
+  email: await fieldState(page, 'E-mail'),
+  phone: await fieldState(page, 'Телефон'),
+  birth: await fieldState(page, 'Дата рождения'),
+  gender: await fieldState(page, 'Пол'),
+};
+check(
+  defaults.first?.value === 'Иван' &&
+    defaults.last?.value === 'Иванов' &&
+    defaults.email?.value === 'demo@goodcall.example' &&
+    defaults.phone?.value === '+7 (900) 000-00-00' &&
+    defaults.birth?.value.includes('12.04.1996') &&
+    defaults.gender?.value === 'Не указан',
+  `profile: persona defaults ${JSON.stringify(defaults)}`,
+);
+facts = await pageFacts(page);
+check(
+  (await page.count('main input[type="file"]')) === 0 &&
+    !/Изменить фото|Загрузить фото/.test(facts.text) &&
+    (await page.count('.account-profile__avatar')) === 1,
+  'profile: decorative avatar only, no upload',
+);
+check(
+  (await page.count('main form[novalidate]')) === 1 &&
+    (await page.getAttribute('.account-profile__submit', 'type')) === 'submit' &&
+    (await profileStatus(page)) === '' &&
+    (await page.getAttribute('.account-profile__status', 'role')) === 'status',
+  'profile: noValidate form, submit button, empty polite status',
+);
+check(
+  facts.mains === 1 && facts.h1.length === 1 && facts.overflow <= 0,
+  'profile: main/h1/overflow',
+);
+await page.evaluate(() => window.scrollTo(0, 0));
+await page.screenshot({ path: `${SHOTS}/account-profile-default-1440.png`, fullPage: true });
+
+await setField(page, 'Имя', '   ');
+await setField(page, 'Фамилия', '');
+await setField(page, 'E-mail', 'not-an-email');
+await setField(page, 'Телефон', '+7 (900');
+await submitProfile(page);
+const invalid = {
+  first: await fieldState(page, 'Имя'),
+  last: await fieldState(page, 'Фамилия'),
+  email: await fieldState(page, 'E-mail'),
+  phone: await fieldState(page, 'Телефон'),
+};
+check(
+  invalid.first.invalid === 'true' && invalid.first.described.includes('Укажите имя'),
+  `validation: required first name ${JSON.stringify(invalid.first)}`,
+);
+check(
+  invalid.last.invalid === 'true' && invalid.last.described.includes('Укажите фамилию'),
+  'validation: required last name',
+);
+check(
+  invalid.email.invalid === 'true' &&
+    invalid.email.described.includes('Проверьте e-mail: например, name@example.ru'),
+  'validation: invalid e-mail',
+);
+check(
+  invalid.phone.invalid === 'true' && invalid.phone.described.includes('Введите номер полностью'),
+  `validation: incomplete phone ${JSON.stringify(invalid.phone)}`,
+);
+check(
+  (await page.evaluate(() => document.activeElement?.id)) === invalid.first.id &&
+    (await profileStatus(page)) === '' &&
+    JSON.parse((await storage(page)).account).profile === undefined,
+  'validation: first invalid field focused, nothing saved',
+);
+await page.evaluate(() => window.scrollTo(0, 0));
+await page.screenshot({ path: `${SHOTS}/account-profile-invalid-1440.png`, fullPage: true });
+
+await setField(page, 'Имя', '  Анна   Мария ');
+check((await fieldState(page, 'Имя')).invalid === null, 'validation: editing clears that error');
+await setField(page, 'Фамилия', 'Смирнова');
+await setField(page, 'E-mail', ' anna@goodcall.example ');
+await setField(page, 'Телефон', '+7 (911) 222-33-44');
+await chooseGender(page, 'Женский');
+await submitProfile(page);
+const savedStore = JSON.parse((await storage(page)).account ?? 'null');
+check(
+  (await profileStatus(page)) === 'Изменения сохранены в этом браузере' &&
+    (await page.evaluate(() => document.activeElement?.textContent.trim())) ===
+      'Сохранить изменения',
+  'save: status shown, focus stays on submit',
+);
+check(
+  JSON.stringify(savedStore) ===
+    JSON.stringify({
+      version: 1,
+      signedIn: true,
+      profile: {
+        firstName: 'Анна Мария',
+        lastName: 'Смирнова',
+        email: 'anna@goodcall.example',
+        phone: '+7 (911) 222-33-44',
+        birthDate: '1996-04-12',
+        gender: 'female',
+      },
+    }),
+  `save: normalized profile stored in goodcall.account.v1 ${JSON.stringify(savedStore)}`,
+);
+check(
+  (await fieldState(page, 'Имя')).value === 'Анна Мария' &&
+    (await page.textContent('.account-profile__name')).trim() === 'Анна Мария Смирнова',
+  'save: form re-baselined, identity block updated',
+);
+await page.evaluate(() => window.scrollTo(0, 0));
+await page.screenshot({ path: `${SHOTS}/account-profile-saved-1440.png`, fullPage: true });
+await setField(page, 'Фамилия', 'Смирнова-Петрова');
+check((await profileStatus(page)) === '', 'save: status clears on next edit');
+await page.reload();
+await page.waitForSelector('.account-profile__form');
+check(
+  (await fieldState(page, 'Фамилия')).value === 'Смирнова' &&
+    (await fieldState(page, 'Пол')).value === 'Женский',
+  'save: reload restores the saved profile, unsaved draft discarded',
+);
+
+await open(page, '/account');
+const integrated = await overview();
+check(
+  integrated.greeting === 'Здравствуйте, Анна Мария!' &&
+    JSON.stringify(integrated.details) ===
+      JSON.stringify([
+        ['Имя', 'Анна Мария Смирнова'],
+        ['Телефон', '+7 (911) 222-33-44'],
+        ['E-mail', 'anna@goodcall.example'],
+        ['Дата рождения', '12.04.1996'],
+      ]),
+  `overview: reflects saved profile ${JSON.stringify(integrated)}`,
+);
+await page.screenshot({ path: `${SHOTS}/account-overview-integrated-1440.png`, fullPage: true });
+
+for (const profile of [
+  { ...PROFILE_BASE, email: 'broken' },
+  { ...PROFILE_BASE, birthDate: '2999-01-01' },
+  { ...PROFILE_BASE, gender: 'robot' },
+  'not-an-object',
+]) {
+  await page.evaluate(
+    (value) =>
+      localStorage.setItem(
+        'goodcall.account.v1',
+        JSON.stringify({ version: 1, signedIn: true, profile: value }),
+      ),
+    profile,
+  );
+  await fresh(page, '/account');
+  await page.waitForSelector('.account-greeting');
+  check(
+    (await hash(page)) === '#/account' &&
+      (await storage(page)).account === '{"version":1,"signedIn":true}' &&
+      (await overview()).greeting === 'Здравствуйте, Иван!',
+    `store: invalid profile ${JSON.stringify(profile).slice(0, 40)} dropped, still signed in`,
+  );
+}
+
+await open(page, '/account/profile');
+await setField(page, 'Имя', 'Анна');
+await submitProfile(page);
+await page.evaluate(
+  (values) => {
+    localStorage.setItem(values.CART, values.CART_VALUE);
+    localStorage.setItem(values.FAVORITES, values.FAVORITES_VALUE);
+    localStorage.setItem(values.COMPARE, values.COMPARE_VALUE);
+    localStorage.setItem(values.CITY, values.CITY_VALUE);
+    sessionStorage.setItem(values.ORDER, values.ORDER_VALUE);
+  },
+  {
+    CART,
+    CART_VALUE,
+    FAVORITES,
+    FAVORITES_VALUE,
+    COMPARE,
+    COMPARE_VALUE,
+    CITY,
+    CITY_VALUE,
+    ORDER,
+    ORDER_VALUE,
+  },
+);
+const beforeReset = await storage(page);
+check(
+  JSON.parse(beforeReset.account).profile?.firstName === 'Анна',
+  'logout precondition: edited profile stored',
+);
+await logoutFromRail(page);
+const afterReset = await storage(page);
+check(
+  afterReset.account === null &&
+    afterReset.cart === beforeReset.cart &&
+    afterReset.favorites === beforeReset.favorites &&
+    afterReset.compare === beforeReset.compare &&
+    afterReset.city === beforeReset.city &&
+    afterReset.order === beforeReset.order,
+  'logout: profile edits reset, cart/favourites/compare/city/session order byte-identical',
+);
+await enterDemo(page);
+await page.waitForFunction(() => location.hash === '#/account');
+await page.waitForSelector('.account-greeting');
+check(
+  (await overview()).greeting === 'Здравствуйте, Иван!',
+  'logout: re-entry starts from persona defaults',
+);
+await open(page, '/account/profile');
+check(
+  (await fieldState(page, 'Имя')).value === 'Иван' &&
+    (await fieldState(page, 'Пол')).value === 'Не указан',
+  'logout: profile form back to defaults',
+);
+
 await page.goto(`${BASE}?reference=header`);
 await page.waitForSelector('.site-header');
 const referenceShell = await shellAccount(page);
@@ -606,13 +1148,13 @@ for (const [width, height, label] of [
       }),
     );
     check(
-      rail.length === 4 && rail.every((r) => r.visible && !r.clipped && r.height >= 40),
+      rail.length === 5 && rail.every((r) => r.visible && !r.clipped && r.height >= 40),
       `mobile: rail actions reachable, unclipped ${JSON.stringify(rail)}`,
     );
     await p.screenshot({ path: `${SHOTS}/account-empty-390.png`, fullPage: true });
     await p.focus('#account-title');
     const tabStops = [];
-    for (let index = 0; index < 4; index += 1) {
+    for (let index = 0; index < 5; index += 1) {
       await p.keyboard.press('Tab');
       tabStops.push(
         await p.evaluate(() => {
@@ -626,7 +1168,8 @@ for (const [width, height, label] of [
       );
     }
     check(
-      tabStops.map((stop) => stop.text).join('|') === 'Профиль|Избранное|Сравнение|Выход' &&
+      tabStops.map((stop) => stop.text).join('|') ===
+        'Профиль|Мои заказы|Избранное|Сравнение|Выход' &&
         tabStops.every((stop) => stop.row && stop.outline !== 'none'),
       `mobile: rail rows reachable by Tab with visible focus ${JSON.stringify(tabStops)}`,
     );
@@ -640,9 +1183,78 @@ for (const [width, height, label] of [
     check(pf.overflow <= 0, 'mobile 390: populated overview no overflow');
     await p.screenshot({ path: `${SHOTS}/account-populated-390.png`, fullPage: true });
   }
+  for (const path of ['/account/orders', '/account/profile']) {
+    await open(p, path);
+    const sectionGeometry = await shellGeometry(p);
+    const sectionFacts = await pageFacts(p);
+    check(
+      sectionFacts.overflow <= 0 &&
+        !sectionGeometry.headerOverlap &&
+        !sectionGeometry.mobileOverlap &&
+        !sectionGeometry.clipped &&
+        !sectionGeometry.offscreen,
+      `${label} ${width}: ${path} no overflow / shell collision`,
+    );
+  }
   await p.screenshot({ path: `${SHOTS}/shell-signed-in-${width}.png` });
   await p.close();
 }
+
+const mobile = await newPage(390, 844);
+await mobile.goto(`${BASE}#/`);
+await mobile.waitForSelector('main');
+await mobile.evaluate(() => {
+  localStorage.clear();
+  sessionStorage.clear();
+});
+await fresh(mobile, '/account/orders');
+await mobile.waitForFunction(() => location.hash === '#/login');
+await enterDemo(mobile);
+await mobile.waitForFunction(() => location.hash === '#/account/orders');
+await mobile.waitForSelector('.account-orders-empty');
+const mobileShots = [];
+const mobileShot = async (name) => {
+  const mf = await pageFacts(mobile);
+  mobileShots.push([name, mf.overflow]);
+  await mobile.evaluate(() => window.scrollTo(0, 0));
+  await mobile.screenshot({ path: `${SHOTS}/${name}.png`, fullPage: true });
+};
+await mobileShot('account-orders-empty-390');
+await mobile.evaluate((values) => sessionStorage.setItem(values.ORDER, values.ORDER_VALUE), {
+  ORDER,
+  ORDER_VALUE,
+});
+await mobile.reload();
+await mobile.waitForSelector('.account-session-order');
+const mobileCard = await mobile.evaluate(() => {
+  const vw = document.documentElement.clientWidth;
+  return [...document.querySelectorAll('.account-session-order *')].every((el) => {
+    const r = el.getBoundingClientRect();
+    return r.width === 0 || r.right <= vw + 1;
+  });
+});
+await mobileShot('account-orders-populated-390');
+await open(mobile, '/account/profile');
+await mobileShot('account-profile-default-390');
+await setField(mobile, 'E-mail', 'broken');
+await setField(mobile, 'Телефон', '+7 (9');
+await submitProfile(mobile);
+await mobileShot('account-profile-invalid-390');
+await setField(mobile, 'E-mail', 'anna@goodcall.example');
+await setField(mobile, 'Телефон', '+7 (911) 222-33-44');
+await setField(mobile, 'Имя', 'Анна');
+await submitProfile(mobile);
+const mobileSaved = await profileStatus(mobile);
+await mobileShot('account-profile-saved-390');
+await open(mobile, '/account');
+await mobileShot('account-overview-integrated-390');
+check(
+  mobileShots.every(([, overflow]) => overflow <= 0) &&
+    mobileCard &&
+    mobileSaved === 'Изменения сохранены в этом браузере',
+  `mobile 390: Account B states without overflow ${JSON.stringify(mobileShots)}`,
+);
+await mobile.close();
 
 await browser.close();
 reportCounts(passed, failures);

@@ -144,12 +144,15 @@ Technically complete:
   owned by React Router using a GitHub Pages-safe hash strategy. See the
   Current routes section below.
 
-Active visual slice: none. Active implementation milestone: none. Account A is
-closed; Account B is only a future bounded candidate (see Project closeout
-state below).
+Active visual slice: none. Active implementation milestone: none. Account A
+and Account B are closed; Account C is only a future bounded candidate (see
+Project closeout state below).
 
 Completed visual slices:
 
+- **Account B / Orders and Profile Edit — USER VISUAL/UX PASS on 2026-10-08,
+  CLOSED and published.** Session-only `#/account/orders` and local demo
+  profile editing on `#/account/profile`. See the Account B section below.
 - **Account A / Demo Entry, Account Shell and Profile Overview — USER
   VISUAL/UX PASS on 2026-10-07, CLOSED and published.** A truthful demo/local
   account: `#/login` and `#/account`. See the Account A section below.
@@ -209,6 +212,52 @@ on 2026-09-30, CLOSED and published.** See the Checkout A section below. Search 
 Blog B, Blog A, Home A, Cart A, Cart B, Search A, Search B, 404 A and the
 Product Details production integration are closed.
 
+### Account B — Orders and Profile Edit
+
+**Status: USER VISUAL/UX PASS on 2026-10-08 — CLOSED and published.** The user
+explicitly granted USER VISUAL/UX PASS for Account B after review. Orders
+empty/populated, profile default/invalid/saved and the integrated overview at
+1440/390, the compact shell at 1024 and the Account A regression states are
+agent-verified (`account` suite and screenshots). Evidence:
+`Account_profile_orders.png` and `Account_profile_edit.png` main columns only;
+the Account A shell and rail stay canonical.
+
+- **Boundary.** Still Option B — demo/local-only. No real auth, passwords,
+  registration, Supabase Auth, remote profile/order writes or sync.
+- **Routes.** `#/account/orders` and `#/account/profile`; other
+  `#/account/...` paths reach the designed 404. Signed-out Account deep links
+  redirect to `#/login` with router state `{ accountReturn }` and return there
+  after demo entry; only `/account`, `/account/orders` and `/account/profile`
+  are allowed, anything else falls back to `/account`. No query-param return,
+  `replace` redirects, one-time state cleared from history.
+- **Orders.** `readDemoOrder()` only: 0 or 1 current-session order in a
+  page-owned card (thumbnail, «Демо-заказ №…», «Оформлен», date, count/total,
+  payment, «Курьером»/«Самовывоз», address or store) with «Подробнее» →
+  `#/order-confirmation`, or «В этой сессии заказов пока нет». No history,
+  filters, pagination, pay, reorder, tracking or `#/account/orders/:id`.
+  `OrderRow` stays reference-only and unchanged.
+- **Profile.** Local demo edit of Имя, Фамилия, E-mail, Телефон, Дата рождения
+  (ISO, ≥ 1900-01-01, ≤ today) and optional Пол (Не указан / Мужской / Женский),
+  with the Checkout name/e-mail/phone rules duplicated in
+  `commerce/account/accountProfile.ts`. Inline errors focus the first invalid
+  field; save stays on the page and announces «Изменения сохранены в этом
+  браузере». No avatar upload, no unsaved-changes guard.
+- **State.** `goodcall.account.v1` stays version 1 with an optional complete
+  validated `profile`; defaults come from the persona fixture (now ISO
+  `birthDate` and `gender: unspecified`). An invalid profile is dropped and the
+  key rewritten to `{"version":1,"signedIn":true}` without signing out. Logout
+  removes the key (resetting edits); cart, favourites, compare, city and the
+  session order are preserved.
+- **Overview and rail.** The greeting and «Личные данные» read the current
+  profile (birth date shown `dd.mm.yyyy`); «Редактировать профиль» →
+  `#/account/profile`; the Заказы tile links «Подробнее» → `#/account/orders`.
+  Rail: Профиль / Мои заказы / Избранное / Сравнение / Выход; Профиль is active
+  on `/account` and `/account/profile`, Мои заказы on `/account/orders`.
+  `AccountLayout` in `pages/account/AccountParts.tsx` is the shared page chrome.
+- Known limitation: the accepted `DateField` calendar steps month by month, so
+  changing the birth year takes many clicks (a Components follow-up, not
+  Account scope).
+
 ### Account A — Demo Entry, Account Shell and Profile Overview
 
 **Status: USER VISUAL/UX PASS on 2026-10-07 — CLOSED and published.** The user
@@ -238,7 +287,8 @@ other Account rasters are a divergent older shell and are not shell evidence.
   `#/compare`) and Заказы 0/1 from the current session demo order only;
   read-only «Личные данные»; «Последние заказы» shows the session order
   («Подробнее» → `#/order-confirmation`) or «В этой сессии заказов пока нет».
-  Rail: Профиль / Избранное / Сравнение / Выход, no future rows. Bonuses,
+  Rail (Account A): Профиль / Избранное / Сравнение / Выход — extended by
+  Account B. Bonuses,
   addresses, recently viewed, profile edit and settings are omitted, not
   placeheld. Below 1024px the rail stacks above the content.
 - **Shell.** `shellActions` gained `accountLabel` (default «Войти»):
@@ -4671,14 +4721,16 @@ router owns only the fragment. The base path still lives solely in
 - `#/login` — the demo-account entry (Account A, closed); signed-in visitors
   are redirected to `#/account`.
 - `#/account` — the demo account overview (Account A, closed); signed-out
-  visitors are redirected to `#/login`. There are no `#/account/:section`
-  routes.
+  visitors are redirected to `#/login`.
+- `#/account/orders` and `#/account/profile` — session-order list and local
+  profile edit (Account B, closed); signed-out visitors go to `#/login` and
+  return after demo entry. There is no `#/account/:section` catch-all.
 - `*` — the designed 404 (`NotFoundRoute`, 404 A, closed).
   It is not a global error architecture.
 
 Route paths live in `src/app/routePaths.ts` as `HOME_PATH`,
 `CATALOG_SMARTPHONES_PATH`, `PRODUCT_PATH`, `CART_PATH`, `CHECKOUT_PATH`, `ORDER_CONFIRMATION_PATH`, `FAVORITES_PATH`, `COMPARE_PATH`, `SHOPS_PATH`, `DELIVERY_PATH`, `WARRANTY_PATH`, `FAQ_PATH`,
-`CONTACTS_PATH`, `ABOUT_PATH`, `PRIVACY_PATH`, `TERMS_PATH`, `OFFER_PATH`, `SEARCH_PATH`, `BLOG_PATH`, `BLOG_ARTICLE_PATH`, `LOGIN_PATH` and `ACCOUNT_PATH`.
+`CONTACTS_PATH`, `ABOUT_PATH`, `PRIVACY_PATH`, `TERMS_PATH`, `OFFER_PATH`, `SEARCH_PATH`, `BLOG_PATH`, `BLOG_ARTICLE_PATH`, `LOGIN_PATH`, `ACCOUNT_PATH`, `ACCOUNT_ORDERS_PATH` and `ACCOUNT_PROFILE_PATH`.
 `hashHref()`, `productDetailsHref()`, `searchPath()`, `blogPath()`,
 `blogArticlePath()` and `blogArticleHref()` serve the `href` and navigation
 seams.
@@ -4695,14 +4747,14 @@ them, statically as before. Module boundaries and public APIs are described in
 `AGENTS.md` (Module boundaries) and enforced by `no-restricted-imports` in
 `eslint.config.js`.
 
-`src/app/ProductionRouter.tsx` holds the `HashRouter`, twenty-two routes and the 404 catch-all; it
+`src/app/ProductionRouter.tsx` holds the `HashRouter`, twenty-four routes and the 404 catch-all; it
 has no local fallback component or stylesheet any more.
 `src/app/routes/HomeRoute.tsx`, `src/app/routes/CatalogRoute.tsx`,
 `src/app/routes/ProductDetailsRoute.tsx`, `src/app/routes/CartRoute.tsx`,
 `src/app/routes/SearchRoute.tsx`, `src/app/routes/BlogRoute.tsx`,
 `src/app/routes/BlogArticleRoute.tsx`, `src/app/routes/AccountRoutes.tsx`
-(`LoginRoute`, `AccountRoute`) and `src/app/routes/NotFoundRoute.tsx` are the
-page seams.
+(`LoginRoute`, `AccountRoute`, `AccountOrdersRoute`, `AccountProfileRoute`) and
+`src/app/routes/NotFoundRoute.tsx` are the page seams.
 `src/app/useSearchNavigation.ts` turns a submitted query into `#/search?q=…`;
 `ProductionShell` uses it for the Header search and `NotFoundRoute` for the 404
 hero search. `src/pages/not-found/` owns the router-free `NotFoundPage`.
@@ -5024,14 +5076,12 @@ none of them blocks the closed milestone.
 
 ## Project closeout state
 
-Account A is the last published milestone. **Active visual slice: none.
+Account B is the last published milestone. **Active visual slice: none.
 Active implementation milestone: none.** No active code-level release blocker
 is known.
 
 **Future bounded Account work (not started):**
 
-- Account B — Orders and Profile Edit (session order section, local profile
-  edits).
 - Account C — Delivery Addresses (local demo addresses, no Checkout coupling).
 
 Settings, Bonuses, Notifications, recently viewed and a real authenticated
