@@ -2473,14 +2473,16 @@ direction. Gallery, description and warranty media use the existing `Picture` /
 `vite-imagetools` contract; review avatars use direct local WebP imports.
 `npm run media:product-details` regenerates the derived files deterministically.
 
-**Deferred.**
+**Deferred at this milestone (historical; partly delivered later).**
 
-- Supabase image and review reads, and product pages beyond the one specimen.
-- The skeleton/loading-state system, a later cross-page system milestone.
-- Variant pricing, cart, favourites and comparison.
-- A reviews backend, a payment provider (the displayed method set must be
-  reconciled with it), and a delivery estimator.
-- Licensed real product imagery and remote `product_images`.
+- Delivered later: product pages for every active product (Product Details
+  Production Integration A/B); PDP cart and favourites (Commerce A, Favourites
+  A); comparison from Catalog and the PDP «Другие смартфоны» cards
+  (Comparison A, Product Details C).
+- Still unscoped: Supabase image and review reads; the skeleton/loading-state
+  system; variant pricing; Compare on the main PDP surface; a reviews backend,
+  a payment provider and a delivery estimator; licensed real product imagery
+  and remote `product_images`.
 
 The Home latest-article cover visual debt is unrelated and untouched.
 
@@ -2493,15 +2495,19 @@ PASS covers:
 - the loading, not-found and error route surfaces;
 - the live specimen route.
 
-Do not broaden the supported-slug set without a product content contract.
+**Superseded by Product Details Production Integration B.** This section records
+the narrower specimen gate Integration A originally shipped; it is not current
+behaviour. Production now gates `#/product/:slug` and `productDetailsHref()` on
+`hasProductDetailsContent(slug)` — the local content registry covering all 18
+active products.
 
 **Route.**
 
 - `routePaths.ts` (then `routes.ts`) owns:
   - `PRODUCT_PATH` (`/product/:slug`);
   - `productPath(slug)` (URI-encoded);
-  - `productDetailsHref(slug)`, which returns a hash href only for specimen
-    slugs.
+  - `productDetailsHref(slug)`, which then returned a hash href only for
+    specimen slugs.
 - The URL shape is `#/product/iphone-15-128`.
 - `src/app/routes/ProductDetailsRoute.tsx` renders inside `ProductionShell` and owns
   the route states. `ProductDetailsRoute.scss` sits beside it.
@@ -2515,13 +2521,12 @@ Do not broaden the supported-slug set without a product content contract.
 It returns `ready`, `not-found`, `failure` or `unavailable`. A non-finite price
 or review count, or a null rating, is a `failure`.
 
-**Specimen gate.** `isProductDetailsSpecimenSlug` in `productDetailsFixtures.ts`
-accepts only `iphone-15-128`. It is checked before any request, so every other
-slug renders not-found with no backend read.
-
-`productDetailsSpecimenFromLive` overlays the backend fields on the specimen.
-It fails closed to not-found unless the backend name ends with `, Розовый`, in
-which case the base title comes from the backend name.
+**Specimen gate (original, since removed).** `isProductDetailsSpecimenSlug` in
+`productDetailsFixtures.ts` accepted only `iphone-15-128` and was checked before
+any request, so every other slug rendered not-found with no backend read.
+`productDetailsSpecimenFromLive` overlaid the backend fields on the specimen and
+failed closed unless the backend name ended with `, Розовый`. Neither symbol
+exists any more.
 
 **Backend-owned fields:**
 
@@ -2599,21 +2604,15 @@ local `AUDIT.md`):
 - The specimen's specifications, description, highlights, colours, memory
   options, galleries, reviews and SKU are iPhone-specific.
 
-**Still deferred.** Deferred until a second product needs a page:
+**Deferred at this milestone (historical; partly delivered later).**
 
-- a product content contract (description, highlights, specifications);
-- variants (colour and memory options, per-variant price, SKU and media);
-- stock and delivery;
-- review bodies;
-- `product_images` in `ProductGallery`, which accepts only build-time
-  `PictureSource` objects and has no empty-images branch.
-
-Also deferred:
-
-- the skeleton system;
-- scroll restoration when traversing into the async route (see Route scroll);
-- the Home `-12%` iPhone badge, which is local and disagrees with the derived
-  `-6%`.
+- Delivered later: the product content contract and pages for every active
+  product (Integration B); the Home iPhone badge now derives `-6%` from live
+  prices (Closeout Polish A).
+- Still unscoped: interactive variants (per-variant price, SKU and media), stock
+  and delivery, review bodies, and `product_images` in `ProductGallery`. The
+  skeleton system and Back/Forward scroll restoration remain deferred (see
+  Project closeout state).
 
 ### Catalog A — Page Foundation & Layout
 
@@ -3624,9 +3623,8 @@ Components F — Utility & Feedback received user visual PASS on 2026-08-24 and 
 closed.
 
 Foundations and Components A, B, C, D, E and F are closed. Overall Components is
-closed. Every raster Components section except 01 is implemented. Section 01
-Header & Navigation remains deferred until future Global Shell work creates the
-real shell consumer and is not an open Components-slice blocker.
+closed. Every raster Components section is implemented; Section 01 Header &
+Navigation is implemented by Global Shell B / SiteHeader + MobileActionBar.
 
 The section-03 narrow reference-composition overflow is corrected. The root cause
 was the reference-only fixed 360px minimum on `.cmp-fields`; reusable Inputs &
