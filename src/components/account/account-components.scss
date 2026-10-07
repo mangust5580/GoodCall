@@ -141,6 +141,11 @@
     color: var(--role-text-muted);
   }
 
+  &__glyph {
+    display: inline-flex;
+    flex: none;
+  }
+
   &__icon {
     color: var(--role-text-link);
   }
@@ -169,6 +174,66 @@
   &__delta {
     font-size: 13px;
     font-weight: 600;
+    color: var(--role-text-link);
+  }
+
+  &__extra {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 12px;
+    align-items: baseline;
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.4;
+  }
+
+  &__note {
+    color: var(--role-text-muted);
+  }
+
+  &__link {
+    font-weight: 600;
+    color: var(--role-text-link);
+    text-decoration-line: none;
+
+    @include controls.control-focus;
+
+    &:hover {
+      color: var(--role-text-link-hover);
+      text-decoration-line: underline;
+    }
+  }
+
+  &--tiles {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--account-card-gap);
+    padding: 0;
+    background-color: transparent;
+    border: 0;
+  }
+
+  &--tiles &__metric {
+    gap: 6px;
+    padding: var(--account-card-padding);
+
+    @include account-surface;
+
+    &:first-child {
+      border-top: var(--control-border-width) solid var(--role-border-default);
+    }
+  }
+
+  &--tiles &__glyph {
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    background-color: var(--role-surface-hero);
+    border-radius: 12px;
+  }
+
+  &--tiles &__value {
     color: var(--role-text-link);
   }
 }

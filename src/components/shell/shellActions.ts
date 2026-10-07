@@ -13,6 +13,7 @@ export interface ShellActionInput {
   readonly favoritesHref?: string;
   readonly cartHref?: string;
   readonly accountHref?: string;
+  readonly accountLabel?: string;
   readonly comparisonCount?: number;
   readonly favoritesCount?: number;
   readonly cartCount?: number;
@@ -24,6 +25,7 @@ export function shellActions({
   favoritesHref,
   cartHref,
   accountHref,
+  accountLabel = 'Войти',
   comparisonCount,
   favoritesCount,
   cartCount,
@@ -42,7 +44,7 @@ export function shellActions({
       count: favoritesCount,
     },
     { label: 'Корзина', icon: 'cart', href: cartHref ?? fallbackHref, count: cartCount },
-    { label: 'Войти', icon: 'person', href: accountHref ?? fallbackHref },
+    { label: accountLabel, icon: 'person', href: accountHref ?? fallbackHref },
   ];
 }
 

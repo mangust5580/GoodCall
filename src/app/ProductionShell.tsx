@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 
+import { useAccountSignedIn } from '../commerce/account';
 import { useCartUnitCount } from '../commerce/cart';
 import { useCompareCount } from '../commerce/compare';
 import { useFavoritesCount } from '../commerce/favorites';
@@ -7,6 +8,7 @@ import { STOREFRONT_PAYMENT_MARKS, STOREFRONT_SUPPORT } from '../commerce/storef
 import { MobileActionBar, NewsletterBand, SiteFooter, SiteHeader } from '../components/shell';
 import {
   ABOUT_PATH,
+  ACCOUNT_PATH,
   CART_PATH,
   CATALOG_SMARTPHONES_PATH,
   COMPARE_PATH,
@@ -15,6 +17,7 @@ import {
   FAQ_PATH,
   FAVORITES_PATH,
   HOME_PATH,
+  LOGIN_PATH,
   OFFER_PATH,
   PRIVACY_PATH,
   SHOPS_PATH,
@@ -66,10 +69,15 @@ export function ProductionShell({ children }: ProductionShellProps) {
   const cart = hashHref(CART_PATH);
   const favorites = hashHref(FAVORITES_PATH);
   const comparison = hashHref(COMPARE_PATH);
+  const signedIn = useAccountSignedIn();
+  const account = hashHref(signedIn ? ACCOUNT_PATH : LOGIN_PATH);
+  const accountLabel = signedIn ? 'Профиль' : 'Войти';
 
   return (
     <div className="production-shell">
       <SiteHeader
+        accountHref={account}
+        accountLabel={accountLabel}
         cartCount={cartCount}
         cartHref={cart}
         comparisonCount={comparisonCount}
@@ -96,6 +104,8 @@ export function ProductionShell({ children }: ProductionShellProps) {
         supportLabel={SUPPORT_LABEL}
       />
       <MobileActionBar
+        accountHref={account}
+        accountLabel={accountLabel}
         cartCount={cartCount}
         cartHref={cart}
         comparisonCount={comparisonCount}

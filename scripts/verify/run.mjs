@@ -25,6 +25,7 @@ const SUITES = [
   { name: 'form-unconfigured', needs: ['app'] },
   { name: 'info', needs: ['app'] },
   { name: 'contacts', needs: ['app'] },
+  { name: 'account', needs: ['app'] },
 ];
 
 const KNOWN_DRIFT = {

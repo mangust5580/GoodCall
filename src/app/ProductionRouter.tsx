@@ -3,6 +3,7 @@ import { HashRouter, Route, Routes } from 'react-router-dom';
 import { RouteScrollReset } from './RouteScrollReset';
 import {
   ABOUT_PATH,
+  ACCOUNT_PATH,
   BLOG_ARTICLE_PATH,
   BLOG_PATH,
   CART_PATH,
@@ -14,6 +15,7 @@ import {
   FAQ_PATH,
   FAVORITES_PATH,
   HOME_PATH,
+  LOGIN_PATH,
   OFFER_PATH,
   ORDER_CONFIRMATION_PATH,
   PRIVACY_PATH,
@@ -23,6 +25,7 @@ import {
   TERMS_PATH,
   WARRANTY_PATH,
 } from './routePaths';
+import { AccountRoute, LoginRoute } from './routes/AccountRoutes';
 import { BlogArticleRoute } from './routes/BlogArticleRoute';
 import { BlogRoute } from './routes/BlogRoute';
 import { CartRoute } from './routes/CartRoute';
@@ -72,6 +75,8 @@ export function ProductionRouter() {
         <Route element={<OfferRoute />} path={OFFER_PATH} />
         <Route element={<BlogRoute />} path={BLOG_PATH} />
         <Route element={<BlogArticleRoute />} path={BLOG_ARTICLE_PATH} />
+        <Route element={<LoginRoute />} path={LOGIN_PATH} />
+        <Route element={<AccountRoute />} path={ACCOUNT_PATH} />
         <Route element={<NotFoundRoute />} path="*" />
       </Routes>
     </HashRouter>

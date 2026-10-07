@@ -144,11 +144,15 @@ Technically complete:
   owned by React Router using a GitHub Pages-safe hash strategy. See the
   Current routes section below.
 
-Active visual slice: none. Active implementation milestone: none. The project
-is at integrated closeout state (see Project closeout state below).
+Active visual slice: none. Active implementation milestone: none. Account A is
+closed; Account B is only a future bounded candidate (see Project closeout
+state below).
 
 Completed visual slices:
 
+- **Account A / Demo Entry, Account Shell and Profile Overview — USER
+  VISUAL/UX PASS on 2026-10-07, CLOSED and published.** A truthful demo/local
+  account: `#/login` and `#/account`. See the Account A section below.
 - **Closeout Polish A — USER VISUAL/UX PASS — CLOSED and published.**
   Storefront truthfulness and copy cleanup on Home, Catalog, Search and PDP.
   See the Closeout Polish A section below.
@@ -204,6 +208,47 @@ section below. **Checkout A / Checkout Page Foundation — USER VISUAL/UX PASS
 on 2026-09-30, CLOSED and published.** See the Checkout A section below. Search C, Favourites A, Commerce B, Commerce A,
 Blog B, Blog A, Home A, Cart A, Cart B, Search A, Search B, 404 A and the
 Product Details production integration are closed.
+
+### Account A — Demo Entry, Account Shell and Profile Overview
+
+**Status: USER VISUAL/UX PASS on 2026-10-07 — CLOSED and published.** The user
+visually reviewed desktop and mobile (390) `#/login` and `#/account` and
+explicitly granted the pass. Empty/populated overview states, signed-in/out
+shell states and 1440/1024/390 responsive sanity are agent-verified (`account`
+verify suite and screenshots), not separately user-reviewed. Evidence:
+`Login_register.png` and `Account_profile.png` (accepted-shell rasters); the
+other Account rasters are a divergent older shell and are not shell evidence.
+
+- **Product boundary.** Option B — demo/local-only account. No real
+  authentication, password, registration, social login, Supabase Auth, remote
+  profile/order data or remote mutation.
+- **Routes.** `#/login` is a one-click «Войти в демо-аккаунт» entry that keeps
+  the `Login_register` composition with truthful demo copy. `#/account` is the
+  canonical overview. Signed-out `#/account` and signed-in `#/login` redirect
+  with `replace`; `#/account/<anything>` reaches the designed 404. Entry focuses
+  the overview h1; logout focuses the login h1 and announces «Вы вышли из
+  демо-аккаунта» through one-time router state that is cleared from history.
+- **State.** `src/commerce/account/` owns `goodcall.account.v1` in localStorage
+  (`{"version":1,"signedIn":true}`, guarded; invalid state recovers signed-out
+  and is removed). The persona (Иван Иванов, `demo@goodcall.example`,
+  `+7 (900) 000-00-00`) is a code fixture, never stored. Logout removes only the
+  account key; cart, favourites, compare, city and the session order stay.
+- **Overview.** «Демо-профиль» greeting; stat tiles from real local data —
+  Избранное/Сравнение counts from the existing stores (links to `#/favorites` /
+  `#/compare`) and Заказы 0/1 from the current session demo order only;
+  read-only «Личные данные»; «Последние заказы» shows the session order
+  («Подробнее» → `#/order-confirmation`) or «В этой сессии заказов пока нет».
+  Rail: Профиль / Избранное / Сравнение / Выход, no future rows. Bonuses,
+  addresses, recently viewed, profile edit and settings are omitted, not
+  placeheld. Below 1024px the rail stacks above the content.
+- **Shell.** `shellActions` gained `accountLabel` (default «Войти»):
+  production passes «Войти» → `#/login` signed out and «Профиль» → `#/account`
+  signed in, to both SiteHeader and MobileActionBar. Reference surfaces keep
+  «Войти» and the base fallback.
+- **Components.** `AccountNavigation` has its first production consumer.
+  `AccountStats` gained an optional `layout="tiles"`, `note` and `link`; the
+  default list layout stays pixel-identical on `?reference=components`.
+- No dependency, Context, state library or future Account schema.
 
 ### Closeout Polish A
 
@@ -4623,12 +4668,17 @@ router owns only the fragment. The base path still lives solely in
 - `#/blog/:slug` — the Blog article detail (Blog B, closed),
   registered only for `how-to-choose-smartphone-2024`. Every other slug renders
   the designed 404.
+- `#/login` — the demo-account entry (Account A, closed); signed-in visitors
+  are redirected to `#/account`.
+- `#/account` — the demo account overview (Account A, closed); signed-out
+  visitors are redirected to `#/login`. There are no `#/account/:section`
+  routes.
 - `*` — the designed 404 (`NotFoundRoute`, 404 A, closed).
   It is not a global error architecture.
 
 Route paths live in `src/app/routePaths.ts` as `HOME_PATH`,
 `CATALOG_SMARTPHONES_PATH`, `PRODUCT_PATH`, `CART_PATH`, `CHECKOUT_PATH`, `ORDER_CONFIRMATION_PATH`, `FAVORITES_PATH`, `COMPARE_PATH`, `SHOPS_PATH`, `DELIVERY_PATH`, `WARRANTY_PATH`, `FAQ_PATH`,
-`CONTACTS_PATH`, `ABOUT_PATH`, `PRIVACY_PATH`, `TERMS_PATH`, `OFFER_PATH`, `SEARCH_PATH`, `BLOG_PATH` and `BLOG_ARTICLE_PATH`.
+`CONTACTS_PATH`, `ABOUT_PATH`, `PRIVACY_PATH`, `TERMS_PATH`, `OFFER_PATH`, `SEARCH_PATH`, `BLOG_PATH`, `BLOG_ARTICLE_PATH`, `LOGIN_PATH` and `ACCOUNT_PATH`.
 `hashHref()`, `productDetailsHref()`, `searchPath()`, `blogPath()`,
 `blogArticlePath()` and `blogArticleHref()` serve the `href` and navigation
 seams.
@@ -4645,13 +4695,14 @@ them, statically as before. Module boundaries and public APIs are described in
 `AGENTS.md` (Module boundaries) and enforced by `no-restricted-imports` in
 `eslint.config.js`.
 
-`src/app/ProductionRouter.tsx` holds the `HashRouter`, twenty routes and the 404 catch-all; it
+`src/app/ProductionRouter.tsx` holds the `HashRouter`, twenty-two routes and the 404 catch-all; it
 has no local fallback component or stylesheet any more.
 `src/app/routes/HomeRoute.tsx`, `src/app/routes/CatalogRoute.tsx`,
 `src/app/routes/ProductDetailsRoute.tsx`, `src/app/routes/CartRoute.tsx`,
 `src/app/routes/SearchRoute.tsx`, `src/app/routes/BlogRoute.tsx`,
-`src/app/routes/BlogArticleRoute.tsx` and
-`src/app/routes/NotFoundRoute.tsx` are the page seams.
+`src/app/routes/BlogArticleRoute.tsx`, `src/app/routes/AccountRoutes.tsx`
+(`LoginRoute`, `AccountRoute`) and `src/app/routes/NotFoundRoute.tsx` are the
+page seams.
 `src/app/useSearchNavigation.ts` turns a submitted query into `#/search?q=…`;
 `ProductionShell` uses it for the Header search and `NotFoundRoute` for the 404
 hero search. `src/pages/not-found/` owns the router-free `NotFoundPage`.
@@ -4674,8 +4725,9 @@ to `#/compare`).
 
 `src/commerce/` owns cross-route commerce state, contracts and facts, each with
 an `index.ts` public API: `cart/` (`cartStore`, `useCartLines`, `cartPricing`,
-`CartLineMedia`), `favorites/`, `compare/`, `storefront/` (storefront facts)
-and `shops/` (`shopData.ts`, the `DEMO_STORES` dataset). `src/commerce/format.ts`
+`CartLineMedia`), `favorites/`, `compare/`, `account/` (the demo-account
+identity store and persona fixture, Account A), `storefront/` (storefront
+facts) and `shops/` (`shopData.ts`, the `DEMO_STORES` dataset). `src/commerce/format.ts`
 holds the single `formatPrice` (ru-RU, RUB, no fractional digits) used by every
 production price. `storefront/` also owns `STOREFRONT_DELIVERY_SLOTS`, the three
 courier intervals used by Checkout, Order Confirmation and the help pages. Route families under
@@ -4814,9 +4866,10 @@ never jumps into the production router.
   invented to make a breadcrumb clickable.
 - **Header and Footer brand links** now point at `#/`, because Home is real.
   The utility links («Магазины» → `#/shops`, «Поддержка» → `#/contacts`), the
-  Сравнение/Избранное/Корзина actions and the search are wired. `Войти`,
-  `Каталог товаров`, `Ещё` and eight of the nine category links keep the
-  consumer-injected fallback to the app base. The `Смартфоны` category links to
+  Сравнение/Избранное/Корзина actions and the search are wired, and the
+  account action is wired since Account A («Войти» → `#/login`, «Профиль» →
+  `#/account`). `Каталог товаров`, `Ещё` and eight of the nine category links
+  keep the consumer-injected fallback to the app base. The `Смартфоны` category links to
   `#/catalog/smartphones` through the narrow `SiteHeader.smartphonesHref` seam
   (production only); `Каталог товаров` is deliberately not pointed at the
   smartphones-only route. No unavailable
@@ -4971,9 +5024,18 @@ none of them blocks the closed milestone.
 
 ## Project closeout state
 
-Closeout Polish A is the last published milestone. **Active visual slice: none.
-Active implementation milestone: none.** The project is at integrated closeout
-state. No active code-level release blocker is known after Closeout Polish A.
+Account A is the last published milestone. **Active visual slice: none.
+Active implementation milestone: none.** No active code-level release blocker
+is known.
+
+**Future bounded Account work (not started):**
+
+- Account B — Orders and Profile Edit (session order section, local profile
+  edits).
+- Account C — Delivery Addresses (local demo addresses, no Checkout coupling).
+
+Settings, Bonuses, Notifications, recently viewed and a real authenticated
+account are intentionally omitted until a new product decision.
 
 **Defer with reason:**
 
@@ -4993,14 +5055,14 @@ state. No active code-level release blocker is known after Closeout Polish A.
 
 **Blocked by product decision:**
 
-- Account/Login identity model.
 - Catalog landing page.
 - Additional categories and category-specific facets.
-- Header unresolved fallback destinations (`Войти`, `Каталог товаров`, `Ещё`
-  and the unresolved category links).
+- Header unresolved fallback destinations (`Каталог товаров`, `Ещё` and the
+  unresolved category links).
 - `Серия` / `Диагональ` filter copy (see Active open questions).
-- Unscoped product areas — real orders/payment, Customer Account, store
-  map/stock, backend cart, promo engine — each needs its own explicit scope.
+- Unscoped product areas — real orders/payment, a real authenticated Customer
+  Account, store map/stock, backend cart, promo engine — each needs its own
+  explicit scope.
 
 **Accepted as-is:**
 

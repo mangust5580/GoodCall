@@ -22,6 +22,8 @@ export const SEARCH_PATH = '/search';
 export const SEARCH_QUERY_PARAM = 'q';
 export const BLOG_PATH = '/blog';
 export const BLOG_ARTICLE_PATH = '/blog/:slug';
+export const LOGIN_PATH = '/login';
+export const ACCOUNT_PATH = '/account';
 
 export function searchPath(query: string): string {
   return `${SEARCH_PATH}?${new URLSearchParams({ [SEARCH_QUERY_PARAM]: query }).toString()}`;
