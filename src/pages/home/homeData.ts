@@ -23,12 +23,15 @@ type HomeDataResult =
       readonly reason: string;
     };
 
-interface HomeProductPresentation {
-  readonly badge?: string;
-  readonly badgeTone?: 'sale' | 'new';
+type HomeProductBadgePresentation =
+  | { readonly badgeTone: 'sale' }
+  | { readonly badgeTone: 'new'; readonly badge: string }
+  | { readonly badgeTone?: undefined };
+
+type HomeProductPresentation = HomeProductBadgePresentation & {
   readonly image: HomeArtwork;
   readonly imageAlt: string;
-}
+};
 
 const CATALOG_MEDIA_BUCKET = 'catalog-media';
 const EXPECTED_CATEGORY_COUNT = HOME_CATEGORY_TILES.length;
@@ -40,7 +43,6 @@ const productPresentationBySlug = new Map<string, HomeProductPresentation>([
   [
     'iphone-15-128',
     {
-      badge: '-12%',
       badgeTone: 'sale',
       image: 'smartphone',
       imageAlt: 'Смартфон Apple iPhone 15',
@@ -58,7 +60,6 @@ const productPresentationBySlug = new Map<string, HomeProductPresentation>([
   [
     'redmi-note-13-pro-256',
     {
-      badge: '-10%',
       badgeTone: 'sale',
       image: 'smartphone',
       imageAlt: 'Смартфон Xiaomi Redmi Note 13 Pro',
@@ -74,7 +75,6 @@ const productPresentationBySlug = new Map<string, HomeProductPresentation>([
   [
     'apple-watch-series-9-45',
     {
-      badge: '-15%',
       badgeTone: 'sale',
       image: 'watch',
       imageAlt: 'Смарт-часы Apple Watch Series 9',
@@ -98,6 +98,32 @@ function groupImagesByProduct(
   }
 
   return groups;
+}
+
+function saleBadge(priceValue: number, oldPriceValue: number | undefined): string | undefined {
+  if (oldPriceValue === undefined || oldPriceValue <= priceValue) {
+    return undefined;
+  }
+
+  return `-${String(Math.round(((oldPriceValue - priceValue) / oldPriceValue) * 100))}%`;
+}
+
+function productBadge(
+  presentation: HomeProductBadgePresentation,
+  priceValue: number,
+  oldPriceValue: number | undefined,
+): Pick<HomeProduct, 'badge' | 'badgeTone'> {
+  if (presentation.badgeTone === 'new') {
+    return { badge: presentation.badge, badgeTone: 'new' };
+  }
+
+  if (presentation.badgeTone === 'sale') {
+    const badge = saleBadge(priceValue, oldPriceValue);
+
+    return badge === undefined ? {} : { badge, badgeTone: 'sale' };
+  }
+
+  return {};
 }
 
 function mapCategory(category: CategoryRow): HomeCategoryTile | undefined {
@@ -150,8 +176,7 @@ function mapProduct(
     priceValue: product.price,
     oldPrice: oldPriceValue === undefined ? undefined : formatPrice(oldPriceValue),
     oldPriceValue,
-    badge: presentation.badge,
-    badgeTone: presentation.badgeTone,
+    ...productBadge(presentation, product.price, oldPriceValue),
     image: presentation.image,
   };
 }

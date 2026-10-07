@@ -78,6 +78,7 @@ export function ProductionShell({ children }: ProductionShellProps) {
         favoritesHref={favorites}
         homeHref={home}
         onSearchSubmit={handleSearchSubmit}
+        searchPlaceholder="Поиск товаров"
         smartphonesHref={hashHref(CATALOG_SMARTPHONES_PATH)}
         storesHref={hashHref(SHOPS_PATH)}
         supportHref={CONTACTS_HREF}

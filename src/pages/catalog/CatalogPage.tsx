@@ -1,6 +1,7 @@
 import { Select } from 'radix-ui';
 import { useState } from 'react';
 
+import { formatUnitCount } from '../../commerce/cart';
 import { EmptyState } from '../../components/feedback';
 import { Container } from '../../components/layout';
 import { Icon, Pagination } from '../../components/ui';
@@ -75,8 +76,6 @@ const FILTER_LIST_KEYS: readonly CatalogFilterListKey[] = [
   'memory',
   'colours',
 ];
-
-const countFormatter = new Intl.NumberFormat('ru-RU');
 
 function sameValues(left: readonly string[], right: readonly string[]): boolean {
   return left.length === right.length && left.every((value, index) => value === right[index]);
@@ -226,7 +225,7 @@ export function CatalogPage({
             <div className="catalog-page__heading-group">
               <h1 className="catalog-page__title">{CATEGORY_TITLE}</h1>
               <p aria-live={live ? 'polite' : undefined} className="catalog-page__count">
-                {countFormatter.format(displayedCount)} товаров
+                {formatUnitCount(displayedCount)}
               </p>
             </div>
 

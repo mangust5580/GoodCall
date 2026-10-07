@@ -1,4 +1,4 @@
-import { createRequire } from 'node:module';
+import { createRequire, register } from 'node:module';
 
 import { MOCK_SUPABASE_HOST } from '../lib/build.mjs';
 import { launchBrowser } from '../lib/browser.mjs';
@@ -7,6 +7,10 @@ import { openPage } from '../lib/page.mjs';
 import { appBase, outputDir, referenceBase, reportCounts } from '../lib/suite.mjs';
 
 const require = createRequire(import.meta.url);
+register(new URL('../lib/ts-hook.mjs', import.meta.url));
+const { STOREFRONT_SUPPORT } = await import(
+  new URL('../../../src/commerce/storefront/storefrontFacts.ts', import.meta.url).href
+);
 const sharp = require('sharp');
 const SHOTS = outputDir();
 
@@ -1084,6 +1088,62 @@ console.log('stage: related', new Date().toISOString());
   );
   scenario = {};
   await failing.close();
+}
+
+console.log('stage: support', new Date().toISOString());
+{
+  const supportFacts = (page) =>
+    page.evaluate(() => {
+      const section = [...document.querySelectorAll('.product-offer__section')].find(
+        (s) => s.querySelector('.product-offer__heading')?.textContent === 'Нужна помощь?',
+      );
+      const items = [...(section?.querySelectorAll('.product-offer__support > li') ?? [])];
+      return {
+        heading: section?.querySelector('h2')?.textContent ?? null,
+        items: items.map((li) => li.innerText.replace(/\s+/g, ' ').trim()),
+        emptyItems: items.filter((li) => li.textContent.trim() === '').length,
+        phoneHref: section?.querySelector('.product-offer__phone')?.getAttribute('href') ?? null,
+        mainText: document.querySelector('main')?.innerText ?? '',
+        overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      };
+    });
+  const expectedPhone = `${STOREFRONT_SUPPORT.phone} ${STOREFRONT_SUPPORT.hours}`;
+  const productionSupportOk = (facts) =>
+    facts.heading === 'Нужна помощь?' &&
+    facts.items.length === 1 &&
+    facts.items[0] === expectedPhone &&
+    facts.emptyItems === 0 &&
+    facts.phoneHref === STOREFRONT_SUPPORT.phoneHref &&
+    !facts.mainText.includes('Онлайн-чат') &&
+    !facts.mainText.includes('Ответим в течение 1 минуты') &&
+    facts.overflow <= 0;
+
+  for (const [slug, width] of [
+    ['iphone-15-128', 1440],
+    ['apple-watch-series-9-45', 1440],
+    ['iphone-15-128', 390],
+  ]) {
+    const page = await newPage(width, width === 390 ? 844 : 900);
+    await openPdp(page, slug);
+    const facts = await supportFacts(page);
+    check(
+      productionSupportOk(facts),
+      `support ${slug} ${width}: no online-chat row, canonical phone + hours only ${JSON.stringify(facts.items)}`,
+    );
+    await page.close();
+  }
+
+  const page = await newPage();
+  await page.goto(`${NEW}?reference=product-details`);
+  await page.waitForSelector('.product-purchase__title');
+  const ref = await supportFacts(page);
+  check(
+    ref.items.length === 2 &&
+      ref.items[1] === 'Онлайн-чат Ответим в течение 1 минуты' &&
+      ref.emptyItems === 0,
+    `support reference: fixture keeps its online-chat row ${JSON.stringify(ref.items)}`,
+  );
+  await page.close();
 }
 
 console.log('stage: reference', new Date().toISOString());

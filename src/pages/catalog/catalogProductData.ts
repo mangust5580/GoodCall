@@ -26,6 +26,28 @@ function finiteNumber(value: number | null): number | undefined {
   return value === null || !Number.isFinite(value) ? undefined : value;
 }
 
+function saleBadge(priceValue: number, oldPriceValue: number | undefined): string | undefined {
+  if (oldPriceValue === undefined || oldPriceValue <= priceValue) {
+    return undefined;
+  }
+
+  return `-${String(Math.round(((oldPriceValue - priceValue) / oldPriceValue) * 100))}%`;
+}
+
+function productBadge(
+  presentation: CatalogProduct | undefined,
+  priceValue: number,
+  oldPriceValue: number | undefined,
+): Pick<CatalogProduct, 'badge' | 'discounted'> {
+  if (presentation?.discounted !== true) {
+    return { badge: presentation?.badge };
+  }
+
+  const badge = saleBadge(priceValue, oldPriceValue);
+
+  return badge === undefined ? {} : { badge, discounted: true };
+}
+
 function groupImagesByProduct(
   images: readonly ProductImageRow[],
 ): ReadonlyMap<string, readonly ProductImageRow[]> {
@@ -73,8 +95,7 @@ function mapCatalogProduct(
     oldPriceValue,
     rating,
     reviewCount: product.review_count,
-    badge: presentation?.badge,
-    discounted: presentation?.discounted,
+    ...productBadge(presentation, product.price, oldPriceValue),
     popularity: product.popularity_score,
   };
 }

@@ -129,14 +129,14 @@ Open external integration:
   configuration. It is a separate configuration-dependent gate and does not
   block visual shell work.
 
-Technically complete, final polish deferred:
+Accepted as-is:
 
-- **Global Shell E / SiteFooter — technically complete and usable. Final user
-  visual polish is deferred until integrated page review near the end of the
-  project, so page-family work is not blocked on an immediate Footer visual
-  PASS.** Its open items ride along: the support phone conflict across the five
-  rasters, social destination wiring until real URLs exist, and app-store badges
-  until a real GoodCall application and store contract exists.
+- **Global Shell E / SiteFooter — accepted as-is for project closeout.** The
+  integrated 1440/390 review found no layout, spacing or hierarchy blocker; the
+  Footer follows Newsletter correctly with no overflow or collision. The
+  production support identity is settled (see the Global Shell E section).
+  Unavailable destinations stay plain, non-interactive text until real URLs
+  exist; social and app-store destinations remain externally/product blocked.
 
 Technically complete:
 
@@ -144,10 +144,14 @@ Technically complete:
   owned by React Router using a GitHub Pages-safe hash strategy. See the
   Current routes section below.
 
-Active visual slice: none.
+Active visual slice: none. Active implementation milestone: none. The project
+is at integrated closeout state (see Project closeout state below).
 
 Completed visual slices:
 
+- **Closeout Polish A — USER VISUAL/UX PASS — CLOSED and published.**
+  Storefront truthfulness and copy cleanup on Home, Catalog, Search and PDP.
+  See the Closeout Polish A section below.
 - **Newsletter Feedback A — USER VISUAL/UX PASS — CLOSED and published.** A
   valid production Newsletter submit shows a truthful local demo
   acknowledgement. See the Newsletter Feedback A section below.
@@ -200,6 +204,40 @@ section below. **Checkout A / Checkout Page Foundation — USER VISUAL/UX PASS
 on 2026-09-30, CLOSED and published.** See the Checkout A section below. Search C, Favourites A, Commerce B, Commerce A,
 Blog B, Blog A, Home A, Cart A, Cart B, Search A, Search B, 404 A and the
 Product Details production integration are closed.
+
+### Closeout Polish A
+
+**Status: USER VISUAL/UX PASS — CLOSED and published.** The user visually
+reviewed production Home, Catalog, Search and PDP desktop states and explicitly
+granted USER VISUAL/UX PASS. No separate mobile screenshot was supplied; 390
+correctness is covered by the verify suites and the explicit pass.
+
+- **Catalog count** uses the existing `formatUnitCount()` (`commerce/cart`), so
+  Russian inflection is correct (`1 товар`, `2 товара`, `5 товаров`,
+  `21 товар`); the specimen still reads `2 546 товаров`. `aria-live`, filters,
+  sort, pagination and URL state are unchanged.
+- **Home hero offers** (static, non-linked `HOME_HERO_OFFERS`) match the live
+  assortment: iPhone 15 · 128 ГБ, розовый · 79 990 ₽; Samsung Galaxy S24 ·
+  128 ГБ, фиолетовый · 75 990 ₽; Apple Watch Series 9 · 45 мм, чёрный ·
+  44 990 ₽. Colours mirror the live product names. The third card keeps the
+  internal id `apple-watch-se` because it drives the artwork CSS modifier.
+- **Live sale badges.** `homeData.ts` and `catalogProductData.ts` each derive the
+  sale badge locally from live `price` / `old_price` with the PDP/Cart rounding
+  (`-round((old - price) / old × 100)%`), only where the presentation intends a
+  sale and only when `old_price > price`; no valid old price means no badge.
+  Search inherits the Catalog mapper. `Новинка` is preserved. Specimen/reference
+  badge fixtures (`HOME_PRODUCTS`, `CATALOG_PRODUCTS`) are unchanged, and the
+  `discounted` quick filter stays price-based.
+- **Production header search placeholder** is `Поиск товаров` at every width,
+  passed from `ProductionShell` through the existing `searchPlaceholder` seam.
+  The `SiteHeader` default (reference surfaces) is unchanged.
+- **Production PDP** no longer advertises a non-existent online chat.
+  `chatNote` is optional in `ProductDetailsStorewide` / `ProductDetailsView`;
+  production storewide data omits it and `ProductOfferSummary` renders the chat
+  row only when a note exists. «Нужна помощь?» keeps the canonical phone and
+  hours. The reference fixture keeps its chat row, and the Product Details
+  reference stays pixel-identical (diff 0 at 1440 and 390).
+- No dependency, backend, Supabase query/schema, store, context or route change.
 
 ### Newsletter Feedback A
 
@@ -2534,8 +2572,9 @@ both labels and makes no network request.
   `productHref(slug)`, and so does `HomePage`.
 - `CatalogRoute` and `HomeRoute` pass `productDetailsHref` only after their
   live read succeeded. As a result:
-  - only the live `iphone-15-128` card links, on Catalog page 2 by popularity
-    and at Home popular position 1;
+  - _(superseded)_ at this milestone only the live `iphone-15-128` card
+    linked; production now links every registered live product slug (see
+    Product Details Production Integration B);
   - fixture-fallback cards never link.
 
 **Live backend facts** (verified read-only outside this repository at task
@@ -2944,14 +2983,14 @@ label is inside the accessible name (`В корзину: <title>`), so the CTA s
 product-specific and satisfies label-in-name.
 
 **Deferred:** routing and product detail pages; the multi-category filter/facet
-architecture; the final Footer polish pass. Two raster details stay unmatched by
+architecture. (The Footer was later accepted as-is.) Two raster details stay unmatched by
 choice: the promo's `Смотреть подборку` button (no route exists) and its full
 product-cluster photography (only the synthetic `product-phone.svg` exists).
 
 ### Global Shell E — SiteFooter
 
-**Technically complete and usable. Final user visual polish is deferred until
-integrated page review near the end of the project.**
+**Accepted as-is for project closeout.** The integrated 1440/390 review found no
+layout, spacing or hierarchy blocker; no Footer milestone is open.
 
 `src/components/shell/` owns `SiteFooter`, the canonical global shell footer,
 with its styles in `footer.scss`. There is no `src/components/footer/`,
@@ -2967,8 +3006,7 @@ tokens only; no new shadow system, no new surface, no gradient, no radius and no
 floating-card effect. Footer content, columns, socials, contacts, payments,
 legal row and link semantics are unchanged, the footer still reads quieter than
 `NewsletterBand`, and the shadow points up from the footer's own top edge so it
-never overlays the fixed `MobileActionBar`. The rest of the Footer polish pass
-stays deferred to the end-of-project integrated review.
+never overlays the fixed `MobileActionBar`.
 
 **Public API:** `homeHref?` (defaulting to `import.meta.env.BASE_URL` like
 `SiteHeader`), the production seams `helpLinks?`, `companyLinks?`,
@@ -3007,13 +3045,12 @@ link pointing at the repository root merely to be clickable, and no no-op click
 handler. Production support contacts come from `STOREFRONT_SUPPORT`; the
 remaining unwired labels get a link only when their page exists.
 
-**Contact conflict, open.** The email `info@goodcall.ru` is unanimous across all
-five rasters. The phone is **not**: Home shows `8 800 100-10-47`, Blog
-`8 800 100-10-67`, About and Catalog `8 800 100-10-10`, and Shops
-`8 (800) 123-45-67`. The most repeated readable value, `8 800 100-10-10`, is
-implemented and is a single constant in `SiteFooter.tsx`. It needs user
-confirmation. No address, legal entity or support hours beyond the repeated
-9:00-21:00 window were fabricated.
+**Support identity, settled.** Production passes `STOREFRONT_SUPPORT`:
+`8 800 100-10-10`, `support@goodcall.example`, `Ежедневно с 9:00 до 21:00`.
+The rasters disagree on the phone (`8 800 100-10-47`, `-67`, `-10`,
+`8 (800) 123-45-67`) and show `info@goodcall.ru`; those raster values, and the
+`SUPPORT` default in `SiteFooter.tsx` used by reference surfaces, are
+specimen/reference-only. No address or legal entity was fabricated.
 
 **Assets.** `BrandLogo` is reused unchanged inside a footer-owned anchor, and the
 `phone` and `mail` glyphs come from the accepted `Icon` registry.
@@ -4345,8 +4382,7 @@ selecting filters or a quick preset leaves the grid, the page and
 **Catalog A / Page Foundation & Layout — user visual PASS received on
 2026-08-29 and closed.**
 
-**Global Shell E / SiteFooter — technically complete and usable; final visual
-polish deferred to integrated page review.** `?reference=footer` reports zero horizontal document overflow, zero
+**Global Shell E / SiteFooter — accepted as-is for project closeout.** `?reference=footer` reports zero horizontal document overflow, zero
 runtime errors and zero failed requests at 1920 / 1440 / 1280 / 1024 / 768 / 430 /
 390 / 375 / 320, and so do the base index and every earlier reference surface. The
 footer surface is about 270px tall at 1280px and above (271px at 1440 with the payment chips). Layout is five columns from
@@ -4888,20 +4924,10 @@ none of them blocks the closed milestone.
 
 ## Known deferred work
 
-- PDP media coverage is still incomplete for non-batch SKUs: `iphone-15-128`
-  and the five PDP Media Coverage A SKUs have galleries,
-  `apple-watch-series-9-45` has one image, and the other eleven live SKUs
-  (including AirPods) use category artwork on the PDP; AirPods has no product
-  media. The iPhone 15 editorial image mismatch is also deferred.
-- Stale stored image URLs on persisted commerce surfaces have no fallback
-  handling.
-- Catalog count noun inflection: the UI can show forms such as «2 товаров»;
-  separate content polish, not part of Catalog URL State A.
-- Newsletter backend remains intentionally absent; production submit shows only
-  a local demo acknowledgement.
-- No header catalog landing page or additional category routes.
-- Account/Login awaits a demo-identity decision.
-- Product Details Back/Forward does not restore scroll position.
+- Product-facing remaining work is classified in **Project closeout state**
+  below. Media coverage detail: `iphone-15-128` and the five PDP Media
+  Coverage A SKUs have galleries, `apple-watch-series-9-45` has one image, and
+  the other eleven live SKUs (including AirPods) use category artwork.
 - Phone validation, country selection and international formatting are deferred
   until a real product form consumer defines those requirements.
 - Textarea auto-grow remains deferred until a concrete consumer requires it.
@@ -4936,98 +4962,63 @@ none of them blocks the closed milestone.
   specific filter and facet architecture is a second real category with a
   different inventory — not a refactor of the current specimen data.
 - `#/catalog/smartphones` is the only category route. No second category
-  route exists. Only the specimen product card links to a product page; the
-  in-grid promo carries no link.
+  route exists. Live product cards link to `#/product/:slug` for every
+  registered live product slug; fixture-fallback cards and the in-grid promo
+  carry no link.
 - Live DaData behaviour is unverified. No local token is available, GitHub secret
   presence is unverifiable without `gh`, and the DaData hosts are unreachable
   from this build environment, so the adapter was verified against recorded
   response shapes rather than the live service. Live search, live IP detection,
   live reverse geocoding and live Pages behaviour all remain open.
 
-## Next approved step
+## Project closeout state
 
-**Checkout A, Stores A, Pickup A, Order Confirmation A, Comparison A and
-Commerce C are CLOSED and published.** No next milestone is active; none of the following has
-started.
+Closeout Polish A is the last published milestone. **Active visual slice: none.
+Active implementation milestone: none.** The project is at integrated closeout
+state. No active code-level release blocker is known after Closeout Polish A.
 
-- **Pickup follow-ups:** real availability or stock, pickup cost, pickup
-  scheduling and payment rules remain deferred, together with `/shops` →
-  Checkout selection.
-- **Deferred store capabilities:** map and coordinates, stock and
-  availability, city and metro filters, route-building, and a Supabase
-  `stores` source.
-- **Real orders** (backend creation, payment, notifications, tracking,
-  Customer Account history) need their own decision and scope.
-- **Product scope:** there is no Admin / administrative management panel in
-  the planned GoodCall product. The intended future user-facing area is the
-  Customer Account (Личный кабинет), a future candidate that is not active and
-  has no scope yet.
+**Defer with reason:**
 
-Search autocomplete, URL-synced filters and cross-category search are not
-scoped.
+- PDP Back/Forward scroll restoration — revisit with skeleton/loading-state/cache
+  work.
+- Stale stored image URL fallback — revisit when `product_images` rows exist.
+- Remaining smartphone galleries, AirPods media and full assortment media —
+  revisit after assortment freeze.
+- iPhone 15 editorial media mismatch — revisit with media/assortment polish.
 
-Each of the following would need its own explicit scope, and none exists:
+**Blocked externally:**
 
-- backend order creation (Order Confirmation A is a local demo only);
-- the add-to-cart dialog (Search and Home cart actions are delivered by
-  Commerce B and Commerce C);
-- a backend cart;
-- a promo-code engine.
+- Location live DaData verification — requires the repository secret
+  `DADATA_TOKEN` (and a local `.env.local` `VITE_DADATA_TOKEN`). Until then the
+  Header falls back to `Выберите город` and network features degrade gracefully.
+- Footer social and app-store destinations — require real destinations/apps.
 
-**Product Details Production Integration B — Rich Live Product Pages** has
-USER VISUAL/UX PASS, its implementation/regression gates are complete, and it
-passed the final Codex commit-readiness gate; the milestone is complete (see its
-section). Real
-`product_images` support in the gallery, interactive variants, review bodies,
-one-click purchase, Compare on the main PDP surface and galleries for SKUs
-beyond iPhone 15 and PDP Media Coverage A Batch 1 remain unscoped.
+**Blocked by product decision:**
 
-Product Details Production Integration A and the Route scroll fix are closed.
-They received user visual / UX PASS on 2026-09-27.
+- Account/Login identity model.
+- Catalog landing page.
+- Additional categories and category-specific facets.
+- Header unresolved fallback destinations (`Войти`, `Каталог товаров`, `Ещё`
+  and the unresolved category links).
+- `Серия` / `Диагональ` filter copy (see Active open questions).
+- Unscoped product areas — real orders/payment, Customer Account, store
+  map/stock, backend cart, promo engine — each needs its own explicit scope.
 
-**Home A is closed.** User visual PASS was received on 2026-09-27 for the
-current Home page: the integrated desktop/mobile composition, the accepted
-three-slide hero, side offer cards, revised editorial article covers with
-calendar dates, cinema banner without a fake StreamVibe CTA, and the current
-Newsletter/Footer integration.
+**Accepted as-is:**
 
-The category-duplication question is settled: the Home hero's vertical category
-rail is removed, the accepted `SiteHeader` horizontal row is the single
-top-level category navigation, the hero expands into the freed space, and
-`Популярные категории` stays as a Home discovery section.
+- Newsletter backend intentionally absent; the truthful demo acknowledgement
+  exists (Newsletter Feedback A).
+- The current `SiteFooter` visual implementation (Global Shell E).
+- The Home hero «Большие скидки до 50%» campaign copy (accepted demo/raster
+  copy from Home A).
 
-Future Home work needs a new explicit scope. Likely remaining Home work is the
-real section destinations, StreamVibe/cinema integration if a destination
-exists, and campaign/article media data contracts.
-
-**Deferred after Home A:**
-
-- Home campaign/banner, article and broader merchandising contracts. The shared
-  typed Supabase client exists, and Home popular categories/products are wired,
-  but campaign/offers/articles/cinema and deeper merchandising remain local.
-- URL/query state synchronization for Catalog filters, sorting, quick filters
-  and pagination.
-- The remaining Header destinations, each until its own page exists.
-- `SiteFooter` final visual polish at the integrated page review near the end of
-  the project: the support phone conflict, social destination wiring, and
-  app-store badges.
-
-**Outstanding external configuration, independent of page work:** set the
-repository secret `DADATA_TOKEN` (and a local `.env.local` with
-`VITE_DADATA_TOKEN` for local work), then re-run live DaData and Pages
-verification of the Location Foundation. Until then the deployed Header falls
-back to `Выберите город` and the network features are disabled gracefully. That
-gate is configuration-dependent and does not block visual page work.
-
-Do not reopen or redesign the accepted Catalog family, Header, BrandLogo, Media
-Foundation, Location visuals, NewsletterBand, SiteFooter, ProductCard,
-Pagination or closed Components — the single bounded `ProductCard` reopen is
-spent, and `NewsletterBand` stays exactly as its PASS accepted it. Do not turn
-the Home or Catalog fixtures into a product or category domain model, do not add
-state or data architecture, do not create routes for pages that do not exist, do
-not add a footer CMS/config layer, backend or persistence, and do not add
-dependencies unless a concrete requirement proves necessary. Accepted system
-decisions win over incidental raster differences.
+Do not reopen or redesign accepted surfaces (Catalog family, Header, BrandLogo,
+Media Foundation, Location visuals, NewsletterBand, SiteFooter, ProductCard,
+Pagination, closed Components). Do not turn Home or Catalog fixtures into a
+domain model, add state or data architecture, create routes for pages that do
+not exist, add a footer CMS/config layer, backend or persistence, or add
+dependencies without a concrete requirement. Accepted system decisions win over
+incidental raster differences.
 
 ## Normative repository docs
 

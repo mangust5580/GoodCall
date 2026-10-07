@@ -77,13 +77,15 @@ export function ProductOfferSummary({ product }: ProductOfferSummaryProps) {
               <span className="product-offer__service-line">{product.supportHours}</span>
             </span>
           </li>
-          <li className="product-offer__service">
-            <Icon className="product-offer__icon" name="headset" />
-            <span className="product-offer__service-body">
-              <span className="product-offer__service-title">Онлайн-чат</span>
-              <span className="product-offer__service-line">{product.chatNote}</span>
-            </span>
-          </li>
+          {product.chatNote === undefined || product.chatNote === '' ? null : (
+            <li className="product-offer__service">
+              <Icon className="product-offer__icon" name="headset" />
+              <span className="product-offer__service-body">
+                <span className="product-offer__service-title">Онлайн-чат</span>
+                <span className="product-offer__service-line">{product.chatNote}</span>
+              </span>
+            </li>
+          )}
         </ul>
       </section>
     </aside>

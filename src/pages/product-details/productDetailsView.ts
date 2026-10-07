@@ -90,7 +90,7 @@ export interface ProductDetailsStorewide {
   readonly supportPhone: string;
   readonly supportPhoneHref: string;
   readonly supportHours: string;
-  readonly chatNote: string;
+  readonly chatNote?: string;
 }
 
 export interface ProductDetailsVariants {
@@ -132,7 +132,7 @@ export interface ProductDetailsView {
   readonly supportPhone: string;
   readonly supportPhoneHref: string;
   readonly supportHours: string;
-  readonly chatNote: string;
+  readonly chatNote?: string;
   readonly variants?: ProductDetailsVariants;
   readonly sku?: string;
   readonly availability?: ProductDetailsAvailability;
@@ -200,6 +200,6 @@ export function buildProductDetailsView(
     supportPhone: storewide.supportPhone,
     supportPhoneHref: storewide.supportPhoneHref,
     supportHours: storewide.supportHours,
-    chatNote: storewide.chatNote,
+    ...(storewide.chatNote === undefined ? {} : { chatNote: storewide.chatNote }),
   };
 }

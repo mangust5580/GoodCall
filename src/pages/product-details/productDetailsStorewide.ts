@@ -37,7 +37,6 @@ export const STOREWIDE_SUPPORT = {
   supportPhone: STOREFRONT_SUPPORT.phone,
   supportPhoneHref: STOREFRONT_SUPPORT.phoneHref,
   supportHours: STOREFRONT_SUPPORT.hours,
-  chatNote: 'Ответим в течение 1 минуты',
 } as const;
 
 export { WARRANTY_TEXT };

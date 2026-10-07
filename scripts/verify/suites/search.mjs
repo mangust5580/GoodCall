@@ -1,5 +1,14 @@
+import { register } from 'node:module';
 import { launchBrowser, sleep } from '../lib/browser.mjs';
 import { appBase, outputDir, report } from '../lib/suite.mjs';
+
+register(new URL('../lib/ts-hook.mjs', import.meta.url));
+const { formatUnitCount } = await import(
+  new URL('../../../src/commerce/cart/cartPricing.ts', import.meta.url).href
+);
+const { CATALOG_PRODUCTS } = await import(
+  new URL('../../../src/pages/catalog/catalogProducts.ts', import.meta.url).href
+);
 
 const OUT = outputDir();
 const BASE = appBase();
@@ -195,6 +204,26 @@ const cardOf = (title) =>
   `[...document.querySelectorAll('.search-results .product-card')].find((c) => c.querySelector('.product-card__title')?.textContent === ${JSON.stringify(title)})`;
 const status = () =>
   evaluate(`document.querySelector('main.search-page > p[role="status"]')?.textContent ?? ''`);
+
+const GRAMMAR = [
+  [0, '0 товаров'],
+  [1, '1 товар'],
+  [2, '2 товара'],
+  [3, '3 товара'],
+  [4, '4 товара'],
+  [5, '5 товаров'],
+  [11, '11 товаров'],
+  [21, '21 товар'],
+  [22, '22 товара'],
+  [25, '25 товаров'],
+  [2546, '2 546 товаров'],
+];
+const grammar = GRAMMAR.map(([value]) => formatUnitCount(value).replace(/\s/g, ' '));
+check(
+  'catalog count: formatUnitCount ru-RU inflection matrix (0/1/2/3/4/5/11/21/22/25/2 546)',
+  JSON.stringify(grammar) === JSON.stringify(GRAMMAR.map(([, text]) => text)),
+  JSON.stringify(grammar),
+);
 
 await send('Runtime.enable');
 await send('Page.enable');
@@ -1099,7 +1128,7 @@ check(
 
 await reload();
 await waitFor(
-  `document.querySelector('.catalog-page__count')?.textContent.replace(/\\s/g, ' ') === '2 товаров'`,
+  `document.querySelector('.catalog-page__count')?.textContent.replace(/\\s/g, ' ') === '2 товара'`,
   'catalog url reload',
 );
 const reloadedState = await catalogState();
@@ -1493,6 +1522,168 @@ failLive = false;
 await go(CATALOG_HASH);
 catalogRows = false;
 await reload();
+
+const i15Row = PRODUCTS.find((product) => product.slug === 'iphone-15-128');
+const i15LiveOldPrice = i15Row.old_price;
+const fixtureBadge = (slug) => CATALOG_PRODUCTS.find((product) => product.id === slug).badge;
+const catalogBadges = () =>
+  evaluate(
+    `Object.fromEntries([...document.querySelectorAll('.catalog-grid .product-card')].map((c) => [c.querySelector('.product-card__title').textContent, c.querySelector('.catalog-badge') ? [c.querySelector('.catalog-badge').textContent, c.querySelector('.catalog-badge').className] : null]))`,
+  );
+const searchRowBadges = () =>
+  evaluate(
+    `Object.fromEntries([...document.querySelectorAll('.search-row')].map((r) => [r.querySelector('.search-row__title').textContent, r.querySelector('.search-row__badge .ui-chip') ? [r.querySelector('.search-row__badge .ui-chip').textContent, r.querySelector('.search-row__badge .ui-chip').className] : null]))`,
+  );
+const searchCardBadges = () =>
+  evaluate(
+    `Object.fromEntries([...document.querySelectorAll('.search-results .product-card')].map((c) => [c.querySelector('.product-card__title').textContent, c.querySelector('.product-card__badge .ui-chip') ? [c.querySelector('.product-card__badge .ui-chip').textContent, c.querySelector('.product-card__badge .ui-chip').className] : null]))`,
+  );
+const openLiveCatalog = async () => {
+  await go(CATALOG_HASH);
+  await waitFor(
+    `document.querySelector('.catalog-page__count')?.textContent.replace(/\s/g, ' ') === ${JSON.stringify(formatUnitCount(PRODUCTS.length).replace(/\s/g, ' '))}`,
+    'live catalog for badges',
+  );
+};
+const openPdpBadge = async () => {
+  await go('#/product/iphone-15-128');
+  await waitFor(
+    `document.querySelector('.product-purchase .product-details-badge')?.textContent.startsWith('-')`,
+    'pdp sale badge',
+  );
+  return evaluate(
+    `document.querySelector('.product-purchase .product-details-badge')?.textContent ?? null`,
+  );
+};
+
+i15Row.old_price = 89990;
+await reload();
+const pdpBadge = await openPdpBadge();
+await openLiveCatalog();
+let liveCatalogBadges = await catalogBadges();
+await go('#/search?q=iphone');
+await waitFor(`document.querySelector('.search-row__link')`, 'live search rows for badges');
+const liveSearchRows = await searchRowBadges();
+await evaluate(`${rowOf(I15)}.querySelector('.product-action--cart').click()`);
+await sleep(150);
+await go('#/cart');
+await waitFor(`document.querySelector('.cart-line__discount .ui-chip')`, 'cart discount chip');
+const cartBadge = await evaluate(
+  `document.querySelector('.cart-line__discount .ui-chip').textContent`,
+);
+await viewport(390, 844, true);
+await go('#/search?q=iphone');
+await waitFor(`${cardOf(I15)}`, 'live search cards for badges');
+const liveSearchCards = await searchCardBadges();
+await viewport(1440, 900, false);
+check(
+  'sale badge: changed live old_price → PDP, Catalog, Search rows, Search cards and Cart agree',
+  pdpBadge === '-11%' &&
+    pdpBadge !== fixtureBadge('iphone-15-128') &&
+    liveCatalogBadges[I15]?.[0] === pdpBadge &&
+    liveSearchRows[I15]?.[0] === pdpBadge &&
+    liveSearchCards[I15]?.[0] === pdpBadge &&
+    cartBadge === pdpBadge,
+  JSON.stringify({
+    pdpBadge,
+    catalog: liveCatalogBadges[I15],
+    rows: liveSearchRows[I15],
+    cards: liveSearchCards[I15],
+    cartBadge,
+  }),
+);
+check(
+  'sale badge: derived sale keeps the sale tone on Catalog and Search',
+  liveCatalogBadges[I15]?.[1].includes('catalog-badge--sale') &&
+    liveSearchRows[I15]?.[1].includes('ui-chip--danger') &&
+    liveSearchCards[I15]?.[1].includes('ui-chip--danger'),
+);
+check(
+  'sale badge: Новинка preserved on Catalog and Search despite a live old_price',
+  fixtureBadge('iphone-15-pro-128') === 'Новинка' &&
+    liveCatalogBadges[I15PRO]?.[0] === 'Новинка' &&
+    liveCatalogBadges[I15PRO]?.[1].includes('catalog-badge--new') &&
+    liveSearchRows[I15PRO]?.[0] === 'Новинка' &&
+    liveSearchRows[I15PRO]?.[1].includes('ui-chip--brand') &&
+    liveSearchCards[I15PRO]?.[0] === 'Новинка',
+  JSON.stringify([liveCatalogBadges[I15PRO], liveSearchRows[I15PRO]]),
+);
+check(
+  'sale badge: products without a sale presentation get no fabricated badge',
+  liveCatalogBadges['Samsung Galaxy S24 256 ГБ, Фиолетовый'] === null &&
+    liveSearchRows['Apple iPhone 14 128 ГБ, Цвет 1'] === null,
+);
+
+i15Row.old_price = null;
+await clearCart();
+await openLiveCatalog();
+liveCatalogBadges = await catalogBadges();
+await go('#/search?q=iphone');
+await waitFor(`document.querySelector('.search-row__link')`, 'live search rows without old price');
+const noOldPriceRows = await searchRowBadges();
+await goCatalog('quick=discounted');
+await sleep(300);
+const discountedTitles = await evaluate(
+  `[...document.querySelectorAll('.catalog-grid .product-card__title')].map((t) => t.textContent)`,
+);
+check(
+  'sale badge: no valid live old_price → no sale percentage fabricated (Catalog, Search)',
+  liveCatalogBadges[I15] === null && noOldPriceRows[I15] === null,
+  JSON.stringify([liveCatalogBadges[I15], noOldPriceRows[I15]]),
+);
+check(
+  'discounted quick filter: still price-based (old_price > price), unchanged semantics',
+  JSON.stringify(discountedTitles) === JSON.stringify([I15PRO]),
+  JSON.stringify(discountedTitles),
+);
+
+i15Row.old_price = i15LiveOldPrice;
+await go(CATALOG_HASH);
+await reload();
+await openLiveCatalog();
+liveCatalogBadges = await catalogBadges();
+check(
+  'sale badge: snapshot old_price restores the derived -6% (matches PDP semantics)',
+  liveCatalogBadges[I15]?.[0] === (await openPdpBadge()),
+  JSON.stringify(liveCatalogBadges[I15]),
+);
+await go('#/');
+await sleep(400);
+const placeholders = {};
+for (const [width, height, mobile] of [
+  [1440, 900, false],
+  [390, 844, true],
+]) {
+  await viewport(width, height, mobile);
+  placeholders[width] = await evaluate(
+    `document.querySelector('.site-header__search input')?.getAttribute('placeholder') ?? null`,
+  );
+}
+await viewport(1440, 900, false);
+check(
+  'header: production search placeholder «Поиск товаров» at 1440 and 390',
+  placeholders[1440] === 'Поиск товаров' && placeholders[390] === 'Поиск товаров',
+  JSON.stringify(placeholders),
+);
+await evaluate(
+  `(() => { const input = document.querySelector('.site-header__search input'); const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set; setter.call(input, 'pixel'); input.dispatchEvent(new Event('input', { bubbles: true })); input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true })); })()`,
+);
+await sleep(500);
+check(
+  'header: production search submit still routes to #/search?q=…',
+  (await evaluate(`location.hash`)) === '#/search?q=pixel',
+  await evaluate(`location.hash`),
+);
+await send('Page.navigate', { url: `${BASE}?reference=catalog` });
+await sleep(1500);
+check(
+  'header: reference SiteHeader keeps its default desktop placeholder',
+  (await evaluate(
+    `document.querySelector('.site-header__search input')?.getAttribute('placeholder') ?? null`,
+  )) === 'Поиск среди 50 000+ товаров',
+);
+await send('Page.navigate', { url: `${BASE}#/` });
+await sleep(1500);
 
 failLive = true;
 await reload();

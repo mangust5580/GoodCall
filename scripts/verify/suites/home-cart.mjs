@@ -1,6 +1,16 @@
+import { register } from 'node:module';
 import { launchBrowser, sleep } from '../lib/browser.mjs';
+import { PRODUCTS as SNAPSHOT_PRODUCTS } from '../lib/catalog.mjs';
 import { appBase, outputDir, report } from '../lib/suite.mjs';
 import { readFileSync, writeFileSync } from 'node:fs';
+
+register(new URL('../lib/ts-hook.mjs', import.meta.url));
+const { HOME_HERO_OFFERS, HOME_PRODUCTS } = await import(
+  new URL('../../../src/pages/home/homeFixtures.ts', import.meta.url).href
+);
+const { formatPrice } = await import(
+  new URL('../../../src/commerce/format.ts', import.meta.url).href
+);
 
 const OUT = outputDir();
 const BASE = appBase();
@@ -594,6 +604,112 @@ check(
 );
 await evaluate(`localStorage.removeItem('${CART}')`);
 await reload();
+
+const homeBadges = () =>
+  evaluate(
+    `${homeCards}.map((c) => [c.querySelector('.product-card__title').textContent, c.querySelector('.product-card__badge')?.textContent ?? null])`,
+  );
+await openHome();
+const liveHomeBadges = await homeBadges();
+const liveBadgeOf = (slug) => liveHomeBadges[HOME.findIndex((p) => p.slug === slug)]?.[1];
+await evaluate(`localStorage.removeItem('${CART}')`);
+await reload();
+await openHome();
+for (const index of [0, 2, 4]) {
+  await evaluate(`${card(index)}.querySelector('.product-card__cart').click()`);
+  await sleep(150);
+}
+await go('#/cart');
+await waitFor(`document.querySelectorAll('.cart-line').length === 3`, 'badge cart lines');
+const cartDiscounts = await evaluate(
+  `Object.fromEntries([...document.querySelectorAll('.cart-line')].map((l) => [l.querySelector('.cart-line__title').textContent, l.querySelector('.cart-line__discount .ui-chip')?.textContent ?? null]))`,
+);
+check(
+  'badge: live Home sale badges equal the Cart percentage for the same live price/old_price',
+  [0, 2, 4].every(
+    (index) =>
+      liveHomeBadges[index][1] !== null &&
+      liveHomeBadges[index][1] === cartDiscounts[liveHomeBadges[index][0]],
+  ),
+  JSON.stringify({ liveHomeBadges, cartDiscounts }),
+);
+check(
+  'badge: stale static Home percentage replaced by the derived value (Redmi -11%, not -10%)',
+  liveBadgeOf('redmi-note-13-pro-256') === '-11%' &&
+    liveBadgeOf('redmi-note-13-pro-256') !== '-10%',
+  String(liveBadgeOf('redmi-note-13-pro-256')),
+);
+check(
+  'badge: Новинка preserved on live Galaxy S24; AirPods without sale intent stays unbadged',
+  liveBadgeOf('galaxy-s24-128') === 'Новинка' && liveBadgeOf('airpods-pro-2-usb-c') === null,
+  JSON.stringify(liveHomeBadges),
+);
+await evaluate(`localStorage.removeItem('${CART}')`);
+await reload();
+
+const homeOffers = () =>
+  evaluate(
+    `[...document.querySelectorAll('.home-hero__offers .home-offer')].map((o) => { const lines = ['title', 'spec', 'price'].map((k) => { const el = o.querySelector('.home-offer__' + k); const lh = parseFloat(getComputedStyle(el).lineHeight); return { text: el.textContent, lines: Math.round(el.getBoundingClientRect().height / lh), clipped: el.scrollWidth > el.clientWidth }; }); const r = o.getBoundingClientRect(); return { label: o.getAttribute('aria-label'), lines, w: Math.round(r.width), h: Math.round(r.height) }; })`,
+  );
+const offerText = (offers) =>
+  offers.map((o) => o.lines.map((l) => l.text.replace(/\s/g, ' ')).join(' | '));
+const expectedOffers = HOME_HERO_OFFERS.map((offer) =>
+  [offer.title, offer.spec, offer.price].join(' | ').replace(/\s/g, ' '),
+);
+const snapshotPrice = (slug) =>
+  formatPrice(SNAPSHOT_PRODUCTS.find((p) => p.slug === slug).price).replace(/\s/g, ' ');
+check(
+  'hero offers: static copy matches the live catalog snapshot (iPhone 15, Galaxy S24, Watch Series 9)',
+  JSON.stringify(expectedOffers) ===
+    JSON.stringify([
+      `iPhone 15 | 128 ГБ, розовый | ${snapshotPrice('iphone-15-128')}`,
+      `Samsung Galaxy S24 | 128 ГБ, фиолетовый | ${snapshotPrice('galaxy-s24-128')}`,
+      `Apple Watch Series 9 | 45 мм, чёрный | ${snapshotPrice('apple-watch-series-9-45')}`,
+    ]),
+  JSON.stringify(expectedOffers),
+);
+for (const [width, height, mobile] of [
+  [1440, 900, false],
+  [390, 844, true],
+]) {
+  await viewport(width, height, mobile);
+  await openHome();
+  const offers = await homeOffers();
+  check(
+    `hero offers ${width}: exact title/spec/price, 3 cards, title ≤2 lines, spec/price 1 line, unclipped, equal heights, no overflow`,
+    offers.length === 3 &&
+      JSON.stringify(offerText(offers)) === JSON.stringify(expectedOffers) &&
+      offers.every(
+        (o) =>
+          o.lines[0].lines <= 2 &&
+          o.lines[1].lines === 1 &&
+          o.lines[2].lines === 1 &&
+          o.lines.every((l) => !l.clipped),
+      ) &&
+      new Set(offers.map((o) => o.h)).size === 1 &&
+      (await evaluate(
+        `document.documentElement.scrollWidth - document.documentElement.clientWidth`,
+      )) <= 0,
+    JSON.stringify(offers),
+  );
+  await shot(`closeout-home-${width}`);
+}
+check(
+  'hero offers: obsolete Apple Watch SE copy is gone',
+  !(await evaluate(`document.querySelector('.home-hero__offers').textContent.includes('SE')`)),
+);
+await viewport(1440, 900, false);
+await send('Page.navigate', { url: `${BASE}?reference=home` });
+await sleep(1500);
+const referenceBadges = await homeBadges();
+check(
+  'badge: ?reference=home keeps the specimen HOME_PRODUCTS badge copy',
+  JSON.stringify(referenceBadges.map(([, b]) => b)) ===
+    JSON.stringify(HOME_PRODUCTS.map((p) => p.badge ?? null)),
+  JSON.stringify(referenceBadges),
+);
+await send('Page.navigate', { url: `${BASE}#/` });
+await sleep(1500);
 
 homeFails = true;
 const before = JSON.stringify(await lines());
