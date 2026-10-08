@@ -10,6 +10,7 @@ export interface CatalogProduct {
   readonly oldPriceValue?: number;
   readonly rating?: number;
   readonly reviewCount: number;
+  readonly brand?: string;
   readonly badge?: string;
   readonly discounted?: boolean;
   readonly popularity: number;

@@ -2,7 +2,7 @@ import type { CartLineImage } from '../../commerce/cart';
 import type { PictureSource } from '../../components/media';
 import type { IconName } from '../../components/ui';
 
-export type ProductContentCategory = 'smartphones' | 'smart-watches' | 'headphones';
+export type ProductContentCategory = 'smartphones' | 'smart-watches' | 'headphones' | 'laptops';
 
 export interface ProductSpecRow {
   readonly label: string;

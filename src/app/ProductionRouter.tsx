@@ -10,6 +10,7 @@ import {
   BLOG_ARTICLE_PATH,
   BLOG_PATH,
   CART_PATH,
+  CATALOG_LAPTOPS_PATH,
   CATALOG_SMARTPHONES_PATH,
   CHECKOUT_PATH,
   COMPARE_PATH,
@@ -38,6 +39,7 @@ import {
 import { BlogArticleRoute } from './routes/BlogArticleRoute';
 import { BlogRoute } from './routes/BlogRoute';
 import { CartRoute } from './routes/CartRoute';
+import { CatalogLaptopsRoute } from './routes/CatalogLaptopsRoute';
 import { CatalogRoute } from './routes/CatalogRoute';
 import { CheckoutRoute } from './routes/CheckoutRoute';
 import { CompareRoute } from './routes/CompareRoute';
@@ -66,6 +68,7 @@ export function ProductionRouter() {
       <Routes>
         <Route element={<HomeRoute />} path={HOME_PATH} />
         <Route element={<CatalogRoute />} path={CATALOG_SMARTPHONES_PATH} />
+        <Route element={<CatalogLaptopsRoute />} path={CATALOG_LAPTOPS_PATH} />
         <Route element={<ProductDetailsRoute />} path={PRODUCT_PATH} />
         <Route element={<CartRoute />} path={CART_PATH} />
         <Route element={<CheckoutRoute />} path={CHECKOUT_PATH} />

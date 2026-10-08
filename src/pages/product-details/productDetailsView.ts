@@ -147,6 +147,7 @@ const CATEGORY_ARTWORK: Readonly<Record<ProductContentCategory, PictureSource>> 
   smartphones: HOME_DEVICE_MEDIA.smartphone,
   'smart-watches': HOME_DEVICE_MEDIA.watch,
   headphones: HOME_DEVICE_MEDIA.earbuds,
+  laptops: HOME_DEVICE_MEDIA.laptop,
 };
 
 export function discountLabel(priceValue: number, oldPriceValue: number): string {

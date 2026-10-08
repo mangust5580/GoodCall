@@ -26,3 +26,8 @@ export {
   productRam,
   productStorage,
 } from './catalogFacets';
+export { LaptopCatalogPage } from './laptops/LaptopCatalogPage';
+export { buildLaptopFacets } from './laptops/laptopFacets';
+export { laptopFacts } from './laptops/laptopFacts';
+export { parseLaptopUrlState, serializeLaptopUrlState } from './laptops/laptopUrlState';
+export type { LaptopAppliedState } from './laptops/laptopUrlState';

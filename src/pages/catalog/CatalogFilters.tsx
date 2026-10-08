@@ -1,30 +1,26 @@
 import { useState } from 'react';
-import type { ReactNode } from 'react';
 
-import { Checkbox, Icon, RangeSlider, SearchField } from '../../components/ui';
+import { Checkbox, Icon } from '../../components/ui';
+import { catalogColourSwatch } from './catalogColourPalette';
 import {
-  CATALOG_PRICE_MAX,
-  CATALOG_PRICE_MIN,
-  CATALOG_PRICE_STEP,
+  CatalogBrandGroup,
+  CatalogCheckboxGroup,
+  CatalogColourGroup,
+  CatalogFilterPanel,
+  CatalogPriceGroup,
+} from './CatalogFilterGroups';
+import type {
+  CatalogColourOption,
+  CatalogFilterLayout,
+  CatalogFilterOption,
+} from './CatalogFilterGroups';
+import {
   CATALOG_RATING_VALUES,
   DEFAULT_CATALOG_FILTER_STATE,
   toggleCatalogFilterValue,
 } from './catalogFilterState';
 import type { CatalogFilterListKey, CatalogFilterState } from './catalogFilterState';
 import type { CatalogLiveFacets } from './catalogFacets';
-
-interface CatalogFilterOption {
-  readonly value: string;
-  readonly label: string;
-  readonly count?: number;
-}
-
-interface CatalogColourOption {
-  readonly value: string;
-  readonly label: string;
-  readonly swatch?: string;
-  readonly count?: number;
-}
 
 interface CatalogRatingOption {
   readonly value: string;
@@ -87,41 +83,11 @@ const COLOUR_EXTRA_OPTIONS: readonly CatalogColourOption[] = [
   { value: 'teal', label: 'Бирюзовый' },
 ];
 
-const ALL_BRAND_OPTIONS: readonly CatalogFilterOption[] = [
-  ...BRAND_OPTIONS,
-  ...BRAND_EXTRA_OPTIONS,
-];
-
-const ALL_COLOUR_OPTIONS: readonly CatalogColourOption[] = [
-  ...COLOUR_OPTIONS,
-  ...COLOUR_EXTRA_OPTIONS,
-];
-
-const PALETTE_SWATCHES: Readonly<Partial<Record<string, string>>> = Object.fromEntries(
-  ALL_COLOUR_OPTIONS.map((option) => [option.label, option.value]),
-);
-
 const MEMORY_LABELS: Readonly<Partial<Record<string, string>>> = Object.fromEntries(
   MEMORY_OPTIONS.map((option) => [option.value, option.label]),
 );
 
-const SHOW_MORE_LABEL = 'Показать ещё';
-const SHOW_LESS_LABEL = 'Свернуть';
 const BRAND_SEARCH_LABEL = 'Поиск бренда';
-const BRAND_SEARCH_EMPTY_LABEL = 'Бренды не найдены';
-
-const countFormatter = new Intl.NumberFormat('ru-RU');
-
-function OptionLabel({ label, count }: { readonly label: string; readonly count?: number }) {
-  return (
-    <span className="catalog-filters__option">
-      <span className="catalog-filters__option-name">{label}</span>
-      {count === undefined ? null : (
-        <span className="catalog-filters__option-count">{countFormatter.format(count)}</span>
-      )}
-    </span>
-  );
-}
 
 function RatingLabel({ option }: { readonly option: CatalogRatingOption }) {
   return (
@@ -138,31 +104,11 @@ function RatingLabel({ option }: { readonly option: CatalogRatingOption }) {
   );
 }
 
-interface ShowMoreButtonProps {
-  readonly expanded: boolean;
-  readonly onToggle: () => void;
-  readonly groupLabel: string;
-}
-
-function ShowMoreButton({ expanded, onToggle, groupLabel }: ShowMoreButtonProps) {
-  return (
-    <button
-      aria-expanded={expanded}
-      className="catalog-filters__more"
-      onClick={onToggle}
-      type="button"
-    >
-      {expanded ? SHOW_LESS_LABEL : SHOW_MORE_LABEL}
-      <span className="ui-visually-hidden">{groupLabel}</span>
-    </button>
-  );
-}
-
 export interface CatalogFiltersProps {
   readonly value: CatalogFilterState;
   readonly onChange: (next: CatalogFilterState) => void;
   readonly totalCount: number;
-  readonly layout?: 'sidebar' | 'dialog';
+  readonly layout?: CatalogFilterLayout;
   readonly liveFacets?: CatalogLiveFacets;
   readonly onReset?: () => void;
 }
@@ -192,7 +138,7 @@ function liveOptionSets(facets: CatalogLiveFacets): CatalogFilterOptionSets {
   const colours = facets.colours.map((colour) => ({
     value: colour.value,
     label: colour.value,
-    swatch: PALETTE_SWATCHES[colour.value],
+    swatch: catalogColourSwatch(colour.value),
     count: colour.count,
   }));
 
@@ -219,133 +165,58 @@ export function CatalogFilters({
 }: CatalogFiltersProps) {
   const live = liveFacets !== undefined;
   const options = live ? liveOptionSets(liveFacets) : SPECIMEN_OPTION_SETS;
-  const searchableBrands = live ? [...options.brands, ...options.extraBrands] : ALL_BRAND_OPTIONS;
-  const [brandsExpanded, setBrandsExpanded] = useState(false);
-  const [coloursExpanded, setColoursExpanded] = useState(false);
   const [brandQuery, setBrandQuery] = useState('');
-
-  const normalizedBrandQuery = brandQuery.trim().toLowerCase();
-  const brandSearchActive = normalizedBrandQuery.length > 0;
-  const matchingBrands = searchableBrands.filter((option) =>
-    option.label.toLowerCase().includes(normalizedBrandQuery),
-  );
 
   const setList = (key: CatalogFilterListKey, next: readonly string[]): void => {
     onChange({ ...value, [key]: next });
   };
 
-  const renderCheckboxGroup = (
-    key: CatalogFilterListKey,
-    options: readonly CatalogFilterOption[],
-  ): ReactNode =>
-    options.map((option) => (
-      <div className="catalog-filters__row" key={option.value}>
-        <Checkbox
-          checked={value[key].includes(option.value)}
-          label={<OptionLabel count={option.count} label={option.label} />}
-          onChange={(checked) => {
-            setList(key, toggleCatalogFilterValue(value[key], option.value, checked));
-          }}
-        />
-      </div>
-    ));
-
-  const renderColourSwatches = (swatches: readonly CatalogColourOption[]): ReactNode =>
-    swatches.map((option) => (
-      <label className="catalog-filters__swatch" key={option.value}>
-        <input
-          checked={value.colours.includes(option.value)}
-          className="catalog-filters__swatch-input"
-          onChange={(event) => {
-            setList(
-              'colours',
-              toggleCatalogFilterValue(value.colours, option.value, event.target.checked),
-            );
-          }}
-          type="checkbox"
-        />
-        <span
-          className={`catalog-filters__swatch-dot catalog-filters__swatch-dot--${option.swatch ?? ''}`}
-        >
-          <Icon className="catalog-filters__swatch-mark" name="check" />
-        </span>
-        <span className="ui-visually-hidden">
-          {option.count === undefined
-            ? option.label
-            : `${option.label} (${countFormatter.format(option.count)})`}
-        </span>
-      </label>
-    ));
-
-  const shownColours = coloursExpanded
-    ? [...options.colours, ...options.extraColours]
-    : options.colours;
-  const colourSwatches = shownColours.filter((option) => option.swatch !== undefined);
-  const colourRows = shownColours.filter((option) => option.swatch === undefined);
-
-  const panelClass =
-    layout === 'dialog' ? 'catalog-filters catalog-filters--plain' : 'catalog-filters';
-
   return (
-    <div className={panelClass}>
-      {layout === 'sidebar' ? <h2 className="catalog-filters__title">Фильтры</h2> : null}
+    <CatalogFilterPanel
+      layout={layout}
+      onReset={() => {
+        setBrandQuery('');
 
-      <fieldset className="catalog-filters__group">
-        <legend className="ui-visually-hidden">Бренд</legend>
-        <div className="catalog-filters__brand-search">
-          <SearchField
-            label={BRAND_SEARCH_LABEL}
-            labelVisuallyHidden
-            onValueChange={setBrandQuery}
-            placeholder={BRAND_SEARCH_LABEL}
-            value={brandQuery}
-          />
-        </div>
-        <div className="catalog-filters__row">
-          <Checkbox
-            checked={value.brands.length === 0}
-            label={<OptionLabel count={totalCount} label="Все бренды" />}
-            onChange={(checked) => {
-              if (checked) {
-                setList('brands', []);
-              }
-            }}
-          />
-        </div>
-        {brandSearchActive ? (
-          matchingBrands.length === 0 ? (
-            <p className="catalog-filters__empty">{BRAND_SEARCH_EMPTY_LABEL}</p>
-          ) : (
-            renderCheckboxGroup('brands', matchingBrands)
-          )
-        ) : (
-          <>
-            {renderCheckboxGroup('brands', options.brands)}
-            {brandsExpanded ? renderCheckboxGroup('brands', options.extraBrands) : null}
-            {options.extraBrands.length > 0 ? (
-              <ShowMoreButton
-                expanded={brandsExpanded}
-                groupLabel="бренды"
-                onToggle={() => {
-                  setBrandsExpanded(!brandsExpanded);
-                }}
-              />
-            ) : null}
-          </>
-        )}
-      </fieldset>
+        if (onReset === undefined) {
+          onChange(DEFAULT_CATALOG_FILTER_STATE);
+        } else {
+          onReset();
+        }
+      }}
+    >
+      <CatalogBrandGroup
+        brands={options.brands}
+        extraBrands={options.extraBrands}
+        legend="Бренд"
+        onChange={(next) => {
+          setList('brands', next);
+        }}
+        onQueryChange={setBrandQuery}
+        query={brandQuery}
+        searchLabel={BRAND_SEARCH_LABEL}
+        selected={value.brands}
+        totalCount={totalCount}
+      />
 
       {live ? null : (
         <>
-          <fieldset className="catalog-filters__group">
-            <legend className="catalog-filters__legend">Серия</legend>
-            {renderCheckboxGroup('series', SERIES_OPTIONS)}
-          </fieldset>
+          <CatalogCheckboxGroup
+            legend="Серия"
+            onChange={(next) => {
+              setList('series', next);
+            }}
+            options={SERIES_OPTIONS}
+            selected={value.series}
+          />
 
-          <fieldset className="catalog-filters__group">
-            <legend className="catalog-filters__legend">Диагональ</legend>
-            {renderCheckboxGroup('diagonal', DIAGONAL_OPTIONS)}
-          </fieldset>
+          <CatalogCheckboxGroup
+            legend="Диагональ"
+            onChange={(next) => {
+              setList('diagonal', next);
+            }}
+            options={DIAGONAL_OPTIONS}
+            selected={value.diagonal}
+          />
         </>
       )}
 
@@ -364,70 +235,30 @@ export function CatalogFilters({
         ))}
       </fieldset>
 
-      <div className="catalog-filters__group">
-        <h3 className="catalog-filters__legend">Цена, ₽</h3>
-        <div className="catalog-filters__price">
-          <RangeSlider
-            formatValue={(price) => countFormatter.format(price)}
-            max={CATALOG_PRICE_MAX}
-            maxLabel="Цена до"
-            min={CATALOG_PRICE_MIN}
-            minLabel="Цена от"
-            onChange={(price) => {
-              onChange({ ...value, price });
-            }}
-            step={CATALOG_PRICE_STEP}
-            values={value.price}
-          />
-        </div>
-      </div>
+      <CatalogPriceGroup
+        onChange={(price) => {
+          onChange({ ...value, price });
+        }}
+        value={value.price}
+      />
 
-      <fieldset className="catalog-filters__group">
-        <legend className="catalog-filters__legend">Память</legend>
-        {renderCheckboxGroup('memory', options.memory)}
-      </fieldset>
+      <CatalogCheckboxGroup
+        legend="Память"
+        onChange={(next) => {
+          setList('memory', next);
+        }}
+        options={options.memory}
+        selected={value.memory}
+      />
 
-      <fieldset className="catalog-filters__group">
-        <legend className="catalog-filters__legend">Цвет</legend>
-        {colourSwatches.length > 0 ? (
-          <div className="catalog-filters__swatches">{renderColourSwatches(colourSwatches)}</div>
-        ) : null}
-        {colourRows.length > 0 ? (
-          <div className="catalog-filters__colour-rows">
-            {renderCheckboxGroup('colours', colourRows)}
-          </div>
-        ) : null}
-        {options.extraColours.length > 0 ? (
-          <ShowMoreButton
-            expanded={coloursExpanded}
-            groupLabel="цвета"
-            onToggle={() => {
-              setColoursExpanded(!coloursExpanded);
-            }}
-          />
-        ) : null}
-      </fieldset>
-
-      {layout === 'sidebar' ? (
-        <div className="catalog-filters__group">
-          <button
-            className="catalog-filters__reset"
-            onClick={() => {
-              setBrandQuery('');
-
-              if (onReset === undefined) {
-                onChange(DEFAULT_CATALOG_FILTER_STATE);
-              } else {
-                onReset();
-              }
-            }}
-            type="button"
-          >
-            <Icon name="return" />
-            Сбросить фильтры
-          </button>
-        </div>
-      ) : null}
-    </div>
+      <CatalogColourGroup
+        colours={options.colours}
+        extraColours={options.extraColours}
+        onChange={(next) => {
+          setList('colours', next);
+        }}
+        selected={value.colours}
+      />
+    </CatalogFilterPanel>
   );
 }

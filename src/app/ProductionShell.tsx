@@ -10,6 +10,7 @@ import {
   ABOUT_PATH,
   ACCOUNT_PATH,
   CART_PATH,
+  CATALOG_LAPTOPS_PATH,
   CATALOG_SMARTPHONES_PATH,
   COMPARE_PATH,
   CONTACTS_PATH,
@@ -87,6 +88,7 @@ export function ProductionShell({ children }: ProductionShellProps) {
         homeHref={home}
         onSearchSubmit={handleSearchSubmit}
         searchPlaceholder="Поиск товаров"
+        laptopsHref={hashHref(CATALOG_LAPTOPS_PATH)}
         smartphonesHref={hashHref(CATALOG_SMARTPHONES_PATH)}
         storesHref={hashHref(SHOPS_PATH)}
         supportHref={CONTACTS_HREF}

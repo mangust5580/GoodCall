@@ -1,12 +1,8 @@
-import { Select } from 'radix-ui';
 import { useState } from 'react';
 
-import { formatUnitCount } from '../../commerce/cart';
-import { EmptyState } from '../../components/feedback';
-import { Container } from '../../components/layout';
-import { Icon, Pagination } from '../../components/ui';
 import { CatalogFilterDialog } from './CatalogFilterDialog';
 import { CatalogFilters } from './CatalogFilters';
+import { CatalogListingLayout } from './CatalogListingLayout';
 import { CatalogProductGrid } from './CatalogProductGrid';
 import type {
   CatalogCartSeam,
@@ -20,9 +16,9 @@ import {
   catalogLivePageSlice,
 } from './catalogFacets';
 import type { CatalogQuickFilterValue } from './catalogFacets';
-import { DEFAULT_CATALOG_FILTER_STATE } from './catalogFilterState';
+import { DEFAULT_CATALOG_FILTER_STATE, isPriceOnlyChange } from './catalogFilterState';
 import type { CatalogFilterListKey, CatalogFilterState } from './catalogFilterState';
-import { CATALOG_SORT_OPTIONS, DEFAULT_CATALOG_SORT, sortCatalogProducts } from './catalogProduct';
+import { DEFAULT_CATALOG_SORT, sortCatalogProducts } from './catalogProduct';
 import type { CatalogProduct, CatalogSortValue } from './catalogProduct';
 import { CATALOG_PAGE_COUNT, catalogPageProducts } from './catalogProductFixtures';
 import { CATALOG_PRODUCTS } from './catalogProducts';
@@ -51,7 +47,6 @@ interface QuickFilter {
 
 const CATEGORY_TITLE = 'Смартфоны';
 const DEFAULT_RESULT_COUNT = 2546;
-const SORT_LABEL = 'Сортировка';
 
 const QUICK_FILTERS: readonly QuickFilter[] = [
   { value: 'all', label: 'Все смартфоны' },
@@ -76,14 +71,6 @@ const FILTER_LIST_KEYS: readonly CatalogFilterListKey[] = [
   'memory',
   'colours',
 ];
-
-function sameValues(left: readonly string[], right: readonly string[]): boolean {
-  return left.length === right.length && left.every((value, index) => value === right[index]);
-}
-
-function isPriceOnlyChange(previous: CatalogFilterState, next: CatalogFilterState): boolean {
-  return FILTER_LIST_KEYS.every((key) => sameValues(previous[key], next[key]));
-}
 
 export function CatalogPage({
   mode = 'specimen',
@@ -129,7 +116,10 @@ export function CatalogPage({
 
   const updateFilters = (next: CatalogFilterState): void => {
     if (controlled) {
-      commit({ filters: next, page: 1 }, isPriceOnlyChange(filters, next) ? 'replace' : 'push');
+      commit(
+        { filters: next, page: 1 },
+        isPriceOnlyChange(filters, next, FILTER_LIST_KEYS) ? 'replace' : 'push',
+      );
       return;
     }
 
@@ -200,146 +190,68 @@ export function CatalogPage({
   };
 
   return (
-    <main className="catalog-page">
-      <Container>
-        <nav aria-label="Хлебные крошки" className="catalog-page__breadcrumbs">
-          <ol className="catalog-page__crumbs">
-            <li className="catalog-page__crumb">
-              {homeHref === undefined ? (
-                'Главная'
-              ) : (
-                <a className="catalog-page__crumb-link" href={homeHref}>
-                  Главная
-                </a>
-              )}
-            </li>
-            <li className="catalog-page__crumb">Каталог</li>
-            <li aria-current="page" className="catalog-page__crumb">
-              {CATEGORY_TITLE}
-            </li>
-          </ol>
-        </nav>
+    <CatalogListingLayout
+      count={displayedCount}
+      emptyResults={emptyResults}
+      filterBar={
+        <CatalogFilterDialog
+          liveFacets={liveFacets}
+          onApply={applyDialogFilters}
+          totalCount={live ? products.length : resultCount}
+          value={filters}
+        />
+      }
+      homeHref={homeHref}
+      live={live}
+      onResetResults={resetLiveResults}
+      onSortChange={changeSort}
+      pagination={
+        live && pageCount <= 1 ? undefined : { page: currentPage, pageCount, onChange: changePage }
+      }
+      quickFilters={
+        <div aria-label="Быстрые фильтры" className="catalog-page__quick-filters" role="group">
+          {quickFilters.map((item) => {
+            const selected = item.value === quickFilter;
+            const className = selected
+              ? 'catalog-page__quick-filter catalog-page__quick-filter--selected'
+              : 'catalog-page__quick-filter';
 
-        <div className="catalog-page__layout">
-          <header className="catalog-page__heading">
-            <div className="catalog-page__heading-group">
-              <h1 className="catalog-page__title">{CATEGORY_TITLE}</h1>
-              <p aria-live={live ? 'polite' : undefined} className="catalog-page__count">
-                {formatUnitCount(displayedCount)}
-              </p>
-            </div>
-
-            <Select.Root
-              onValueChange={(value: CatalogSortValue) => {
-                changeSort(value);
-              }}
-              value={sort}
-            >
-              <Select.Trigger
-                aria-label={SORT_LABEL}
-                className="ui-input ui-input--select-trigger catalog-page__sort"
+            return (
+              <button
+                aria-pressed={selected}
+                className={className}
+                key={item.value}
+                onClick={() => {
+                  changeQuickFilter(item.value);
+                }}
+                type="button"
               >
-                <Select.Value />
-                <Select.Icon asChild>
-                  <Icon className="ui-input__select-icon" name="chevron-down" />
-                </Select.Icon>
-              </Select.Trigger>
-              <Select.Portal>
-                <Select.Content
-                  align="end"
-                  className="ui-floating-surface ui-select-content"
-                  collisionPadding={16}
-                  position="popper"
-                  sideOffset={8}
-                >
-                  <Select.Viewport className="ui-select-content__viewport">
-                    {CATALOG_SORT_OPTIONS.map((option) => (
-                      <Select.Item
-                        className="ui-select-content__item"
-                        key={option.value}
-                        value={option.value}
-                      >
-                        <Select.ItemText>{option.label}</Select.ItemText>
-                      </Select.Item>
-                    ))}
-                  </Select.Viewport>
-                </Select.Content>
-              </Select.Portal>
-            </Select.Root>
-          </header>
-
-          <aside aria-label="Фильтры каталога" className="catalog-page__sidebar">
-            <CatalogFilters
-              liveFacets={liveFacets}
-              onChange={updateFilters}
-              onReset={live ? resetLiveResults : undefined}
-              totalCount={live ? products.length : resultCount}
-              value={filters}
-            />
-          </aside>
-
-          <section aria-label="Товары каталога" className="catalog-page__results">
-            <div className="catalog-page__filter-bar">
-              <CatalogFilterDialog
-                liveFacets={liveFacets}
-                onApply={applyDialogFilters}
-                totalCount={live ? products.length : resultCount}
-                value={filters}
-              />
-            </div>
-
-            <div aria-label="Быстрые фильтры" className="catalog-page__quick-filters" role="group">
-              {quickFilters.map((item) => {
-                const selected = item.value === quickFilter;
-                const className = selected
-                  ? 'catalog-page__quick-filter catalog-page__quick-filter--selected'
-                  : 'catalog-page__quick-filter';
-
-                return (
-                  <button
-                    aria-pressed={selected}
-                    className={className}
-                    key={item.value}
-                    onClick={() => {
-                      changeQuickFilter(item.value);
-                    }}
-                    type="button"
-                  >
-                    {item.label}
-                  </button>
-                );
-              })}
-            </div>
-
-            {emptyResults ? (
-              <EmptyState
-                action={{ label: 'Сбросить фильтры', onClick: resetLiveResults }}
-                message="По выбранным фильтрам товаров нет."
-                title="Ничего не найдено"
-              />
-            ) : (
-              <CatalogProductGrid
-                cart={cart}
-                favorites={favorites}
-                compare={compare}
-                productHref={productHref}
-                products={visibleProducts}
-              />
-            )}
-
-            {live && pageCount <= 1 ? null : (
-              <div className="catalog-page__pagination">
-                <Pagination
-                  label="Страницы каталога"
-                  onChange={changePage}
-                  page={currentPage}
-                  pageCount={pageCount}
-                />
-              </div>
-            )}
-          </section>
+                {item.label}
+              </button>
+            );
+          })}
         </div>
-      </Container>
-    </main>
+      }
+      results={
+        <CatalogProductGrid
+          cart={cart}
+          favorites={favorites}
+          compare={compare}
+          productHref={productHref}
+          products={visibleProducts}
+        />
+      }
+      sidebar={
+        <CatalogFilters
+          liveFacets={liveFacets}
+          onChange={updateFilters}
+          onReset={live ? resetLiveResults : undefined}
+          totalCount={live ? products.length : resultCount}
+          value={filters}
+        />
+      }
+      sort={sort}
+      title={CATEGORY_TITLE}
+    />
   );
 }

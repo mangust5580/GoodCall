@@ -144,12 +144,16 @@ Technically complete:
   owned by React Router using a GitHub Pages-safe hash strategy. See the
   Current routes section below.
 
-Active visual slice: none. Active implementation milestone: none. Account A,
-B and C are closed; there is no approved next Account milestone (see Project
-closeout state below).
+Active visual slice: none. Active implementation milestone: none. Second
+Category A (Ноутбуки) is closed and published. Next approved activity:
+portfolio-wide quality audit / remediation planning (see Project closeout
+state below).
 
 Completed visual slices:
 
+- **Second Category A / Ноутбуки — USER VISUAL/UX PASS on 2026-10-08, CLOSED
+  and published.** `#/catalog/laptops` with 12 live laptops. See the Second
+  Category A section below.
 - **Account C / Delivery Addresses — USER VISUAL/UX PASS on 2026-10-08,
   CLOSED and published.** Browser-local demo address book on
   `#/account/addresses`. See the Account C section below.
@@ -214,6 +218,53 @@ section below. **Checkout A / Checkout Page Foundation — USER VISUAL/UX PASS
 on 2026-09-30, CLOSED and published.** See the Checkout A section below. Search C, Favourites A, Commerce B, Commerce A,
 Blog B, Blog A, Home A, Cart A, Cart B, Search A, Search B, 404 A and the
 Product Details production integration are closed.
+
+### Second Category A — Ноутбуки
+
+**Status: USER VISUAL/UX PASS on 2026-10-08 — CLOSED and published.**
+
+- **Route.** `#/catalog/laptops` is an explicit route (no `/catalog/:category`
+  wildcard; `#/catalog/tablets` and other categories stay the designed 404).
+  Breadcrumbs «Главная › Каталог › Ноутбуки», h1 «Ноутбуки».
+- **Data.** 12 live laptop products in the existing `products` table (category
+  `laptops`); no schema change, no `product_images` or `home_popular_products`
+  change. The approved seed SQL was executed outside Claude Code through the
+  connected Supabase tool in the working ChatGPT session; the live state was
+  re-read and verified before implementation. The verify fixture holds the
+  same 30 live rows.
+- **Read.** `fetchCatalogProducts(categorySlug)` serves `'smartphones'` and
+  `'laptops'`. Laptop badges come from live data (sale `-N%`, else
+  «Новинка»). Loading, read error and an empty result show route states; there
+  is no laptop fixture fallback.
+- **Facets.** Цена, Производитель (live `brand`), Диагональ экрана
+  (`13-14`/`15-16`/`17+`), Процессор, RAM, SSD, Видеокарта, ОС, Цвет — from a
+  typed local facts map keyed by slug (`src/pages/catalog/laptops/laptopFacts.ts`),
+  never parsed from names. No availability, rating, quick filters or Серия.
+- **URL state.** `brand diagonal cpu ram ssd gpu os colour price_from price_to
+sort page` in that order; same push/replace, page-reset, unknown-value,
+  unrelated-param and mobile draft/apply rules as smartphones. 12 per page:
+  one page, no visible pagination.
+- **Catalog family boundary.** Two explicit category consumers. Shared:
+  `CatalogListingLayout`, `CatalogFilterGroups`, `CatalogFilterDialogShell`,
+  the colour palette, price/sort/page helpers. Smartphone-owned: specimen and
+  reference mode, quick filters, in-grid promo, smartphone facets and URL.
+  Laptop-owned: facts, facets, filter state, URL state. No universal facet
+  engine or category DSL.
+- **Navigation.** Header «Ноутбуки» (`SiteHeader.laptopsHref`) and the Home
+  «Ноутбуки» tile (`HomePage.laptopsPath`) link to `#/catalog/laptops`; both
+  props are optional, so reference output is unchanged.
+- **PDP.** 12 laptop entries (`content/laptops.ts`, category `laptops`, six
+  spec groups) with provenance in `docs/product-content-sources.md`; the
+  `content` suite asserts facts/PDP parity. The category crumb links to
+  `#/catalog/laptops`; no laptop related-products section.
+- **Media.** All 12 laptops use the laptop category artwork
+  (`productThumbnail` → `HOME_DEVICE_MEDIA.laptop`) on Catalog, Cart,
+  Favourites, Compare, Checkout, Order Confirmation and the PDP.
+- **Search.** Global Search stays smartphone-only by explicit scope;
+  cross-category Search is a separate product decision.
+- **Verification.** New `laptops` suite (route, facets, URL state, sort,
+  cards, navigation, states, downstream media, PDP handoff, responsive,
+  reference pixel diffs vs HEAD); `content` extended.
 
 ### Account C — Delivery Addresses
 
@@ -4744,13 +4795,14 @@ router owns only the fragment. The base path still lives solely in
 - `#/` — the production Home route. The temporary redirect to Catalog is gone.
 - `#/catalog/smartphones` — the production Catalog route. Direct-entry shape:
   <https://mangust5580.github.io/GoodCall/#/catalog/smartphones>
+- `#/catalog/laptops` — the laptops Catalog route (Second Category A, closed).
 - `#/cart` — the production Cart route over the shared local cart
   (Commerce A): the Cart A empty state when the cart is empty, and the Cart B
   populated state otherwise.
 - `#/search?q=…` — the production Search results route (Search A, with Search B
   desktop facets); optional `sort` and `page` params.
 - `#/product/:slug` — the production Product Details route, content-gated by
-  the local Product Details registry (all 18 active products); a slug without
+  the local Product Details registry (all 30 active products); a slug without
   content renders the route's compact not-found state.
 - `#/blog` — the Blog listing (Blog A, closed); optional
   `category`, `q` and `page` params.
@@ -4783,7 +4835,7 @@ router owns only the fragment. The base path still lives solely in
   It is not a global error architecture.
 
 Route paths live in `src/app/routePaths.ts` as `HOME_PATH`,
-`CATALOG_SMARTPHONES_PATH`, `PRODUCT_PATH`, `CART_PATH`, `CHECKOUT_PATH`, `ORDER_CONFIRMATION_PATH`, `FAVORITES_PATH`, `COMPARE_PATH`, `SHOPS_PATH`, `DELIVERY_PATH`, `WARRANTY_PATH`, `FAQ_PATH`,
+`CATALOG_SMARTPHONES_PATH`, `CATALOG_LAPTOPS_PATH`, `PRODUCT_PATH`, `CART_PATH`, `CHECKOUT_PATH`, `ORDER_CONFIRMATION_PATH`, `FAVORITES_PATH`, `COMPARE_PATH`, `SHOPS_PATH`, `DELIVERY_PATH`, `WARRANTY_PATH`, `FAQ_PATH`,
 `CONTACTS_PATH`, `ABOUT_PATH`, `PRIVACY_PATH`, `TERMS_PATH`, `OFFER_PATH`, `SEARCH_PATH`, `BLOG_PATH`, `BLOG_ARTICLE_PATH`, `LOGIN_PATH`, `ACCOUNT_PATH`, `ACCOUNT_ORDERS_PATH`, `ACCOUNT_PROFILE_PATH` and `ACCOUNT_ADDRESSES_PATH`.
 `hashHref()`, `productDetailsHref()`, `searchPath()`, `blogPath()`,
 `blogArticlePath()` and `blogArticleHref()` serve the `href` and navigation
@@ -4895,6 +4947,8 @@ Remote products map into the existing `CatalogProduct` presentation model:
 review count and popularity come from `products`, and the accepted badge
 presentation temporarily comes from matching fixture slugs. Future remote
 products without fixture presentation metadata render without an invented badge.
+The same reader serves `#/catalog/laptops` with `'laptops'` (live badges, no
+fixture fallback; see Second Category A).
 
 `product_images` currently has no rows, so the Catalog renders the local product
 thumbnail for covered slugs (Product Thumbnail Integration A) and the accepted
@@ -4975,9 +5029,10 @@ never jumps into the production router.
   The utility links («Магазины» → `#/shops`, «Поддержка» → `#/contacts`), the
   Сравнение/Избранное/Корзина actions and the search are wired, and the
   account action is wired since Account A («Войти» → `#/login`, «Профиль» →
-  `#/account`). `Каталог товаров`, `Ещё` and eight of the nine category links
+  `#/account`). `Каталог товаров`, `Ещё` and seven of the nine category links
   keep the consumer-injected fallback to the app base. The `Смартфоны` category links to
   `#/catalog/smartphones` through the narrow `SiteHeader.smartphonesHref` seam
+  and `Ноутбуки` to `#/catalog/laptops` through `SiteHeader.laptopsHref`
   (production only); `Каталог товаров` is deliberately not pointed at the
   smartphones-only route. No unavailable
   destination received a fake route and no category label became semantically
@@ -5085,7 +5140,8 @@ none of them blocks the closed milestone.
 - Product-facing remaining work is classified in **Project closeout state**
   below. Media coverage detail: `iphone-15-128` and the five PDP Media
   Coverage A SKUs have galleries, `apple-watch-series-9-45` has one image, and
-  the other eleven live SKUs (including AirPods) use category artwork.
+  the other eleven smartphone/headphone SKUs (including AirPods) and all 12
+  laptops use category artwork.
 - Phone validation, country selection and international formatting are deferred
   until a real product form consumer defines those requirements.
 - Textarea auto-grow remains deferred until a concrete consumer requires it.
@@ -5114,13 +5170,12 @@ none of them blocks the closed milestone.
 - In specimen mode, options behind the brand and colour `Показать ещё` buttons
   are fixtures (the raster shows only the collapsed lists). The live route
   derives them from live products.
-- The smartphone filter and product fixtures are **not** the future universal
-  category contract. GoodCall will hold many technical categories with different
-  filter inventories, and the trigger for designing common-versus-category-
-  specific filter and facet architecture is a second real category with a
-  different inventory — not a refactor of the current specimen data.
-- `#/catalog/smartphones` is the only category route. No second category
-  route exists. Live product cards link to `#/product/:slug` for every
+- The Catalog contract has two explicit category consumers (smartphones,
+  laptops): shared listing mechanics, explicit category-specific facet and URL
+  modules, no universal facet engine. A third category is a new product
+  decision.
+- `#/catalog/smartphones` and `#/catalog/laptops` are the only category
+  routes. Live product cards link to `#/product/:slug` for every
   registered live product slug; fixture-fallback cards and the in-grid promo
   carry no link.
 - Live DaData behaviour is unverified. No local token is available, GitHub secret
@@ -5131,9 +5186,11 @@ none of them blocks the closed milestone.
 
 ## Project closeout state
 
-Account C is the last published milestone. **Active visual slice: none.
-Active implementation milestone: none.** No active code-level release blocker
-is known, and there is no approved next Account milestone.
+Second Category A (Ноутбуки) is the last published milestone. **Active visual
+slice: none. Active implementation milestone: none.** No active code-level
+release blocker is known, and there is no approved next Account milestone.
+**Next approved activity: portfolio-wide quality audit / remediation
+planning.**
 
 Settings, Bonuses, Notifications, recently viewed, a real authenticated
 account and Checkout saved-address integration are intentionally omitted (not
@@ -5158,7 +5215,7 @@ planned) until a new product decision.
 **Blocked by product decision:**
 
 - Catalog landing page.
-- Additional categories and category-specific facets.
+- Further categories beyond smartphones and laptops; cross-category Search.
 - Header unresolved fallback destinations (`Каталог товаров`, `Ещё` and the
   unresolved category links).
 - `Серия` / `Диагональ` filter copy (see Active open questions).

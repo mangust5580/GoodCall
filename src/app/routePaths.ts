@@ -3,6 +3,7 @@ import { hasProductDetailsContent } from '../pages/product-details';
 
 export const HOME_PATH = '/';
 export const CATALOG_SMARTPHONES_PATH = '/catalog/smartphones';
+export const CATALOG_LAPTOPS_PATH = '/catalog/laptops';
 export const PRODUCT_PATH = '/product/:slug';
 export const CART_PATH = '/cart';
 export const CHECKOUT_PATH = '/checkout';

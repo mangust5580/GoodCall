@@ -52,7 +52,7 @@ const CATALOG_URL_PARAMS = [
 
 const PAGE_PATTERN = /^\d+$/u;
 
-function allowedValues(
+export function allowedValues(
   params: URLSearchParams,
   key: string,
   allowed: ReadonlySet<string>,
@@ -68,7 +68,7 @@ function allowedValues(
   return values;
 }
 
-function parsePriceBound(value: string | null, fallback: number): number {
+export function parsePriceBound(value: string | null, fallback: number): number {
   if (value === null || value.trim() === '') {
     return fallback;
   }
@@ -93,13 +93,13 @@ function parseQuickFilter(value: string | null): CatalogQuickFilterValue {
   );
 }
 
-function parseSort(value: string | null): CatalogSortValue {
+export function parseSort(value: string | null): CatalogSortValue {
   return (
     CATALOG_SORT_OPTIONS.find((option) => option.value === value)?.value ?? DEFAULT_CATALOG_SORT
   );
 }
 
-function parsePage(value: string | null): number {
+export function parsePage(value: string | null): number {
   if (value === null || !PAGE_PATTERN.test(value)) {
     return 1;
   }
@@ -135,7 +135,11 @@ export function parseCatalogUrlState(
   };
 }
 
-function appendUnique(params: URLSearchParams, key: string, values: readonly string[]): void {
+export function appendUnique(
+  params: URLSearchParams,
+  key: string,
+  values: readonly string[],
+): void {
   for (const value of new Set(values)) {
     params.append(key, value);
   }

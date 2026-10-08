@@ -1,4 +1,5 @@
 import { HEADPHONES_CONTENT } from './content/headphones';
+import { LAPTOPS_CONTENT } from './content/laptops';
 import { SMART_WATCHES_CONTENT } from './content/smartWatches';
 import { SMARTPHONES_CONTENT } from './content/smartphones';
 import type { ProductContentCategory, ProductDetailsContent } from './productDetailsContent.types';
@@ -23,6 +24,14 @@ export const PRODUCT_SPEC_TEMPLATES: Readonly<Record<ProductContentCategory, rea
     'Совместимость',
   ],
   headphones: ['Звук', 'Управление и чип', 'Питание', 'Связь', 'Корпус и защита', 'Совместимость'],
+  laptops: [
+    'Экран',
+    'Процессор',
+    'Память и накопитель',
+    'Графика',
+    'Корпус и порты',
+    'Система и батарея',
+  ],
 };
 
 function buildRegistry(
@@ -45,6 +54,7 @@ export const PRODUCT_DETAILS_CONTENT: readonly ProductDetailsContent[] = [
   ...SMARTPHONES_CONTENT,
   ...SMART_WATCHES_CONTENT,
   ...HEADPHONES_CONTENT,
+  ...LAPTOPS_CONTENT,
 ];
 
 const registry = buildRegistry(PRODUCT_DETAILS_CONTENT);

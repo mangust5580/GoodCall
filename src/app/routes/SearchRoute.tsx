@@ -33,7 +33,7 @@ export function SearchRoute() {
   useEffect(() => {
     let mounted = true;
 
-    void fetchCatalogProducts().then((result) => {
+    void fetchCatalogProducts('smartphones').then((result) => {
       if (!mounted) {
         return;
       }

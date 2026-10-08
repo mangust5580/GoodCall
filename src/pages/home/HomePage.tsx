@@ -37,6 +37,7 @@ export interface HomeCartSeam {
 
 export interface HomePageProps {
   readonly smartphonesPath?: string;
+  readonly laptopsPath?: string;
   readonly articlesPath?: string;
   readonly categories?: readonly HomeCategoryTile[];
   readonly products?: readonly HomeProduct[];
@@ -46,6 +47,7 @@ export interface HomePageProps {
 }
 
 const SMARTPHONES_SLUG = 'smartphones';
+const LAPTOPS_SLUG = 'laptops';
 
 const ARTWORK: Readonly<Record<HomeArtwork, PictureSource>> = {
   smartphone: HOME_DEVICE_MEDIA.smartphone,
@@ -73,6 +75,7 @@ const ARTICLE_MEDIA: Readonly<Record<string, PictureSource>> = {
 
 export function HomePage({
   smartphonesPath,
+  laptopsPath,
   articlesPath,
   categories = HOME_CATEGORY_TILES,
   products = HOME_PRODUCTS,
@@ -82,9 +85,12 @@ export function HomePage({
 }: HomePageProps) {
   const [announcement, setAnnouncement] = useState('');
   const categoryLink = (slug: string, content: ReactNode, className: string) => {
-    if (slug === SMARTPHONES_SLUG && smartphonesPath !== undefined) {
+    const path =
+      slug === SMARTPHONES_SLUG ? smartphonesPath : slug === LAPTOPS_SLUG ? laptopsPath : undefined;
+
+    if (path !== undefined) {
       return (
-        <Link className={`${className} ${className}--available`} to={smartphonesPath}>
+        <Link className={`${className} ${className}--available`} to={path}>
           {content}
         </Link>
       );

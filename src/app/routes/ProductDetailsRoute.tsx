@@ -20,7 +20,13 @@ import type {
   ProductDetailsView,
 } from '../../pages/product-details';
 import { ProductionShell } from '../ProductionShell';
-import { CATALOG_SMARTPHONES_PATH, HOME_PATH, hashHref, productDetailsHref } from '../routePaths';
+import {
+  CATALOG_LAPTOPS_PATH,
+  CATALOG_SMARTPHONES_PATH,
+  HOME_PATH,
+  hashHref,
+  productDetailsHref,
+} from '../routePaths';
 import { useCatalogCartSeam } from './useCatalogCartSeam';
 import { useCatalogCompareSeam } from './useCatalogCompareSeam';
 import { useCatalogFavoritesSeam } from './useCatalogFavoritesSeam';
@@ -45,6 +51,10 @@ interface SettledProductRead {
 }
 
 const SMARTPHONES_CATEGORY_SLUG = 'smartphones';
+const CATEGORY_HREFS: Readonly<Partial<Record<string, string>>> = {
+  [SMARTPHONES_CATEGORY_SLUG]: hashHref(CATALOG_SMARTPHONES_PATH),
+  laptops: hashHref(CATALOG_LAPTOPS_PATH),
+};
 const RELATED_PRODUCTS_LIMIT = 8;
 const FALLBACK_CART_IMAGE: CartLineImage = { kind: 'catalog-fallback' };
 const LOADING_VIEW: ProductDetailsRouteView = { status: 'loading' };
@@ -72,7 +82,7 @@ function viewFromResult(
       status: 'ready',
       product: buildProductDetailsView(live, content, PRODUCT_DETAILS_STOREWIDE),
       cartImage: content.media?.cartImage ?? FALLBACK_CART_IMAGE,
-      categoryHref: smartphone ? hashHref(CATALOG_SMARTPHONES_PATH) : undefined,
+      categoryHref: CATEGORY_HREFS[live.categorySlug],
       smartphone,
     };
   }
@@ -181,7 +191,7 @@ export function ProductDetailsRoute() {
 
     smartphoneCatalogRequested.current = true;
 
-    void fetchCatalogProducts().then((result) => {
+    void fetchCatalogProducts('smartphones').then((result) => {
       if (result.status === 'ready') {
         setSmartphoneCatalog(result.products);
         return;

@@ -18,7 +18,8 @@ type CatalogProductDataResult =
       readonly reason: string;
     };
 
-const SMARTPHONES_SLUG = 'smartphones';
+export type CatalogCategorySlug = 'smartphones' | 'laptops';
+
 const CATALOG_MEDIA_BUCKET = 'catalog-media';
 const fixturePresentationBySlug = new Map(CATALOG_PRODUCTS.map((product) => [product.id, product]));
 
@@ -32,6 +33,27 @@ function saleBadge(priceValue: number, oldPriceValue: number | undefined): strin
   }
 
   return `-${String(Math.round(((oldPriceValue - priceValue) / oldPriceValue) * 100))}%`;
+}
+
+const NEW_PRODUCT_BADGE = 'Новинка';
+
+const IMAGE_ALT_PREFIX: Readonly<Record<CatalogCategorySlug, string>> = {
+  smartphones: 'Смартфон',
+  laptops: 'Ноутбук',
+};
+
+function liveBadge(
+  priceValue: number,
+  oldPriceValue: number | undefined,
+  isNew: boolean,
+): Pick<CatalogProduct, 'badge' | 'discounted'> {
+  const badge = saleBadge(priceValue, oldPriceValue);
+
+  if (badge !== undefined) {
+    return { badge, discounted: true };
+  }
+
+  return isNew ? { badge: NEW_PRODUCT_BADGE } : {};
 }
 
 function productBadge(
@@ -68,6 +90,7 @@ function groupImagesByProduct(
 
 function mapCatalogProduct(
   client: GoodCallSupabaseClient,
+  categorySlug: CatalogCategorySlug,
   product: ProductRow,
   images: readonly ProductImageRow[],
 ): CatalogProduct | undefined {
@@ -75,7 +98,8 @@ function mapCatalogProduct(
     return undefined;
   }
 
-  const presentation = fixturePresentationBySlug.get(product.slug);
+  const presentation =
+    categorySlug === 'smartphones' ? fixturePresentationBySlug.get(product.slug) : undefined;
   const primaryImage = images[0];
   const publicImage =
     primaryImage === undefined
@@ -90,12 +114,18 @@ function mapCatalogProduct(
     title: product.name,
     imageSrc: publicImage,
     image: publicImage === undefined ? productThumbnail(product.slug) : undefined,
-    imageAlt: primaryImage?.alt.trim() || presentation?.imageAlt || `Смартфон ${product.name}`,
+    imageAlt:
+      primaryImage?.alt.trim() ||
+      presentation?.imageAlt ||
+      `${IMAGE_ALT_PREFIX[categorySlug]} ${product.name}`,
     priceValue: product.price,
     oldPriceValue,
     rating,
     reviewCount: product.review_count,
-    ...productBadge(presentation, product.price, oldPriceValue),
+    brand: product.brand,
+    ...(categorySlug === 'smartphones'
+      ? productBadge(presentation, product.price, oldPriceValue)
+      : liveBadge(product.price, oldPriceValue, product.is_new)),
     popularity: product.popularity_score,
   };
 }
@@ -122,7 +152,9 @@ async function fetchProductImages(
   return data;
 }
 
-export async function fetchCatalogProducts(): Promise<CatalogProductDataResult> {
+export async function fetchCatalogProducts(
+  categorySlug: CatalogCategorySlug,
+): Promise<CatalogProductDataResult> {
   const client = supabaseClient;
 
   if (client === undefined) {
@@ -133,7 +165,7 @@ export async function fetchCatalogProducts(): Promise<CatalogProductDataResult> 
     const { data: category, error: categoryError } = await client
       .from('categories')
       .select('id')
-      .eq('slug', SMARTPHONES_SLUG)
+      .eq('slug', categorySlug)
       .eq('is_active', true)
       .maybeSingle();
 
@@ -142,7 +174,7 @@ export async function fetchCatalogProducts(): Promise<CatalogProductDataResult> 
     }
 
     if (category === null) {
-      return { status: 'failure', reason: 'smartphones-category-missing' };
+      return { status: 'failure', reason: `${categorySlug}-category-missing` };
     }
 
     const { data: products, error: productsError } = await client
@@ -160,7 +192,7 @@ export async function fetchCatalogProducts(): Promise<CatalogProductDataResult> 
     }
 
     if (products.length === 0) {
-      return { status: 'failure', reason: 'smartphones-products-empty' };
+      return { status: 'failure', reason: `${categorySlug}-products-empty` };
     }
 
     const images = await fetchProductImages(
@@ -169,11 +201,13 @@ export async function fetchCatalogProducts(): Promise<CatalogProductDataResult> 
     );
     const imagesByProduct = groupImagesByProduct(images);
     const mappedProducts = products
-      .map((product) => mapCatalogProduct(client, product, imagesByProduct.get(product.id) ?? []))
+      .map((product) =>
+        mapCatalogProduct(client, categorySlug, product, imagesByProduct.get(product.id) ?? []),
+      )
       .filter((product): product is CatalogProduct => product !== undefined);
 
     if (mappedProducts.length === 0) {
-      return { status: 'failure', reason: 'smartphones-products-invalid' };
+      return { status: 'failure', reason: `${categorySlug}-products-invalid` };
     }
 
     return { status: 'ready', products: mappedProducts };

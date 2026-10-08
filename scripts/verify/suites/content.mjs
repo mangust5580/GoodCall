@@ -19,6 +19,21 @@ const server = await createServer({
   logLevel: 'error',
 });
 
+const EXPECTED_LAPTOP_SLUGS = [
+  'acer-aspire-5-i5-512',
+  'acer-swift-go-14-ultra5',
+  'asus-tuf-f15-rtx3050',
+  'asus-vivobook-15-i5-512',
+  'hp-15-i5-512',
+  'hp-victus-16-rtx4050',
+  'huawei-matebook-d16-i5',
+  'lenovo-ideapad-slim-5-14',
+  'lenovo-legion-5-16-rtx4060',
+  'macbook-air-13-m3-256',
+  'macbook-pro-14-m3-512',
+  'msi-katana-17-rtx4060',
+];
+
 let pass = 0;
 const failures = [];
 function check(condition, message) {
@@ -44,6 +59,7 @@ try {
     smartphones: { groups: 7, rows: 20, keyMin: 8, keyMax: 12, featureMin: 4 },
     'smart-watches': { groups: 7, rows: 16, keyMin: 6, keyMax: 10, featureMin: 3 },
     headphones: { groups: 6, rows: 12, keyMin: 6, keyMax: 8, featureMin: 3 },
+    laptops: { groups: 6, rows: 14, keyMin: 6, keyMax: 10, featureMin: 4 },
   };
   const forbidden =
     /(В наличии|Хит продаж|Код товара|бонус|Завтра|Сегодня|Купить в 1 клик|45 магазинов)/i;
@@ -52,10 +68,10 @@ try {
   const slugs = PRODUCT_DETAILS_CONTENT.map((record) => record.slug);
   check(new Set(slugs).size === slugs.length, 'duplicate slugs in content');
   check(
-    PRODUCT_DETAILS_CONTENT.length === 18,
-    `expected 18 records, got ${PRODUCT_DETAILS_CONTENT.length}`,
+    PRODUCT_DETAILS_CONTENT.length === 30,
+    `expected 30 records, got ${PRODUCT_DETAILS_CONTENT.length}`,
   );
-  check(live.length === 18, `expected 18 live active products, got ${live.length}`);
+  check(live.length === 30, `expected 30 live active products, got ${live.length}`);
 
   for (const product of live) {
     check(hasProductDetailsContent(product.slug), `missing content for live slug ${product.slug}`);
@@ -115,6 +131,10 @@ try {
     }
     const features = record.description.features.length;
     check(features >= limit.featureMin && features <= 5, `${id}: features ${features}`);
+    if (record.category === 'laptops') {
+      check(features === 4, `${id}: laptop feature callouts ${features}`);
+      check(record.description.paragraphs.length === 2, `${id}: laptop paragraphs`);
+    }
     for (const feature of record.description.features) {
       check(icons.has(feature.icon), `${id}: invalid icon ${feature.icon}`);
     }
@@ -149,12 +169,17 @@ try {
       `${id}: colour attribute ${attribute('Цвет')} vs name ${colourFromName}`,
     );
     const storage = /(\d+)\s*ГБ/u.exec(name.replace(/\d+\//u, ''));
-    check(
-      attribute('Память') === (storage === null ? undefined : `${storage[1]} ГБ`),
-      `${id}: storage attribute`,
-    );
     const ram = /(\d+)\/\d+\s*ГБ/u.exec(name);
-    check(attribute('ОЗУ') === (ram === null ? undefined : `${ram[1]} ГБ`), `${id}: RAM attribute`);
+    if (record.category !== 'laptops') {
+      check(
+        attribute('Память') === (storage === null ? undefined : `${storage[1]} ГБ`),
+        `${id}: storage attribute`,
+      );
+      check(
+        attribute('ОЗУ') === (ram === null ? undefined : `${ram[1]} ГБ`),
+        `${id}: RAM attribute`,
+      );
+    }
     if (record.category === 'smartphones') {
       const storageRow = rows.find((row) => row.label === 'Встроенная память')?.value ?? '';
       check(
@@ -209,6 +234,9 @@ try {
   const { PRODUCT_DETAILS_GALLERY_BY_COLOUR_MEDIA } = await server.ssrLoadModule(
     '/src/assets/media/product-details/productDetailsMedia.ts',
   );
+  const { HOME_DEVICE_MEDIA } = await server.ssrLoadModule(
+    '/src/assets/media/home/homeMarketingMedia.ts',
+  );
   const THUMBNAIL_SLUGS = [
     'iphone-15-128',
     'iphone-15-pro-128',
@@ -230,6 +258,11 @@ try {
         thumbnail !== undefined && thumbnail === record.media?.gallery[0]?.source,
         `${record.slug}: thumbnail is the production gallery hero`,
       );
+    } else if (record.category === 'laptops') {
+      check(
+        thumbnail !== undefined && thumbnail === HOME_DEVICE_MEDIA.laptop,
+        `${record.slug}: laptop thumbnail is the laptop category artwork`,
+      );
     } else {
       check(thumbnail === undefined, `${record.slug}: no thumbnail without product media`);
     }
@@ -240,6 +273,77 @@ try {
     'thumbnail lookup has exactly 7 entries',
   );
   check(productThumbnail('constructor') === undefined, 'thumbnail lookup ignores prototype keys');
+
+  const {
+    LAPTOP_CPU_LABELS,
+    LAPTOP_FACT_SLUGS,
+    LAPTOP_GPU_LABELS,
+    LAPTOP_OS_LABELS,
+    formatLaptopDiagonal,
+    formatLaptopMemory,
+    laptopFacts,
+  } = await server.ssrLoadModule('/src/pages/catalog/laptops/laptopFacts.ts');
+  const liveLaptops = live.filter((product) => product.categories?.slug === 'laptops');
+  const liveLaptopSlugs = liveLaptops.map((product) => product.slug).sort();
+  const laptopRecords = PRODUCT_DETAILS_CONTENT.filter((record) => record.category === 'laptops');
+  const provenance = readFileSync(`${ROOT}/docs/product-content-sources.md`, 'utf8');
+  const laptopSection = provenance.slice(provenance.indexOf('## Laptops'));
+  check(
+    JSON.stringify(liveLaptopSlugs) === JSON.stringify(EXPECTED_LAPTOP_SLUGS),
+    `laptops: 12 expected live slugs (${liveLaptopSlugs.join(',')})`,
+  );
+  check(
+    LAPTOP_FACT_SLUGS.length === 12,
+    `laptops: 12 facts entries, got ${LAPTOP_FACT_SLUGS.length}`,
+  );
+  check(laptopRecords.length === 12, `laptops: 12 PDP entries, got ${laptopRecords.length}`);
+  check(provenance.includes('## Laptops'), 'laptops: provenance section present');
+  for (const slug of LAPTOP_FACT_SLUGS) {
+    check(liveLaptopSlugs.includes(slug), `laptops: orphan facts entry ${slug}`);
+  }
+  for (const record of laptopRecords) {
+    check(liveLaptopSlugs.includes(record.slug), `laptops: orphan PDP content ${record.slug}`);
+  }
+  for (const product of liveLaptops) {
+    const slug = product.slug;
+    const facts = laptopFacts(slug);
+    const record = laptopRecords.find((entry) => entry.slug === slug);
+    check(facts !== undefined, `${slug}: laptop facts present`);
+    check(record !== undefined, `${slug}: laptop PDP content present`);
+    check(
+      new RegExp(`\\| \`${slug}\`\\s*\\| <https://`).test(laptopSection),
+      `${slug}: provenance row with official source`,
+    );
+    if (facts === undefined || record === undefined) continue;
+    const row = (label) =>
+      record.specificationGroups
+        .flatMap((group) => group.rows)
+        .find((entry) => entry.label === label)?.value;
+    const attribute = (label) => record.attributes.find((entry) => entry.label === label)?.value;
+    const expectRow = (label, expected) =>
+      check(row(label) === expected, `${slug}: ${label} ${row(label)} vs facts ${expected}`);
+    expectRow('Диагональ экрана', formatLaptopDiagonal(facts.diagonal));
+    expectRow('Процессор', facts.cpuModel);
+    check(
+      facts.cpuModel.startsWith(LAPTOP_CPU_LABELS[facts.cpu]),
+      `${slug}: CPU family ${facts.cpu} vs model ${facts.cpuModel}`,
+    );
+    expectRow('Оперативная память', formatLaptopMemory(facts.ram));
+    expectRow('Накопитель', `${formatLaptopMemory(facts.ssd)} SSD`);
+    expectRow('Видеокарта', LAPTOP_GPU_LABELS[facts.gpu]);
+    check(
+      (row('Операционная система') ?? '').startsWith(LAPTOP_OS_LABELS[facts.os]),
+      `${slug}: OS ${row('Операционная система')} vs facts ${facts.os}`,
+    );
+    expectRow('Цвет', facts.colour);
+    check(attribute('Цвет') === facts.colour, `${slug}: colour attribute vs facts`);
+    check(attribute('ОЗУ') === formatLaptopMemory(facts.ram), `${slug}: RAM attribute vs facts`);
+    check(attribute('SSD') === formatLaptopMemory(facts.ssd), `${slug}: SSD attribute vs facts`);
+    check(
+      product.name.endsWith(`, ${facts.colour}`),
+      `${slug}: live name colour vs facts ${facts.colour}`,
+    );
+  }
 } finally {
   await server.close();
 }

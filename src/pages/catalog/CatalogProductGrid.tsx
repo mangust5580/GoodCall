@@ -16,6 +16,7 @@ interface CatalogProductGridProps {
   readonly cart?: CatalogCartSeam;
   readonly favorites?: CatalogFavoritesSeam;
   readonly compare?: CatalogCompareSeam;
+  readonly promo?: boolean;
 }
 
 const PROMO_AFTER_INDEX = 8;
@@ -28,6 +29,7 @@ export function CatalogProductGrid({
   favorites,
   productHref,
   products,
+  promo = true,
 }: CatalogProductGridProps) {
   const [announcement, setAnnouncement] = useState('');
 
@@ -36,7 +38,7 @@ export function CatalogProductGrid({
       <div className="catalog-grid">
         {products.map((product, index) => (
           <Fragment key={product.id}>
-            {index === PROMO_AFTER_INDEX ? (
+            {promo && index === PROMO_AFTER_INDEX ? (
               <div className="catalog-grid__promo">
                 <PromoBanner
                   description={PROMO_DESCRIPTION}

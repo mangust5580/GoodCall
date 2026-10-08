@@ -20,6 +20,7 @@ export interface SiteHeaderProps extends Omit<ShellActionInput, 'fallbackHref'> 
   readonly homeHref?: string;
   readonly catalogHref?: string;
   readonly smartphonesHref?: string;
+  readonly laptopsHref?: string;
   readonly storesHref?: string;
   readonly supportHref?: string;
   readonly supportLabel?: string;
@@ -70,11 +71,12 @@ const CATEGORY_CAROUSEL_OPTIONS = {
 } as const;
 
 const SMARTPHONES_LABEL = 'Смартфоны';
+const LAPTOPS_LABEL = 'Ноутбуки';
 
 const CANONICAL_CATEGORIES: readonly { readonly label: string; readonly icon: IconName }[] = [
   { label: SMARTPHONES_LABEL, icon: 'smartphone' },
   { label: 'Планшеты', icon: 'tablet' },
-  { label: 'Ноутбуки', icon: 'laptop' },
+  { label: LAPTOPS_LABEL, icon: 'laptop' },
   { label: 'Аксессуары', icon: 'accessories' },
   { label: 'Наушники', icon: 'headphones' },
   { label: 'Умные часы', icon: 'watch' },
@@ -103,6 +105,7 @@ export function SiteHeader({
   homeHref,
   catalogHref,
   smartphonesHref,
+  laptopsHref,
   storesHref,
   supportHref,
   supportLabel = 'Поддержка 24/7',
@@ -132,7 +135,12 @@ export function SiteHeader({
     categories ??
     CANONICAL_CATEGORIES.map((category) => ({
       ...category,
-      href: category.label === SMARTPHONES_LABEL ? (smartphonesHref ?? catalog) : catalog,
+      href:
+        category.label === SMARTPHONES_LABEL
+          ? (smartphonesHref ?? catalog)
+          : category.label === LAPTOPS_LABEL
+            ? (laptopsHref ?? catalog)
+            : catalog,
     }));
   const actions = shellActions({ fallbackHref: base, ...actionInput });
 

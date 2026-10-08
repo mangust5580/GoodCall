@@ -1,11 +1,12 @@
 import { COMPARE_LIMIT, toggleCompareItem, useCompareItems } from '../../commerce/compare';
 import type { CompareItem } from '../../commerce/compare';
+import { laptopFacts } from '../../pages/catalog';
 import type { CatalogCompareSeam, CatalogProduct } from '../../pages/catalog';
 import { productBrand, productColour, productStorage } from '../../pages/search';
 
 function catalogCompareItem(product: CatalogProduct): CompareItem {
   const brand = productBrand(product);
-  const storage = productStorage(product);
+  const storage = laptopFacts(product.id)?.ssd ?? productStorage(product);
   const colour = productColour(product);
 
   return {

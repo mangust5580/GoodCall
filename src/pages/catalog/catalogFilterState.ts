@@ -52,3 +52,15 @@ export function toggleCatalogFilterValue(
 
   return values.filter((current) => current !== value);
 }
+
+function sameValues(left: readonly string[], right: readonly string[]): boolean {
+  return left.length === right.length && left.every((value, index) => value === right[index]);
+}
+
+export function isPriceOnlyChange<Key extends string>(
+  previous: Readonly<Record<Key, readonly string[]>>,
+  next: Readonly<Record<Key, readonly string[]>>,
+  keys: readonly Key[],
+): boolean {
+  return keys.every((key) => sameValues(previous[key], next[key]));
+}
