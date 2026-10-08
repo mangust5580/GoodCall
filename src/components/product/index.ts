@@ -1,5 +1,8 @@
+export { colourSwatch } from './colourSwatch';
 export { MiniProductCard } from './MiniProductCard';
 export { PriceBlock } from './PriceBlock';
+export { ProductBadge } from './ProductBadge';
+export type { ProductBadgeTone } from './ProductBadge';
 export { AddToCartButton, CompareButton, FavoriteButton } from './ProductActions';
 export { ProductAvailability } from './ProductAvailability';
 export { ProductCard } from './ProductCard';

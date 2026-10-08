@@ -1,22 +1,6 @@
-@use 'sass:list';
 @use '../../styles/helpers' as h;
+@use '../../components/product/colour-swatches';
 @use '../../components/ui/controls';
-
-$product-details-sale-badge-surface: #dc2626;
-$product-details-swatches: (
-  'pink': (
-    #f4a29f,
-    #12131a,
-  ),
-  'black': (
-    #12131a,
-    #fff,
-  ),
-  'blue': (
-    #3e96f3,
-    #fff,
-  ),
-);
 
 @mixin product-details-surface {
   background-color: var(--role-surface-card);
@@ -88,18 +72,6 @@ $product-details-swatches: (
     grid-area: offer;
     min-width: 0;
   }
-}
-
-.product-details-badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 5px 10px;
-  background-color: $product-details-sale-badge-surface;
-  border-radius: var(--control-radius-sm);
-  font-size: var(--control-label-size);
-  font-weight: 700;
-  line-height: 1.2;
-  color: var(--role-text-inverse);
 }
 
 .product-gallery {
@@ -541,12 +513,7 @@ $product-details-swatches: (
       box-shadow 200ms ease-out,
       transform 200ms ease-out;
 
-    @each $name, $pair in $product-details-swatches {
-      &--#{$name} {
-        background-color: list.nth($pair, 1);
-        color: list.nth($pair, 2);
-      }
-    }
+    @include colour-swatches.colour-swatch-modifiers;
   }
 
   &__swatch-mark {

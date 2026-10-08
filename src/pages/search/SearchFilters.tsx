@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { ReactNode } from 'react';
 
+import { colourSwatch } from '../../components/product';
 import { Button, Checkbox, Icon, RangeSlider } from '../../components/ui';
 import { SEARCH_PRICE_STEP, toggleFilterValue } from './searchFacets';
 import type { SearchFacetOption, SearchFacetOptions, SearchFilterState } from './searchFacets';
@@ -29,20 +30,32 @@ const COLLAPSED_OPTION_COUNT = 6;
 
 const countFormatter = new Intl.NumberFormat('ru-RU');
 
-const SWATCH_FILLS: Readonly<Record<string, string>> = {
+const SEARCH_SWATCH_FILLS: Readonly<Partial<Record<string, string>>> = {
   'Натуральный титан': '#b8b2a7',
-  Фиолетовый: '#7c5cbf',
-  Чёрный: '#1f2024',
   Обсидиан: '#2b2d33',
   Сланец: '#5b6470',
   Серебристый: '#c9ccd1',
   Лиловый: '#b89ad8',
-  Золотой: '#d4b26a',
   Изумрудный: '#2f8f6b',
-  Зелёный: '#4f9a5e',
-  Розовый: '#f2b8c0',
-  Синий: '#3a6fd8',
 };
+
+function SwatchDot({ label }: { readonly label: string }) {
+  const swatch = colourSwatch(label);
+  const fill = Object.hasOwn(SEARCH_SWATCH_FILLS, label) ? SEARCH_SWATCH_FILLS[label] : undefined;
+
+  return (
+    <span
+      className={
+        swatch === undefined
+          ? 'search-filters__swatch-dot'
+          : `search-filters__swatch-dot search-filters__swatch-dot--${swatch}`
+      }
+      style={swatch === undefined && fill !== undefined ? { backgroundColor: fill } : undefined}
+    >
+      <Icon className="search-filters__swatch-mark" name="check" />
+    </span>
+  );
+}
 
 function OptionLabel({ label, count }: { readonly label: string; readonly count: number }) {
   return (
@@ -204,12 +217,7 @@ export function SearchFilters(props: SearchFiltersProps) {
                     }}
                     type="checkbox"
                   />
-                  <span
-                    className="search-filters__swatch-dot"
-                    style={{ backgroundColor: SWATCH_FILLS[colour.value] }}
-                  >
-                    <Icon className="search-filters__swatch-mark" name="check" />
-                  </span>
+                  <SwatchDot label={colour.value} />
                   <OptionLabel count={colour.count} label={colour.value} />
                 </label>
               </li>

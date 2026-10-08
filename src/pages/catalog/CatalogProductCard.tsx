@@ -1,6 +1,6 @@
 import productPhone from '../../assets/products/product-phone.svg';
 import { formatPrice } from '../../commerce/format';
-import { ProductCard } from '../../components/product';
+import { ProductBadge, ProductCard } from '../../components/product';
 import type { CatalogProduct } from './catalogProduct';
 
 export interface CatalogCartSeam {
@@ -46,11 +46,9 @@ export function CatalogProductCard({
     <ProductCard
       badge={
         product.badge === undefined ? undefined : (
-          <span
-            className={`catalog-badge catalog-badge--${product.discounted === true ? 'sale' : 'new'}`}
-          >
+          <ProductBadge tone={product.discounted === true ? 'sale' : 'new'}>
             {product.badge}
-          </span>
+          </ProductBadge>
         )
       }
       compareDisabled={compare === undefined || compareFull}

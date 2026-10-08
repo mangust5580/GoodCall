@@ -144,13 +144,16 @@ Technically complete:
   owned by React Router using a GitHub Pages-safe hash strategy. See the
   Current routes section below.
 
-Active visual slice: none. Active implementation milestone: none. Quality B
-(Shared Navigation and Feedback Primitives) is closed and published. Next
-approved activity: Quality C — Product Presentation Consistency (see Quality
-remediation below).
+Active visual slice: none. Active implementation milestone: none. Quality C
+(Product Presentation Consistency) is closed and published. No next milestone
+is approved; the next activity is selecting from the remaining Quality backlog
+when requested (see Quality remediation below).
 
 Completed visual slices:
 
+- **Quality C / Product Presentation Consistency — USER VISUAL/UX PASS on
+  2026-10-08, CLOSED and published.** Closes audit items Q-05, Q-06, Q-19 and
+  Q-20. See the Quality remediation section below.
 - **Quality B / Shared Navigation and Feedback Primitives — USER VISUAL/UX
   PASS on 2026-10-08, CLOSED and published.** Closes audit items Q-04, Q-09,
   Q-10 and Q-21. See the Quality remediation section below.
@@ -3030,13 +3033,10 @@ sorting or pagination.
 deliberately unused: the raster's catalog card shows none, and its bordered
 padded box does not fit a 259px column beside the price.
 
-**Catalog-local badge presentation.** `badge` takes a `ReactNode`, so the
-raster's solid violet `Новинка` and solid red discount badges render through a
-Catalog-owned `.catalog-badge` span on existing tokens
-(`--color-brand-purple-600`, `--role-state-danger`, `--control-radius-sm`,
-`--control-label-size`). Global `Chip` keeps its accepted soft-tint design and
-was not reopened, and no global `Badge` component was introduced — a second real
-non-Catalog consumer would be the trigger for that, not this one.
+**Badge presentation.** `badge` takes a `ReactNode`. The raster's solid violet
+`Новинка` and solid red discount badges render through the shared
+`ProductBadge` (Quality C; see Quality remediation). Global `Chip` keeps its
+accepted soft-tint design.
 
 **Sale-badge closeout.** Each badge variant owns its own colour pair. `Новинка`
 is `--role-text-inverse` on `--color-brand-purple-600` at 6.75:1. The sale badge
@@ -5246,21 +5246,54 @@ Durable results:
   may return `null` to hold a request in its loading state.
   Reference-protected surfaces stay pixel-identical.
 
-Still open (not started): Q-03 Cart recommendations, Q-05 ProductBadge, Q-06
-colour swatches, Q-07 typography roles, Q-08 breakpoints, Q-12 DateField, Q-13
-reference lazy loading, Q-14 footer destinations, Q-15 cross-category Search
-(product decision), Q-18 rating separator, Q-19 1024 GB → 1 TB, Q-20 thumbnail
-fallback, Q-22 `.mcp.json` tooling ignore.
+**Quality C / Product Presentation Consistency — CLOSED, USER VISUAL/UX PASS
+on 2026-10-08.** Closed items: Q-05 (ProductBadge), Q-06 (colour swatches),
+Q-19 (1024 GB → 1 TB), Q-20 (card fallback artwork).
 
-**Next approved activity: Quality C — Product Presentation Consistency.** Not
-started.
+Durable results:
+
+- `ProductBadge` (`src/components/product`, `tone: 'sale' | 'new'`) is the one
+  product badge on Home, Catalog, PDP (gallery and purchase panel) and Search
+  (desktop rows and mobile cards). It owns the single sale surface `#DC2626`
+  with white text; `new` is `--color-brand-purple-600`. Sale percentages are
+  still derived from live `old_price > price`. Generic `Chip`, the Cart
+  discount chip, the 404 and the `?reference=components` specimen are
+  unchanged. Accepted visible change: Search badges are solid instead of soft
+  Chips.
+- Colour swatches have one owner in `src/components/product`:
+  `_colour-swatches.scss` (fill and mark ink, `colour-swatch-modifiers` mixin)
+  and `colourSwatch(label)` (label → key). Catalog smartphone/laptop filters,
+  PDP colour options and Search filters consume it. Catalog values win for
+  shared colours. Search keeps local fills only for its product-only colours;
+  unknown colours keep the ring-only dot. Accepted visible change: six shared
+  Search swatches (Чёрный, Фиолетовый, Синий, Зелёный, Розовый, Золотой) now
+  match Catalog, with dark marks on light fills.
+- `formatMemorySize` (`src/commerce/format.ts`) shows whole multiples of
+  1024 GB in ТБ. Compare «Встроенная память» and laptop memory facets use it;
+  persisted Compare `storage` stays numeric.
+- Live Catalog card image precedence: `product_images` URL → slug thumbnail →
+  category artwork (laptops: Home laptop device art) → generic phone fallback.
+  Known limitation, not part of this milestone: for a laptop without a
+  thumbnail, downstream Cart/Favourites/Compare/Checkout `catalog-fallback`
+  media still resolves to phone art. All 12 current laptops have thumbnails.
+- Home, Catalog and PDP reference-protected surfaces stay pixel-identical; the
+  `search`, `product-details`, `compare` and `laptops` suites lock these
+  contracts.
+
+Still open (not started): Q-03 Cart recommendations, Q-07 typography roles,
+Q-08 breakpoints, Q-12 DateField, Q-13 reference lazy loading, Q-14 footer
+destinations, Q-15 cross-category Search (product decision), Q-18 rating
+separator, Q-22 `.mcp.json` tooling ignore.
+
+No next milestone is approved; select from the remaining backlog when
+requested.
 
 ## Project closeout state
 
-Quality B is the last published milestone. **Active visual slice: none.
+Quality C is the last published milestone. **Active visual slice: none.
 Active implementation milestone: none.** No active code-level release blocker
-is known, and there is no approved next Account milestone. **Next approved
-activity: Quality C — Product Presentation Consistency** (see Quality
+is known, and there is no approved next milestone. The next activity is
+selecting from the remaining Quality backlog when requested (see Quality
 remediation).
 
 Settings, Bonuses, Notifications, recently viewed, a real authenticated

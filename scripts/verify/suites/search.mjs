@@ -1518,6 +1518,113 @@ check(
 await viewport(1440, 900, false);
 await goCatalog('');
 
+const swatchStyles = (dotSelector, labelOf) =>
+  evaluate(
+    `Object.fromEntries([...document.querySelectorAll('${dotSelector}')].map((dot) => { const style = getComputedStyle(dot); return [${labelOf}, [style.backgroundColor, style.color]]; }))`,
+  );
+const CATALOG_SWATCH_LABEL = `dot.closest('label').querySelector('.ui-visually-hidden').textContent.split(' (')[0]`;
+const SEARCH_SWATCH_LABEL = `dot.closest('label').querySelector('.search-filters__option-label').textContent`;
+const SEARCH_ONLY_FILLS = {
+  'Натуральный титан': 'rgb(184, 178, 167)',
+  Обсидиан: 'rgb(43, 45, 51)',
+  Сланец: 'rgb(91, 100, 112)',
+  Серебристый: 'rgb(201, 204, 209)',
+  Лиловый: 'rgb(184, 154, 216)',
+  Изумрудный: 'rgb(47, 143, 107)',
+};
+const expandSearchColours = (scope) =>
+  evaluate(
+    `[...document.querySelectorAll('${scope} .search-filters__group')].find((g) => g.querySelector('legend')?.textContent.includes('Цвет'))?.querySelector('.search-filters__more[aria-expanded="false"]')?.click()`,
+  );
+const searchSwatchFacts = (label) =>
+  evaluate(`(() => {
+    const dot = [...document.querySelectorAll('.search-filters .search-filters__swatch-dot')].find((dot) => ${SEARCH_SWATCH_LABEL} === ${JSON.stringify(label)});
+    const input = dot.closest('label').querySelector('input');
+    const mark = dot.querySelector('.search-filters__swatch-mark');
+    return { checked: input.checked, focused: document.activeElement === input, type: input.type, mark: getComputedStyle(mark).opacity, ring: getComputedStyle(dot).boxShadow };
+  })()`);
+await evaluate(
+  `(() => { const more = ${colourGroup('.catalog-page__sidebar')}.querySelector('.catalog-filters__more'); if (more?.getAttribute('aria-expanded') === 'false') more.click(); })()`,
+);
+await sleep(150);
+const catalogSwatchStyles = await swatchStyles(
+  '.catalog-page__sidebar .catalog-filters__swatch-dot',
+  CATALOG_SWATCH_LABEL,
+);
+await go('#/search?q=гб');
+await waitFor(
+  `document.querySelector('.search-filters .search-filters__swatch-dot')`,
+  'search swatches',
+);
+await expandSearchColours('.search-filters');
+await sleep(150);
+const searchSwatchStyles = await swatchStyles(
+  '.search-filters .search-filters__swatch-dot',
+  SEARCH_SWATCH_LABEL,
+);
+const sharedSwatchLabels = Object.keys(PALETTE_SWATCHES).filter(
+  (label) => label in catalogSwatchStyles && label in searchSwatchStyles,
+);
+check(
+  'swatch Q-06: shared colours resolve to the same fill and mark ink on Catalog and Search',
+  sharedSwatchLabels.length === 6 &&
+    sharedSwatchLabels.every(
+      (label) =>
+        JSON.stringify(catalogSwatchStyles[label]) === JSON.stringify(searchSwatchStyles[label]),
+    ),
+  JSON.stringify({ catalogSwatchStyles, searchSwatchStyles }),
+);
+check(
+  'swatch Q-06: Search-only product colours keep their Search fills',
+  Object.entries(SEARCH_ONLY_FILLS).every(
+    ([label, fill]) => searchSwatchStyles[label]?.[0] === fill,
+  ),
+  JSON.stringify(searchSwatchStyles),
+);
+await evaluate(`(() => {
+  const dot = [...document.querySelectorAll('.search-filters .search-filters__swatch-dot')].find((dot) => ${SEARCH_SWATCH_LABEL} === 'Розовый');
+  const input = dot.closest('label').querySelector('input');
+  input.focus();
+  input.click();
+})()`);
+await sleep(200);
+const pinkSearchSwatch = await searchSwatchFacts('Розовый');
+check(
+  'swatch Q-06: Search shared swatch stays a focusable checkbox with checked ring and visible mark',
+  pinkSearchSwatch.checked &&
+    pinkSearchSwatch.focused &&
+    pinkSearchSwatch.type === 'checkbox' &&
+    pinkSearchSwatch.mark === '1' &&
+    pinkSearchSwatch.ring.includes('rgb(112, 40, 228)'),
+  JSON.stringify(pinkSearchSwatch),
+);
+await viewport(390, 844, true);
+await go('#/search?q=гб');
+await waitFor(`document.querySelector('.search-filter-trigger')`, 'search mobile filter trigger');
+await evaluate(`document.querySelector('.search-filter-trigger').click()`);
+await waitFor(
+  `document.querySelector('.search-filter-dialog .search-filters__swatch-dot')`,
+  'search mobile swatches',
+);
+await expandSearchColours('.search-filter-dialog');
+await sleep(150);
+const dialogSwatchStyles = await swatchStyles(
+  '.search-filter-dialog .search-filters__swatch-dot',
+  SEARCH_SWATCH_LABEL,
+);
+check(
+  'swatch Q-06: Search mobile dialog swatches match the desktop panel',
+  Object.keys(searchSwatchStyles).length === 12 &&
+    Object.entries(searchSwatchStyles).every(
+      ([label, style]) => JSON.stringify(dialogSwatchStyles[label]) === JSON.stringify(style),
+    ),
+  JSON.stringify(dialogSwatchStyles),
+);
+await evaluate(`document.querySelector('.search-filter-dialog__close').click()`);
+await sleep(200);
+await viewport(1440, 900, false);
+await goCatalog('');
+
 failLive = true;
 await reload();
 await go(`${CATALOG_HASH}?brand=Apple&quick=discounted&sort=cheap&page=3`);
@@ -1542,15 +1649,15 @@ const i15LiveOldPrice = i15Row.old_price;
 const fixtureBadge = (slug) => CATALOG_PRODUCTS.find((product) => product.id === slug).badge;
 const catalogBadges = () =>
   evaluate(
-    `Object.fromEntries([...document.querySelectorAll('.catalog-grid .product-card')].map((c) => [c.querySelector('.product-card__title').textContent, c.querySelector('.catalog-badge') ? [c.querySelector('.catalog-badge').textContent, c.querySelector('.catalog-badge').className] : null]))`,
+    `Object.fromEntries([...document.querySelectorAll('.catalog-grid .product-card')].map((c) => [c.querySelector('.product-card__title').textContent, c.querySelector('.product-badge') ? [c.querySelector('.product-badge').textContent, c.querySelector('.product-badge').className, getComputedStyle(c.querySelector('.product-badge')).backgroundColor, getComputedStyle(c.querySelector('.product-badge')).color] : null]))`,
   );
 const searchRowBadges = () =>
   evaluate(
-    `Object.fromEntries([...document.querySelectorAll('.search-row')].map((r) => [r.querySelector('.search-row__title').textContent, r.querySelector('.search-row__badge .ui-chip') ? [r.querySelector('.search-row__badge .ui-chip').textContent, r.querySelector('.search-row__badge .ui-chip').className] : null]))`,
+    `Object.fromEntries([...document.querySelectorAll('.search-row')].map((r) => [r.querySelector('.search-row__title').textContent, r.querySelector('.search-row__badge .product-badge') ? [r.querySelector('.search-row__badge .product-badge').textContent, r.querySelector('.search-row__badge .product-badge').className, getComputedStyle(r.querySelector('.search-row__badge .product-badge')).backgroundColor, getComputedStyle(r.querySelector('.search-row__badge .product-badge')).color] : null]))`,
   );
 const searchCardBadges = () =>
   evaluate(
-    `Object.fromEntries([...document.querySelectorAll('.search-results .product-card')].map((c) => [c.querySelector('.product-card__title').textContent, c.querySelector('.product-card__badge .ui-chip') ? [c.querySelector('.product-card__badge .ui-chip').textContent, c.querySelector('.product-card__badge .ui-chip').className] : null]))`,
+    `Object.fromEntries([...document.querySelectorAll('.search-results .product-card')].map((c) => [c.querySelector('.product-card__title').textContent, c.querySelector('.product-card__badge .product-badge') ? [c.querySelector('.product-card__badge .product-badge').textContent, c.querySelector('.product-card__badge .product-badge').className, getComputedStyle(c.querySelector('.product-card__badge .product-badge')).backgroundColor, getComputedStyle(c.querySelector('.product-card__badge .product-badge')).color] : null]))`,
   );
 const openLiveCatalog = async () => {
   await go(CATALOG_HASH);
@@ -1562,11 +1669,11 @@ const openLiveCatalog = async () => {
 const openPdpBadge = async () => {
   await go('#/product/iphone-15-128');
   await waitFor(
-    `document.querySelector('.product-purchase .product-details-badge')?.textContent.startsWith('-')`,
+    `document.querySelector('.product-purchase .product-badge')?.textContent.startsWith('-')`,
     'pdp sale badge',
   );
   return evaluate(
-    `document.querySelector('.product-purchase .product-details-badge')?.textContent ?? null`,
+    `document.querySelector('.product-purchase .product-badge')?.textContent ?? null`,
   );
 };
 
@@ -1606,19 +1713,36 @@ check(
     cartBadge,
   }),
 );
+const SALE_BADGE = ['rgb(220, 38, 38)', 'rgb(255, 255, 255)'];
+const NEW_BADGE = ['rgb(112, 40, 228)', 'rgb(255, 255, 255)'];
+const badgeLooks = (entry, tone, colours) =>
+  entry !== undefined &&
+  entry !== null &&
+  entry[1].split(' ').includes(`product-badge--${tone}`) &&
+  !entry[1].includes('ui-chip') &&
+  entry[2] === colours[0] &&
+  entry[3] === colours[1];
 check(
-  'sale badge: derived sale keeps the sale tone on Catalog and Search',
-  liveCatalogBadges[I15]?.[1].includes('catalog-badge--sale') &&
-    liveSearchRows[I15]?.[1].includes('ui-chip--danger') &&
-    liveSearchCards[I15]?.[1].includes('ui-chip--danger'),
+  'sale badge: Catalog, Search rows and Search cards share the ProductBadge sale presentation',
+  badgeLooks(liveCatalogBadges[I15], 'sale', SALE_BADGE) &&
+    badgeLooks(liveSearchRows[I15], 'sale', SALE_BADGE) &&
+    badgeLooks(liveSearchCards[I15], 'sale', SALE_BADGE),
+  JSON.stringify([liveCatalogBadges[I15], liveSearchRows[I15], liveSearchCards[I15]]),
+);
+check(
+  'new badge: Catalog, Search rows and Search cards share the ProductBadge new presentation',
+  badgeLooks(liveCatalogBadges[I15PRO], 'new', NEW_BADGE) &&
+    badgeLooks(liveSearchRows[I15PRO], 'new', NEW_BADGE) &&
+    badgeLooks(liveSearchCards[I15PRO], 'new', NEW_BADGE),
+  JSON.stringify([liveCatalogBadges[I15PRO], liveSearchRows[I15PRO], liveSearchCards[I15PRO]]),
 );
 check(
   'sale badge: Новинка preserved on Catalog and Search despite a live old_price',
   fixtureBadge('iphone-15-pro-128') === 'Новинка' &&
     liveCatalogBadges[I15PRO]?.[0] === 'Новинка' &&
-    liveCatalogBadges[I15PRO]?.[1].includes('catalog-badge--new') &&
+    liveCatalogBadges[I15PRO]?.[1].includes('product-badge--new') &&
     liveSearchRows[I15PRO]?.[0] === 'Новинка' &&
-    liveSearchRows[I15PRO]?.[1].includes('ui-chip--brand') &&
+    liveSearchRows[I15PRO]?.[1].includes('product-badge--new') &&
     liveSearchCards[I15PRO]?.[0] === 'Новинка',
   JSON.stringify([liveCatalogBadges[I15PRO], liveSearchRows[I15PRO]]),
 );

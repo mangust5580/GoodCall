@@ -5,8 +5,8 @@ import productPhone from '../../assets/products/product-phone.svg';
 import { formatPrice } from '../../commerce/format';
 import { EmptyState } from '../../components/feedback';
 import { Breadcrumbs, Container } from '../../components/layout';
-import { ProductCard } from '../../components/product';
-import { Chip, Icon, Pagination } from '../../components/ui';
+import { ProductBadge, ProductCard } from '../../components/product';
+import { Icon, Pagination } from '../../components/ui';
 import type { CatalogCartSeam, CatalogProduct, CatalogSortValue } from '../catalog';
 import { CATALOG_SORT_OPTIONS, sortCatalogProducts } from '../catalog';
 import { SearchFilterDialog } from './SearchFilterDialog';
@@ -160,9 +160,9 @@ export function SearchPage({
             <ProductCard
               badge={
                 product.badge === undefined ? undefined : (
-                  <Chip variant={product.discounted === true ? 'danger' : 'brand'}>
+                  <ProductBadge tone={product.discounted === true ? 'sale' : 'new'}>
                     {product.badge}
-                  </Chip>
+                  </ProductBadge>
                 )
               }
               disabled={cart === undefined}

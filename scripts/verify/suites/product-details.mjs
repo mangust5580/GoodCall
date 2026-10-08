@@ -214,8 +214,20 @@ async function pdpFacts(page) {
         b.textContent.includes('Купить в 1 клик'),
       ),
       offerServices: document.querySelector('.product-offer__services')?.innerText ?? '',
-      badge:
-        document.querySelector('.product-purchase .product-details-badge')?.textContent ?? null,
+      badge: document.querySelector('.product-purchase .product-badge')?.textContent ?? null,
+      badgeLook: [
+        document.querySelector('.product-purchase .product-badge'),
+        document.querySelector('.product-gallery__badge'),
+      ].map((el) =>
+        el === null
+          ? null
+          : [
+              el.textContent,
+              el.className,
+              getComputedStyle(el).backgroundColor,
+              getComputedStyle(el).color,
+            ],
+      ),
       oldPrice: document.querySelector('.product-purchase__old-price') !== null,
       labels: [...document.querySelectorAll('.product-purchase__labels li')].map((li) =>
         li.textContent.trim(),
@@ -296,6 +308,17 @@ console.log('stage: pdp pages', new Date().toISOString());
     'iphone: category crumb link',
   );
   check(facts.badge === '-6%' && facts.oldPrice, `iphone: discount ${facts.badge}`);
+  check(
+    facts.badgeLook.every(
+      (look) =>
+        look !== null &&
+        look[0] === '-6%' &&
+        look[1].split(' ').includes('product-badge--sale') &&
+        look[2] === 'rgb(220, 38, 38)' &&
+        look[3] === 'rgb(255, 255, 255)',
+    ) && facts.badgeLook[1][1].includes('product-gallery__badge'),
+    `iphone: purchase and gallery discount use the shared sale ProductBadge ${JSON.stringify(facts.badgeLook)}`,
+  );
   check(facts.labels.length === 0, 'iphone: no labels (is_new false)');
   summary.iphone = { keySpecs: facts.keySpecs, tabs: facts.tabs };
 
@@ -379,6 +402,10 @@ console.log('stage: pdp pages', new Date().toISOString());
     'airpods: template',
   );
   check(facts.badge === null && !facts.oldPrice, 'airpods: no discount');
+  check(
+    facts.badgeLook.every((look) => look === null),
+    `airpods: no ProductBadge without a sale ${JSON.stringify(facts.badgeLook)}`,
+  );
   check(facts.crumbs[2]?.text === 'Наушники', 'airpods: category crumb');
 
   for (const slug of ['pixel-8-128', 'oneplus-12-256', 'tecno-camon-30-256']) {

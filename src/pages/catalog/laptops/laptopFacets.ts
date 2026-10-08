@@ -1,13 +1,8 @@
+import { formatMemorySize } from '../../../commerce/format';
 import { CATALOG_PRICE_MAX, CATALOG_PRICE_MIN } from '../catalogFilterState';
 import { byCountThenName, countFacetValues } from '../catalogFacets';
 import type { CatalogProduct } from '../catalogProduct';
-import {
-  LAPTOP_CPU_LABELS,
-  LAPTOP_GPU_LABELS,
-  LAPTOP_OS_LABELS,
-  formatLaptopMemory,
-  laptopFacts,
-} from './laptopFacts';
+import { LAPTOP_CPU_LABELS, LAPTOP_GPU_LABELS, LAPTOP_OS_LABELS, laptopFacts } from './laptopFacts';
 import type { LaptopFacts } from './laptopFacts';
 import type { LaptopFilterListKey, LaptopFilterState } from './laptopFilterState';
 
@@ -79,7 +74,7 @@ function orderedOptions(
 function memoryOptions(counts: Map<string, number>): LaptopFacetOption[] {
   return [...counts]
     .sort(([left], [right]) => Number(left) - Number(right))
-    .map(([value, count]) => ({ value, label: formatLaptopMemory(Number(value)), count }));
+    .map(([value, count]) => ({ value, label: formatMemorySize(Number(value)), count }));
 }
 
 function namedOptions(counts: Map<string, number>): LaptopFacetOption[] {

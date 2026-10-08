@@ -1,5 +1,5 @@
 import { Picture } from '../../components/media';
-import { FavoriteButton } from '../../components/product';
+import { FavoriteButton, ProductBadge } from '../../components/product';
 import { Icon } from '../../components/ui';
 import type { ProductDetailsGalleryImage } from './productDetailsView';
 
@@ -46,7 +46,9 @@ export function ProductGallery({
     >
       <div className="product-gallery__stage">
         {discount === undefined ? null : (
-          <span className="product-details-badge product-gallery__badge">{discount}</span>
+          <ProductBadge className="product-gallery__badge" tone="sale">
+            {discount}
+          </ProductBadge>
         )}
         <FavoriteButton
           className="product-gallery__favorite"

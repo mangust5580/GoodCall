@@ -1,8 +1,8 @@
 import productPhone from '../../assets/products/product-phone.svg';
 import { formatPrice } from '../../commerce/format';
 import { Picture } from '../../components/media';
-import { AddToCartButton, ProductRating } from '../../components/product';
-import { Chip, QuantityStepper } from '../../components/ui';
+import { AddToCartButton, ProductBadge, ProductRating } from '../../components/product';
+import { QuantityStepper } from '../../components/ui';
 import type { CatalogProduct } from '../catalog';
 import { productColour, productRam, productStorage } from './searchFacets';
 import { searchSavings } from './searchResults';
@@ -44,7 +44,9 @@ export function SearchResultRow({
       <div className="search-row__media">
         {product.badge === undefined ? null : (
           <div className="search-row__badge">
-            <Chip variant={product.discounted === true ? 'danger' : 'brand'}>{product.badge}</Chip>
+            <ProductBadge tone={product.discounted === true ? 'sale' : 'new'}>
+              {product.badge}
+            </ProductBadge>
           </div>
         )}
         {product.image === undefined ? (

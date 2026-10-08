@@ -1,7 +1,7 @@
 import { useState } from 'react';
 
+import { colourSwatch } from '../../components/product';
 import { Checkbox, Icon } from '../../components/ui';
-import { catalogColourSwatch } from './catalogColourPalette';
 import {
   CatalogBrandGroup,
   CatalogCheckboxGroup,
@@ -138,7 +138,7 @@ function liveOptionSets(facets: CatalogLiveFacets): CatalogFilterOptionSets {
   const colours = facets.colours.map((colour) => ({
     value: colour.value,
     label: colour.value,
-    swatch: catalogColourSwatch(colour.value),
+    swatch: colourSwatch(colour.value),
     count: colour.count,
   }));
 

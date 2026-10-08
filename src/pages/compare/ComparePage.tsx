@@ -4,7 +4,7 @@ import type { ReactNode } from 'react';
 import { CartLineMedia } from '../../commerce/cart';
 import { COMPARE_LIMIT } from '../../commerce/compare';
 import type { CompareItem } from '../../commerce/compare';
-import { formatPrice } from '../../commerce/format';
+import { formatMemorySize, formatPrice } from '../../commerce/format';
 import { EmptyState } from '../../components/feedback';
 import { Breadcrumbs, Container } from '../../components/layout';
 import { ProductRating } from '../../components/product';
@@ -53,7 +53,7 @@ const COMPARE_ROWS: readonly CompareRow[] = [
   { label: 'Бренд', value: (item) => item.brand ?? MISSING },
   {
     label: 'Встроенная память',
-    value: (item) => (item.storage === undefined ? MISSING : `${String(item.storage)} ГБ`),
+    value: (item) => (item.storage === undefined ? MISSING : formatMemorySize(item.storage)),
   },
   { label: 'Цвет', value: (item) => item.colour ?? MISSING },
 ];

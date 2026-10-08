@@ -280,9 +280,10 @@ try {
     LAPTOP_GPU_LABELS,
     LAPTOP_OS_LABELS,
     formatLaptopDiagonal,
-    formatLaptopMemory,
     laptopFacts,
   } = await server.ssrLoadModule('/src/pages/catalog/laptops/laptopFacts.ts');
+  const { formatMemorySize: formatLaptopMemory } =
+    await server.ssrLoadModule('/src/commerce/format.ts');
   const liveLaptops = live.filter((product) => product.categories?.slug === 'laptops');
   const liveLaptopSlugs = liveLaptops.map((product) => product.slug).sort();
   const laptopRecords = PRODUCT_DETAILS_CONTENT.filter((record) => record.category === 'laptops');

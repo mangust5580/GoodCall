@@ -1,4 +1,4 @@
-const CATALOG_COLOUR_SWATCH_BY_LABEL: Readonly<Partial<Record<string, string>>> = {
+const COLOUR_SWATCH_BY_LABEL: Readonly<Partial<Record<string, string>>> = {
   Чёрный: 'black',
   Серый: 'gray',
   Белый: 'white',
@@ -12,8 +12,6 @@ const CATALOG_COLOUR_SWATCH_BY_LABEL: Readonly<Partial<Record<string, string>>> 
   Бирюзовый: 'teal',
 };
 
-export function catalogColourSwatch(label: string): string | undefined {
-  return Object.hasOwn(CATALOG_COLOUR_SWATCH_BY_LABEL, label)
-    ? CATALOG_COLOUR_SWATCH_BY_LABEL[label]
-    : undefined;
+export function colourSwatch(label: string): string | undefined {
+  return Object.hasOwn(COLOUR_SWATCH_BY_LABEL, label) ? COLOUR_SWATCH_BY_LABEL[label] : undefined;
 }

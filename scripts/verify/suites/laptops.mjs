@@ -53,11 +53,11 @@ let scenario = {};
 function tableRows(table) {
   if (table === 'categories') return CATEGORIES;
   if (table === 'home_popular_products') return HOME_POPULAR_PRODUCTS;
-  if (table === 'product_images') return [];
+  if (table === 'product_images') return scenario.productImages ?? [];
   if (table === 'products') {
-    return scenario.laptopsEmpty
-      ? PRODUCTS.filter((row) => row.category_id !== laptopsCategory.id)
-      : PRODUCTS;
+    if (scenario.laptopsEmpty)
+      return PRODUCTS.filter((row) => row.category_id !== laptopsCategory.id);
+    return scenario.extraProduct === undefined ? PRODUCTS : [...PRODUCTS, scenario.extraProduct];
   }
   return [];
 }
@@ -431,10 +431,10 @@ const cards = await page.evaluate(() =>
   [...document.querySelectorAll('.catalog-grid .product-card')].map((card) => ({
     title: card.querySelector('.product-card__title')?.textContent.trim(),
     href: card.querySelector('.product-card__link')?.getAttribute('href'),
-    badge: card.querySelector('.catalog-badge')?.textContent ?? null,
-    badgeKind: card.querySelector('.catalog-badge--sale')
+    badge: card.querySelector('.product-badge')?.textContent ?? null,
+    badgeKind: card.querySelector('.product-badge--sale')
       ? 'sale'
-      : card.querySelector('.catalog-badge--new')
+      : card.querySelector('.product-badge--new')
         ? 'new'
         : null,
     oldPrice: card.querySelector('.product-card__old-price, s, del')?.textContent ?? null,
@@ -1063,6 +1063,109 @@ scenario = { productsHang: true };
   await p.close();
 }
 scenario = {};
+
+console.log('stage: card artwork', new Date().toISOString());
+const UNLISTED_LAPTOP = {
+  ...bySlug.get(LEGION),
+  id: 'id-unlisted-laptop',
+  slug: 'unlisted-verify-laptop',
+  name: 'Verify Laptop 15 8/256 ГБ, Серый',
+  popularity_score: 100000,
+};
+const IMAGED_SLUG = expectedOrder('popular')[0];
+const IMAGED_PATH = 'stub/laptop-live.webp';
+scenario = {
+  extraProduct: UNLISTED_LAPTOP,
+  productImages: [
+    {
+      id: 'img-laptop-live',
+      product_id: bySlug.get(IMAGED_SLUG).id,
+      storage_path: IMAGED_PATH,
+      alt: 'Ноутбук с живым фото',
+      position: 1,
+    },
+  ],
+};
+{
+  const p = await newPage(1440, 900);
+  await fresh(p);
+  await settleImages(p);
+  const cards = await p.evaluate(() =>
+    Object.fromEntries(
+      [...document.querySelectorAll('.catalog-grid .product-card')].map((card) => {
+        const img = card.querySelector('.product-card__image');
+        const sources = [img.currentSrc, img.getAttribute('src'), img.getAttribute('srcset')]
+          .concat(
+            [...(img.closest('picture')?.querySelectorAll('source') ?? [])].map((source) =>
+              source.getAttribute('srcset'),
+            ),
+          )
+          .join(' ');
+        return [
+          card.querySelector('.product-card__title').textContent.trim(),
+          { sources, loaded: img.complete && img.naturalWidth > 0 },
+        ];
+      }),
+    ),
+  );
+  const unlisted = cards[UNLISTED_LAPTOP.name];
+  check(
+    unlisted !== undefined &&
+      unlisted.sources.includes(LAPTOP_ART) &&
+      !unlisted.sources.includes(PHONE_ART) &&
+      unlisted.loaded,
+    `card artwork: laptop without product image or thumbnail falls back to loaded laptop category art ${JSON.stringify(unlisted)}`,
+  );
+  const imaged = cards[bySlug.get(IMAGED_SLUG).name];
+  check(
+    imaged !== undefined &&
+      imaged.sources.includes(`catalog-media/${IMAGED_PATH}`) &&
+      !imaged.sources.includes(LAPTOP_ART) &&
+      !imaged.sources.includes(PHONE_ART),
+    `card artwork: a real product_images URL still wins over thumbnail and category art ${JSON.stringify(imaged)}`,
+  );
+  const thumbnailed = Object.entries(cards).filter(
+    ([title]) => title !== UNLISTED_LAPTOP.name && title !== bySlug.get(IMAGED_SLUG).name,
+  );
+  check(
+    thumbnailed.length > 0 &&
+      thumbnailed.every(
+        ([, card]) =>
+          card.sources.includes(LAPTOP_ART) && !card.sources.includes(PHONE_ART) && card.loaded,
+      ),
+    `card artwork: listed laptops keep their product thumbnail (${thumbnailed.length})`,
+  );
+  await p.close();
+}
+scenario = {};
+
+console.log('stage: compare storage', new Date().toISOString());
+{
+  const p = await newPage(1440, 900);
+  await fresh(p, 'ssd=1024');
+  const terabyteSlugs = slugsOf(await listing(p));
+  await p.click('.catalog-grid .product-card button[aria-label*="сравн" i]');
+  await p.waitForTimeout(150);
+  const storedCompare = await p.evaluate(() =>
+    JSON.parse(localStorage.getItem('goodcall.compare.v1') ?? 'null'),
+  );
+  await p.goto(`${NEW}#/compare`);
+  await p.waitForSelector('.compare-product');
+  const storageCell = await p.evaluate(() => {
+    const row = [...document.querySelectorAll('tbody tr')].find(
+      (tr) => tr.querySelector('th').textContent === 'Встроенная память',
+    );
+    return row?.querySelector('td')?.textContent.replace(/\s/g, ' ') ?? null;
+  });
+  check(
+    JSON.stringify([...terabyteSlugs].sort()) ===
+      JSON.stringify(['lenovo-legion-5-16-rtx4060', 'msi-katana-17-rtx4060']) &&
+      storedCompare?.items?.[0]?.storage === 1024 &&
+      storageCell === '1 ТБ',
+    `compare storage: a 1 ТБ laptop added from Catalog stores 1024 and shows «1 ТБ» ${JSON.stringify({ terabyteSlugs, stored: storedCompare?.items?.[0], storageCell })}`,
+  );
+  await p.close();
+}
 
 console.log('stage: downstream', new Date().toISOString());
 const flow = await newPage(1440, 900);

@@ -174,9 +174,3 @@ export function laptopFacts(slug: string): LaptopFacts | undefined {
 export function formatLaptopDiagonal(diagonal: number): string {
   return `${String(diagonal).replace('.', ',')}″`;
 }
-
-export function formatLaptopMemory(gigabytes: number): string {
-  return gigabytes >= 1024 && gigabytes % 1024 === 0
-    ? `${String(gigabytes / 1024)} ТБ`
-    : `${String(gigabytes)} ГБ`;
-}

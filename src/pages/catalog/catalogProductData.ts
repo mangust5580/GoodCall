@@ -1,4 +1,6 @@
+import { HOME_DEVICE_MEDIA } from '../../assets/media/home/homeMarketingMedia';
 import { productThumbnail } from '../../assets/media/product-details/productThumbnailMedia';
+import type { PictureSource } from '../../components/media';
 import { supabaseClient } from '../../lib/supabase/client';
 import type { GoodCallSupabaseClient } from '../../lib/supabase/client';
 import type { Database } from '../../lib/supabase/database.types';
@@ -40,6 +42,10 @@ const NEW_PRODUCT_BADGE = 'Новинка';
 const IMAGE_ALT_PREFIX: Readonly<Record<CatalogCategorySlug, string>> = {
   smartphones: 'Смартфон',
   laptops: 'Ноутбук',
+};
+
+const CATEGORY_FALLBACK_IMAGE: Readonly<Partial<Record<CatalogCategorySlug, PictureSource>>> = {
+  laptops: HOME_DEVICE_MEDIA.laptop,
 };
 
 function liveBadge(
@@ -113,7 +119,10 @@ function mapCatalogProduct(
     id: product.slug,
     title: product.name,
     imageSrc: publicImage,
-    image: publicImage === undefined ? productThumbnail(product.slug) : undefined,
+    image:
+      publicImage === undefined
+        ? (productThumbnail(product.slug) ?? CATEGORY_FALLBACK_IMAGE[categorySlug])
+        : undefined,
     imageAlt:
       primaryImage?.alt.trim() ||
       presentation?.imageAlt ||

@@ -1,7 +1,6 @@
 @use '../../styles/helpers' as h;
 
 $home-offers-width: 280px;
-$home-sale-badge-surface: #dc2626;
 
 @mixin banner-media($width, $position: right center, $fade: 26%) {
   position: absolute;
@@ -577,26 +576,6 @@ $home-sale-badge-surface: #dc2626;
 
   @include h.media-max(520px) {
     grid-template-columns: minmax(0, 1fr);
-  }
-}
-
-.home-badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 5px 10px;
-  border-radius: var(--control-radius-sm);
-  font-size: var(--control-label-size);
-  font-weight: 700;
-  line-height: 1.2;
-
-  &--new {
-    background-color: var(--color-brand-purple-600);
-    color: var(--role-text-inverse);
-  }
-
-  &--sale {
-    background-color: $home-sale-badge-surface;
-    color: var(--role-text-inverse);
   }
 }
 

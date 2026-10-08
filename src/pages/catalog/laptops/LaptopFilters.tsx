@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-import { catalogColourSwatch } from '../catalogColourPalette';
+import { colourSwatch } from '../../../components/product';
 import {
   CatalogBrandGroup,
   CatalogCheckboxGroup,
@@ -95,7 +95,7 @@ export function LaptopFilters({
       <CatalogColourGroup
         colours={facets.colours.map((option) => ({
           ...option,
-          swatch: catalogColourSwatch(option.value),
+          swatch: colourSwatch(option.value),
         }))}
         extraColours={[]}
         onChange={(next) => {

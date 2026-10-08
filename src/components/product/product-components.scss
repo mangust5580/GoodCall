@@ -1,5 +1,7 @@
 @use '../ui/controls';
 
+$product-sale-surface: #dc2626;
+
 :root {
   --product-card-radius: 16px;
   --product-card-padding: 16px;
@@ -366,5 +368,24 @@
     font-weight: 700;
     line-height: 1.2;
     color: var(--role-state-danger);
+  }
+}
+
+.product-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 10px;
+  border-radius: var(--control-radius-sm);
+  font-size: var(--control-label-size);
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--role-text-inverse);
+
+  &--new {
+    background-color: var(--color-brand-purple-600);
+  }
+
+  &--sale {
+    background-color: $product-sale-surface;
   }
 }

@@ -1,6 +1,7 @@
 import { useId, useState } from 'react';
 
 import { formatPrice } from '../../commerce/format';
+import { ProductBadge } from '../../components/product';
 import { Button, Chip, Icon, QuantityStepper } from '../../components/ui';
 import { PRODUCT_STAR_COUNT, ProductStars } from './ProductStars';
 import { formatPoints, formatRating, formatReviewCount } from './productDetailsFormat';
@@ -137,7 +138,7 @@ export function ProductPurchasePanel({
             <del className="product-purchase__old-price">{formatPrice(product.oldPriceValue)}</del>
           )}
           {product.discount === undefined ? null : (
-            <span className="product-details-badge">{product.discount}</span>
+            <ProductBadge tone="sale">{product.discount}</ProductBadge>
           )}
         </p>
         <p className="product-purchase__installment">

@@ -1,0 +1,57 @@
+@use 'sass:list';
+
+$colour-swatches: (
+  'black': (
+    #12131a,
+    #fff,
+  ),
+  'gray': (
+    #a5a6ab,
+    #fff,
+  ),
+  'white': (
+    #fff,
+    #12131a,
+  ),
+  'violet': (
+    #8f70f0,
+    #fff,
+  ),
+  'blue': (
+    #3e96f3,
+    #fff,
+  ),
+  'green': (
+    #70c58c,
+    #fff,
+  ),
+  'pink': (
+    #f4a29f,
+    #12131a,
+  ),
+  'red': (
+    #e05a5a,
+    #fff,
+  ),
+  'gold': (
+    #e6c88a,
+    #12131a,
+  ),
+  'yellow': (
+    #f5d76e,
+    #12131a,
+  ),
+  'teal': (
+    #5ec8c8,
+    #12131a,
+  ),
+);
+
+@mixin colour-swatch-modifiers {
+  @each $name, $pair in $colour-swatches {
+    &--#{$name} {
+      background-color: list.nth($pair, 1);
+      color: list.nth($pair, 2);
+    }
+  }
+}

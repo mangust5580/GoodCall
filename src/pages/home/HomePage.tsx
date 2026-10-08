@@ -12,7 +12,7 @@ import type { PictureSource } from '../../components/media';
 import { BenefitsStrip } from '../../components/content';
 import type { BenefitItem } from '../../components/content';
 import { Container } from '../../components/layout';
-import { ProductCard } from '../../components/product';
+import { ProductBadge, ProductCard } from '../../components/product';
 import { Icon } from '../../components/ui';
 import {
   HOME_ARTICLES,
@@ -229,9 +229,7 @@ export function HomePage({
                 <ProductCard
                   badge={
                     product.badge === undefined ? undefined : (
-                      <span className={`home-badge home-badge--${product.badgeTone ?? 'new'}`}>
-                        {product.badge}
-                      </span>
+                      <ProductBadge tone={product.badgeTone ?? 'new'}>{product.badge}</ProductBadge>
                     )
                   }
                   disabled={cart === undefined}

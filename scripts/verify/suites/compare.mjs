@@ -756,6 +756,73 @@ const MIXED_COMPARE = JSON.stringify({
 await evaluate(`localStorage.setItem('${COMPARE}', ${JSON.stringify(MIXED_COMPARE)})`);
 await checkMediaGeometry('mixed smartphone + laptop media geometry', 2, 'compare-mixed');
 
+const STORAGE_COMPARE = JSON.stringify({
+  items: [
+    item(
+      'lenovo-legion-5-16-rtx4060',
+      'Lenovo Legion Slim 5 16 AMD Ryzen 7 16 ГБ/1 ТБ RTX 4060, Серый',
+      149990,
+      164990,
+      4.8,
+      254,
+      'Lenovo',
+      1024,
+      'Серый',
+    ),
+    item(
+      'macbook-pro-14-m3-512',
+      'Apple MacBook Pro 14 M3 8/512 ГБ, Серый космос',
+      169990,
+      null,
+      4.9,
+      148,
+      'Apple',
+      512,
+      'Серый космос',
+    ),
+    item(
+      'macbook-air-13-m3-256',
+      'Apple MacBook Air 13 M3 8/256 ГБ, Полночь',
+      129990,
+      null,
+      4.9,
+      7,
+      'Apple',
+      256,
+      'Полночь',
+    ),
+    item(
+      'iphone-15-pro-128',
+      'Apple iPhone 15 Pro 128 ГБ, Натуральный титан',
+      109990,
+      124990,
+      4.8,
+      12,
+      'Apple',
+      128,
+      'Натуральный титан',
+    ),
+  ],
+});
+await evaluate(`localStorage.setItem('${COMPARE}', ${JSON.stringify(STORAGE_COMPARE)})`);
+await reload();
+await waitFor(`document.querySelectorAll('.compare-product').length === 4`, 'storage compare');
+const storageRow = await evaluate(
+  `[...document.querySelectorAll('tbody tr')].find((tr) => tr.querySelector('th').textContent === 'Встроенная память') ? [...[...document.querySelectorAll('tbody tr')].find((tr) => tr.querySelector('th').textContent === 'Встроенная память').querySelectorAll('td')].map((td) => td.textContent.replace(/\s/g, ' ')) : null`,
+);
+check(
+  'row Встроенная память Q-19: laptop 1024 → 1 ТБ; 512/256/128 stay in ГБ',
+  JSON.stringify(storageRow) === JSON.stringify(['1 ТБ', '512 ГБ', '256 ГБ', '128 ГБ']),
+  JSON.stringify(storageRow),
+);
+check(
+  'row Встроенная память Q-19: persisted storage stays numeric (1024/512/256/128)',
+  JSON.stringify(
+    JSON.parse(await evaluate(`localStorage.getItem('${COMPARE}')`)).items.map((i) => i.storage),
+  ) === JSON.stringify([1024, 512, 256, 128]),
+);
+await checkMediaGeometry('storage 1 ТБ compare media geometry', 4, 'compare-storage');
+
 await evaluate(`localStorage.removeItem('${CART}'); localStorage.removeItem('${COMPARE}')`);
 
 check('no uncaught errors', consoleErrors.length === 0, consoleErrors.join(' ; '));
