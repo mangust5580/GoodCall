@@ -350,7 +350,7 @@ await evaluate(
 );
 await sleep(200);
 const empty = await evaluate(
-  `(() => { const e = document.querySelector('.favorites-empty'); return e && [e.querySelector('h2').textContent, e.querySelector('.favorites-empty__message').textContent, [...e.querySelectorAll('a')].map((a) => a.getAttribute('href') + '=' + a.textContent).join(',')].join('|'); })()`,
+  `(() => { const e = document.querySelector('.favorites-empty'); return e && [e.querySelector('h2').textContent, e.querySelector('.empty-state__message').textContent, [...e.querySelectorAll('a')].map((a) => a.getAttribute('href') + '=' + a.textContent).join(',')].join('|'); })()`,
 );
 check(
   'empty: state, copy and links',

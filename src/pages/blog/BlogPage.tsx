@@ -1,7 +1,7 @@
 import { useRef } from 'react';
 
 import { BLOG_HERO_MEDIA } from '../../assets/media/blog/blogMedia';
-import { Container } from '../../components/layout';
+import { Breadcrumbs, Container } from '../../components/layout';
 import { Picture } from '../../components/media';
 import { Button, Icon, Pagination } from '../../components/ui';
 import { BlogArticleCard } from './BlogArticleCard';
@@ -63,18 +63,10 @@ export function BlogPage({
   return (
     <main className="blog-page">
       <Container>
-        <nav aria-label="Хлебные крошки" className="blog-page__breadcrumbs">
-          <ol className="blog-page__crumbs">
-            <li className="blog-page__crumb">
-              <a className="blog-page__crumb-link" href={homeHref}>
-                Главная
-              </a>
-            </li>
-            <li aria-current="page" className="blog-page__crumb">
-              Блог
-            </li>
-          </ol>
-        </nav>
+        <Breadcrumbs
+          className="blog-page__breadcrumbs"
+          items={[{ label: 'Главная', href: homeHref }, { label: 'Блог' }]}
+        />
 
         <section aria-labelledby="blog-title" className="blog-hero">
           <div className="blog-hero__content">

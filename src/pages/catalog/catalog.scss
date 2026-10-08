@@ -60,44 +60,6 @@ $catalog-swatches: (
     margin-bottom: h.fluid(20, 14);
   }
 
-  &__crumbs {
-    display: flex;
-    flex-flow: row wrap;
-    gap: 4px 8px;
-    align-items: center;
-    margin: 0;
-    padding: 0;
-    list-style: none;
-    font-size: 14px;
-    line-height: 1.4;
-    color: var(--role-text-muted);
-  }
-
-  &__crumb {
-    display: inline-flex;
-    gap: 8px;
-    align-items: center;
-
-    &:not(:first-child)::before {
-      content: '›';
-      color: var(--role-text-subtle);
-    }
-  }
-
-  &__crumb-link {
-    color: var(--role-text-secondary);
-    text-decoration-line: none;
-
-    &:hover {
-      color: var(--role-text-link);
-    }
-
-    &:focus-visible {
-      outline: 2px solid var(--role-border-focus);
-      outline-offset: 2px;
-    }
-  }
-
   &__heading {
     display: flex;
     flex-flow: row wrap;

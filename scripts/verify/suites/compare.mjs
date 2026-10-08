@@ -325,7 +325,7 @@ await go('#/compare');
 await sleep(400);
 check(
   'page: breadcrumb',
-  (await evaluate(`document.querySelector('.compare-page__crumbs').textContent`)) ===
+  (await evaluate(`document.querySelector('.compare-page__breadcrumbs ol').textContent`)) ===
     'ГлавнаяСравнение товаров',
 );
 check(
@@ -505,8 +505,9 @@ check(
 check(
   'empty: no table, catalogue CTA link, shell 0, store empty',
   (await evaluate(`document.querySelector('table')`)) === null &&
-    (await evaluate(`document.querySelector('.compare-empty__action').getAttribute('href')`)) ===
-      '#/catalog/smartphones' &&
+    (await evaluate(
+      `document.querySelector('.compare-empty .empty-state__action').getAttribute('href')`,
+    )) === '#/catalog/smartphones' &&
     (await compareBadge()) === '0' &&
     (await stored()).length === 0,
 );

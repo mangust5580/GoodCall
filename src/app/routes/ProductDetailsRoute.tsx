@@ -4,7 +4,7 @@ import { Link, useParams } from 'react-router-dom';
 import { addCartLine, cartLineId } from '../../commerce/cart';
 import type { CartLineImage } from '../../commerce/cart';
 import { toggleFavorite, useFavoriteItems } from '../../commerce/favorites';
-import { Container } from '../../components/layout';
+import { RouteStatus } from '../../components/feedback';
 import { fetchCatalogProducts } from '../../pages/catalog';
 import type { CatalogProduct } from '../../pages/catalog';
 import {
@@ -31,8 +31,6 @@ import { useDocumentTitle } from '../useDocumentTitle';
 import { useCatalogCartSeam } from './useCatalogCartSeam';
 import { useCatalogCompareSeam } from './useCatalogCompareSeam';
 import { useCatalogFavoritesSeam } from './useCatalogFavoritesSeam';
-
-import './ProductDetailsRoute.scss';
 
 type ProductDetailsRouteView =
   | { readonly status: 'loading' }
@@ -97,53 +95,41 @@ function viewFromResult(
 }
 
 function ProductRouteLoading() {
-  return (
-    <main aria-busy="true" className="product-route-state">
-      <Container className="product-route-state__inner">
-        <p className="product-route-state__message" role="status">
-          Загружаем товар…
-        </p>
-      </Container>
-    </main>
-  );
+  return <RouteStatus kind="loading" message="Загружаем товар…" />;
 }
 
 function ProductRouteNotFound() {
   return (
-    <main className="product-route-state">
-      <Container className="product-route-state__inner">
-        <h1 className="product-route-state__title">Товар не найден</h1>
-        <p className="product-route-state__message">
-          Такого товара нет или его страница пока недоступна.
-        </p>
-        <div className="product-route-state__actions">
+    <RouteStatus
+      actions={
+        <>
           <Link className="ui-button ui-button--primary" to={CATALOG_SMARTPHONES_PATH}>
             В каталог
           </Link>
           <Link className="ui-button ui-button--secondary" to={HOME_PATH}>
             На главную
           </Link>
-        </div>
-      </Container>
-    </main>
+        </>
+      }
+      kind="failure"
+      message="Такого товара нет или его страница пока недоступна."
+      title="Товар не найден"
+    />
   );
 }
 
 function ProductRouteError() {
   return (
-    <main className="product-route-state">
-      <Container className="product-route-state__inner">
-        <h1 className="product-route-state__title">Не удалось загрузить товар</h1>
-        <p className="product-route-state__message">
-          Сервис временно недоступен. Попробуйте обновить страницу позже.
-        </p>
-        <div className="product-route-state__actions">
-          <Link className="ui-button ui-button--primary" to={CATALOG_SMARTPHONES_PATH}>
-            В каталог
-          </Link>
-        </div>
-      </Container>
-    </main>
+    <RouteStatus
+      actions={
+        <Link className="ui-button ui-button--primary" to={CATALOG_SMARTPHONES_PATH}>
+          В каталог
+        </Link>
+      }
+      kind="failure"
+      message="Сервис временно недоступен. Попробуйте обновить страницу позже."
+      title="Не удалось загрузить товар"
+    />
   );
 }
 

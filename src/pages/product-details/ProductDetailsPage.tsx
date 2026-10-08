@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-import { Container } from '../../components/layout';
+import { Breadcrumbs, Container } from '../../components/layout';
 import { ProductDetailsSections } from './ProductDetailsSections';
 import { ProductGallery } from './ProductGallery';
 import type { ProductFavoriteBinding } from './ProductGallery';
@@ -50,32 +50,15 @@ export function ProductDetailsPage({
   return (
     <main className="product-details">
       <Container>
-        <nav aria-label="Хлебные крошки" className="product-details__breadcrumbs">
-          <ol className="product-details__crumbs">
-            <li className="product-details__crumb">
-              {homeHref === undefined ? (
-                'Главная'
-              ) : (
-                <a className="product-details__crumb-link" href={homeHref}>
-                  Главная
-                </a>
-              )}
-            </li>
-            <li className="product-details__crumb">Каталог</li>
-            <li className="product-details__crumb">
-              {categoryHref === undefined ? (
-                product.categoryTitle
-              ) : (
-                <a className="product-details__crumb-link" href={categoryHref}>
-                  {product.categoryTitle}
-                </a>
-              )}
-            </li>
-            <li aria-current="page" className="product-details__crumb">
-              {title}
-            </li>
-          </ol>
-        </nav>
+        <Breadcrumbs
+          className="product-details__breadcrumbs"
+          items={[
+            { label: 'Главная', href: homeHref },
+            { label: 'Каталог' },
+            { label: product.categoryTitle, href: categoryHref },
+            { label: title },
+          ]}
+        />
 
         <div className="product-details__layout">
           <div className="product-details__gallery">

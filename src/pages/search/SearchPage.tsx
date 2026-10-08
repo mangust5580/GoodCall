@@ -3,9 +3,10 @@ import { Select } from 'radix-ui';
 
 import productPhone from '../../assets/products/product-phone.svg';
 import { formatPrice } from '../../commerce/format';
-import { Container } from '../../components/layout';
+import { EmptyState } from '../../components/feedback';
+import { Breadcrumbs, Container } from '../../components/layout';
 import { ProductCard } from '../../components/product';
-import { Button, Chip, Icon, Pagination } from '../../components/ui';
+import { Chip, Icon, Pagination } from '../../components/ui';
 import type { CatalogCartSeam, CatalogProduct, CatalogSortValue } from '../catalog';
 import { CATALOG_SORT_OPTIONS, sortCatalogProducts } from '../catalog';
 import { SearchFilterDialog } from './SearchFilterDialog';
@@ -139,22 +140,20 @@ export function SearchPage({
   };
 
   const filteredEmpty = (
-    <section aria-labelledby="search-filtered-empty-title" className="search-filtered-empty">
-      <span className="search-empty__visual">
-        <Icon className="search-empty__icon" name="search" />
-      </span>
-      <h2 className="search-empty__title" id="search-filtered-empty-title">
-        Ничего не найдено
-      </h2>
-      <p className="search-empty__message">По текущему запросу и выбранным фильтрам товаров нет.</p>
-      <Button className="search-filtered-empty__reset" onClick={resetFilters}>
-        Сбросить фильтры
-      </Button>
-    </section>
+    <EmptyState
+      action={{ label: 'Сбросить фильтры', onClick: resetFilters }}
+      className="search-filtered-empty"
+      headingLevel="h2"
+      icon="search"
+      message="По текущему запросу и выбранным фильтрам товаров нет."
+      title="Ничего не найдено"
+      variant="page"
+    />
   );
 
   const resultList = (
     <>
+      <h2 className="ui-visually-hidden">Найденные товары</h2>
       <ul aria-label="Найденные товары" className="search-results">
         {visibleMatches.map((product) => (
           <li key={product.id}>
@@ -212,18 +211,10 @@ export function SearchPage({
   return (
     <main className="search-page">
       <Container>
-        <nav aria-label="Хлебные крошки" className="search-page__breadcrumbs">
-          <ol className="search-page__crumbs">
-            <li className="search-page__crumb">
-              <a className="search-page__crumb-link" href={homeHref}>
-                Главная
-              </a>
-            </li>
-            <li aria-current="page" className="search-page__crumb">
-              Поиск
-            </li>
-          </ol>
-        </nav>
+        <Breadcrumbs
+          className="search-page__breadcrumbs"
+          items={[{ label: 'Главная', href: homeHref }, { label: 'Поиск' }]}
+        />
 
         <header className="search-page__heading">
           <div className="search-page__heading-group">
@@ -303,6 +294,7 @@ export function SearchPage({
             <div className="search-workspace__results">
               {matches.length > 0 ? (
                 <>
+                  <h2 className="ui-visually-hidden">Найденные товары</h2>
                   <ul aria-label="Найденные товары" className="search-rows">
                     {visibleMatches.map((product) => (
                       <li key={product.id}>
@@ -343,32 +335,25 @@ export function SearchPage({
         ) : hasBaseMatches ? (
           filteredEmpty
         ) : (
-          <section aria-labelledby="search-empty-title" className="search-empty">
-            <span className="search-empty__visual">
-              <Icon className="search-empty__icon" name="search" />
-            </span>
-            <h2 className="search-empty__title" id="search-empty-title">
-              {hasQuery ? 'Ничего не найдено' : 'Введите запрос'}
-            </h2>
-            <p className="search-empty__message">
-              {hasQuery ? (
+          <EmptyState
+            action={{ label: 'Перейти в каталог', href: catalogHref }}
+            className="search-empty"
+            headingLevel="h2"
+            icon="search"
+            message={
+              hasQuery ? (
                 <>
                   По запросу <span className="search-page__query">«{query}»</span> ничего не
                   найдено. Проверьте написание или попробуйте другой запрос в строке поиска.
                 </>
               ) : (
                 'Воспользуйтесь строкой поиска в шапке сайта, чтобы найти товары.'
-              )}
-            </p>
-            <div className="search-empty__actions">
-              <a className="ui-button ui-button--primary search-empty__action" href={catalogHref}>
-                Перейти в каталог
-              </a>
-              <a className="ui-button ui-button--secondary search-empty__action" href={homeHref}>
-                На главную
-              </a>
-            </div>
-          </section>
+              )
+            }
+            secondaryAction={{ label: 'На главную', href: homeHref }}
+            title={hasQuery ? 'Ничего не найдено' : 'Введите запрос'}
+            variant="page"
+          />
         )}
       </Container>
       <p className="ui-visually-hidden" role="status">

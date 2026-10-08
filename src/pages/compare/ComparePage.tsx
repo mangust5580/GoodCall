@@ -5,7 +5,8 @@ import { CartLineMedia } from '../../commerce/cart';
 import { COMPARE_LIMIT } from '../../commerce/compare';
 import type { CompareItem } from '../../commerce/compare';
 import { formatPrice } from '../../commerce/format';
-import { Container } from '../../components/layout';
+import { EmptyState } from '../../components/feedback';
+import { Breadcrumbs, Container } from '../../components/layout';
 import { ProductRating } from '../../components/product';
 import { Icon } from '../../components/ui';
 
@@ -115,34 +116,22 @@ export function ComparePage({
   return (
     <main className="compare-page">
       <Container>
-        <nav aria-label="Хлебные крошки" className="compare-page__breadcrumbs">
-          <ol className="compare-page__crumbs">
-            <li className="compare-page__crumb">
-              <a className="compare-page__crumb-link" href={homeHref}>
-                Главная
-              </a>
-            </li>
-            <li aria-current="page" className="compare-page__crumb">
-              Сравнение товаров
-            </li>
-          </ol>
-        </nav>
+        <Breadcrumbs
+          className="compare-page__breadcrumbs"
+          items={[{ label: 'Главная', href: homeHref }, { label: 'Сравнение товаров' }]}
+        />
 
         {itemCount === 0 ? (
-          <section aria-labelledby={EMPTY_TITLE_ID} className="compare-empty">
-            <span className="compare-empty__visual">
-              <Icon className="compare-empty__icon" name="compare" />
-            </span>
-            <h1 className="compare-empty__title" id={EMPTY_TITLE_ID} tabIndex={-1}>
-              Сравнение пусто
-            </h1>
-            <p className="compare-empty__message">
-              {`Добавляйте товары к сравнению в каталоге — до ${String(COMPARE_LIMIT)} товаров одновременно.`}
-            </p>
-            <a className="ui-button ui-button--primary compare-empty__action" href={catalogHref}>
-              Перейти в каталог
-            </a>
-          </section>
+          <EmptyState
+            action={{ label: 'Перейти в каталог', href: catalogHref }}
+            className="compare-empty"
+            headingLevel="h1"
+            icon="compare"
+            message={`Добавляйте товары к сравнению в каталоге — до ${String(COMPARE_LIMIT)} товаров одновременно.`}
+            title="Сравнение пусто"
+            titleId={EMPTY_TITLE_ID}
+            variant="page"
+          />
         ) : (
           <section aria-labelledby="compare-title" className="compare">
             <header className="compare__header">

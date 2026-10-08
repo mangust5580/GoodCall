@@ -56,7 +56,9 @@ export async function openPage(
         });
         return;
       }
-      const { status, body } = respond(request);
+      const reply = respond(request);
+      if (reply === null) return;
+      const { status, body } = reply;
       send('Fetch.fulfillRequest', {
         requestId,
         responseCode: status,

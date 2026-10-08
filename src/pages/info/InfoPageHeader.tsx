@@ -1,33 +1,13 @@
 import type { ReactNode } from 'react';
 
+import { Breadcrumbs } from '../../components/layout';
+
 interface InfoPageHeaderProps {
   readonly homeHref: string;
   readonly title: string;
   readonly crumb?: string;
   readonly lead: string;
   readonly aside?: ReactNode;
-}
-
-interface InfoBreadcrumbsProps {
-  readonly homeHref: string;
-  readonly crumb: string;
-}
-
-export function InfoBreadcrumbs({ homeHref, crumb }: InfoBreadcrumbsProps) {
-  return (
-    <nav aria-label="Хлебные крошки" className="info-page__breadcrumbs">
-      <ol className="info-page__crumbs">
-        <li className="info-page__crumb">
-          <a className="info-page__crumb-link" href={homeHref}>
-            Главная
-          </a>
-        </li>
-        <li aria-current="page" className="info-page__crumb">
-          {crumb}
-        </li>
-      </ol>
-    </nav>
-  );
 }
 
 export function InfoPageHeader({
@@ -39,7 +19,10 @@ export function InfoPageHeader({
 }: InfoPageHeaderProps) {
   return (
     <>
-      <InfoBreadcrumbs crumb={crumb} homeHref={homeHref} />
+      <Breadcrumbs
+        className="info-page__breadcrumbs"
+        items={[{ label: 'Главная', href: homeHref }, { label: crumb }]}
+      />
 
       <header
         className={

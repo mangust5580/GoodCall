@@ -1,4 +1,4 @@
-import { Container } from '../../components/layout';
+import { Breadcrumbs, Container } from '../../components/layout';
 import { Picture } from '../../components/media';
 import { Icon } from '../../components/ui';
 import { BlogArticleCard } from './BlogArticleCard';
@@ -44,23 +44,14 @@ export function BlogArticlePage({
   return (
     <main className="blog-page">
       <Container>
-        <nav aria-label="Хлебные крошки" className="blog-page__breadcrumbs">
-          <ol className="blog-page__crumbs">
-            <li className="blog-page__crumb">
-              <a className="blog-page__crumb-link" href={homeHref}>
-                Главная
-              </a>
-            </li>
-            <li className="blog-page__crumb">
-              <a className="blog-page__crumb-link" href={blogHref}>
-                Блог
-              </a>
-            </li>
-            <li aria-current="page" className="blog-page__crumb">
-              {article.title}
-            </li>
-          </ol>
-        </nav>
+        <Breadcrumbs
+          className="blog-page__breadcrumbs"
+          items={[
+            { label: 'Главная', href: homeHref },
+            { label: 'Блог', href: blogHref },
+            { label: article.title },
+          ]}
+        />
 
         <div className="blog-detail">
           <article aria-labelledby="blog-article-title" className="blog-detail__article">

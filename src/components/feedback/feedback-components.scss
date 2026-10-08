@@ -1,3 +1,4 @@
+@use '../../styles/helpers' as h;
 @use '../ui/controls';
 
 :root {
@@ -145,32 +146,136 @@
 .empty-state {
   display: flex;
   flex-direction: column;
-  gap: var(--feedback-surface-gap);
   align-items: center;
   min-width: 0;
-  padding: var(--feedback-surface-padding);
   text-align: center;
 
-  @include feedback-surface;
+  &--panel {
+    gap: var(--feedback-surface-gap);
+    padding: var(--feedback-surface-padding);
 
-  &__icon {
+    @include feedback-surface;
+  }
+
+  &--page {
+    max-width: 560px;
+    margin-inline: auto;
+  }
+
+  &__visual {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: h.fluid(120, 96);
+    height: h.fluid(120, 96);
+    margin-bottom: h.fluid(24, 20);
+    background-color: var(--role-surface-brand-soft);
+    border-radius: 50%;
+    color: var(--role-text-link);
+  }
+
+  &--panel &__icon {
     --control-icon-size: 40px;
 
     color: var(--role-text-link);
   }
 
-  &__title {
+  &--page &__icon {
+    --control-icon-size: #{h.fluid(48, 40)};
+  }
+
+  &--panel &__title {
     @include feedback-panel-title;
   }
 
-  &__message {
+  &--page &__title {
+    margin: 0;
+    font-size: h.fluid(26, 22);
+    font-weight: 700;
+    line-height: 1.25;
+    color: var(--role-text-primary);
+  }
+
+  &--page &__title--lead {
+    font-size: h.fluid(32, 24);
+    font-weight: 800;
+    line-height: 1.2;
+    outline: none;
+  }
+
+  &--panel &__message {
     @include feedback-panel-message;
   }
 
-  &__action {
+  &--page &__message {
+    margin: 12px 0 0;
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--role-text-secondary);
+    overflow-wrap: anywhere;
+    text-wrap: balance;
+  }
+
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: center;
+    margin-top: h.fluid(28, 24);
+
+    @include h.media-max(480px) {
+      flex-direction: column;
+      align-self: stretch;
+    }
+  }
+
+  &--panel &__action {
     width: 100%;
     margin-top: 4px;
     text-decoration: none;
+  }
+
+  &--page &__action {
+    min-width: 200px;
+
+    @include h.media-max(480px) {
+      min-width: 0;
+    }
+  }
+}
+
+.route-status {
+  background-color: var(--role-surface-page);
+
+  &__inner {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+    padding-block: 96px;
+  }
+
+  &__title {
+    margin: 0;
+    font-size: 32px;
+    font-weight: 800;
+    line-height: 1.2;
+    color: var(--role-text-primary);
+  }
+
+  &__message {
+    margin: 0;
+    max-width: 560px;
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--role-text-secondary);
+  }
+
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-block-start: 8px;
   }
 }
 

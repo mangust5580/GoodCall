@@ -1,6 +1,6 @@
 import { cartTotals } from '../../commerce/cart';
 import type { CartLine } from '../../commerce/cart';
-import { Container } from '../../components/layout';
+import { Breadcrumbs, Container } from '../../components/layout';
 import type { AddressLookupClient, CityLookupClient, CityOption } from '../../components/location';
 import { Icon } from '../../components/ui';
 import { CheckoutForm } from './CheckoutForm';
@@ -33,18 +33,10 @@ export function CheckoutPage({
   return (
     <main className="checkout-page">
       <Container>
-        <nav aria-label="Хлебные крошки" className="checkout-page__breadcrumbs">
-          <ol className="checkout-page__crumbs">
-            <li className="checkout-page__crumb">
-              <a className="checkout-page__crumb-link" href={homeHref}>
-                Главная
-              </a>
-            </li>
-            <li aria-current="page" className="checkout-page__crumb">
-              Оформление заказа
-            </li>
-          </ol>
-        </nav>
+        <Breadcrumbs
+          className="checkout-page__breadcrumbs"
+          items={[{ label: 'Главная', href: homeHref }, { label: 'Оформление заказа' }]}
+        />
 
         {selectedLines.length === 0 ? (
           <section aria-labelledby="checkout-unavailable-title" className="checkout-unavailable">

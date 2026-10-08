@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 
 import { BenefitsStrip } from '../../components/content';
-import { Container } from '../../components/layout';
+import { Breadcrumbs, Container } from '../../components/layout';
 import { Button, Icon } from '../../components/ui';
 import { ACCOUNT_BENEFITS, ACCOUNT_DEMO_FEATURES, ACCOUNT_DEMO_PROMISES } from './accountFixtures';
 import type { AccountDemoFeature } from './accountFixtures';
@@ -71,18 +71,10 @@ export function LoginPage({
   return (
     <main className="login-page">
       <Container>
-        <nav aria-label="Хлебные крошки" className="account-crumbs">
-          <ol className="account-crumbs__list">
-            <li className="account-crumbs__item">
-              <a className="account-crumbs__link" href={homeHref}>
-                Главная
-              </a>
-            </li>
-            <li aria-current="page" className="account-crumbs__item">
-              Вход
-            </li>
-          </ol>
-        </nav>
+        <Breadcrumbs
+          className="account-crumbs"
+          items={[{ label: 'Главная', href: homeHref }, { label: 'Вход' }]}
+        />
 
         <header className="login-page__heading">
           <h1 className="login-page__title" id={TITLE_ID} tabIndex={-1}>

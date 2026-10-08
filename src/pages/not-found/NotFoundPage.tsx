@@ -1,6 +1,6 @@
 import notFoundHero from '../../assets/media/not-found/not-found-hero.png?w=360;480;640;800;1000;1200&picture';
 import { HOME_DEVICE_MEDIA } from '../../assets/media/home/homeMarketingMedia';
-import { Container } from '../../components/layout';
+import { Breadcrumbs, Container } from '../../components/layout';
 import { Picture } from '../../components/media';
 import type { PictureSource } from '../../components/media';
 import { ProductCard } from '../../components/product';
@@ -61,18 +61,10 @@ export function NotFoundPage({
   return (
     <main className="not-found-page">
       <Container>
-        <nav aria-label="Хлебные крошки" className="not-found-page__breadcrumbs">
-          <ol className="not-found-page__crumbs">
-            <li className="not-found-page__crumb">
-              <a className="not-found-page__crumb-link" href={homeHref}>
-                Главная
-              </a>
-            </li>
-            <li aria-current="page" className="not-found-page__crumb">
-              404
-            </li>
-          </ol>
-        </nav>
+        <Breadcrumbs
+          className="not-found-page__breadcrumbs"
+          items={[{ label: 'Главная', href: homeHref }, { label: '404' }]}
+        />
 
         <section aria-labelledby="not-found-title" className="not-found-hero">
           <div className="not-found-hero__content">

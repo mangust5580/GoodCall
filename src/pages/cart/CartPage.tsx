@@ -3,7 +3,7 @@ import { useEffect, useRef } from 'react';
 import { cartTotals, formatUnitCount } from '../../commerce/cart';
 import type { CartLinesState } from '../../commerce/cart';
 import { BenefitsStrip } from '../../components/content';
-import { Container } from '../../components/layout';
+import { Breadcrumbs, Container } from '../../components/layout';
 import { ProductCard } from '../../components/product';
 import { Button, Checkbox, Chip } from '../../components/ui';
 import { CartEmptyState } from './CartEmptyState';
@@ -41,18 +41,10 @@ export function CartPage({ homeHref, catalogHref, checkoutHref, cart }: CartPage
   return (
     <main className="cart-page">
       <Container>
-        <nav aria-label="Хлебные крошки" className="cart-page__breadcrumbs">
-          <ol className="cart-page__crumbs">
-            <li className="cart-page__crumb">
-              <a className="cart-page__crumb-link" href={homeHref}>
-                Главная
-              </a>
-            </li>
-            <li aria-current="page" className="cart-page__crumb">
-              Корзина
-            </li>
-          </ol>
-        </nav>
+        <Breadcrumbs
+          className="cart-page__breadcrumbs"
+          items={[{ label: 'Главная', href: homeHref }, { label: 'Корзина' }]}
+        />
 
         {lineCount === 0 ? (
           <CartEmptyState catalogHref={catalogHref} homeHref={homeHref} />

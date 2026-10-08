@@ -3,12 +3,11 @@ import contactsStoreInterior from '../../assets/media/contacts/contacts-store-in
 import { COMPARE_LIMIT } from '../../commerce/compare';
 import { DEMO_STORES } from '../../commerce/shops';
 import { STOREFRONT_SUPPORT } from '../../commerce/storefront';
-import { Container } from '../../components/layout';
+import { Breadcrumbs, Container } from '../../components/layout';
 import { Picture } from '../../components/media';
 import { Icon } from '../../components/ui';
 import type { IconName } from '../../components/ui';
 import type { InfoLinks } from './infoLinks';
-import { InfoBreadcrumbs } from './InfoPageHeader';
 
 const HERO_SIZES = '(min-width: 1280px) 1232px, 100vw';
 const BLOCK_SIZES = '(min-width: 1024px) 600px, 100vw';
@@ -70,7 +69,10 @@ export function AboutPage({ links }: AboutPageProps) {
   return (
     <main className="info-page about-page">
       <Container>
-        <InfoBreadcrumbs crumb="О нас" homeHref={links.home} />
+        <Breadcrumbs
+          className="info-page__breadcrumbs"
+          items={[{ label: 'Главная', href: links.home }, { label: 'О нас' }]}
+        />
 
         <div className="about-hero">
           <Picture

@@ -144,13 +144,16 @@ Technically complete:
   owned by React Router using a GitHub Pages-safe hash strategy. See the
   Current routes section below.
 
-Active visual slice: none. Active implementation milestone: none. Quality A
-(Correctness and Document Semantics) is closed and published. Next approved
-activity: Quality B — Shared Navigation and Feedback Primitives (see Quality
+Active visual slice: none. Active implementation milestone: none. Quality B
+(Shared Navigation and Feedback Primitives) is closed and published. Next
+approved activity: Quality C — Product Presentation Consistency (see Quality
 remediation below).
 
 Completed visual slices:
 
+- **Quality B / Shared Navigation and Feedback Primitives — USER VISUAL/UX
+  PASS on 2026-10-08, CLOSED and published.** Closes audit items Q-04, Q-09,
+  Q-10 and Q-21. See the Quality remediation section below.
 - **Quality A / Correctness and Document Semantics — USER VISUAL/UX PASS on
   2026-10-08, CLOSED and published.** Closes audit items Q-01, Q-02, Q-11,
   Q-16 and Q-17. See the Quality remediation section below.
@@ -675,8 +678,8 @@ is authoritative).
 
 - **Route.** `#/about` (`ABOUT_PATH`), `AboutRoute` in
   `src/app/routes/InfoRoutes.tsx`; `AboutPage` lives in `src/pages/info/`. It
-  renders `InfoBreadcrumbs` (the breadcrumb extracted from `InfoPageHeader`,
-  which still renders it) so the hero can sit between breadcrumb and `h1`.
+  renders the shared `Breadcrumbs` directly (`InfoPageHeader` renders it too)
+  so the hero can sit between breadcrumb and `h1`.
 - **Sections.** Breadcrumb «Главная › О нас», wide hero, `h1` «О GoodCall» with
   the intro, «Как устроен GoodCall», «Что можно сделать на сайте», the «Задача
   проекта» callout, «Возможности сайта» with six cards (Каталог и поиск,
@@ -1482,8 +1485,8 @@ adding to the cart keeps the favourite.
 - The empty state is page-owned, following the Search pattern: a heart disc,
   `h2` «В избранном пока пусто», «Нажимайте ♥ на карточках товаров, чтобы
   сохранить их здесь.», and the links `Перейти в каталог` / `На главную`.
-- When empty, the chip and lead are omitted. `EmptyState` (Components F) was
-  not used, because it is cart-specific.
+- When empty, the chip and lead are omitted. Since Quality B the empty state is
+  the shared `EmptyState` `variant="page"` (`h2`, heart icon).
 - Removing a card moves focus to the `h1` when focus would fall to `body`, as
   in the Cart precedent.
 - One polite `role="status"` announces removals and cart adds.
@@ -2712,7 +2715,7 @@ active products.
     specimen slugs.
 - The URL shape is `#/product/iphone-15-128`.
 - `src/app/routes/ProductDetailsRoute.tsx` renders inside `ProductionShell` and owns
-  the route states. `ProductDetailsRoute.scss` sits beside it.
+  the route states, rendered with the shared `RouteStatus` (Quality B).
 
 **Read.** `src/pages/product-details/productDetailsData.ts` makes one query:
 
@@ -5213,22 +5216,51 @@ Durable results:
 - `scripts/verify/README.md` lists current suite ownership, including
   `account`, `laptops` and the live smartphone Catalog coverage in `search`.
 
-Still open (not started): Q-03 Cart recommendations, Q-04 Breadcrumbs, Q-05
-ProductBadge, Q-06 colour swatches, Q-07 typography roles, Q-08 breakpoints,
-Q-09 EmptyState, Q-10 RouteStatus, Q-12 DateField, Q-13 reference lazy loading,
-Q-14 footer destinations, Q-15 cross-category Search (product decision), Q-18
-rating separator, Q-19 1024 GB → 1 TB, Q-20 thumbnail fallback, Q-21 heading
-skips, Q-22 `.mcp.json` tooling ignore.
+**Quality B / Shared Navigation and Feedback Primitives — CLOSED, USER
+VISUAL/UX PASS on 2026-10-08.** Closed items: Q-04 (Breadcrumbs), Q-09
+(EmptyState), Q-10 (RouteStatus), Q-21 (heading skips).
 
-**Next approved activity: Quality B — Shared Navigation and Feedback
-Primitives.** Not started.
+Durable results:
+
+- `Breadcrumbs` (`src/components/layout`) owns breadcrumb markup and
+  semantics for every page family: `{ label, href? }` items, the last item is
+  the non-link `aria-current="page"`, and the `›` separator is
+  presentation-only. Each family's spacing (`__breadcrumbs` margin,
+  `.account-crumbs`) stays page-owned. No variant API.
+- `EmptyState` (`src/components/feedback`) has a caller-chosen `icon` and
+  `headingLevel`, and two variants: `panel` (Catalog filtered no-results,
+  now a search icon; the components reference) and `page` (the disc used by
+  Order, Compare, Favourites and Search). An `h1` page empty state uses the
+  lead title tier and is a focus target. Page empty-state actions share one
+  group: min-width 200px, stacked full-width at ≤480px. Cart, Blog, FAQ and
+  Account empty states stay local by design (distinct compositions).
+- `RouteStatus` (`src/components/feedback`) owns the PDP and laptop Catalog
+  loading (`aria-busy` + `role="status"`) and failure (`h1` + routed
+  actions) states, including PDP product-not-found. The cross-route
+  `ProductDetailsRoute.scss` seam is gone.
+- Catalog, Search and Favourites result lists have visually hidden `h2`s, and
+  empty-state headings follow page context. No targeted `h1`→`h3` skip
+  remains at 1440/1024/390. Card titles stay `h3`.
+- The verify suites lock breadcrumb labels/hrefs/invariants, RouteStatus
+  semantics, EmptyState variant/level/icon/CTA and heading outlines. A stub
+  may return `null` to hold a request in its loading state.
+  Reference-protected surfaces stay pixel-identical.
+
+Still open (not started): Q-03 Cart recommendations, Q-05 ProductBadge, Q-06
+colour swatches, Q-07 typography roles, Q-08 breakpoints, Q-12 DateField, Q-13
+reference lazy loading, Q-14 footer destinations, Q-15 cross-category Search
+(product decision), Q-18 rating separator, Q-19 1024 GB → 1 TB, Q-20 thumbnail
+fallback, Q-22 `.mcp.json` tooling ignore.
+
+**Next approved activity: Quality C — Product Presentation Consistency.** Not
+started.
 
 ## Project closeout state
 
-Quality A is the last published milestone. **Active visual slice: none.
+Quality B is the last published milestone. **Active visual slice: none.
 Active implementation milestone: none.** No active code-level release blocker
 is known, and there is no approved next Account milestone. **Next approved
-activity: Quality B — Shared Navigation and Feedback Primitives** (see Quality
+activity: Quality C — Product Presentation Consistency** (see Quality
 remediation).
 
 Settings, Bonuses, Notifications, recently viewed, a real authenticated

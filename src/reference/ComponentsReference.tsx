@@ -761,6 +761,8 @@ export function ComponentsReference() {
         <Group className="cmp-feedback-group cmp-feedback-group--empty" title="Пустое состояние">
           <EmptyState
             action={{ label: 'Перейти в каталог', href: REFERENCE_HREF }}
+            headingLevel="h3"
+            icon="cart"
             message="Добавьте товары, чтобы оформить заказ."
             title="Корзина пуста"
           />

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 
-import { Container } from '../../components/layout';
+import { RouteStatus } from '../../components/feedback';
 import {
   LaptopCatalogPage,
   buildLaptopFacets,
@@ -16,7 +16,6 @@ import { useDocumentTitle } from '../useDocumentTitle';
 import { useCatalogCartSeam } from './useCatalogCartSeam';
 import { useCatalogCompareSeam } from './useCatalogCompareSeam';
 import { useCatalogFavoritesSeam } from './useCatalogFavoritesSeam';
-import './ProductDetailsRoute.scss';
 
 type LaptopsRead =
   | { readonly status: 'loading' }
@@ -24,32 +23,21 @@ type LaptopsRead =
   | { readonly status: 'failure' };
 
 function LaptopsLoading() {
-  return (
-    <main aria-busy="true" className="product-route-state">
-      <Container className="product-route-state__inner">
-        <p className="product-route-state__message" role="status">
-          Загружаем товары…
-        </p>
-      </Container>
-    </main>
-  );
+  return <RouteStatus kind="loading" message="Загружаем товары…" />;
 }
 
 function LaptopsFailure() {
   return (
-    <main className="product-route-state">
-      <Container className="product-route-state__inner">
-        <h1 className="product-route-state__title">Товары временно недоступны</h1>
-        <p className="product-route-state__message">
-          Не удалось загрузить ноутбуки. Попробуйте обновить страницу позже.
-        </p>
-        <div className="product-route-state__actions">
-          <Link className="ui-button ui-button--primary" to={HOME_PATH}>
-            На главную
-          </Link>
-        </div>
-      </Container>
-    </main>
+    <RouteStatus
+      actions={
+        <Link className="ui-button ui-button--primary" to={HOME_PATH}>
+          На главную
+        </Link>
+      }
+      kind="failure"
+      message="Не удалось загрузить ноутбуки. Попробуйте обновить страницу позже."
+      title="Товары временно недоступны"
+    />
   );
 }
 

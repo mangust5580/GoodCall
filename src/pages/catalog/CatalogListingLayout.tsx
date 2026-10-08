@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 
 import { formatUnitCount } from '../../commerce/cart';
 import { EmptyState } from '../../components/feedback';
-import { Container } from '../../components/layout';
+import { Breadcrumbs, Container } from '../../components/layout';
 import { Icon, Pagination } from '../../components/ui';
 import { CATALOG_SORT_OPTIONS } from './catalogProduct';
 import type { CatalogSortValue } from './catalogProduct';
@@ -50,23 +50,10 @@ export function CatalogListingLayout({
   return (
     <main className="catalog-page">
       <Container>
-        <nav aria-label="Хлебные крошки" className="catalog-page__breadcrumbs">
-          <ol className="catalog-page__crumbs">
-            <li className="catalog-page__crumb">
-              {homeHref === undefined ? (
-                'Главная'
-              ) : (
-                <a className="catalog-page__crumb-link" href={homeHref}>
-                  Главная
-                </a>
-              )}
-            </li>
-            <li className="catalog-page__crumb">Каталог</li>
-            <li aria-current="page" className="catalog-page__crumb">
-              {title}
-            </li>
-          </ol>
-        </nav>
+        <Breadcrumbs
+          className="catalog-page__breadcrumbs"
+          items={[{ label: 'Главная', href: homeHref }, { label: 'Каталог' }, { label: title }]}
+        />
 
         <div className="catalog-page__layout">
           <header className="catalog-page__heading">
@@ -115,7 +102,10 @@ export function CatalogListingLayout({
             {sidebar}
           </aside>
 
-          <section aria-label="Товары каталога" className="catalog-page__results">
+          <section aria-labelledby="catalog-results-title" className="catalog-page__results">
+            <h2 className="ui-visually-hidden" id="catalog-results-title">
+              Товары каталога
+            </h2>
             <div className="catalog-page__filter-bar">{filterBar}</div>
 
             {quickFilters}
@@ -123,6 +113,8 @@ export function CatalogListingLayout({
             {emptyResults ? (
               <EmptyState
                 action={{ label: 'Сбросить фильтры', onClick: onResetResults }}
+                headingLevel="h3"
+                icon="search"
                 message="По выбранным фильтрам товаров нет."
                 title="Ничего не найдено"
               />

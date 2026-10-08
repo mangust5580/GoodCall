@@ -270,7 +270,7 @@ check(
 check(
   'checkout: breadcrumb Главная › Оформление заказа',
   await evaluate(
-    `[...document.querySelectorAll('.checkout-page__crumb')].map((c) => c.textContent).join('|') === 'Главная|Оформление заказа' && document.querySelector('.checkout-page__crumb-link').getAttribute('href') === '#/'`,
+    `[...document.querySelectorAll('.checkout-page__breadcrumbs li')].map((c) => c.textContent).join('|') === 'Главная|Оформление заказа' && document.querySelector('.checkout-page__breadcrumbs a').getAttribute('href') === '#/'`,
   ),
 );
 const titles = await evaluate(

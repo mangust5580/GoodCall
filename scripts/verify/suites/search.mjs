@@ -1,5 +1,6 @@
 import { register } from 'node:module';
 import { launchBrowser, sleep } from '../lib/browser.mjs';
+import { emptyStateFacts, headingOutline } from '../lib/semantics.mjs';
 import { appBase, outputDir, report } from '../lib/suite.mjs';
 
 register(new URL('../lib/ts-hook.mjs', import.meta.url));
@@ -389,7 +390,20 @@ check(
   'F search: filtered-empty state',
   await evaluate(`Boolean(document.querySelector('.search-filtered-empty'))`),
 );
-await evaluate(`document.querySelector('.search-filtered-empty__reset').click()`);
+const filteredEmpty = await evaluate(`(${emptyStateFacts})('.search-page')`);
+const filteredOutline = await evaluate(`(${headingOutline})()`);
+check(
+  'F search: filtered-empty uses the shared page EmptyState (h2, search icon, reset button) without heading skips',
+  filteredEmpty?.variant === 'page' &&
+    filteredEmpty.level === 'h2' &&
+    filteredEmpty.icon === 'ui-icon--search' &&
+    filteredEmpty.labelledBy &&
+    JSON.stringify(filteredEmpty.actions) === JSON.stringify(['button:Сбросить фильтры']) &&
+    filteredOutline.skips.length === 0 &&
+    filteredOutline.visibleH1 === 1,
+  JSON.stringify({ filteredEmpty, filteredOutline }),
+);
+await evaluate(`document.querySelector('.search-filtered-empty .empty-state__action').click()`);
 await sleep(250);
 check(
   'F search: filters reset restores rows',
@@ -399,14 +413,14 @@ await go('#/search?q=zzzz');
 await sleep(300);
 check(
   'F search: no-results',
-  (await evaluate(`document.querySelector('.search-empty__title')?.textContent`)) ===
+  (await evaluate(`document.querySelector('.search-page .empty-state__title')?.textContent`)) ===
     'Ничего не найдено',
 );
 await go('#/search');
 await sleep(300);
 check(
   'F search: no-query',
-  (await evaluate(`document.querySelector('.search-empty__title')?.textContent`)) ===
+  (await evaluate(`document.querySelector('.search-page .empty-state__title')?.textContent`)) ===
     'Введите запрос',
 );
 

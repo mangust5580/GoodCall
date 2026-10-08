@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 
 import { AccountNavigation } from '../../components/account';
 import type { AccountNavigationItem } from '../../components/account';
-import { Container } from '../../components/layout';
+import { Breadcrumbs, Container } from '../../components/layout';
 import { Icon } from '../../components/ui';
 
 export interface AccountLinks {
@@ -58,31 +58,18 @@ export function AccountLayout({
   return (
     <main className="account-page">
       <Container>
-        <nav aria-label="Хлебные крошки" className="account-crumbs">
-          <ol className="account-crumbs__list">
-            <li className="account-crumbs__item">
-              <a className="account-crumbs__link" href={links.home}>
-                Главная
-              </a>
-            </li>
-            {crumb === undefined ? (
-              <li aria-current="page" className="account-crumbs__item">
-                Аккаунт
-              </li>
-            ) : (
-              <>
-                <li className="account-crumbs__item">
-                  <a className="account-crumbs__link" href={links.account}>
-                    Аккаунт
-                  </a>
-                </li>
-                <li aria-current="page" className="account-crumbs__item">
-                  {crumb}
-                </li>
-              </>
-            )}
-          </ol>
-        </nav>
+        <Breadcrumbs
+          className="account-crumbs"
+          items={
+            crumb === undefined
+              ? [{ label: 'Главная', href: links.home }, { label: 'Аккаунт' }]
+              : [
+                  { label: 'Главная', href: links.home },
+                  { label: 'Аккаунт', href: links.account },
+                  { label: crumb },
+                ]
+          }
+        />
 
         <h1 className="account-page__title" id={ACCOUNT_TITLE_ID} tabIndex={-1}>
           {title}

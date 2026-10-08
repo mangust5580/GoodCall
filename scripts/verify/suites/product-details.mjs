@@ -4,6 +4,7 @@ import { MOCK_SUPABASE_HOST } from '../lib/build.mjs';
 import { launchBrowser } from '../lib/browser.mjs';
 import { CATEGORIES, HOME_POPULAR_PRODUCTS, PRODUCTS } from '../lib/catalog.mjs';
 import { openPage } from '../lib/page.mjs';
+import { routeStatusFacts } from '../lib/semantics.mjs';
 import { appBase, outputDir, referenceBase, reportCounts } from '../lib/suite.mjs';
 
 const require = createRequire(import.meta.url);
@@ -129,6 +130,7 @@ function stub(request) {
   const table = url.pathname.replace('/rest/v1/', '');
   if (table === 'products') productRequests.push(url.search);
   if (table === 'categories') categoryRequests += 1;
+  if (scenario.productsHang && table === 'products') return null;
   if (scenario.catalogListError && table === 'categories') {
     return {
       status: 500,
@@ -204,7 +206,7 @@ async function pdpFacts(page) {
       specGroups: [...document.querySelectorAll('.product-spec-groups__title')].map((h) =>
         h.textContent.trim(),
       ),
-      crumbs: [...document.querySelectorAll('.product-details__crumb')].map((li) => ({
+      crumbs: [...document.querySelectorAll('.product-details__breadcrumbs li')].map((li) => ({
         text: li.textContent.trim(),
         href: li.querySelector('a')?.getAttribute('href') ?? null,
       })),
@@ -664,6 +666,17 @@ console.log('stage: route states', new Date().toISOString());
   scenario = { inactiveSlug: 'tecno-camon-30-256' };
   await openPdp(page, 'tecno-camon-30-256');
   check((await page.textContent('h1')) === 'Товар не найден', 'inactive: not-found');
+  const notFoundStatus = await page.evaluate(routeStatusFacts);
+  check(
+    notFoundStatus.routeStatus &&
+      notFoundStatus.busy === null &&
+      notFoundStatus.message === 'Такого товара нет или его страница пока недоступна.' &&
+      JSON.stringify(notFoundStatus.actions) ===
+        JSON.stringify(['В каталог=#/catalog/smartphones', 'На главную=#/']) &&
+      notFoundStatus.paddingTop === '96px' &&
+      notFoundStatus.titleSize === '32px',
+    `inactive: shared RouteStatus failure presentation ${JSON.stringify(notFoundStatus)}`,
+  );
   scenario = { mismatchSlug: 'airpods-pro-2-usb-c' };
   await openPdp(page, 'airpods-pro-2-usb-c');
   check((await page.textContent('h1')) === 'Товар не найден', 'category mismatch: not-found');
@@ -672,6 +685,31 @@ console.log('stage: route states', new Date().toISOString());
   check(
     (await page.textContent('h1')) === 'Не удалось загрузить товар',
     'query error: error state',
+  );
+  const errorStatus = await page.evaluate(routeStatusFacts);
+  check(
+    errorStatus.routeStatus &&
+      errorStatus.busy === null &&
+      errorStatus.status === null &&
+      errorStatus.message === 'Сервис временно недоступен. Попробуйте обновить страницу позже.' &&
+      JSON.stringify(errorStatus.actions) === JSON.stringify(['В каталог=#/catalog/smartphones']) &&
+      errorStatus.paddingTop === '96px' &&
+      errorStatus.titleSize === '32px',
+    `query error: shared RouteStatus failure semantics ${JSON.stringify(errorStatus)}`,
+  );
+  scenario = { productsHang: true };
+  await page.goto(`${NEW}#/product/galaxy-s24-128`);
+  await page.waitForSelector('main[aria-busy="true"]');
+  await page.waitForTimeout(300);
+  const loadingStatus = await page.evaluate(routeStatusFacts);
+  check(
+    loadingStatus.mains === 1 &&
+      loadingStatus.routeStatus &&
+      loadingStatus.busy === 'true' &&
+      loadingStatus.status === 'Загружаем товар…' &&
+      loadingStatus.h1.length === 0 &&
+      loadingStatus.paddingTop === '96px',
+    `pending read: shared RouteStatus loading semantics ${JSON.stringify(loadingStatus)}`,
   );
   scenario = { extraProduct: true };
   productRequests = [];

@@ -4,6 +4,14 @@ import { MOCK_SUPABASE_HOST } from '../lib/build.mjs';
 import { launchBrowser } from '../lib/browser.mjs';
 import { CATEGORIES, HOME_POPULAR_PRODUCTS, PRODUCTS } from '../lib/catalog.mjs';
 import { openPage } from '../lib/page.mjs';
+import {
+  BREADCRUMB_LABEL,
+  breadcrumbFacts,
+  breadcrumbProblems,
+  emptyStateFacts,
+  headingOutline,
+  routeStatusFacts,
+} from '../lib/semantics.mjs';
 import { appBase, outputDir, referenceBase, reportCounts } from '../lib/suite.mjs';
 
 const require = createRequire(import.meta.url);
@@ -93,6 +101,7 @@ function applyFilters(rows, params) {
 function stub(request) {
   const url = new URL(request.url);
   const table = url.pathname.replace('/rest/v1/', '');
+  if (scenario.productsHang && table === 'products') return null;
   if (scenario.productsError && table === 'products') {
     return {
       status: 500,
@@ -284,7 +293,7 @@ const page = await newPage(1440, 900);
 await fresh(page);
 let state = await listing(page);
 const route = await page.evaluate(() => {
-  const crumbs = [...document.querySelectorAll('.catalog-page__crumb')];
+  const crumbs = [...document.querySelectorAll('.catalog-page__breadcrumbs li')];
   const legends = [...document.querySelectorAll('.catalog-page__sidebar fieldset > legend')].map(
     (legend) => legend.textContent,
   );
@@ -1022,6 +1031,35 @@ for (const [name, value] of [
       text.mains === 1,
     `states: ${name} → failure state, no fixture fallback ${JSON.stringify(text)}`,
   );
+  const status = await p.evaluate(routeStatusFacts);
+  check(
+    status.routeStatus &&
+      status.busy === null &&
+      status.status === null &&
+      status.message === 'Не удалось загрузить ноутбуки. Попробуйте обновить страницу позже.' &&
+      JSON.stringify(status.actions) === JSON.stringify(['На главную=#/']) &&
+      status.paddingTop === '96px' &&
+      status.titleSize === '32px',
+    `states: ${name} → shared RouteStatus failure semantics and geometry ${JSON.stringify(status)}`,
+  );
+  await p.close();
+}
+scenario = { productsHang: true };
+{
+  const p = await newPage(1440, 900);
+  await p.goto(`${NEW}${LAPTOPS_HASH}`);
+  await p.waitForSelector('main[aria-busy="true"]');
+  await p.waitForTimeout(300);
+  const status = await p.evaluate(routeStatusFacts);
+  check(
+    status.mains === 1 &&
+      status.routeStatus &&
+      status.busy === 'true' &&
+      status.status === 'Загружаем товары…' &&
+      status.h1.length === 0 &&
+      status.paddingTop === '96px',
+    `states: pending read → shared RouteStatus loading semantics ${JSON.stringify(status)}`,
+  );
   await p.close();
 }
 scenario = {};
@@ -1184,6 +1222,58 @@ async function visitHeadingTitle(hash, heading) {
   await expectTitle(`${hash} (h1 "${h1}")`, titled(h1));
 }
 await expectTitle('#/ initial load', titled('Главная'));
+const HOME_CRUMB = ['Главная', '#/'];
+const EXPECTED_CRUMBS = {
+  '#/catalog/smartphones': [HOME_CRUMB, ['Каталог', null], ['Смартфоны', null]],
+  '#/catalog/laptops': [HOME_CRUMB, ['Каталог', null], ['Ноутбуки', null]],
+  '#/cart': [HOME_CRUMB, ['Корзина', null]],
+  '#/order-confirmation': [HOME_CRUMB, ['Заказ не найден', null]],
+  '#/favorites': [HOME_CRUMB, ['Избранное', null]],
+  '#/compare': [HOME_CRUMB, ['Сравнение товаров', null]],
+  '#/search?q=iPhone': [HOME_CRUMB, ['Поиск', null]],
+  '#/shops': [HOME_CRUMB, ['Магазины', null]],
+  '#/delivery': [HOME_CRUMB, ['Доставка и оплата', null]],
+  '#/faq': [HOME_CRUMB, ['FAQ', null]],
+  '#/about': [HOME_CRUMB, ['О нас', null]],
+  '#/blog': [HOME_CRUMB, ['Блог', null]],
+  '#/login': [HOME_CRUMB, ['Вход', null]],
+  '#/no-such-route': [HOME_CRUMB, ['404', null]],
+  [`#/product/${LEGION}`]: [
+    HOME_CRUMB,
+    ['Каталог', null],
+    ['Ноутбуки', LAPTOPS_HASH],
+    [bySlug.get(LEGION).name, null],
+  ],
+  [`#/product/${IPHONE_PRO}`]: [
+    HOME_CRUMB,
+    ['Каталог', null],
+    ['Смартфоны', '#/catalog/smartphones'],
+    [iphoneProName, null],
+  ],
+  '#/account/orders': [HOME_CRUMB, ['Аккаунт', '#/account'], ['Мои заказы', null]],
+};
+let crumbRoutes = 0;
+async function checkCrumbs(hash) {
+  if (EXPECTED_CRUMBS[hash] !== undefined) {
+    await doc.waitForFunction(
+      (label) => document.querySelector(`nav[aria-label="${label}"]`) !== null,
+      BREADCRUMB_LABEL,
+    );
+  }
+  const facts = await doc.evaluate(breadcrumbFacts, BREADCRUMB_LABEL);
+  if (facts.navs === 0 && EXPECTED_CRUMBS[hash] === undefined) return;
+  crumbRoutes += 1;
+  const problems = breadcrumbProblems(facts);
+  const expected = EXPECTED_CRUMBS[hash];
+  if (
+    expected !== undefined &&
+    JSON.stringify(facts.labels.map((label, index) => [label, facts.hrefs[index]])) !==
+      JSON.stringify(expected)
+  ) {
+    problems.push(`items ${JSON.stringify(facts.labels)} ${JSON.stringify(facts.hrefs)}`);
+  }
+  check(problems.length === 0, `breadcrumbs: ${hash} ${problems.join('; ')}`);
+}
 for (const [hash, name] of [
   ['#/catalog/smartphones', 'Смартфоны'],
   ['#/catalog/laptops', 'Ноутбуки'],
@@ -1212,10 +1302,19 @@ for (const [hash, name] of [
   ['#/no-such-route', 'Страница не найдена'],
 ]) {
   await visitTitle(hash, titled(name));
+  await checkCrumbs(hash);
 }
 await visitHeadingTitle(`#/product/${LEGION}`, '.product-purchase__title');
+await checkCrumbs(`#/product/${LEGION}`);
 await visitHeadingTitle('#/blog/how-to-choose-smartphone-2024', '.blog-article__title');
-await visitHeadingTitle('#/order-confirmation', '.order-empty__title');
+const articleCrumbs = await doc.evaluate(breadcrumbFacts, BREADCRUMB_LABEL);
+check(
+  breadcrumbProblems(articleCrumbs).length === 0 &&
+    JSON.stringify(articleCrumbs.hrefs) === JSON.stringify(['#/', '#/blog', null]) &&
+    articleCrumbs.labels[2] === (await doc.textContent('.blog-article__title')).trim(),
+  `breadcrumbs: blog article ${JSON.stringify(articleCrumbs)}`,
+);
+await visitHeadingTitle('#/order-confirmation', '.order-empty .empty-state__title');
 await doc.evaluate(() => {
   localStorage.setItem('goodcall.account.v1', JSON.stringify({ version: 1, signedIn: true }));
 });
@@ -1227,6 +1326,7 @@ for (const [hash, name] of [
   ['#/account/addresses', 'Адреса доставки'],
 ]) {
   await visitTitle(hash, titled(name));
+  await checkCrumbs(hash);
   const heading = (await doc.textContent('.account-page__title')).trim();
   check(heading === name, `title: ${hash} matches its h1 "${heading}"`);
 }
@@ -1248,6 +1348,157 @@ await visitTitle('#/no-such-route', titled('Страница не найдена
 await doc.reload();
 await expectTitle('reload #/no-such-route', titled('Страница не найдена'));
 await doc.close();
+check(crumbRoutes >= 25, `breadcrumbs: invariants covered ${crumbRoutes} routes`);
+
+console.log('stage: headings', new Date().toISOString());
+const SMARTPHONES_EMPTY_QUERY =
+  'sort=rating&brand=Samsung&colour=%D0%97%D0%BE%D0%BB%D0%BE%D1%82%D0%BE%D0%B9&quick=discounted';
+const HEADING_ROUTES = [
+  {
+    name: 'catalog smartphones',
+    hash: '#/catalog/smartphones',
+    ready: '.catalog-grid .product-card',
+    hidden: ['Товары каталога'],
+  },
+  {
+    name: 'catalog laptops',
+    hash: LAPTOPS_HASH,
+    ready: '.catalog-grid .product-card',
+    hidden: ['Товары каталога'],
+  },
+  {
+    name: 'catalog no-results',
+    hash: `#/catalog/smartphones?${SMARTPHONES_EMPTY_QUERY}`,
+    ready: '.catalog-page__results .empty-state',
+    hidden: ['Товары каталога'],
+    empty: {
+      scope: '.catalog-page__results',
+      variant: 'panel',
+      level: 'h3',
+      icon: 'ui-icon--search',
+      actions: ['button:Сбросить фильтры'],
+    },
+  },
+  {
+    name: 'search results',
+    hash: '#/search?q=iPhone',
+    ready: '.search-rows, .search-results',
+    hidden: ['Найденные товары'],
+  },
+  {
+    name: 'search no-results',
+    hash: '#/search?q=zzzzzz',
+    ready: '.search-empty',
+    hidden: [],
+    empty: {
+      scope: '.search-page',
+      variant: 'page',
+      level: 'h2',
+      icon: 'ui-icon--search',
+      actions: ['a:Перейти в каталог=#/catalog/smartphones', 'a:На главную=#/'],
+    },
+  },
+  {
+    name: 'favourites empty',
+    hash: '#/favorites',
+    ready: '.favorites-empty',
+    hidden: [],
+    empty: {
+      scope: '.favorites-page',
+      variant: 'page',
+      level: 'h2',
+      icon: 'ui-icon--heart',
+      actions: ['a:Перейти в каталог=#/catalog/smartphones', 'a:На главную=#/'],
+    },
+  },
+  {
+    name: 'compare empty',
+    hash: '#/compare',
+    ready: '.compare-empty',
+    hidden: [],
+    empty: {
+      scope: '.compare-page',
+      variant: 'page',
+      level: 'h1',
+      icon: 'ui-icon--compare',
+      actions: ['a:Перейти в каталог=#/catalog/smartphones'],
+    },
+  },
+  {
+    name: 'order empty',
+    hash: '#/order-confirmation',
+    ready: '.order-empty',
+    hidden: [],
+    empty: {
+      scope: '.order-page',
+      variant: 'page',
+      level: 'h1',
+      icon: 'ui-icon--package',
+      actions: ['a:Перейти в каталог=#/catalog/smartphones', 'a:На главную=#/'],
+    },
+  },
+  {
+    name: 'favourites populated',
+    hash: '#/favorites',
+    ready: '.favorites-grid .product-card',
+    hidden: ['Товары в избранном'],
+    seedFavourite: true,
+  },
+];
+for (const width of [1440, 1024, 390]) {
+  const p = await newPage(width, width >= 1024 ? 900 : 844);
+  await p.goto(`${NEW}#/`);
+  await p.waitForSelector('main');
+  await p.evaluate(() => {
+    localStorage.clear();
+    sessionStorage.clear();
+  });
+  for (const route of HEADING_ROUTES) {
+    if (route.seedFavourite) {
+      await p.goto(`${NEW}#/catalog/smartphones`);
+      await p.waitForFunction(
+        () =>
+          document.querySelector(
+            '.catalog-grid .product-card button[aria-label*="избранн" i]:not(:disabled)',
+          ) !== null,
+      );
+      await p.evaluate(() =>
+        document
+          .querySelector('.catalog-grid .product-card button[aria-label*="избранн" i]')
+          .click(),
+      );
+      await p.waitForFunction(() => localStorage.getItem('goodcall.favorites.v1') !== null);
+    }
+    await p.goto(`${NEW}${route.hash}`);
+    await p.waitForSelector(route.ready);
+    await p.waitForTimeout(150);
+    const outline = await p.evaluate(headingOutline);
+    check(
+      outline.skips.length === 0 &&
+        outline.visibleH1 === 1 &&
+        outline.levels[0] === 1 &&
+        JSON.stringify(outline.hiddenH2) === JSON.stringify(route.hidden),
+      `headings ${width}: ${route.name} ${JSON.stringify(outline)}`,
+    );
+    if (route.empty !== undefined) {
+      const facts = await p.evaluate(emptyStateFacts, route.empty.scope);
+      check(
+        facts !== null &&
+          facts.variant === route.empty.variant &&
+          facts.level === route.empty.level &&
+          facts.icon === route.empty.icon &&
+          facts.labelledBy &&
+          JSON.stringify(facts.actions) === JSON.stringify(route.empty.actions),
+        `empty state ${width}: ${route.name} ${JSON.stringify(facts)}`,
+      );
+    }
+  }
+  const overflow = await p.evaluate(
+    () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+  );
+  check(overflow <= 0, `headings ${width}: favourites populated has no overflow (${overflow})`);
+  await p.close();
+}
 for (const reference of ['catalog', 'product-details', 'home', 'header', 'components']) {
   const isolated = await newPage(1440, 900);
   await isolated.goto(`${NEW}?reference=${reference}`);

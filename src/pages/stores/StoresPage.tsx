@@ -1,5 +1,5 @@
 import type { StorePoint } from '../../commerce/shops';
-import { Container } from '../../components/layout';
+import { Breadcrumbs, Container } from '../../components/layout';
 import { Icon } from '../../components/ui';
 
 export interface StoresPageProps {
@@ -36,18 +36,10 @@ export function StoresPage({ homeHref, stores }: StoresPageProps) {
   return (
     <main className="stores-page">
       <Container>
-        <nav aria-label="Хлебные крошки" className="stores-page__breadcrumbs">
-          <ol className="stores-page__crumbs">
-            <li className="stores-page__crumb">
-              <a className="stores-page__crumb-link" href={homeHref}>
-                Главная
-              </a>
-            </li>
-            <li aria-current="page" className="stores-page__crumb">
-              Магазины
-            </li>
-          </ol>
-        </nav>
+        <Breadcrumbs
+          className="stores-page__breadcrumbs"
+          items={[{ label: 'Главная', href: homeHref }, { label: 'Магазины' }]}
+        />
 
         <header className="stores-page__heading">
           <h1 className="stores-page__title">Магазины</h1>

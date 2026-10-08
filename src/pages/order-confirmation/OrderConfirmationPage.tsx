@@ -3,7 +3,8 @@ import { useEffect } from 'react';
 import { CartLineMedia, formatUnitCount } from '../../commerce/cart';
 import { formatPrice } from '../../commerce/format';
 import { findStore } from '../../commerce/shops';
-import { Container } from '../../components/layout';
+import { EmptyState } from '../../components/feedback';
+import { Breadcrumbs, Container } from '../../components/layout';
 import { Icon } from '../../components/ui';
 import type { IconName } from '../../components/ui';
 import { CHECKOUT_PAYMENT_METHODS } from '../checkout';
@@ -84,31 +85,6 @@ function deliveryItems(order: DemoOrder): readonly InfoItem[] {
   ];
 }
 
-function EmptyState({ homeHref, catalogHref }: Omit<OrderConfirmationPageProps, 'order'>) {
-  return (
-    <section aria-labelledby={TITLE_ID} className="order-empty">
-      <span className="order-empty__visual">
-        <Icon className="order-empty__icon" name="package" />
-      </span>
-      <h1 className="order-empty__title" id={TITLE_ID} tabIndex={-1}>
-        Заказ не найден
-      </h1>
-      <p className="order-empty__message">
-        В текущей сессии браузера нет оформленного демо-заказа. Оформите заказ в корзине, чтобы
-        увидеть его здесь.
-      </p>
-      <div className="order-empty__actions">
-        <a className="ui-button ui-button--primary order-empty__action" href={catalogHref}>
-          Перейти в каталог
-        </a>
-        <a className="ui-button ui-button--secondary order-empty__action" href={homeHref}>
-          На главную
-        </a>
-      </div>
-    </section>
-  );
-}
-
 export function OrderConfirmationPage({
   order,
   homeHref,
@@ -131,21 +107,26 @@ export function OrderConfirmationPage({
   return (
     <main className="order-page">
       <Container>
-        <nav aria-label="Хлебные крошки" className="order-page__breadcrumbs">
-          <ol className="order-page__crumbs">
-            <li className="order-page__crumb">
-              <a className="order-page__crumb-link" href={homeHref}>
-                Главная
-              </a>
-            </li>
-            <li aria-current="page" className="order-page__crumb">
-              {order === undefined ? 'Заказ не найден' : 'Заказ оформлен'}
-            </li>
-          </ol>
-        </nav>
+        <Breadcrumbs
+          className="order-page__breadcrumbs"
+          items={[
+            { label: 'Главная', href: homeHref },
+            { label: order === undefined ? 'Заказ не найден' : 'Заказ оформлен' },
+          ]}
+        />
 
         {order === undefined ? (
-          <EmptyState catalogHref={catalogHref} homeHref={homeHref} />
+          <EmptyState
+            action={{ label: 'Перейти в каталог', href: catalogHref }}
+            className="order-empty"
+            headingLevel="h1"
+            icon="package"
+            message="В текущей сессии браузера нет оформленного демо-заказа. Оформите заказ в корзине, чтобы увидеть его здесь."
+            secondaryAction={{ label: 'На главную', href: homeHref }}
+            title="Заказ не найден"
+            titleId={TITLE_ID}
+            variant="page"
+          />
         ) : (
           <section aria-labelledby={TITLE_ID} className="order-confirmation">
             <div className="order-confirmation__hero">
