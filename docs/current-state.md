@@ -144,12 +144,15 @@ Technically complete:
   owned by React Router using a GitHub Pages-safe hash strategy. See the
   Current routes section below.
 
-Active visual slice: none. Active implementation milestone: none. Account A
-and Account B are closed; Account C is only a future bounded candidate (see
-Project closeout state below).
+Active visual slice: none. Active implementation milestone: none. Account A,
+B and C are closed; there is no approved next Account milestone (see Project
+closeout state below).
 
 Completed visual slices:
 
+- **Account C / Delivery Addresses — USER VISUAL/UX PASS on 2026-10-08,
+  CLOSED and published.** Browser-local demo address book on
+  `#/account/addresses`. See the Account C section below.
 - **Account B / Orders and Profile Edit — USER VISUAL/UX PASS on 2026-10-08,
   CLOSED and published.** Session-only `#/account/orders` and local demo
   profile editing on `#/account/profile`. See the Account B section below.
@@ -212,6 +215,54 @@ on 2026-09-30, CLOSED and published.** See the Checkout A section below. Search 
 Blog B, Blog A, Home A, Cart A, Cart B, Search A, Search B, 404 A and the
 Product Details production integration are closed.
 
+### Account C — Delivery Addresses
+
+**Status: USER VISUAL/UX PASS on 2026-10-08 — CLOSED and published.** The user
+explicitly granted USER VISUAL/UX PASS for Account C after review. Address
+empty/validation/add/populated/edit/delete states at 1440/390, the limit state
+at 1440, the overview address card empty/populated at 1440/390, the compact
+shell at 1024 and the Account A/B regression states are agent-verified
+(`account` suite and screenshots). Evidence: `Account_profile_address.png`
+main area and the `Account_profile.png` address card; the Account A/B shell
+and rail stay canonical.
+
+- **Address book.** `#/account/addresses` is an empty-by-default, browser-local
+  demo address book: add, edit and delete (with `ConfirmationDialog`) up to 5
+  addresses through one inline form; at 5 the add form is replaced by a limit
+  note while editing stays available. Fields: recipient, phone, city, address
+  line, optional 6-digit postal code — no country, entrance, floor, comment,
+  split street/house fields, geocoding or verification. Copy states the
+  addresses stay in this browser and are not inserted at checkout.
+- **Default.** The first saved address becomes default; «Сделать основным
+  адресом» moves it; unchecking the current default keeps it; deleting the
+  default promotes the first remaining one. Exactly one default exists while
+  any address exists; none when the list is empty.
+- **Profile snapshot.** A new address prefills recipient and phone from the
+  current profile; saved values are address-local snapshots that later profile
+  edits do not change.
+- **State.** `goodcall.account.v1` stays version 1; `addresses` and
+  `defaultAddressId` are optional additive fields (omitted when empty), so
+  Account A/B values stay valid. One merge-based write path: profile saves
+  keep addresses/default, address changes keep the profile, and the default is
+  normalized atomically with the list (never dangling). Read-time recovery
+  drops invalid items individually, keeps the first of duplicate ids, trims to
+  5, drops a non-array list and promotes the first address for a dangling
+  default — without signing out and keeping a valid profile. IDs come from
+  `crypto.randomUUID()` (fallback `getRandomValues`). Logout removes the key;
+  cart, favourites, compare, city and the session order are preserved.
+- **Routes and rail.** `#/account/addresses` joins the deep-link return
+  allow-list; `#/account/addresses/<anything>` is the designed 404. Rail:
+  Профиль / Мои заказы / Избранное / Сравнение / Адреса доставки / Выход;
+  «Адреса доставки» is active only on `/account/addresses`.
+- **Overview.** A third «Адрес доставки» card shows the default address only
+  («Изменить адрес») or «Адрес пока не добавлен» («Добавить адрес»), both
+  linking to `#/account/addresses`.
+- **AddressCard.** Optional `badge`, `deleteLabel`/`onDelete` and
+  `actionContext` (unique accessible action names); without them the
+  `?reference=components` rendering is pixel-identical.
+- **Checkout boundary.** Checkout does not read, offer or prefill Account
+  addresses and is unchanged; there is no integration seam or flag.
+
 ### Account B — Orders and Profile Edit
 
 **Status: USER VISUAL/UX PASS on 2026-10-08 — CLOSED and published.** The user
@@ -251,7 +302,8 @@ the Account A shell and rail stay canonical.
 - **Overview and rail.** The greeting and «Личные данные» read the current
   profile (birth date shown `dd.mm.yyyy`); «Редактировать профиль» →
   `#/account/profile`; the Заказы tile links «Подробнее» → `#/account/orders`.
-  Rail: Профиль / Мои заказы / Избранное / Сравнение / Выход; Профиль is active
+  Rail (Account B): Профиль / Мои заказы / Избранное / Сравнение / Выход —
+  extended by Account C; Профиль is active
   on `/account` and `/account/profile`, Мои заказы on `/account/orders`.
   `AccountLayout` in `pages/account/AccountParts.tsx` is the shared page chrome.
 - Known limitation: the accepted `DateField` calendar steps month by month, so
@@ -4725,12 +4777,14 @@ router owns only the fragment. The base path still lives solely in
 - `#/account/orders` and `#/account/profile` — session-order list and local
   profile edit (Account B, closed); signed-out visitors go to `#/login` and
   return after demo entry. There is no `#/account/:section` catch-all.
+- `#/account/addresses` — the browser-local demo address book (Account C,
+  closed); same signed-out return. There is no `#/account/addresses/:id`.
 - `*` — the designed 404 (`NotFoundRoute`, 404 A, closed).
   It is not a global error architecture.
 
 Route paths live in `src/app/routePaths.ts` as `HOME_PATH`,
 `CATALOG_SMARTPHONES_PATH`, `PRODUCT_PATH`, `CART_PATH`, `CHECKOUT_PATH`, `ORDER_CONFIRMATION_PATH`, `FAVORITES_PATH`, `COMPARE_PATH`, `SHOPS_PATH`, `DELIVERY_PATH`, `WARRANTY_PATH`, `FAQ_PATH`,
-`CONTACTS_PATH`, `ABOUT_PATH`, `PRIVACY_PATH`, `TERMS_PATH`, `OFFER_PATH`, `SEARCH_PATH`, `BLOG_PATH`, `BLOG_ARTICLE_PATH`, `LOGIN_PATH`, `ACCOUNT_PATH`, `ACCOUNT_ORDERS_PATH` and `ACCOUNT_PROFILE_PATH`.
+`CONTACTS_PATH`, `ABOUT_PATH`, `PRIVACY_PATH`, `TERMS_PATH`, `OFFER_PATH`, `SEARCH_PATH`, `BLOG_PATH`, `BLOG_ARTICLE_PATH`, `LOGIN_PATH`, `ACCOUNT_PATH`, `ACCOUNT_ORDERS_PATH`, `ACCOUNT_PROFILE_PATH` and `ACCOUNT_ADDRESSES_PATH`.
 `hashHref()`, `productDetailsHref()`, `searchPath()`, `blogPath()`,
 `blogArticlePath()` and `blogArticleHref()` serve the `href` and navigation
 seams.
@@ -4747,14 +4801,15 @@ them, statically as before. Module boundaries and public APIs are described in
 `AGENTS.md` (Module boundaries) and enforced by `no-restricted-imports` in
 `eslint.config.js`.
 
-`src/app/ProductionRouter.tsx` holds the `HashRouter`, twenty-four routes and the 404 catch-all; it
+`src/app/ProductionRouter.tsx` holds the `HashRouter`, twenty-five routes and the 404 catch-all; it
 has no local fallback component or stylesheet any more.
 `src/app/routes/HomeRoute.tsx`, `src/app/routes/CatalogRoute.tsx`,
 `src/app/routes/ProductDetailsRoute.tsx`, `src/app/routes/CartRoute.tsx`,
 `src/app/routes/SearchRoute.tsx`, `src/app/routes/BlogRoute.tsx`,
 `src/app/routes/BlogArticleRoute.tsx`, `src/app/routes/AccountRoutes.tsx`
-(`LoginRoute`, `AccountRoute`, `AccountOrdersRoute`, `AccountProfileRoute`) and
-`src/app/routes/NotFoundRoute.tsx` are the page seams.
+(`LoginRoute`, `AccountRoute`, `AccountOrdersRoute`, `AccountProfileRoute`,
+`AccountAddressesRoute`) and `src/app/routes/NotFoundRoute.tsx` are the page
+seams.
 `src/app/useSearchNavigation.ts` turns a submitted query into `#/search?q=…`;
 `ProductionShell` uses it for the Header search and `NotFoundRoute` for the 404
 hero search. `src/pages/not-found/` owns the router-free `NotFoundPage`.
@@ -5076,16 +5131,13 @@ none of them blocks the closed milestone.
 
 ## Project closeout state
 
-Account B is the last published milestone. **Active visual slice: none.
+Account C is the last published milestone. **Active visual slice: none.
 Active implementation milestone: none.** No active code-level release blocker
-is known.
+is known, and there is no approved next Account milestone.
 
-**Future bounded Account work (not started):**
-
-- Account C — Delivery Addresses (local demo addresses, no Checkout coupling).
-
-Settings, Bonuses, Notifications, recently viewed and a real authenticated
-account are intentionally omitted until a new product decision.
+Settings, Bonuses, Notifications, recently viewed, a real authenticated
+account and Checkout saved-address integration are intentionally omitted (not
+planned) until a new product decision.
 
 **Defer with reason:**
 

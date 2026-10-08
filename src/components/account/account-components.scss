@@ -437,6 +437,34 @@
     &:hover {
       color: var(--role-text-link-hover);
     }
+
+    &--inline {
+      min-height: 40px;
+      padding: 0;
+      border-top: 0;
+    }
+
+    &--danger {
+      color: var(--role-state-danger);
+
+      &:hover {
+        color: var(--role-state-danger);
+        text-decoration-line: underline;
+      }
+    }
+  }
+
+  &__badge {
+    display: flex;
+  }
+
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 24px;
+    align-items: center;
+    padding-top: calc(var(--account-card-gap) - 10px);
+    border-top: 1px solid var(--role-border-soft);
   }
 }
 

@@ -3,6 +3,7 @@ import { HashRouter, Route, Routes } from 'react-router-dom';
 import { RouteScrollReset } from './RouteScrollReset';
 import {
   ABOUT_PATH,
+  ACCOUNT_ADDRESSES_PATH,
   ACCOUNT_ORDERS_PATH,
   ACCOUNT_PATH,
   ACCOUNT_PROFILE_PATH,
@@ -28,6 +29,7 @@ import {
   WARRANTY_PATH,
 } from './routePaths';
 import {
+  AccountAddressesRoute,
   AccountOrdersRoute,
   AccountProfileRoute,
   AccountRoute,
@@ -86,6 +88,7 @@ export function ProductionRouter() {
         <Route element={<AccountRoute />} path={ACCOUNT_PATH} />
         <Route element={<AccountOrdersRoute />} path={ACCOUNT_ORDERS_PATH} />
         <Route element={<AccountProfileRoute />} path={ACCOUNT_PROFILE_PATH} />
+        <Route element={<AccountAddressesRoute />} path={ACCOUNT_ADDRESSES_PATH} />
         <Route element={<NotFoundRoute />} path="*" />
       </Routes>
     </HashRouter>

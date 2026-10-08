@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react';
+
 import { Icon } from '../ui';
 
 interface AddressCardProps {
@@ -8,6 +10,10 @@ interface AddressCardProps {
   readonly phone: string;
   readonly editLabel: string;
   readonly onEdit: () => void;
+  readonly badge?: ReactNode;
+  readonly deleteLabel?: string;
+  readonly onDelete?: () => void;
+  readonly actionContext?: string;
 }
 
 export function AddressCard({
@@ -18,9 +24,19 @@ export function AddressCard({
   phone,
   editLabel,
   onEdit,
+  badge,
+  deleteLabel,
+  onDelete,
+  actionContext,
 }: AddressCardProps) {
+  const context =
+    actionContext === undefined ? null : (
+      <span className="ui-visually-hidden">: {actionContext}</span>
+    );
+
   return (
     <article className="address-card">
+      {badge === undefined ? null : <div className="address-card__badge">{badge}</div>}
       <div className="address-card__group">
         <Icon className="address-card__icon" name="map-pin" />
         <div className="address-card__content">
@@ -43,10 +59,34 @@ export function AddressCard({
           <p className="address-card__phone">{phone}</p>
         </div>
       </div>
-      <button className="address-card__edit" onClick={onEdit} type="button">
-        <Icon name="edit" />
-        <span>{editLabel}</span>
-      </button>
+      {deleteLabel === undefined || onDelete === undefined ? (
+        <button className="address-card__edit" onClick={onEdit} type="button">
+          <Icon name="edit" />
+          <span>{editLabel}</span>
+          {context}
+        </button>
+      ) : (
+        <div className="address-card__actions">
+          <button
+            className="address-card__edit address-card__edit--inline"
+            onClick={onEdit}
+            type="button"
+          >
+            <Icon name="edit" />
+            <span>{editLabel}</span>
+            {context}
+          </button>
+          <button
+            className="address-card__edit address-card__edit--inline address-card__edit--danger"
+            onClick={onDelete}
+            type="button"
+          >
+            <Icon name="close" />
+            <span>{deleteLabel}</span>
+            {context}
+          </button>
+        </div>
+      )}
     </article>
   );
 }

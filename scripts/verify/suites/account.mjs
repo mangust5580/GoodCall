@@ -332,7 +332,6 @@ const FORBIDDEN = [
   /Уведомлени/i,
   /Безопасность|двухфактор|Активные сессии/i,
   /Недавно просмотренн/i,
-  /Адреса доставки|Адрес доставки/,
   /Настройки/,
 ];
 
@@ -504,6 +503,7 @@ check(
         ['A', 'Мои заказы', '#/account/orders'],
         ['A', 'Избранное', '#/favorites'],
         ['A', 'Сравнение', '#/compare'],
+        ['A', 'Адреса доставки', '#/account/addresses'],
         ['BUTTON', 'Выход', null],
       ]),
   `overview: rail rows ${JSON.stringify(view.rail?.rows.map((r) => r.text))}`,
@@ -569,7 +569,12 @@ check(
 await fresh(page, '/login');
 await page.waitForFunction(() => location.hash === '#/account');
 check((await hash(page)) === '#/account', 'route: signed-in #/login → #/account');
-for (const path of ['/account/settings', '/account/anything', '/account/orders/1']) {
+for (const path of [
+  '/account/settings',
+  '/account/anything',
+  '/account/orders/1',
+  '/account/addresses/x',
+]) {
   await open(page, path);
   check(
     (await page.textContent('main h1')).trim() === 'Страница не найдена' &&
@@ -1078,6 +1083,564 @@ check(
   'logout: profile form back to defaults',
 );
 
+const ACCOUNT_ADDRESS_LIMIT_VALUE = 5;
+const addressCards = (target) =>
+  target.evaluate(() =>
+    [...document.querySelectorAll('.account-addresses__items > li')].map((li) => ({
+      id: li.dataset.addressId,
+      line: li.querySelector('.address-card__line')?.textContent ?? null,
+      locality:
+        li.querySelector('.address-card__locality')?.textContent.replace(/\s/g, ' ') ?? null,
+      recipient: li.querySelector('.address-card__recipient')?.textContent ?? null,
+      phone: li.querySelector('.address-card__phone')?.textContent ?? null,
+      badge: li.querySelector('.address-card__badge')?.textContent.trim() ?? null,
+      article: li.firstElementChild?.tagName ?? null,
+      buttons: [...li.querySelectorAll('button')].map((b) => [b.tagName, b.textContent.trim()]),
+    })),
+  );
+const storedAccount = async (target) => JSON.parse((await storage(target)).account ?? 'null');
+const addressStatus = (target) =>
+  target.evaluate(() => document.querySelector('.account-addresses__status')?.textContent ?? null);
+const formHeading = (target) =>
+  target.evaluate(
+    () => document.querySelector('.account-addresses__form-card h2')?.textContent.trim() ?? null,
+  );
+const defaultCheckbox = (target) =>
+  target.evaluate(() => {
+    const input = document.querySelector('.account-addresses__form .ui-choice input');
+    return input ? input.checked : null;
+  });
+const fillAddress = async (target, values) => {
+  for (const [label, value] of Object.entries(values)) {
+    await setField(target, label, value);
+  }
+};
+const submitAddress = async (target) => {
+  await target.click('.account-addresses__submit');
+  await target.waitForTimeout(150);
+};
+const clickCardAction = async (target, id, label) => {
+  await target.click(`[data-address-id="${id}"] .address-card__edit`, { hasText: label });
+  await target.waitForTimeout(150);
+};
+const dialogState = (target) =>
+  target.evaluate(() => {
+    const dialog = document.querySelector('[role="alertdialog"]');
+    return dialog
+      ? {
+          title: dialog.querySelector('.feedback-dialog__title')?.textContent ?? null,
+          message: dialog.querySelector('.feedback-dialog__message')?.textContent ?? null,
+          focusInside: dialog.contains(document.activeElement),
+        }
+      : null;
+  });
+const ADDRESS_ONE = {
+  Город: 'Москва',
+  Адрес: 'ул. Тверская, 18, кв. 25',
+  Индекс: '125009',
+};
+const ADDRESS_TWO = { Город: 'Санкт-Петербург', Адрес: 'пр. Ленина, 42, кв. 10', Индекс: '' };
+const extraAddress = (index) => ({
+  Город: 'Казань',
+  Адрес: `ул. Баумана, ${String(index)}`,
+  Индекс: '',
+});
+
+await page.evaluate(() => {
+  localStorage.clear();
+  sessionStorage.clear();
+});
+await fresh(page, '/account/addresses');
+await page.waitForFunction(() => location.hash === '#/login');
+const addressesLength = await historyLength(page);
+await enterDemo(page);
+await page.waitForFunction(() => location.hash === '#/account/addresses');
+await page.waitForSelector('.account-addresses');
+facts = await pageFacts(page);
+check(
+  facts.focused === 'account-title' && (await historyLength(page)) === addressesLength,
+  `addresses: signed-out deep link returns with h1 focus (${facts.focused})`,
+);
+await page.waitForTimeout(100);
+check(
+  (await page.evaluate(() => JSON.stringify(history.state?.usr ?? null))) === 'null',
+  'addresses: one-time return state cleared',
+);
+check(
+  (await page.textContent('main h1')) === 'Адреса доставки' &&
+    (await activeRail(page)) === 'Адреса доставки' &&
+    JSON.stringify((await crumbs(page)).map(([text]) => text)) ===
+      JSON.stringify(['Главная', 'Аккаунт', 'Адреса доставки']),
+  'addresses: h1, rail and breadcrumbs',
+);
+check(
+  facts.mains === 1 && facts.h1.length === 1 && facts.overflow <= 0,
+  'addresses: main/h1/overflow',
+);
+check(
+  /Сохранённых адресов пока нет/.test(facts.text) &&
+    /только в этом браузере/.test(facts.text) &&
+    /не подставляются при оформлении заказа/.test(facts.text) &&
+    !/будут доступны при оформлении/.test(facts.text) &&
+    (await page.count('.account-addresses__items')) === 0 &&
+    (await page.count('.account-addresses__form')) === 1 &&
+    (await formHeading(page)) === 'Добавить новый адрес' &&
+    (await defaultCheckbox(page)) === null &&
+    /Первый сохранённый адрес станет основным/.test(facts.text),
+  'addresses: empty by default, truthful copy, add form visible, first-default note',
+);
+check(
+  (await fieldState(page, 'Получатель'))?.value === 'Иван Иванов' &&
+    (await fieldState(page, 'Телефон'))?.value === '+7 (900) 000-00-00' &&
+    (await fieldState(page, 'Город'))?.value === '',
+  'addresses: add form prefilled from the profile',
+);
+await page.evaluate(() => window.scrollTo(0, 0));
+await page.screenshot({ path: `${SHOTS}/account-addresses-empty-1440.png`, fullPage: true });
+
+await fillAddress(page, { Получатель: '', Телефон: '+7 (9', Город: '', Адрес: '', Индекс: '12' });
+await submitAddress(page);
+let addressErrors = {
+  recipient: await fieldState(page, 'Получатель'),
+  phone: await fieldState(page, 'Телефон'),
+  city: await fieldState(page, 'Город'),
+  line: await fieldState(page, 'Адрес'),
+  postal: await fieldState(page, 'Индекс'),
+};
+check(
+  addressErrors.recipient.invalid === 'true' &&
+    addressErrors.recipient.described.includes('Укажите получателя') &&
+    addressErrors.phone.described.includes('Введите номер полностью') &&
+    addressErrors.city.described.includes('Укажите город') &&
+    addressErrors.line.described.includes('Укажите улицу, дом и квартиру') &&
+    addressErrors.postal.described.includes('Индекс состоит из 6 цифр') &&
+    (await page.evaluate(() => document.activeElement?.id)) === addressErrors.recipient.id,
+  `addresses validation: required fields, aria-invalid/described-by, first-invalid focus ${JSON.stringify(addressErrors.recipient)}`,
+);
+await fillAddress(page, {
+  Получатель: 'Иван3',
+  Телефон: '',
+  Город: 'Москва1',
+  Адрес: 'Тверская улица',
+  Индекс: '12a456',
+});
+await submitAddress(page);
+addressErrors = {
+  recipient: await fieldState(page, 'Получатель'),
+  phone: await fieldState(page, 'Телефон'),
+  city: await fieldState(page, 'Город'),
+  line: await fieldState(page, 'Адрес'),
+  postal: await fieldState(page, 'Индекс'),
+};
+check(
+  addressErrors.recipient.described.includes('Имя получателя может содержать') &&
+    addressErrors.phone.described.includes('Укажите номер телефона') &&
+    addressErrors.city.described.includes('Название города может содержать') &&
+    addressErrors.line.described.includes('Укажите улицу, дом и квартиру') &&
+    addressErrors.postal.described.includes('Индекс состоит из 6 цифр') &&
+    (await storedAccount(page)).addresses === undefined,
+  'addresses validation: invalid characters, missing digit, bad postal code; nothing saved',
+);
+await page.evaluate(() => window.scrollTo(0, 0));
+await page.screenshot({ path: `${SHOTS}/account-addresses-validation-1440.png`, fullPage: true });
+
+await fillAddress(page, {
+  Получатель: 'Иван   Иванов',
+  Телефон: '+7 (900) 000-00-00',
+  ...ADDRESS_ONE,
+});
+check(
+  (await fieldState(page, 'Получатель')).invalid === null,
+  'addresses validation: editing a field clears its error',
+);
+await submitAddress(page);
+let account = await storedAccount(page);
+let cards = await addressCards(page);
+const firstId = account.addresses?.[0]?.id;
+check(
+  (await addressStatus(page)) === 'Адрес сохранён в этом браузере' &&
+    account.addresses?.length === 1 &&
+    account.defaultAddressId === firstId &&
+    JSON.stringify({ ...account.addresses[0], id: 'x' }) ===
+      JSON.stringify({
+        id: 'x',
+        recipientName: 'Иван Иванов',
+        phone: '+7 (900) 000-00-00',
+        city: 'Москва',
+        addressLine: 'ул. Тверская, 18, кв. 25',
+        postalCode: '125009',
+      }) &&
+    typeof firstId === 'string' &&
+    firstId.length >= 32,
+  `addresses add: normalized stored shape, first address auto-default ${JSON.stringify(account)}`,
+);
+check(
+  cards.length === 1 &&
+    cards[0].badge === 'Основной адрес' &&
+    cards[0].article === 'ARTICLE' &&
+    cards[0].locality === 'Москва, 125009' &&
+    JSON.stringify(cards[0].buttons) ===
+      JSON.stringify([
+        ['BUTTON', 'Редактировать: ул. Тверская, 18, кв. 25'],
+        ['BUTTON', 'Удалить: ул. Тверская, 18, кв. 25'],
+      ]) &&
+    (await page.getAttribute('.account-addresses__items', 'aria-label')) === 'Сохранённые адреса',
+  `addresses add: card, default chip, unique action names ${JSON.stringify(cards)}`,
+);
+check(
+  (await formHeading(page)) === 'Добавить новый адрес' &&
+    (await fieldState(page, 'Город')).value === '' &&
+    (await fieldState(page, 'Получатель')).value === 'Иван Иванов' &&
+    (await defaultCheckbox(page)) === false,
+  'addresses add: form resets to prefilled add mode, default checkbox now unchecked',
+);
+await page.evaluate(() => window.scrollTo(0, 0));
+await page.screenshot({ path: `${SHOTS}/account-addresses-add-saved-1440.png`, fullPage: true });
+await page.reload();
+await page.waitForSelector('.account-addresses__items');
+check(
+  (await addressCards(page)).length === 1 && (await addressStatus(page)) === '',
+  'addresses: reload persists addresses, status not persisted',
+);
+
+await fillAddress(page, ADDRESS_TWO);
+await page.click('.account-addresses__form .ui-choice');
+await submitAddress(page);
+account = await storedAccount(page);
+cards = await addressCards(page);
+const secondId = account.addresses?.[1]?.id;
+check(
+  account.addresses.length === 2 &&
+    account.defaultAddressId === secondId &&
+    !('postalCode' in account.addresses[1]) &&
+    cards.filter((card) => card.badge === 'Основной адрес').length === 1 &&
+    cards[1].badge === 'Основной адрес' &&
+    cards[1].locality === 'Санкт-Петербург',
+  'addresses: second address marked primary, exactly one default, empty postal code omitted',
+);
+await page.evaluate(() => window.scrollTo(0, 0));
+await page.screenshot({ path: `${SHOTS}/account-addresses-populated-1440.png`, fullPage: true });
+
+await open(page, '/account');
+const overviewAddress = await page.evaluate(() => {
+  const card = document.getElementById('account-address-title')?.closest('section');
+  return card
+    ? {
+        line: card.querySelector('.account-address-summary__line')?.textContent ?? null,
+        recipient: card.querySelector('.account-details__value')?.textContent ?? null,
+        link: card.querySelector('a')?.getAttribute('href') ?? null,
+        linkText: card.querySelector('a')?.textContent.trim() ?? null,
+        lines: card.querySelectorAll('.account-address-summary__line').length,
+      }
+    : null;
+});
+check(
+  overviewAddress?.line === 'пр. Ленина, 42, кв. 10' &&
+    overviewAddress.lines === 1 &&
+    overviewAddress.recipient === 'Иван Иванов' &&
+    overviewAddress.link === '#/account/addresses' &&
+    overviewAddress.linkText === 'Изменить адрес',
+  `overview: shows only the default address ${JSON.stringify(overviewAddress)}`,
+);
+await page.screenshot({
+  path: `${SHOTS}/account-overview-address-populated-1440.png`,
+  fullPage: true,
+});
+
+await open(page, '/account/addresses');
+await clickCardAction(page, firstId, 'Редактировать');
+check(
+  (await formHeading(page)) === 'Редактирование адреса' &&
+    (await fieldState(page, 'Город')).value === 'Москва' &&
+    (await fieldState(page, 'Индекс')).value === '125009' &&
+    (await defaultCheckbox(page)) === false &&
+    (await page.evaluate(() => document.activeElement?.id)) ===
+      (await fieldState(page, 'Получатель')).id &&
+    (await page.count('.account-addresses__actions button')) === 2,
+  'addresses edit: loads the saved snapshot, focuses Получатель, shows Отменить',
+);
+await page.evaluate(() => window.scrollTo(0, 0));
+await page.screenshot({ path: `${SHOTS}/account-addresses-edit-1440.png`, fullPage: true });
+await fillAddress(page, { Получатель: 'Анна Смирнова', Телефон: '+7 (911) 222-33-44' });
+await submitAddress(page);
+account = await storedAccount(page);
+check(
+  (await addressStatus(page)) === 'Изменения адреса сохранены' &&
+    account.addresses[0].id === firstId &&
+    account.addresses[0].recipientName === 'Анна Смирнова' &&
+    account.addresses[1].id === secondId &&
+    account.defaultAddressId === secondId &&
+    (await formHeading(page)) === 'Добавить новый адрес' &&
+    (await page.evaluate(() => document.activeElement?.closest('li')?.dataset.addressId)) ===
+      firstId,
+  'addresses edit: id kept, other address untouched, focus back on its card',
+);
+await clickCardAction(page, secondId, 'Редактировать');
+check((await defaultCheckbox(page)) === true, 'addresses edit: default address loads checked');
+await page.click('.account-addresses__form .ui-choice');
+await submitAddress(page);
+check(
+  (await storedAccount(page)).defaultAddressId === secondId,
+  'addresses edit: unchecking the current default keeps it default',
+);
+await clickCardAction(page, firstId, 'Редактировать');
+await page.click('.account-addresses__actions button', { hasText: 'Отменить' });
+await page.waitForTimeout(150);
+check(
+  (await formHeading(page)) === 'Добавить новый адрес' &&
+    (await page.evaluate(() => document.activeElement?.closest('li')?.dataset.addressId)) ===
+      firstId,
+  'addresses edit: cancel discards the draft and restores focus to the card',
+);
+
+await open(page, '/account/profile');
+await setField(page, 'Имя', 'Пётр');
+await submitProfile(page);
+account = await storedAccount(page);
+check(
+  account.profile?.firstName === 'Пётр' &&
+    account.addresses?.length === 2 &&
+    account.defaultAddressId === secondId &&
+    account.addresses[0].recipientName === 'Анна Смирнова' &&
+    account.addresses[1].recipientName === 'Иван Иванов',
+  'invariants: profile save preserves addresses/default; saved recipients are snapshots',
+);
+await open(page, '/account/addresses');
+check(
+  (await fieldState(page, 'Получатель')).value === 'Пётр Иванов',
+  'snapshot: new add form prefills from the updated profile',
+);
+await fillAddress(page, extraAddress(1));
+await submitAddress(page);
+account = await storedAccount(page);
+const thirdId = account.addresses[2]?.id;
+check(
+  account.profile?.firstName === 'Пётр' && account.defaultAddressId === secondId,
+  'invariants: address add preserves profile and default',
+);
+
+await clickCardAction(page, firstId, 'Удалить');
+let dialog = await dialogState(page);
+check(
+  dialog?.title === 'Удалить адрес?' &&
+    dialog.message.includes('ул. Тверская, 18, кв. 25') &&
+    dialog.focusInside,
+  `delete: confirmation dialog with address and trapped focus ${JSON.stringify(dialog)}`,
+);
+await page.evaluate(() => window.scrollTo(0, 0));
+await page.screenshot({
+  path: `${SHOTS}/account-addresses-delete-dialog-1440.png`,
+  fullPage: true,
+});
+await page.evaluate(() =>
+  document.activeElement?.dispatchEvent(
+    new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }),
+  ),
+);
+await page.waitForTimeout(300);
+check(
+  (await dialogState(page)) === null &&
+    (await addressCards(page)).length === 3 &&
+    (await page.evaluate(() => document.activeElement?.textContent.trim())).startsWith('Удалить'),
+  'delete: Escape cancels and focus returns to the delete trigger',
+);
+await clickCardAction(page, firstId, 'Удалить');
+await page.click('[role="alertdialog"] .ui-button--danger');
+await page.waitForTimeout(400);
+account = await storedAccount(page);
+check(
+  account.addresses.length === 2 &&
+    !account.addresses.some((address) => address.id === firstId) &&
+    account.defaultAddressId === secondId &&
+    account.profile?.firstName === 'Пётр' &&
+    (await addressStatus(page)) === 'Адрес удалён' &&
+    (await page.evaluate(() => document.activeElement?.tagName)) === 'H2',
+  `delete: confirm removes only that address, preserves profile, focuses list heading (${await page.evaluate(() => document.activeElement?.tagName)})`,
+);
+await clickCardAction(page, secondId, 'Удалить');
+await page.click('[role="alertdialog"] .ui-button--danger');
+await page.waitForTimeout(400);
+account = await storedAccount(page);
+check(
+  account.addresses.length === 1 && account.defaultAddressId === thirdId,
+  'delete: removing the default promotes the first remaining address',
+);
+await clickCardAction(page, thirdId, 'Редактировать');
+await clickCardAction(page, thirdId, 'Удалить');
+await page.click('[role="alertdialog"] .ui-button--danger');
+await page.waitForTimeout(400);
+account = await storedAccount(page);
+check(
+  account.addresses === undefined &&
+    account.defaultAddressId === undefined &&
+    account.profile?.firstName === 'Пётр' &&
+    (await formHeading(page)) === 'Добавить новый адрес' &&
+    /Сохранённых адресов пока нет/.test((await pageFacts(page)).text),
+  'delete: deleting the edited last address resets the form and clears addresses/default',
+);
+
+await open(page, '/account');
+check(
+  (await page.evaluate(
+    () =>
+      document
+        .getElementById('account-address-title')
+        ?.closest('section')
+        ?.textContent.includes('Адрес пока не добавлен') ?? false,
+  )) &&
+    (await page.evaluate(
+      () =>
+        document
+          .getElementById('account-address-title')
+          ?.closest('section')
+          ?.querySelector('a')
+          ?.getAttribute('href') ?? null,
+    )) === '#/account/addresses',
+  'overview: empty address card links to #/account/addresses',
+);
+await page.screenshot({ path: `${SHOTS}/account-overview-address-empty-1440.png`, fullPage: true });
+
+await open(page, '/account/addresses');
+for (let index = 1; index <= ACCOUNT_ADDRESS_LIMIT_VALUE; index += 1) {
+  await fillAddress(page, extraAddress(index));
+  await submitAddress(page);
+}
+account = await storedAccount(page);
+facts = await pageFacts(page);
+check(
+  account.addresses.length === ACCOUNT_ADDRESS_LIMIT_VALUE &&
+    (await page.count('.account-addresses__form')) === 0 &&
+    /Можно сохранить до 5 адресов/.test(facts.text) &&
+    (await page.count('main [disabled], main [aria-disabled="true"]')) === 0,
+  'limit: five addresses, add form replaced by the limit note, no disabled controls',
+);
+await page.evaluate(() => window.scrollTo(0, 0));
+await page.screenshot({ path: `${SHOTS}/account-addresses-limit-1440.png`, fullPage: true });
+const limitId = account.addresses[4].id;
+await clickCardAction(page, limitId, 'Редактировать');
+await setField(page, 'Индекс', '420111');
+await submitAddress(page);
+check(
+  (await storedAccount(page)).addresses[4].postalCode === '420111' &&
+    (await page.count('.account-addresses__form')) === 0,
+  'limit: editing still works at five, then the limit note returns',
+);
+
+await page.evaluate(
+  (values) => {
+    const valid = (id, line) => ({
+      id,
+      recipientName: 'Иван Иванов',
+      phone: '+7 (900) 000-00-00',
+      city: 'Москва',
+      addressLine: line,
+    });
+    localStorage.setItem(
+      'goodcall.account.v1',
+      JSON.stringify({
+        version: 1,
+        signedIn: true,
+        profile: values.PROFILE,
+        addresses: [
+          valid('a1', 'ул. Первая, 1'),
+          { ...valid('bad', 'без цифр'), phone: '123' },
+          valid('a1', 'ул. Дубль, 2'),
+          'not-an-object',
+          valid('a2', 'ул. Вторая, 2'),
+          valid('a3', 'ул. Третья, 3'),
+          valid('a4', 'ул. Четвёртая, 4'),
+          valid('a5', 'ул. Пятая, 5'),
+          valid('a6', 'ул. Шестая, 6'),
+        ],
+        defaultAddressId: 'missing',
+      }),
+    );
+  },
+  { PROFILE: { ...PROFILE_BASE, firstName: 'Пётр' } },
+);
+await fresh(page, '/account/addresses');
+await page.waitForSelector('.account-addresses__items');
+account = await storedAccount(page);
+check(
+  (await hash(page)) === '#/account/addresses' &&
+    JSON.stringify(account.addresses.map((address) => address.id)) ===
+      JSON.stringify(['a1', 'a2', 'a3', 'a4', 'a5']) &&
+    account.defaultAddressId === 'a1' &&
+    account.profile?.firstName === 'Пётр',
+  `corruption: bad/duplicate items dropped, trimmed to 5, dangling default promoted, profile kept ${JSON.stringify(account.addresses?.map((a) => a.id))}`,
+);
+await page.evaluate(() =>
+  localStorage.setItem(
+    'goodcall.account.v1',
+    JSON.stringify({ version: 1, signedIn: true, addresses: 'oops', defaultAddressId: 'a1' }),
+  ),
+);
+await fresh(page, '/account/addresses');
+await page.waitForSelector('.account-addresses');
+check(
+  (await hash(page)) === '#/account/addresses' &&
+    (await storage(page)).account === '{"version":1,"signedIn":true}',
+  'corruption: non-array addresses dropped without signing out',
+);
+
+await fillAddress(page, { Город: 'Москва', Адрес: 'ул. Заводская, 7', Индекс: '' });
+await submitAddress(page);
+await page.evaluate(
+  (values) => {
+    localStorage.setItem(values.CART, values.CART_VALUE);
+    localStorage.setItem(values.FAVORITES, values.FAVORITES_VALUE);
+    localStorage.setItem(values.COMPARE, values.COMPARE_VALUE);
+    localStorage.setItem(values.CITY, values.CITY_VALUE);
+    sessionStorage.setItem(values.ORDER, values.ORDER_VALUE);
+  },
+  {
+    CART,
+    CART_VALUE,
+    FAVORITES,
+    FAVORITES_VALUE,
+    COMPARE,
+    COMPARE_VALUE,
+    CITY,
+    CITY_VALUE,
+    ORDER,
+    ORDER_VALUE,
+  },
+);
+await open(page, '/checkout');
+await page.waitForTimeout(400);
+const checkoutText = await page.evaluate(() => ({
+  text: document.querySelector('main')?.innerText ?? '',
+  values: [...document.querySelectorAll('main input')].map((input) => input.value),
+}));
+check(
+  !checkoutText.text.includes('ул. Заводская, 7') &&
+    !checkoutText.values.some((value) => value.includes('Заводская')) &&
+    !/Сохранённые адреса|Основной адрес/.test(checkoutText.text),
+  'checkout: saved Account addresses are not offered or prefilled',
+);
+await open(page, '/account');
+const beforeAddressLogout = await storage(page);
+await logoutFromRail(page);
+const afterAddressLogout = await storage(page);
+check(
+  afterAddressLogout.account === null &&
+    afterAddressLogout.cart === beforeAddressLogout.cart &&
+    afterAddressLogout.favorites === beforeAddressLogout.favorites &&
+    afterAddressLogout.compare === beforeAddressLogout.compare &&
+    afterAddressLogout.city === beforeAddressLogout.city &&
+    afterAddressLogout.order === beforeAddressLogout.order,
+  'logout: addresses reset; cart/favourites/compare/city/session order byte-identical',
+);
+await enterDemo(page);
+await page.waitForFunction(() => location.hash === '#/account');
+await page.waitForSelector('.account-greeting');
+await open(page, '/account/addresses');
+check(
+  (await page.count('.account-addresses__items')) === 0 &&
+    (await fieldState(page, 'Получатель')).value === 'Иван Иванов',
+  'logout: re-entry starts with an empty address book and persona prefill',
+);
+
 await page.goto(`${BASE}?reference=header`);
 await page.waitForSelector('.site-header');
 const referenceShell = await shellAccount(page);
@@ -1148,13 +1711,13 @@ for (const [width, height, label] of [
       }),
     );
     check(
-      rail.length === 5 && rail.every((r) => r.visible && !r.clipped && r.height >= 40),
+      rail.length === 6 && rail.every((r) => r.visible && !r.clipped && r.height >= 40),
       `mobile: rail actions reachable, unclipped ${JSON.stringify(rail)}`,
     );
     await p.screenshot({ path: `${SHOTS}/account-empty-390.png`, fullPage: true });
     await p.focus('#account-title');
     const tabStops = [];
-    for (let index = 0; index < 5; index += 1) {
+    for (let index = 0; index < 6; index += 1) {
       await p.keyboard.press('Tab');
       tabStops.push(
         await p.evaluate(() => {
@@ -1169,7 +1732,7 @@ for (const [width, height, label] of [
     }
     check(
       tabStops.map((stop) => stop.text).join('|') ===
-        'Профиль|Мои заказы|Избранное|Сравнение|Выход' &&
+        'Профиль|Мои заказы|Избранное|Сравнение|Адреса доставки|Выход' &&
         tabStops.every((stop) => stop.row && stop.outline !== 'none'),
       `mobile: rail rows reachable by Tab with visible focus ${JSON.stringify(tabStops)}`,
     );
@@ -1183,7 +1746,7 @@ for (const [width, height, label] of [
     check(pf.overflow <= 0, 'mobile 390: populated overview no overflow');
     await p.screenshot({ path: `${SHOTS}/account-populated-390.png`, fullPage: true });
   }
-  for (const path of ['/account/orders', '/account/profile']) {
+  for (const path of ['/account/orders', '/account/profile', '/account/addresses']) {
     await open(p, path);
     const sectionGeometry = await shellGeometry(p);
     const sectionFacts = await pageFacts(p);
@@ -1255,6 +1818,67 @@ check(
   `mobile 390: Account B states without overflow ${JSON.stringify(mobileShots)}`,
 );
 await mobile.close();
+
+const addressMobile = await newPage(390, 844);
+await addressMobile.goto(`${BASE}#/`);
+await addressMobile.waitForSelector('main');
+await addressMobile.evaluate(() => {
+  localStorage.clear();
+  sessionStorage.clear();
+});
+await fresh(addressMobile, '/login');
+await enterDemo(addressMobile);
+await addressMobile.waitForFunction(() => location.hash === '#/account');
+await addressMobile.waitForSelector('.account-greeting');
+const addressShots = [];
+const addressShot = async (name) => {
+  const mf = await pageFacts(addressMobile);
+  addressShots.push([name, mf.overflow]);
+  await addressMobile.evaluate(() => window.scrollTo(0, 0));
+  await addressMobile.screenshot({ path: `${SHOTS}/${name}.png`, fullPage: true });
+};
+await addressShot('account-overview-address-empty-390');
+await open(addressMobile, '/account/addresses');
+await addressShot('account-addresses-empty-390');
+await fillAddress(addressMobile, { Телефон: '+7 (9', Город: '', Адрес: 'без номера' });
+await submitAddress(addressMobile);
+await addressShot('account-addresses-validation-390');
+await fillAddress(addressMobile, { Телефон: '+7 (900) 000-00-00', ...ADDRESS_ONE });
+await submitAddress(addressMobile);
+await addressShot('account-addresses-add-saved-390');
+await fillAddress(addressMobile, ADDRESS_TWO);
+await submitAddress(addressMobile);
+await addressShot('account-addresses-populated-390');
+const mobileCards = await addressCards(addressMobile);
+await clickCardAction(addressMobile, mobileCards[1].id, 'Редактировать');
+const editVisible = await addressMobile.evaluate(() => {
+  const field = document.activeElement;
+  const r = field?.getBoundingClientRect();
+  return Boolean(r && r.top >= 0 && r.bottom <= window.innerHeight);
+});
+await addressShot('account-addresses-edit-390');
+await addressMobile.click('.account-addresses__actions button', { hasText: 'Отменить' });
+await addressMobile.waitForTimeout(150);
+await clickCardAction(addressMobile, mobileCards[1].id, 'Удалить');
+const mobileDialog = await addressMobile.evaluate(() => {
+  const dialog = document.querySelector('[role="alertdialog"]');
+  const r = dialog?.getBoundingClientRect();
+  return Boolean(r && r.left >= 0 && r.right <= document.documentElement.clientWidth);
+});
+await addressShot('account-addresses-delete-dialog-390');
+await addressMobile.evaluate(() =>
+  document.activeElement?.dispatchEvent(
+    new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }),
+  ),
+);
+await addressMobile.waitForTimeout(300);
+await open(addressMobile, '/account');
+await addressShot('account-overview-address-populated-390');
+check(
+  addressShots.every(([, overflow]) => overflow <= 0) && editVisible && mobileDialog,
+  `mobile 390: address states without overflow, edit field in view, dialog fits ${JSON.stringify(addressShots)}`,
+);
+await addressMobile.close();
 
 await browser.close();
 reportCounts(passed, failures);

@@ -3,16 +3,22 @@ import type { ReactNode } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 
 import {
+  addAccountAddress,
+  deleteAccountAddress,
   saveAccountProfile,
   signInDemoAccount,
   signOutDemoAccount,
+  updateAccountAddress,
+  useAccountAddresses,
   useAccountProfile,
   useAccountSignedIn,
+  useDefaultAccountAddressId,
 } from '../../commerce/account';
 import { useCompareCount } from '../../commerce/compare';
 import { useFavoritesCount } from '../../commerce/favorites';
 import { findStore } from '../../commerce/shops';
 import {
+  AccountAddressesPage,
   AccountOrdersPage,
   AccountOverviewPage,
   AccountProfilePage,
@@ -24,6 +30,7 @@ import { readDemoOrder } from '../../pages/order-confirmation';
 import type { DemoOrder } from '../../pages/order-confirmation';
 import { ProductionShell } from '../ProductionShell';
 import {
+  ACCOUNT_ADDRESSES_PATH,
   ACCOUNT_ORDERS_PATH,
   ACCOUNT_PATH,
   ACCOUNT_PROFILE_PATH,
@@ -48,6 +55,7 @@ const ACCOUNT_RETURN_PATHS: readonly string[] = [
   ACCOUNT_PATH,
   ACCOUNT_ORDERS_PATH,
   ACCOUNT_PROFILE_PATH,
+  ACCOUNT_ADDRESSES_PATH,
 ];
 
 const ACCOUNT_LINKS: AccountLinks = {
@@ -55,6 +63,7 @@ const ACCOUNT_LINKS: AccountLinks = {
   account: hashHref(ACCOUNT_PATH),
   orders: hashHref(ACCOUNT_ORDERS_PATH),
   profile: hashHref(ACCOUNT_PROFILE_PATH),
+  addresses: hashHref(ACCOUNT_ADDRESSES_PATH),
   favorites: hashHref(FAVORITES_PATH),
   compare: hashHref(COMPARE_PATH),
   catalog: hashHref(CATALOG_SMARTPHONES_PATH),
@@ -204,6 +213,9 @@ export function LoginRoute() {
 export function AccountRoute() {
   const { gate, focusTitle, signOut } = useSignedInAccountPage();
   const profile = useAccountProfile();
+  const addresses = useAccountAddresses();
+  const defaultAddressId = useDefaultAccountAddressId();
+  const defaultAddress = addresses.find((address) => address.id === defaultAddressId);
   const favoritesCount = useFavoritesCount();
   const compareCount = useCompareCount();
   const [order] = useState(() => recentOrder(readDemoOrder()));
@@ -216,6 +228,7 @@ export function AccountRoute() {
     <ProductionShell>
       <AccountOverviewPage
         compareCount={compareCount}
+        defaultAddress={defaultAddress}
         favoritesCount={favoritesCount}
         focusTitle={focusTitle}
         links={ACCOUNT_LINKS}
@@ -262,6 +275,33 @@ export function AccountProfileRoute() {
         links={ACCOUNT_LINKS}
         onSave={saveAccountProfile}
         onSignOut={signOut}
+        profile={profile}
+      />
+    </ProductionShell>
+  );
+}
+
+export function AccountAddressesRoute() {
+  const { gate, focusTitle, signOut } = useSignedInAccountPage();
+  const profile = useAccountProfile();
+  const addresses = useAccountAddresses();
+  const defaultAddressId = useDefaultAccountAddressId();
+
+  if (gate !== null) {
+    return gate;
+  }
+
+  return (
+    <ProductionShell>
+      <AccountAddressesPage
+        addresses={addresses}
+        defaultAddressId={defaultAddressId}
+        focusTitle={focusTitle}
+        links={ACCOUNT_LINKS}
+        onAdd={addAccountAddress}
+        onDelete={deleteAccountAddress}
+        onSignOut={signOut}
+        onUpdate={updateAccountAddress}
         profile={profile}
       />
     </ProductionShell>

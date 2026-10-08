@@ -1,3 +1,5 @@
+export { AccountAddressesPage } from './AccountAddressesPage';
+export type { AccountAddressesPageProps } from './AccountAddressesPage';
 export { AccountOrdersPage } from './AccountOrdersPage';
 export type { AccountOrdersPageProps, AccountSessionOrder } from './AccountOrdersPage';
 export { AccountOverviewPage } from './AccountOverviewPage';

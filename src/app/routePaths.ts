@@ -26,6 +26,7 @@ export const LOGIN_PATH = '/login';
 export const ACCOUNT_PATH = '/account';
 export const ACCOUNT_ORDERS_PATH = '/account/orders';
 export const ACCOUNT_PROFILE_PATH = '/account/profile';
+export const ACCOUNT_ADDRESSES_PATH = '/account/addresses';
 
 export function searchPath(query: string): string {
   return `${SEARCH_PATH}?${new URLSearchParams({ [SEARCH_QUERY_PARAM]: query }).toString()}`;

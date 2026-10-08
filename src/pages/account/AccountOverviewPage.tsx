@@ -1,5 +1,5 @@
 import { formatAccountBirthDate } from '../../commerce/account';
-import type { DemoAccountProfile } from '../../commerce/account';
+import type { DemoAccountAddress, DemoAccountProfile } from '../../commerce/account';
 import { formatUnitCount } from '../../commerce/cart';
 import { formatPrice } from '../../commerce/format';
 import { AccountStats } from '../../components/account';
@@ -22,6 +22,7 @@ export interface AccountOverviewPageProps {
   readonly favoritesCount: number;
   readonly compareCount: number;
   readonly order?: AccountRecentOrder;
+  readonly defaultAddress?: DemoAccountAddress;
   readonly onSignOut: () => void;
   readonly focusTitle?: boolean;
 }
@@ -92,6 +93,7 @@ export function AccountOverviewPage({
   favoritesCount,
   compareCount,
   order,
+  defaultAddress,
   onSignOut,
   focusTitle = false,
 }: AccountOverviewPageProps) {
@@ -194,6 +196,53 @@ export function AccountOverviewPage({
             <AccountOrdersEmpty catalogHref={links.catalog} headingLevel="h3" />
           ) : (
             <RecentOrder order={order} orderHref={links.orderConfirmation} />
+          )}
+        </section>
+
+        <section aria-labelledby="account-address-title" className="account-card">
+          <h2 className="account-card__title" id="account-address-title">
+            Адрес доставки
+          </h2>
+          {defaultAddress === undefined ? (
+            <>
+              <p className="account-address-summary__empty">Адрес пока не добавлен</p>
+              <a
+                className="ui-button ui-button--secondary account-card__action"
+                href={links.addresses}
+              >
+                Добавить адрес
+              </a>
+            </>
+          ) : (
+            <>
+              <div className="account-address-summary">
+                <Icon className="account-address-summary__icon" name="map-pin" />
+                <div className="account-address-summary__text">
+                  <p className="account-address-summary__line">{defaultAddress.addressLine}</p>
+                  <p className="account-address-summary__locality">
+                    {defaultAddress.postalCode === undefined
+                      ? defaultAddress.city
+                      : `${defaultAddress.city}, ${defaultAddress.postalCode}`}
+                  </p>
+                </div>
+              </div>
+              <dl className="account-details">
+                <div className="account-details__row">
+                  <dt className="account-details__term">Получатель</dt>
+                  <dd className="account-details__value">{defaultAddress.recipientName}</dd>
+                </div>
+                <div className="account-details__row">
+                  <dt className="account-details__term">Телефон</dt>
+                  <dd className="account-details__value">{defaultAddress.phone}</dd>
+                </div>
+              </dl>
+              <a
+                className="ui-button ui-button--secondary account-card__action"
+                href={links.addresses}
+              >
+                Изменить адрес
+              </a>
+            </>
           )}
         </section>
       </div>

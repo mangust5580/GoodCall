@@ -11,13 +11,14 @@ export interface AccountLinks {
   readonly account: string;
   readonly orders: string;
   readonly profile: string;
+  readonly addresses: string;
   readonly favorites: string;
   readonly compare: string;
   readonly catalog: string;
   readonly orderConfirmation: string;
 }
 
-export type AccountSection = 'overview' | 'orders' | 'profile';
+export type AccountSection = 'overview' | 'orders' | 'profile' | 'addresses';
 
 interface AccountLayoutProps {
   readonly links: AccountLinks;
@@ -51,6 +52,7 @@ export function AccountLayout({
     { id: 'orders', label: 'Мои заказы', icon: 'package', href: links.orders },
     { id: 'favorites', label: 'Избранное', icon: 'heart', href: links.favorites },
     { id: 'compare', label: 'Сравнение', icon: 'compare', href: links.compare },
+    { id: 'addresses', label: 'Адреса доставки', icon: 'map-pin', href: links.addresses },
   ];
 
   return (
@@ -89,7 +91,7 @@ export function AccountLayout({
         <div className="account-page__layout">
           <div className="account-page__rail">
             <AccountNavigation
-              currentId={section === 'orders' ? 'orders' : 'profile'}
+              currentId={section === 'overview' || section === 'profile' ? 'profile' : section}
               items={navigation}
               label="Личный кабинет"
               onSignOut={onSignOut}
