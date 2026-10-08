@@ -144,10 +144,10 @@ Technically complete:
   owned by React Router using a GitHub Pages-safe hash strategy. See the
   Current routes section below.
 
-Active visual slice: none. Active implementation milestone: none. Quality C
-(Product Presentation Consistency) is closed and published. No next milestone
-is approved; the next activity is selecting from the remaining Quality backlog
-when requested (see Quality remediation below).
+Active visual slice: none. Active implementation milestone: none. Quality D
+(Clean Format Gate) is closed and published. No next milestone is approved;
+the next activity is selecting from the remaining Quality backlog when
+requested (see Quality remediation below).
 
 Completed visual slices:
 
@@ -5280,17 +5280,23 @@ Durable results:
   `search`, `product-details`, `compare` and `laptops` suites lock these
   contracts.
 
+**Quality D / Clean Format Gate — CLOSED (non-visual).** Closed item: Q-22.
+The per-machine `.mcp.json` is excluded by root-anchored `/.mcp.json` entries
+in `.gitignore` and `.prettierignore`, so `npm run format:check` passes with
+the local file present. No tooling rules changed.
+
 Still open (not started): Q-03 Cart recommendations, Q-07 typography roles,
 Q-08 breakpoints, Q-12 DateField, Q-13 reference lazy loading, Q-14 footer
 destinations, Q-15 cross-category Search (product decision), Q-18 rating
-separator, Q-22 `.mcp.json` tooling ignore.
+separator.
 
 No next milestone is approved; select from the remaining backlog when
-requested.
+requested. Q-12 (DateField year navigation) is a possible candidate, not an
+approved milestone.
 
 ## Project closeout state
 
-Quality C is the last published milestone. **Active visual slice: none.
+Quality D is the last published milestone. **Active visual slice: none.
 Active implementation milestone: none.** No active code-level release blocker
 is known, and there is no approved next milestone. The next activity is
 selecting from the remaining Quality backlog when requested (see Quality

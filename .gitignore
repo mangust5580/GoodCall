@@ -18,6 +18,7 @@ pnpm-debug.log*
 .serena/
 
 /AUDIT.md
+/.mcp.json
 
 .idea/
 .vscode/
