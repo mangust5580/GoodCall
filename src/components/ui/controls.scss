@@ -715,6 +715,15 @@ $icon-names: (
   max-height: var(--radix-select-content-available-height);
   overflow: hidden;
 
+  &--calendar {
+    width: auto;
+    min-width: var(--radix-select-trigger-width);
+  }
+
+  &--calendar &__item {
+    text-transform: capitalize;
+  }
+
   &__viewport {
     max-height: min(280px, var(--radix-select-content-available-height));
     padding: 6px;
@@ -806,15 +815,62 @@ $icon-names: (
 
     @include control-focus;
 
-    &:hover:not(:disabled) {
+    &:hover:not(:disabled, [aria-disabled='true']) {
       background-color: var(--role-surface-page-soft);
       color: var(--role-text-primary);
     }
 
-    &:disabled {
+    &:disabled,
+    &[aria-disabled='true'] {
       color: var(--role-text-subtle);
       cursor: not-allowed;
     }
+  }
+
+  &--navigable &__month-caption {
+    gap: 4px;
+    justify-content: flex-start;
+    padding: 0 80px 0 0;
+  }
+
+  &--navigable &__nav {
+    left: auto;
+    gap: 4px;
+  }
+
+  &__dropdown {
+    display: inline-flex;
+    flex: none;
+    gap: 2px;
+    align-items: center;
+    height: 36px;
+    padding: 0 6px 0 10px;
+    background-color: transparent;
+    border: var(--control-border-width) solid var(--role-border-default);
+    border-radius: var(--control-radius-sm);
+    font: inherit;
+    font-weight: 600;
+    line-height: 1.2;
+    color: var(--role-text-primary);
+    text-transform: capitalize;
+    white-space: nowrap;
+    cursor: pointer;
+
+    @include control-focus;
+
+    &:hover {
+      background-color: var(--role-surface-page-soft);
+    }
+
+    &[data-state='open'] {
+      border-color: var(--role-border-focus);
+    }
+  }
+
+  &__dropdown-icon {
+    width: 18px;
+    height: 18px;
+    color: var(--role-text-subtle);
   }
 
   &__chevron {

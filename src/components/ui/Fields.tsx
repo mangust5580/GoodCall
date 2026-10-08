@@ -1,4 +1,4 @@
-import { DayFlag, DayPicker, SelectionState, UI } from '@daypicker/react';
+import { DayFlag, DayPicker, SelectionState, UI, useDayPicker } from '@daypicker/react';
 import { ru } from '@daypicker/react/locale';
 import type { MaskitoOptions } from '@maskito/core';
 import { useMaskito } from '@maskito/react';
@@ -12,7 +12,7 @@ import type {
   ReactNode,
   TextareaHTMLAttributes,
 } from 'react';
-import type { ChevronProps, ClassNames } from '@daypicker/react';
+import type { ChevronProps, ClassNames, MonthCaptionProps } from '@daypicker/react';
 
 import { Icon } from './Icon';
 import type { IconName } from './Icon';
@@ -509,6 +509,126 @@ function CalendarChevron({ orientation = 'left', className }: ChevronProps) {
   return <Icon className={className} name={name} />;
 }
 
+const calendarMonthFormatter = new Intl.DateTimeFormat('ru-RU', { month: 'long' });
+
+const calendarMonthLabels = Array.from({ length: 12 }, (_, month) =>
+  calendarMonthFormatter.format(new Date(2000, month, 1)),
+);
+
+function monthIndex(date: Date): number {
+  return date.getFullYear() * 12 + date.getMonth();
+}
+
+interface CalendarDropdownProps {
+  readonly label: string;
+  readonly value: number;
+  readonly options: readonly {
+    readonly value: number;
+    readonly label: string;
+    readonly disabled: boolean;
+  }[];
+  readonly onValueChange: (value: number) => void;
+}
+
+function CalendarDropdown({ label, value, options, onValueChange }: CalendarDropdownProps) {
+  return (
+    <Select.Root
+      onValueChange={(nextValue) => {
+        onValueChange(Number(nextValue));
+      }}
+      value={String(value)}
+    >
+      <Select.Trigger aria-label={label} className="ui-calendar__dropdown">
+        <Select.Value />
+        <Select.Icon asChild>
+          <Icon className="ui-calendar__dropdown-icon" name="chevron-down" />
+        </Select.Icon>
+      </Select.Trigger>
+      <Select.Portal>
+        <Select.Content
+          align="start"
+          className="ui-floating-surface ui-select-content ui-select-content--calendar"
+          collisionPadding={16}
+          position="popper"
+          sideOffset={4}
+        >
+          <Select.Viewport className="ui-select-content__viewport">
+            {options.map((option) => (
+              <Select.Item
+                className="ui-select-content__item"
+                disabled={option.disabled}
+                key={option.value}
+                value={String(option.value)}
+              >
+                <Select.ItemText>{option.label}</Select.ItemText>
+              </Select.Item>
+            ))}
+          </Select.Viewport>
+        </Select.Content>
+      </Select.Portal>
+    </Select.Root>
+  );
+}
+
+const calendarComponents = { Chevron: CalendarChevron };
+
+function CalendarMonthCaption({ calendarMonth, className, children }: MonthCaptionProps) {
+  const { dayPickerProps, goToMonth } = useDayPicker();
+  const { startMonth, endMonth } = dayPickerProps;
+  const displayed = calendarMonth.date;
+  const displayedYear = displayed.getFullYear();
+  const displayedMonth = displayed.getMonth();
+
+  if (!startMonth || !endMonth) {
+    return <div className={className}>{children}</div>;
+  }
+
+  const monthOptions = calendarMonthLabels.map((monthLabel, month) => {
+    const candidate = monthIndex(new Date(displayedYear, month, 1));
+
+    return {
+      value: month,
+      label: monthLabel,
+      disabled: candidate < monthIndex(startMonth) || candidate > monthIndex(endMonth),
+    };
+  });
+  const yearOptions = Array.from(
+    { length: endMonth.getFullYear() - startMonth.getFullYear() + 1 },
+    (_, offset) => {
+      const year = endMonth.getFullYear() - offset;
+
+      return { value: year, label: String(year), disabled: false };
+    },
+  );
+
+  return (
+    <div className={className}>
+      <CalendarDropdown
+        label="Выберите месяц"
+        onValueChange={(month) => {
+          goToMonth(new Date(displayedYear, month, 1));
+        }}
+        options={monthOptions}
+        value={displayedMonth}
+      />
+      <CalendarDropdown
+        label="Выберите год"
+        onValueChange={(year) => {
+          goToMonth(new Date(year, displayedMonth, 1));
+        }}
+        options={yearOptions}
+        value={displayedYear}
+      />
+      <span className="ui-visually-hidden">{children}</span>
+    </div>
+  );
+}
+
+const navigableCalendarComponents = {
+  Chevron: CalendarChevron,
+  MonthCaption: CalendarMonthCaption,
+};
+
 export function DateField({
   label,
   hint,
@@ -530,6 +650,16 @@ export function DateField({
   const minDate = parseDateValue(min);
   const maxDate = parseDateValue(max);
   const displayValue = selectedDate ? dateFormatter.format(selectedDate) : placeholder;
+  const navigationBounds =
+    minDate && maxDate && minDate <= maxDate
+      ? {
+          startMonth: new Date(minDate.getFullYear(), minDate.getMonth(), 1),
+          endMonth: new Date(maxDate.getFullYear(), maxDate.getMonth(), 1),
+          navLayout: 'after' as const,
+          className: 'ui-calendar--navigable',
+          components: navigableCalendarComponents,
+        }
+      : { components: calendarComponents };
 
   const updateValue = (nextValue: string) => {
     if (value === undefined) {
@@ -567,8 +697,8 @@ export function DateField({
             sideOffset={8}
           >
             <DayPicker
+              {...navigationBounds}
               classNames={calendarClassNames}
-              components={{ Chevron: CalendarChevron }}
               defaultMonth={selectedDate}
               disabled={[
                 ...(minDate ? [{ before: minDate }] : []),

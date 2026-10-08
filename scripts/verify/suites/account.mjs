@@ -1880,5 +1880,453 @@ check(
 );
 await addressMobile.close();
 
+const SIGNED_IN = '{"version":1,"signedIn":true}';
+const MONTH_CONTROL = '[role="combobox"][aria-label="Выберите месяц"]';
+const YEAR_CONTROL = '[role="combobox"][aria-label="Выберите год"]';
+const PREVIOUS_MONTH = 'button[aria-label="Перейти к предыдущему месяцу"]';
+const NEXT_MONTH = 'button[aria-label="Перейти к следующему месяцу"]';
+
+const calendarPage = async (width, height = 900) => {
+  const p = await newPage(width, height);
+  await p.goto(`${BASE}#/login`);
+  await p.waitForSelector('main h1');
+  await p.evaluate((value) => {
+    localStorage.clear();
+    sessionStorage.clear();
+    localStorage.setItem('goodcall.account.v1', value);
+  }, SIGNED_IN);
+  await fresh(p, '/account/profile');
+  await p.waitForSelector('.account-profile__form');
+  return p;
+};
+const birthTriggerId = async (p) => (await fieldState(p, 'Дата рождения')).id;
+const openCalendar = async (p) => {
+  await p.click(`[id="${await birthTriggerId(p)}"]`);
+  await p.waitForSelector('[role="dialog"] [role="grid"]');
+  await p.waitForTimeout(150);
+};
+const calendarState = (p) =>
+  p.evaluate(
+    ({ month, year, previous, next }) => {
+      const dialog = document.querySelector('[role="dialog"]');
+      if (!dialog) return null;
+      const control = (selector) => dialog.querySelector(selector);
+      return {
+        grid: dialog.querySelector('[role="grid"]')?.getAttribute('aria-label') ?? null,
+        month: control(month)?.textContent.trim() ?? null,
+        year: control(year)?.textContent.trim() ?? null,
+        previousDisabled: control(previous)?.getAttribute('aria-disabled') === 'true',
+        nextDisabled: control(next)?.getAttribute('aria-disabled') === 'true',
+        days: [...dialog.querySelectorAll('[data-day]')].map((cell) => ({
+          iso: cell.getAttribute('data-day'),
+          button: Boolean(cell.querySelector('button')),
+          disabled: Boolean(cell.querySelector('button:disabled')),
+          outside: cell.hasAttribute('data-outside'),
+        })),
+        focus: document.activeElement?.getAttribute('aria-label') ?? document.activeElement?.id,
+      };
+    },
+    { month: MONTH_CONTROL, year: YEAR_CONTROL, previous: PREVIOUS_MONTH, next: NEXT_MONTH },
+  );
+const listOptions = (p) =>
+  p.evaluate(() =>
+    [...document.querySelectorAll('[role="listbox"] [role="option"]')].map((option) => ({
+      label: option.textContent.trim(),
+      disabled:
+        option.getAttribute('aria-disabled') === 'true' || option.hasAttribute('data-disabled'),
+      selected: option.getAttribute('aria-selected') === 'true',
+    })),
+  );
+const openList = async (p, control) => {
+  await p.click(control);
+  await p.waitForSelector('[role="listbox"]');
+  await p.waitForTimeout(150);
+};
+const chooseOption = async (p, control, label) => {
+  await openList(p, control);
+  const index = await p.evaluate((text) => {
+    const options = [...document.querySelectorAll('[role="listbox"] [role="option"]')];
+    const target = options.findIndex((option) => option.textContent.trim() === text);
+    options[target]?.scrollIntoView({ block: 'center' });
+    return target;
+  }, label);
+  await p.waitForTimeout(100);
+  await p.click('[role="listbox"] [role="option"]', { nth: index });
+  await p.waitForFunction(() => !document.querySelector('[role="listbox"]'));
+  await p.waitForTimeout(150);
+};
+const jumpTo = async (p, year, month) => {
+  await chooseOption(p, YEAR_CONTROL, String(year));
+  await chooseOption(p, MONTH_CONTROL, month);
+};
+const pressEscape = (p) =>
+  p.evaluate(() =>
+    (document.activeElement ?? document.body).dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Escape', code: 'Escape', bubbles: true }),
+    ),
+  );
+const typeKeys = (p, keys) =>
+  p.evaluate((sequence) => {
+    for (const key of sequence) {
+      (document.activeElement ?? document.body).dispatchEvent(
+        new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }),
+      );
+    }
+  }, keys);
+const triggerText = async (p) => (await fieldState(p, 'Дата рождения')).value;
+const storedBirthDate = async (p) =>
+  JSON.parse((await storage(p)).account ?? 'null')?.profile?.birthDate ?? null;
+const browserToday = (p) =>
+  p.evaluate(() => {
+    const now = new Date();
+    const iso = (date) =>
+      [
+        date.getFullYear(),
+        `${date.getMonth() + 1}`.padStart(2, '0'),
+        `${date.getDate()}`.padStart(2, '0'),
+      ].join('-');
+    return {
+      iso: iso(now),
+      tomorrow: iso(new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1)),
+      year: now.getFullYear(),
+      month: now.getMonth(),
+      monthLabel: new Intl.DateTimeFormat('ru-RU', { month: 'long' }).format(now),
+      display: new Intl.DateTimeFormat('ru-RU', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+      }).format(now),
+    };
+  });
+const calendarGeometry = (p) =>
+  p.evaluate(
+    ({ month, year, previous, next }) => {
+      const rect = (selector) => document.querySelector(selector).getBoundingClientRect();
+      const popover = rect('.ui-date-popover');
+      const monthRect = rect(month);
+      const yearRect = rect(year);
+      const previousRect = rect(previous);
+      const nextRect = rect(next);
+      const grid = rect('[role="dialog"] [role="grid"]');
+      return {
+        popoverWidth: Math.round(popover.width),
+        inViewport: popover.left >= 0 && popover.right <= document.documentElement.clientWidth,
+        startsInViewport: popover.left >= 0,
+        oneRow:
+          Math.abs(monthRect.top - yearRect.top) < 1 &&
+          Math.abs(previousRect.top - nextRect.top) < 1 &&
+          Math.abs(
+            monthRect.top + monthRect.height / 2 - previousRect.top - previousRect.height / 2,
+          ) < 1,
+        ordered:
+          monthRect.right <= yearRect.left &&
+          yearRect.right <= previousRect.left &&
+          previousRect.right <= nextRect.left,
+        insideGrid: monthRect.left >= grid.left - 1 && nextRect.right <= grid.right + 1,
+        navSize: [previousRect.width, previousRect.height, nextRect.width, nextRect.height],
+        clipped: [month, year].some((selector) => {
+          const el = document.querySelector(selector);
+          return el.scrollWidth > el.clientWidth + 1;
+        }),
+        overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      };
+    },
+    { month: MONTH_CONTROL, year: YEAR_CONTROL, previous: PREVIOUS_MONTH, next: NEXT_MONTH },
+  );
+
+const calendar = await calendarPage(1440);
+const closedBefore = await triggerText(calendar);
+await openCalendar(calendar);
+let calendarNow = await calendarState(calendar);
+check(
+  closedBefore === '12.04.1996' &&
+    calendarNow.grid?.includes('апрель') &&
+    calendarNow.grid?.includes('1996') &&
+    calendarNow.month === 'апрель' &&
+    calendarNow.year === '1996' &&
+    calendarNow.days.some((day) => day.iso === '1996-04-12' && day.button),
+  `calendar: opens on the selected April 1996 ${JSON.stringify({ ...calendarNow, days: undefined })}`,
+);
+const comboboxes = await calendar.evaluate(() =>
+  [...document.querySelectorAll('[role="dialog"] [role="combobox"]')].map((el) => ({
+    name: el.getAttribute('aria-label'),
+    expanded: el.getAttribute('aria-expanded'),
+  })),
+);
+check(
+  JSON.stringify(comboboxes) ===
+    JSON.stringify([
+      { name: 'Выберите месяц', expanded: 'false' },
+      { name: 'Выберите год', expanded: 'false' },
+    ]),
+  `calendar: named month/year comboboxes ${JSON.stringify(comboboxes)}`,
+);
+
+await calendar.focus(MONTH_CONTROL);
+const tabOrder = [];
+for (let step = 0; step < 5; step += 1) {
+  if (step > 0) await calendar.keyboard.press('Tab');
+  tabOrder.push(
+    await calendar.evaluate(() => {
+      const day = document.activeElement.closest('[data-day]');
+      return day
+        ? `day ${day.getAttribute('data-day')}`
+        : document.activeElement.getAttribute('aria-label');
+    }),
+  );
+}
+check(
+  JSON.stringify(tabOrder) ===
+    JSON.stringify([
+      'Выберите месяц',
+      'Выберите год',
+      'Перейти к предыдущему месяцу',
+      'Перейти к следующему месяцу',
+      'day 1996-04-12',
+    ]),
+  `calendar: tab order month → year → previous → next → selected day ${JSON.stringify(tabOrder)}`,
+);
+await calendar.keyboard.press('ArrowRight');
+await calendar.waitForTimeout(100);
+const arrowDay = await calendar.evaluate(() =>
+  document.activeElement.closest('[data-day]')?.getAttribute('data-day'),
+);
+check(
+  arrowDay === '1996-04-13',
+  `calendar: grid ArrowRight still moves the day focus (${arrowDay})`,
+);
+
+await chooseOption(calendar, YEAR_CONTROL, '2000');
+calendarNow = await calendarState(calendar);
+check(
+  calendarNow.grid?.includes('апрель') &&
+    calendarNow.grid?.includes('2000') &&
+    calendarNow.month === 'апрель' &&
+    calendarNow.year === '2000' &&
+    calendarNow.focus === 'Выберите год' &&
+    (await triggerText(calendar)) === '12.04.1996' &&
+    (await storedBirthDate(calendar)) === null,
+  `calendar: year jump keeps the month, refocuses its control, selects nothing ${JSON.stringify({ ...calendarNow, days: undefined })}`,
+);
+
+const today = await browserToday(calendar);
+await calendar.focus(YEAR_CONTROL);
+await calendar.keyboard.press('Enter');
+await calendar.waitForSelector('[role="listbox"]');
+await calendar.waitForTimeout(150);
+const years = await listOptions(calendar);
+check(
+  years.length === today.year - 1900 + 1 &&
+    years[0].label === String(today.year) &&
+    years.at(-1).label === '1900' &&
+    years.every((option) => !option.disabled) &&
+    years
+      .filter((option) => option.selected)
+      .map((option) => option.label)
+      .join() === '2000',
+  `calendar: keyboard-opened year list ${today.year}…1900 newest first, 2000 selected (${years.length})`,
+);
+await typeKeys(calendar, ['1', '9', '5', '0']);
+await calendar.waitForTimeout(100);
+const typeahead = await calendar.evaluate(() => document.activeElement?.textContent.trim());
+await calendar.keyboard.press('Enter');
+await calendar.waitForFunction(() => !document.querySelector('[role="listbox"]'));
+await calendar.waitForTimeout(150);
+calendarNow = await calendarState(calendar);
+check(
+  typeahead === '1950' && calendarNow.year === '1950' && calendarNow.grid?.includes('1950'),
+  `calendar: year typeahead + Enter jumps to 1950 (${typeahead}, ${calendarNow.year})`,
+);
+
+await openList(calendar, YEAR_CONTROL);
+const stacking = await calendar.evaluate(() => {
+  const list = document.querySelector('[role="listbox"]').getBoundingClientRect();
+  const x = list.left + list.width / 2;
+  const y = list.top + Math.min(list.height / 2, 60);
+  return Boolean(document.elementFromPoint(x, y)?.closest('[role="listbox"]'));
+});
+check(stacking, 'calendar: the open list paints above the calendar popover');
+await pressEscape(calendar);
+await calendar.waitForTimeout(200);
+const afterFirstEscape = await calendar.evaluate(() => ({
+  list: Boolean(document.querySelector('[role="listbox"]')),
+  dialog: Boolean(document.querySelector('[role="dialog"]')),
+  focus: document.activeElement?.getAttribute('aria-label'),
+}));
+await pressEscape(calendar);
+await calendar.waitForTimeout(200);
+const afterSecondEscape = await calendar.evaluate(() => ({
+  dialog: Boolean(document.querySelector('[role="dialog"]')),
+  focus: document.activeElement?.id,
+}));
+check(
+  !afterFirstEscape.list &&
+    afterFirstEscape.dialog &&
+    afterFirstEscape.focus === 'Выберите год' &&
+    !afterSecondEscape.dialog &&
+    afterSecondEscape.focus === (await birthTriggerId(calendar)) &&
+    (await triggerText(calendar)) === '12.04.1996',
+  `calendar: Escape closes the list, then the calendar, focus back on the field ${JSON.stringify({ afterFirstEscape, afterSecondEscape })}`,
+);
+
+await openCalendar(calendar);
+await openList(calendar, MONTH_CONTROL);
+await calendar.click('main h1');
+await calendar.waitForTimeout(200);
+const afterOutsideClick = await calendar.evaluate(() => ({
+  list: Boolean(document.querySelector('[role="listbox"]')),
+  dialog: Boolean(document.querySelector('[role="dialog"]')),
+}));
+check(
+  !afterOutsideClick.list && afterOutsideClick.dialog,
+  `calendar: an outside click closes only the open list ${JSON.stringify(afterOutsideClick)}`,
+);
+
+await jumpTo(calendar, 1900, 'январь');
+calendarNow = await calendarState(calendar);
+const january1900 = calendarNow.days.filter((day) => day.button);
+check(
+  calendarNow.grid?.includes('январь') &&
+    calendarNow.grid?.includes('1900') &&
+    calendarNow.previousDisabled &&
+    !calendarNow.nextDisabled &&
+    january1900[0]?.iso === '1900-01-01' &&
+    january1900.every((day) => day.iso >= '1900-01-01'),
+  `calendar: direct jump to январь 1900, previous unavailable, no pre-1900 days ${JSON.stringify({ ...calendarNow, days: january1900.slice(0, 2) })}`,
+);
+check(
+  (await calendar.getAttribute(PREVIOUS_MONTH, 'tabindex')) === '-1',
+  'calendar: unavailable previous month leaves the tab order',
+);
+await openList(calendar, MONTH_CONTROL);
+const months1900 = await listOptions(calendar);
+await pressEscape(calendar);
+await calendar.waitForTimeout(150);
+check(
+  months1900.length === 12 &&
+    months1900[0].label === 'январь' &&
+    months1900[0].selected &&
+    months1900.every((option) => !option.disabled),
+  `calendar: every 1900 month is available ${JSON.stringify(months1900.slice(0, 2))}`,
+);
+await calendar.click('[role="dialog"] [data-day="1900-01-01"] button');
+await calendar.waitForFunction(() => !document.querySelector('[role="dialog"]'));
+await calendar.waitForTimeout(150);
+check(
+  (await triggerText(calendar)) === '01.01.1900' &&
+    (await calendar.evaluate(() => document.activeElement?.id)) ===
+      (await birthTriggerId(calendar)),
+  'calendar: selecting 01.01.1900 closes the calendar and focuses the field',
+);
+await submitProfile(calendar);
+check(
+  (await storedBirthDate(calendar)) === '1900-01-01' &&
+    (await profileStatus(calendar)) === 'Изменения сохранены в этом браузере',
+  'calendar: 1900-01-01 saves to goodcall.account.v1',
+);
+await open(calendar, '/account');
+check(
+  await calendar.evaluate(() => document.querySelector('main').innerText.includes('01.01.1900')),
+  'calendar: overview shows 01.01.1900',
+);
+
+await open(calendar, '/account/profile');
+await openCalendar(calendar);
+calendarNow = await calendarState(calendar);
+check(
+  calendarNow.year === '1900' && calendarNow.month === 'январь' && calendarNow.previousDisabled,
+  'calendar: reopens on the saved January 1900',
+);
+await jumpTo(calendar, 2024, 'февраль');
+calendarNow = await calendarState(calendar);
+check(
+  calendarNow.days.some((day) => day.iso === '2024-02-29' && day.button && !day.disabled),
+  'calendar: 29.02.2024 is available',
+);
+await calendar.click('[role="dialog"] [data-day="2024-02-29"] button');
+await calendar.waitForFunction(() => !document.querySelector('[role="dialog"]'));
+await submitProfile(calendar);
+check(
+  (await triggerText(calendar)) === '29.02.2024' &&
+    (await storedBirthDate(calendar)) === '2024-02-29',
+  'calendar: leap day 2024-02-29 selects and persists',
+);
+await openCalendar(calendar);
+await jumpTo(calendar, 1900, 'февраль');
+calendarNow = await calendarState(calendar);
+const february1900 = calendarNow.days.filter(
+  (day) => day.iso.startsWith('1900-02') && !day.outside,
+);
+check(
+  february1900.length === 28 && !calendarNow.days.some((day) => day.iso === '1900-02-29'),
+  `calendar: February 1900 has 28 days and no 29.02.1900 (${february1900.length})`,
+);
+
+await jumpTo(calendar, today.year, today.monthLabel);
+calendarNow = await calendarState(calendar);
+await openList(calendar, MONTH_CONTROL);
+const currentYearMonths = await listOptions(calendar);
+await pressEscape(calendar);
+await calendar.waitForTimeout(150);
+const tomorrowCell = calendarNow.days.find((day) => day.iso === today.tomorrow);
+check(
+  calendarNow.year === String(today.year) &&
+    calendarNow.month === today.monthLabel &&
+    calendarNow.nextDisabled &&
+    currentYearMonths.every((option, month) => option.disabled === month > today.month) &&
+    (!tomorrowCell || !tomorrowCell.button || tomorrowCell.disabled) &&
+    calendarNow.days.some((day) => day.iso === today.iso && day.button && !day.disabled),
+  `calendar: current month is the upper bound ${JSON.stringify({ today, months: currentYearMonths.map((option) => option.disabled), tomorrowCell })}`,
+);
+await calendar.click(`[role="dialog"] [data-day="${today.iso}"] button`);
+await calendar.waitForFunction(() => !document.querySelector('[role="dialog"]'));
+await submitProfile(calendar);
+check(
+  (await triggerText(calendar)) === today.display &&
+    (await storedBirthDate(calendar)) === today.iso,
+  'calendar: today is selectable and saves',
+);
+await calendar.close();
+
+const calendarShots = [];
+for (const [width, height] of [
+  [1440, 900],
+  [1024, 768],
+  [390, 844],
+  [320, 640],
+]) {
+  const p = await calendarPage(width, height);
+  const closedOverflow = (await pageFacts(p)).overflow;
+  await p.evaluate(() => window.scrollTo(0, 0));
+  await p.screenshot({ path: `${SHOTS}/account-profile-closed-${width}.png`, fullPage: true });
+  await openCalendar(p);
+  const geometry = await calendarGeometry(p);
+  await p.screenshot({ path: `${SHOTS}/account-calendar-initial-${width}.png` });
+  if (width !== 1024) {
+    await jumpTo(p, 1900, 'январь');
+    await p.screenshot({ path: `${SHOTS}/account-calendar-1900-${width}.png` });
+    const now = await browserToday(p);
+    await jumpTo(p, now.year, now.monthLabel);
+    await p.screenshot({ path: `${SHOTS}/account-calendar-current-${width}.png` });
+  }
+  calendarShots.push({ width, closedOverflow, ...geometry });
+  await p.close();
+}
+check(
+  calendarShots.every(
+    (shot) =>
+      shot.closedOverflow <= 0 &&
+      shot.overflow <= 0 &&
+      (shot.width === 320 ? shot.startsInViewport : shot.inViewport) &&
+      shot.popoverWidth === 306 &&
+      shot.oneRow &&
+      shot.ordered &&
+      shot.insideGrid &&
+      !shot.clipped &&
+      shot.navSize.every((size) => size === 36),
+  ),
+  `calendar: caption and 36px nav fit one row without overflow at 1440/1024/390/320 ${JSON.stringify(calendarShots)}`,
+);
+
 await browser.close();
 reportCounts(passed, failures);

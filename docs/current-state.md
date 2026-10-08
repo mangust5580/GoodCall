@@ -144,10 +144,10 @@ Technically complete:
   owned by React Router using a GitHub Pages-safe hash strategy. See the
   Current routes section below.
 
-Active visual slice: none. Active implementation milestone: none. Quality D
-(Clean Format Gate) is closed and published. No next milestone is approved;
-the next activity is selecting from the remaining Quality backlog when
-requested (see Quality remediation below).
+Active visual slice: none. Active implementation milestone: none. Quality E
+(DateField Month–Year Navigation) is closed and published. No next milestone is
+approved; the next activity is selecting from the remaining Quality backlog
+when requested (see Quality remediation below).
 
 Completed visual slices:
 
@@ -366,9 +366,8 @@ the Account A shell and rail stay canonical.
   extended by Account C; Профиль is active
   on `/account` and `/account/profile`, Мои заказы on `/account/orders`.
   `AccountLayout` in `pages/account/AccountParts.tsx` is the shared page chrome.
-- Known limitation: the accepted `DateField` calendar steps month by month, so
-  changing the birth year takes many clicks (a Components follow-up, not
-  Account scope).
+- Дата рождения uses the bounded `DateField` month/year selectors (Quality E),
+  so any month from January 1900 to the current month is a direct jump.
 
 ### Account A — Demo Entry, Account Shell and Profile Overview
 
@@ -4030,6 +4029,17 @@ from `@daypicker/react`. Their popup surfaces share Components-owned background,
 border, radius and elevation decisions; those decisions have not moved into
 Foundations.
 
+DateField navigation (Quality E): when both `min` and `max` are valid, the
+calendar caption is GoodCall-styled Radix Select month («Выберите месяц») and
+year («Выберите год», newest first) selectors on the shared select surface,
+with DayPicker `startMonth`/`endMonth` from the bounds, `navLayout="after"`
+and bound-aware previous/next (`aria-disabled` at the edges; out-of-range
+outside days are hidden). Fields without both bounds keep the original label
+caption and unbounded month stepping, so the `?reference=components` specimen
+is unchanged. The public API is unchanged: values stay `YYYY-MM-DD`, and only
+selecting a day changes the value; month/year navigation never does. The
+`account` verify suite owns these checks.
+
 SearchField is a reusable control primitive only. It keeps native `type="search"`
 semantics, suppresses browser-native cancel UI, and owns value, clear and submit
 control behaviour. Future ProductSearch belongs to a feature-level consumer that
@@ -5285,18 +5295,26 @@ The per-machine `.mcp.json` is excluded by root-anchored `/.mcp.json` entries
 in `.gitignore` and `.prettierignore`, so `npm run format:check` passes with
 the local file present. No tooling rules changed.
 
+**Quality E / DateField Month–Year Navigation — CLOSED, USER VISUAL/UX PASS
+on 2026-10-08.** Closed item: Q-12. Bounded DateFields (the Account birth
+date) jump directly to any permitted month/year through GoodCall-styled Radix
+selectors; unbounded fields and the Components reference are unchanged (see
+Components A). No dependency or public API change. Known, unchanged: at 320px
+the accepted 306px date popover overhangs the right edge by 2px (pre-existing
+geometry); the `account` logout → demo re-entry step (also reproduced on the
+Quality D baseline) and the `product-details` related request-count checks
+fail intermittently and pass on rerun.
+
 Still open (not started): Q-03 Cart recommendations, Q-07 typography roles,
-Q-08 breakpoints, Q-12 DateField, Q-13 reference lazy loading, Q-14 footer
-destinations, Q-15 cross-category Search (product decision), Q-18 rating
-separator.
+Q-08 breakpoints, Q-13 reference lazy loading, Q-14 footer destinations, Q-15
+cross-category Search (product decision), Q-18 rating separator.
 
 No next milestone is approved; select from the remaining backlog when
-requested. Q-12 (DateField year navigation) is a possible candidate, not an
-approved milestone.
+requested.
 
 ## Project closeout state
 
-Quality D is the last published milestone. **Active visual slice: none.
+Quality E is the last published milestone. **Active visual slice: none.
 Active implementation milestone: none.** No active code-level release blocker
 is known, and there is no approved next milestone. The next activity is
 selecting from the remaining Quality backlog when requested (see Quality
