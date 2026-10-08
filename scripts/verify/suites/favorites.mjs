@@ -163,7 +163,7 @@ check(
   (await favBadge()) === '0' && (await favName()) === 'Избранное: 0',
   `${await favBadge()} / ${await favName()}`,
 );
-check('shell: comparison specimen 3 unchanged', (await compareBadge()) === '3');
+const compareBeforeFavorites = await compareBadge();
 check(
   'shell: favourites link is #/favorites',
   await evaluate(`Boolean(document.querySelector('.site-header__action[href="#/favorites"]'))`),
@@ -189,6 +189,12 @@ check('catalog: shell count 1', (await favBadge()) === '1');
 await evaluate(`${catalogHeart(PRO)}.click()`);
 await sleep(120);
 check('catalog: second ♥ → count 2', (await favBadge()) === '2');
+const compareAfterFavorites = await compareBadge();
+check(
+  'shell: favourite actions do not change the comparison count',
+  compareBeforeFavorites !== null && compareAfterFavorites === compareBeforeFavorites,
+  `${compareBeforeFavorites} → ${compareAfterFavorites}`,
+);
 await reload();
 await waitFor(`document.querySelector('.product-card__link')`, 'catalog reload');
 check(

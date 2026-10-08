@@ -1143,6 +1143,132 @@ check(pdpMobileFacts.overflow <= 0, `pdp 390: no overflow (${pdpMobileFacts.over
 await shot(pdpMobile, 'laptop-pdp-legion-390');
 await pdpMobile.close();
 
+console.log('stage: document', new Date().toISOString());
+const SITE_TITLE = 'GoodCall';
+const titled = (name) => `${name} — ${SITE_TITLE}`;
+const IPHONE_PRO = 'iphone-15-pro-128';
+const iphoneProName = PRODUCTS.find((row) => row.slug === IPHONE_PRO)?.name;
+const doc = await newPage(1440, 900);
+await doc.goto(`${NEW}#/`);
+await doc.waitForSelector('main');
+await doc.evaluate(() => {
+  localStorage.clear();
+  sessionStorage.clear();
+});
+await doc.reload();
+await doc.waitForSelector('main');
+check(
+  (await doc.evaluate(() => document.documentElement.lang)) === 'ru',
+  'document: production html lang is ru',
+);
+async function expectTitle(label, expected) {
+  await doc.waitForFunction((title) => document.title === title, expected).catch(() => null);
+  const title = await doc.evaluate(() => document.title);
+  check(
+    title.trim() !== '' && title !== SITE_TITLE && title.includes(SITE_TITLE) && title === expected,
+    `title: ${label} → "${title}" (expected "${expected}")`,
+  );
+}
+async function visitTitle(hash, expected) {
+  await doc.evaluate((target) => {
+    location.hash = target;
+  }, hash);
+  await expectTitle(hash, expected);
+}
+async function visitHeadingTitle(hash, heading) {
+  await doc.evaluate((target) => {
+    location.hash = target;
+  }, hash);
+  await doc.waitForSelector(heading);
+  const h1 = (await doc.textContent(heading)).trim();
+  await expectTitle(`${hash} (h1 "${h1}")`, titled(h1));
+}
+await expectTitle('#/ initial load', titled('Главная'));
+for (const [hash, name] of [
+  ['#/catalog/smartphones', 'Смартфоны'],
+  ['#/catalog/laptops', 'Ноутбуки'],
+  ['#/cart', 'Корзина'],
+  ['#/checkout', 'Оформление заказа'],
+  ['#/order-confirmation', 'Заказ не найден'],
+  ['#/favorites', 'Избранное'],
+  ['#/compare', 'Сравнение товаров'],
+  ['#/search?q=iPhone', 'Результаты поиска «iPhone»'],
+  ['#/shops', 'Магазины'],
+  ['#/delivery', 'Доставка и оплата'],
+  ['#/warranty', 'Гарантия и возврат'],
+  ['#/faq', 'Часто задаваемые вопросы'],
+  ['#/contacts', 'Контакты'],
+  ['#/about', 'О нас'],
+  ['#/privacy', 'Политика конфиденциальности'],
+  ['#/terms', 'Пользовательское соглашение'],
+  ['#/offer', 'Публичная оферта'],
+  ['#/blog', 'Блог'],
+  ['#/login', 'Вход'],
+  ['#/account', 'Вход'],
+  [`#/product/${LEGION}`, bySlug.get(LEGION).name],
+  [`#/product/${IPHONE_PRO}`, iphoneProName],
+  ['#/product/no-such-product', 'Товар не найден'],
+  ['#/blog/no-such-article', 'Страница не найдена'],
+  ['#/no-such-route', 'Страница не найдена'],
+]) {
+  await visitTitle(hash, titled(name));
+}
+await visitHeadingTitle(`#/product/${LEGION}`, '.product-purchase__title');
+await visitHeadingTitle('#/blog/how-to-choose-smartphone-2024', '.blog-article__title');
+await visitHeadingTitle('#/order-confirmation', '.order-empty__title');
+await doc.evaluate(() => {
+  localStorage.setItem('goodcall.account.v1', JSON.stringify({ version: 1, signedIn: true }));
+});
+await doc.reload();
+for (const [hash, name] of [
+  ['#/account', 'Личный кабинет'],
+  ['#/account/orders', 'Мои заказы'],
+  ['#/account/profile', 'Профиль'],
+  ['#/account/addresses', 'Адреса доставки'],
+]) {
+  await visitTitle(hash, titled(name));
+  const heading = (await doc.textContent('.account-page__title')).trim();
+  check(heading === name, `title: ${hash} matches its h1 "${heading}"`);
+}
+await doc.evaluate(() => {
+  localStorage.removeItem('goodcall.account.v1');
+  location.hash = '#/';
+});
+await doc.reload();
+await expectTitle('reload #/', titled('Главная'));
+await visitTitle('#/cart', titled('Корзина'));
+await visitTitle(`#/product/${LEGION}`, titled(bySlug.get(LEGION).name));
+await doc.evaluate(() => history.back());
+await expectTitle('Back → #/cart', titled('Корзина'));
+await doc.evaluate(() => history.forward());
+await expectTitle(`Forward → #/product/${LEGION}`, titled(bySlug.get(LEGION).name));
+await doc.reload();
+await expectTitle(`reload #/product/${LEGION}`, titled(bySlug.get(LEGION).name));
+await visitTitle('#/no-such-route', titled('Страница не найдена'));
+await doc.reload();
+await expectTitle('reload #/no-such-route', titled('Страница не найдена'));
+await doc.close();
+for (const reference of ['catalog', 'product-details', 'home', 'header', 'components']) {
+  const isolated = await newPage(1440, 900);
+  await isolated.goto(`${NEW}?reference=${reference}`);
+  await isolated.waitForSelector('main, .reference-page, body > div > *');
+  await isolated.waitForTimeout(400);
+  const facts = await isolated.evaluate(() => ({
+    title: document.title,
+    lang: document.documentElement.lang,
+    notes: [...document.querySelectorAll('[class$="-reference__note"]')].map((note) => note.lang),
+    specimen: document.querySelector('.site-header, .product-card')?.closest('[lang]')?.lang,
+  }));
+  check(
+    facts.title === SITE_TITLE &&
+      facts.lang === 'ru' &&
+      facts.notes.every((lang) => lang === 'en') &&
+      facts.specimen === 'ru',
+    `document: ?reference=${reference} keeps the static title, lang ru, English notes lang en, specimen ru ${JSON.stringify(facts)}`,
+  );
+  await isolated.close();
+}
+
 console.log('stage: reference', new Date().toISOString());
 async function capture(base, path, width, ready, name) {
   const p = await newPage(width, 900);

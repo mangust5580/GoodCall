@@ -11,6 +11,7 @@ import {
   blogPath,
   hashHref,
 } from '../routePaths';
+import { useDocumentTitle } from '../useDocumentTitle';
 import { NotFoundRoute } from './NotFoundRoute';
 
 const CATEGORY_PARAM = 'category';
@@ -24,6 +25,7 @@ export function BlogArticleRoute() {
   const { slug = '' } = useParams();
   const navigate = useNavigate();
   const detail = blogArticleDetail(slug);
+  useDocumentTitle(detail?.article.title);
 
   if (detail === undefined) {
     return <NotFoundRoute />;

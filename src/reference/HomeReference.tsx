@@ -17,7 +17,7 @@ export function HomeReference() {
 
   return (
     <div className="home-reference">
-      <p className="home-reference__note">
+      <p className="home-reference__note" lang="en">
         Temporary development reference for the Home page family. Everything below is the real
         production shell around the real <code>HomePage</code>. Home A owns page structure and
         section inventory from <code>Home.png</code>; section depth, promotional artwork and the

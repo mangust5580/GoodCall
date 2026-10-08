@@ -10,6 +10,7 @@ import {
 import type { BlogCategoryId } from '../../pages/blog';
 import { ProductionShell } from '../ProductionShell';
 import { HOME_PATH, blogArticleHref, hashHref } from '../routePaths';
+import { useDocumentTitle } from '../useDocumentTitle';
 
 const CATEGORY_PARAM = 'category';
 const QUERY_PARAM = 'q';
@@ -20,6 +21,7 @@ export function BlogRoute() {
   const category = parseBlogCategory(searchParams.get(CATEGORY_PARAM));
   const query = normalizeBlogQuery(searchParams.get(QUERY_PARAM) ?? '');
   const page = parseBlogPage(searchParams.get(PAGE_PARAM));
+  useDocumentTitle('Блог');
 
   const updateParam = (name: string, value: string | undefined) => {
     setSearchParams((current) => {

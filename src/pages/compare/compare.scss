@@ -230,6 +230,10 @@ $product-column-min: 168px;
     object-fit: contain;
   }
 
+  &__media picture {
+    display: contents;
+  }
+
   &__title {
     display: block;
     min-height: 40px;

@@ -3,9 +3,11 @@ import { clearCompareItems, removeCompareItem, useCompareItems } from '../../com
 import { ComparePage } from '../../pages/compare';
 import { ProductionShell } from '../ProductionShell';
 import { CATALOG_SMARTPHONES_PATH, HOME_PATH, hashHref, productDetailsHref } from '../routePaths';
+import { useDocumentTitle } from '../useDocumentTitle';
 
 export function CompareRoute() {
   const items = useCompareItems();
+  useDocumentTitle('Сравнение товаров');
 
   return (
     <ProductionShell>

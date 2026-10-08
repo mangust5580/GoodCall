@@ -42,6 +42,7 @@ import {
   ORDER_CONFIRMATION_PATH,
   hashHref,
 } from '../routePaths';
+import { useDocumentTitle } from '../useDocumentTitle';
 
 type AccountTransition = 'signed-in' | 'signed-out';
 
@@ -184,6 +185,7 @@ export function LoginRoute() {
   const signedIn = useAccountSignedIn();
   const { transition, accountReturn } = useOneTimeRouteState();
   const [entering, setEntering] = useState(false);
+  useDocumentTitle(signedIn ? undefined : 'Вход');
 
   if (signedIn) {
     return (
@@ -219,6 +221,7 @@ export function AccountRoute() {
   const favoritesCount = useFavoritesCount();
   const compareCount = useCompareCount();
   const [order] = useState(() => recentOrder(readDemoOrder()));
+  useDocumentTitle(gate === null ? 'Личный кабинет' : undefined);
 
   if (gate !== null) {
     return gate;
@@ -243,6 +246,7 @@ export function AccountRoute() {
 export function AccountOrdersRoute() {
   const { gate, focusTitle, signOut } = useSignedInAccountPage();
   const [order] = useState(() => sessionOrder(readDemoOrder()));
+  useDocumentTitle(gate === null ? 'Мои заказы' : undefined);
 
   if (gate !== null) {
     return gate;
@@ -263,6 +267,7 @@ export function AccountOrdersRoute() {
 export function AccountProfileRoute() {
   const { gate, focusTitle, signOut } = useSignedInAccountPage();
   const profile = useAccountProfile();
+  useDocumentTitle(gate === null ? 'Профиль' : undefined);
 
   if (gate !== null) {
     return gate;
@@ -286,6 +291,7 @@ export function AccountAddressesRoute() {
   const profile = useAccountProfile();
   const addresses = useAccountAddresses();
   const defaultAddressId = useDefaultAccountAddressId();
+  useDocumentTitle(gate === null ? 'Адреса доставки' : undefined);
 
   if (gate !== null) {
     return gate;

@@ -2,9 +2,11 @@ import { useCartLines } from '../../commerce/cart';
 import { CartPage } from '../../pages/cart';
 import { ProductionShell } from '../ProductionShell';
 import { CATALOG_SMARTPHONES_PATH, CHECKOUT_PATH, HOME_PATH, hashHref } from '../routePaths';
+import { useDocumentTitle } from '../useDocumentTitle';
 
 export function CartRoute() {
   const cart = useCartLines();
+  useDocumentTitle('Корзина');
 
   return (
     <ProductionShell>

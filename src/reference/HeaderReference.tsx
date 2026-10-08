@@ -27,20 +27,20 @@ export function HeaderReference() {
       <main className="header-reference__body">
         <Container className="header-reference__inner">
           <h1 className="header-reference__title">Global Shell / SiteHeader</h1>
-          <p className="header-reference__note">
+          <p className="header-reference__note" lang="en">
             Temporary development reference for the canonical GoodCall shell navigation. Everything
             above this block is the real production <code>SiteHeader</code>: one brand-purple
             utility row, one main row with brand, catalog entry and search, and one category
             navigation row. Each row is a full-width region whose content sits in the accepted
             Container, so all three rows share the same inner horizontal edges.
           </p>
-          <p className="header-reference__note">
+          <p className="header-reference__note" lang="en">
             Below 768px the four user actions leave the header and appear in the real production{' '}
             <code>MobileActionBar</code> fixed to the bottom of the viewport, and the search gains a
             QR action. The QR button is presentation only: it reports the request below and performs
             no camera access or scanning.
           </p>
-          <p className="header-reference__note">
+          <p className="header-reference__note" lang="en">
             This page body is reference-only. It is not a Home page, and no hero, catalog, footer or
             newsletter is implemented. Header destinations are injected by the consumer; the
             production routes behind them do not exist yet, so they resolve to the app base.

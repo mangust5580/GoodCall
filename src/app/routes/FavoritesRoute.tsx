@@ -10,10 +10,12 @@ import { FavoritesPage } from '../../pages/favorites';
 import type { FavoritesCartSeam } from '../../pages/favorites';
 import { ProductionShell } from '../ProductionShell';
 import { CATALOG_SMARTPHONES_PATH, HOME_PATH, hashHref, productDetailsHref } from '../routePaths';
+import { useDocumentTitle } from '../useDocumentTitle';
 
 export function FavoritesRoute() {
   const items = useFavoriteItems();
   const cartLines = useCartLineList();
+  useDocumentTitle('Избранное');
 
   const cart: FavoritesCartSeam = {
     quantityOf: (item) => cartLines.find((line) => line.id === cartLineId(item.slug))?.quantity,

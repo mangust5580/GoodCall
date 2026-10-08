@@ -12,6 +12,7 @@ import {
 import type { CatalogHistoryMode, CatalogProduct, LaptopAppliedState } from '../../pages/catalog';
 import { ProductionShell } from '../ProductionShell';
 import { HOME_PATH, hashHref, productDetailsHref } from '../routePaths';
+import { useDocumentTitle } from '../useDocumentTitle';
 import { useCatalogCartSeam } from './useCatalogCartSeam';
 import { useCatalogCompareSeam } from './useCatalogCompareSeam';
 import { useCatalogFavoritesSeam } from './useCatalogFavoritesSeam';
@@ -63,6 +64,7 @@ export function CatalogLaptopsRoute() {
   const cart = useCatalogCartSeam(products !== undefined);
   const favorites = useCatalogFavoritesSeam(products !== undefined);
   const compare = useCatalogCompareSeam(products !== undefined);
+  useDocumentTitle(read.status === 'failure' ? 'Товары временно недоступны' : 'Ноутбуки');
 
   useEffect(() => {
     let mounted = true;

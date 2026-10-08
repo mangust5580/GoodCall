@@ -144,13 +144,16 @@ Technically complete:
   owned by React Router using a GitHub Pages-safe hash strategy. See the
   Current routes section below.
 
-Active visual slice: none. Active implementation milestone: none. Second
-Category A (Ноутбуки) is closed and published. Next approved activity:
-portfolio-wide quality audit / remediation planning (see Project closeout
-state below).
+Active visual slice: none. Active implementation milestone: none. Quality A
+(Correctness and Document Semantics) is closed and published. Next approved
+activity: Quality B — Shared Navigation and Feedback Primitives (see Quality
+remediation below).
 
 Completed visual slices:
 
+- **Quality A / Correctness and Document Semantics — USER VISUAL/UX PASS on
+  2026-10-08, CLOSED and published.** Closes audit items Q-01, Q-02, Q-11,
+  Q-16 and Q-17. See the Quality remediation section below.
 - **Second Category A / Ноутбуки — USER VISUAL/UX PASS on 2026-10-08, CLOSED
   and published.** `#/catalog/laptops` with 12 live laptops. See the Second
   Category A section below.
@@ -857,8 +860,9 @@ Details B gates: content 5020/5020, product-details 310/310 (includes the
 frozen reference pixel diff, 0 at 1440 and 390), home-cart 40/40, compare
 71/71, compare-store 21/21, search 46/46, cart 51/51, checkout 95/95, order
 50/50, form-unconfigured 41/41, favorites 50/51. The favorites failure
-«shell: comparison specimen 3 unchanged» is known baseline drift, as are
-configured-mode form and Search C (not in the runner).
+«shell: comparison specimen 3 unchanged» was known baseline drift until Quality
+A replaced it with a real invariant; configured-mode form and Search C remain
+outside the runner.
 
 - **Coverage.** All 18 active products have a production page: 16
   smartphones, `apple-watch-series-9-45` and `airpods-pro-2-usb-c`.
@@ -5184,13 +5188,48 @@ none of them blocks the closed milestone.
   response shapes rather than the live service. Live search, live IP detection,
   live reverse geocoding and live Pages behaviour all remain open.
 
+## Quality remediation
+
+The portfolio-wide quality audit produced backlog items Q-01 … Q-22. They are
+remediated in bounded milestones; an item is closed only by its own milestone.
+
+**Quality A / Correctness and Document Semantics — CLOSED, USER VISUAL/UX
+PASS on 2026-10-08.** Closed items: Q-01 (Compare media overflow), Q-02
+(document language), Q-11 (route-level document titles), Q-16 (stale
+favourites drift), Q-17 (Compare geometry coverage and verify README).
+
+Durable results:
+
+- Compare product media is contained in its media box, and the `compare` suite
+  asserts the geometry at 1440/1024/768/390.
+- `<html lang="ru">`. English developer notes on `?reference=` surfaces carry
+  `lang="en"` (language of parts), so reference pixel diffs remain 0.
+- Every production route sets a Russian `<page> — GoodCall` document title
+  from its route adapter (`src/app/useDocumentTitle.ts`); the PDP title follows
+  the loaded product name or the rendered loading/not-found/error state.
+  `?reference=` surfaces keep the static title.
+- The favourites known drift is removed (`KNOWN_DRIFT` is empty), and the
+  favorites suite is fully green.
+- `scripts/verify/README.md` lists current suite ownership, including
+  `account`, `laptops` and the live smartphone Catalog coverage in `search`.
+
+Still open (not started): Q-03 Cart recommendations, Q-04 Breadcrumbs, Q-05
+ProductBadge, Q-06 colour swatches, Q-07 typography roles, Q-08 breakpoints,
+Q-09 EmptyState, Q-10 RouteStatus, Q-12 DateField, Q-13 reference lazy loading,
+Q-14 footer destinations, Q-15 cross-category Search (product decision), Q-18
+rating separator, Q-19 1024 GB → 1 TB, Q-20 thumbnail fallback, Q-21 heading
+skips, Q-22 `.mcp.json` tooling ignore.
+
+**Next approved activity: Quality B — Shared Navigation and Feedback
+Primitives.** Not started.
+
 ## Project closeout state
 
-Second Category A (Ноутбуки) is the last published milestone. **Active visual
-slice: none. Active implementation milestone: none.** No active code-level
-release blocker is known, and there is no approved next Account milestone.
-**Next approved activity: portfolio-wide quality audit / remediation
-planning.**
+Quality A is the last published milestone. **Active visual slice: none.
+Active implementation milestone: none.** No active code-level release blocker
+is known, and there is no approved next Account milestone. **Next approved
+activity: Quality B — Shared Navigation and Feedback Primitives** (see Quality
+remediation).
 
 Settings, Bonuses, Notifications, recently viewed, a real authenticated
 account and Checkout saved-address integration are intentionally omitted (not

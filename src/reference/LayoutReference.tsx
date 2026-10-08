@@ -12,7 +12,7 @@ export function LayoutReference() {
         <Container>
           <div className="layout-reference__surface">
             <h1 className="layout-reference__title">Layout / Container</h1>
-            <p className="layout-reference__note">
+            <p className="layout-reference__note" lang="en">
               Temporary development reference for the canonical Container primitive. Container owns
               centred horizontal content width, a 1440px maximum outer border-box width and
               responsive horizontal gutters. It owns no vertical spacing, background, border or
@@ -27,7 +27,7 @@ export function LayoutReference() {
         <Container>
           <div className="layout-reference__surface">
             <h2 className="layout-reference__heading">Second full-width band</h2>
-            <p className="layout-reference__note">
+            <p className="layout-reference__note" lang="en">
               The inner edges of this surface must align exactly with the band above and the band
               below, at every viewport width.
             </p>

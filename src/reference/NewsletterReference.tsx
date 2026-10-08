@@ -14,13 +14,13 @@ export function NewsletterReference() {
     <main className="newsletter-reference">
       <Container className="newsletter-reference__inner">
         <h1 className="newsletter-reference__title">Global Shell / NewsletterBand</h1>
-        <p className="newsletter-reference__note">
+        <p className="newsletter-reference__note" lang="en">
           Temporary development reference for the canonical GoodCall pre-footer newsletter region.
           The band below this block is the real production <code>NewsletterBand</code>: one
           full-width section whose violet promotional surface and content both align to the accepted
           Container. The gift artwork is decorative and hidden from assistive technology.
         </p>
-        <p className="newsletter-reference__note">
+        <p className="newsletter-reference__note" lang="en">
           It is a real form with a native <code>type=&quot;email&quot;</code> input, a visually
           hidden label and a real submit button. Browser-native validation gates submission; there
           is no subscription backend, network request, persistence or loading state. Without{' '}
@@ -36,7 +36,7 @@ export function NewsletterReference() {
         <p aria-live="polite" className="newsletter-reference__status">
           {lastEmail ? `Отправлено: ${lastEmail}` : 'Подписка ещё не отправлена'}
         </p>
-        <p className="newsletter-reference__note">
+        <p className="newsletter-reference__note" lang="en">
           The line above is reference-only confirmation that the form submitted. It lives outside{' '}
           <code>NewsletterBand</code> and is not part of the production component.
         </p>

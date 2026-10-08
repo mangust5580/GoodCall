@@ -29,9 +29,7 @@ const SUITES = [
   { name: 'laptops', needs: ['app', 'reference'] },
 ];
 
-const KNOWN_DRIFT = {
-  favorites: ['shell: comparison specimen 3 unchanged'],
-};
+const KNOWN_DRIFT = {};
 
 function parseArgs(argv) {
   const options = { reference: 'HEAD', keepArtifacts: false, suites: [] };

@@ -17,6 +17,7 @@ import {
   hashHref,
   productDetailsHref,
 } from '../routePaths';
+import { useDocumentTitle } from '../useDocumentTitle';
 import { useCatalogCartSeam } from './useCatalogCartSeam';
 
 const SORT_PARAM = 'sort';
@@ -29,6 +30,7 @@ export function SearchRoute() {
   const query = normalizeSearchQuery(searchParams.get(SEARCH_QUERY_PARAM) ?? '');
   const sort = parseSearchSort(searchParams.get(SORT_PARAM)) ?? DEFAULT_CATALOG_SORT;
   const page = parseSearchPage(searchParams.get(PAGE_PARAM));
+  useDocumentTitle(query === '' ? 'Результаты поиска' : `Результаты поиска «${query}»`);
 
   useEffect(() => {
     let mounted = true;

@@ -11,6 +11,7 @@ import {
 import type { CatalogAppliedState, CatalogHistoryMode, CatalogProduct } from '../../pages/catalog';
 import { ProductionShell } from '../ProductionShell';
 import { HOME_PATH, hashHref, productDetailsHref } from '../routePaths';
+import { useDocumentTitle } from '../useDocumentTitle';
 import { useCatalogCartSeam } from './useCatalogCartSeam';
 import { useCatalogCompareSeam } from './useCatalogCompareSeam';
 import { useCatalogFavoritesSeam } from './useCatalogFavoritesSeam';
@@ -26,6 +27,7 @@ export function CatalogRoute() {
   const cart = useCatalogCartSeam(products !== undefined);
   const favorites = useCatalogFavoritesSeam(products !== undefined);
   const compare = useCatalogCompareSeam(products !== undefined);
+  useDocumentTitle('Смартфоны');
 
   useEffect(() => {
     let mounted = true;

@@ -9,6 +9,7 @@ import {
   CATALOG_SMARTPHONES_PATH,
   productDetailsHref,
 } from '../routePaths';
+import { useDocumentTitle } from '../useDocumentTitle';
 import { useHomeCartSeam } from './useHomeCartSeam';
 
 interface HomeRouteData {
@@ -19,6 +20,7 @@ interface HomeRouteData {
 export function HomeRoute() {
   const [homeData, setHomeData] = useState<HomeRouteData>();
   const cart = useHomeCartSeam(homeData !== undefined);
+  useDocumentTitle('Главная');
 
   useEffect(() => {
     let mounted = true;

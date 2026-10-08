@@ -6,7 +6,7 @@ export function ReferenceIndex() {
   return (
     <main className="temporary-reference">
       <h1 className="temporary-reference__title">GoodCall</h1>
-      <p className="temporary-reference__note">
+      <p className="temporary-reference__note" lang="en">
         Temporary development reference surfaces. These are not product pages and will be removed
         once the reference surfaces are no longer needed.
       </p>

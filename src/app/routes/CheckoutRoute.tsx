@@ -13,6 +13,7 @@ import type { CheckoutFormState } from '../../pages/checkout';
 import { createDemoOrder, saveDemoOrder } from '../../pages/order-confirmation';
 import { ProductionShell } from '../ProductionShell';
 import { CART_PATH, HOME_PATH, ORDER_CONFIRMATION_PATH, hashHref } from '../routePaths';
+import { useDocumentTitle } from '../useDocumentTitle';
 
 export function CheckoutRoute() {
   const lines = useCartLineList();
@@ -21,6 +22,7 @@ export function CheckoutRoute() {
   const addressLookupClient = useMemo(() => createDaDataAddressClient(), []);
   const addressLookupConfigured = isCityLookupConfigured();
   const navigate = useNavigate();
+  useDocumentTitle('Оформление заказа');
 
   const placeOrder = (form: CheckoutFormState) => {
     saveDemoOrder(

@@ -12,6 +12,7 @@ import {
   productDetailsHref,
   searchPath,
 } from '../routePaths';
+import { useDocumentTitle } from '../useDocumentTitle';
 import { useSearchNavigation } from '../useSearchNavigation';
 
 const SHORTCUT_TARGETS = {
@@ -24,6 +25,7 @@ const SHORTCUT_TARGETS = {
 export function NotFoundRoute() {
   const handleSearchSubmit = useSearchNavigation();
   const [products, setProducts] = useState<readonly HomeProduct[]>();
+  useDocumentTitle('Страница не найдена');
 
   useEffect(() => {
     let mounted = true;

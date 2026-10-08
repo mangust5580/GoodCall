@@ -26,6 +26,7 @@ import {
   WARRANTY_PATH,
   hashHref,
 } from '../routePaths';
+import { useDocumentTitle } from '../useDocumentTitle';
 
 const INFO_LINKS: InfoLinks = {
   home: hashHref(HOME_PATH),
@@ -44,6 +45,8 @@ const INFO_LINKS: InfoLinks = {
 };
 
 export function DeliveryRoute() {
+  useDocumentTitle('Доставка и оплата');
+
   return (
     <ProductionShell>
       <DeliveryPage links={INFO_LINKS} />
@@ -52,6 +55,8 @@ export function DeliveryRoute() {
 }
 
 export function WarrantyRoute() {
+  useDocumentTitle('Гарантия и возврат');
+
   return (
     <ProductionShell>
       <WarrantyPage links={INFO_LINKS} />
@@ -60,6 +65,8 @@ export function WarrantyRoute() {
 }
 
 export function FaqRoute() {
+  useDocumentTitle('Часто задаваемые вопросы');
+
   return (
     <ProductionShell>
       <FaqPage links={INFO_LINKS} />
@@ -68,6 +75,8 @@ export function FaqRoute() {
 }
 
 export function AboutRoute() {
+  useDocumentTitle('О нас');
+
   return (
     <ProductionShell>
       <AboutPage links={INFO_LINKS} />
@@ -76,6 +85,8 @@ export function AboutRoute() {
 }
 
 export function ContactsRoute() {
+  useDocumentTitle('Контакты');
+
   return (
     <ProductionShell>
       <ContactsPage links={INFO_LINKS} />
@@ -84,6 +95,8 @@ export function ContactsRoute() {
 }
 
 export function PrivacyRoute() {
+  useDocumentTitle('Политика конфиденциальности');
+
   return (
     <ProductionShell>
       <PrivacyPage links={INFO_LINKS} />
@@ -92,6 +105,8 @@ export function PrivacyRoute() {
 }
 
 export function TermsRoute() {
+  useDocumentTitle('Пользовательское соглашение');
+
   return (
     <ProductionShell>
       <TermsPage links={INFO_LINKS} />
@@ -100,6 +115,8 @@ export function TermsRoute() {
 }
 
 export function OfferRoute() {
+  useDocumentTitle('Публичная оферта');
+
   return (
     <ProductionShell>
       <OfferPage links={INFO_LINKS} />

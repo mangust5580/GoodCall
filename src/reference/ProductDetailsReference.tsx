@@ -9,7 +9,7 @@ export function ProductDetailsReference() {
 
   return (
     <div className="product-details-reference">
-      <p className="product-details-reference__note">
+      <p className="product-details-reference__note" lang="en">
         Temporary development reference for the Product Details page family. Everything below is the
         real production shell around the real <code>ProductDetailsPage</code>. Product Details A
         covers the primary product surface from <code>Product_details.png</code>; Product Details B

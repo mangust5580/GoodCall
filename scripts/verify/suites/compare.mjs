@@ -692,6 +692,69 @@ check(
   'b1 compare: reload keeps stored JSON',
   (await evaluate(`localStorage.getItem('${COMPARE}')`)) === B1_COMPARE,
 );
+const settleMedia = () =>
+  evaluate(
+    `Promise.race([Promise.all([...document.querySelectorAll('.compare-product img')].map((img) => { img.loading = 'eager'; return img.complete ? null : new Promise((r) => { img.addEventListener('load', r); img.addEventListener('error', r); }); })), new Promise((r) => setTimeout(r, 6000))])`,
+  );
+const mediaGeometry = () =>
+  evaluate(
+    `(() => { const inside = (a, b) => a.left >= b.left - 1 && a.top >= b.top - 1 && a.right <= b.right + 1 && a.bottom <= b.bottom + 1; const apart = (a, b) => a.bottom <= b.top + 1 || b.bottom <= a.top + 1 || a.right <= b.left + 1 || b.right <= a.left + 1; return [...document.querySelectorAll('.compare-product')].map((p) => { const box = p.querySelector('.compare-product__media').getBoundingClientRect(); const media = [...p.querySelectorAll('.compare-product__media picture, .compare-product__media img')].filter((e) => e.getClientRects().length > 0).map((e) => e.getBoundingClientRect()); const text = [p.querySelector('.compare-product__title'), p.querySelector('.compare-product__prices')].map((e) => e.getBoundingClientRect()); const img = p.querySelector('.compare-product__media img').getBoundingClientRect(); return { title: p.querySelector('.compare-product__title').textContent.trim().slice(0, 24), ok: media.length > 0 && media.every((r) => inside(r, box) && text.every((t) => apart(r, t))), box: [Math.round(box.width), Math.round(box.height)], img: [Math.round(img.width), Math.round(img.height)] }; }); })()`,
+  );
+async function checkMediaGeometry(label, count, shotName) {
+  for (const [w, h, m] of [
+    [1440, 900, false],
+    [1024, 800, false],
+    [768, 1000, true],
+    [390, 844, true],
+  ]) {
+    await viewport(w, h, m);
+    await reload();
+    await waitFor(`document.querySelectorAll('.compare-product').length === ${count}`, label);
+    await settleMedia();
+    await sleep(150);
+    const geometry = await mediaGeometry();
+    check(
+      `${label} ${w}: every product image is contained by its media box and clear of title/price`,
+      geometry.length === count && geometry.every((g) => g.ok),
+      JSON.stringify(geometry.filter((g) => !g.ok)),
+    );
+    if (shotName) {
+      await evaluate('window.scrollTo(0, 0)');
+      await shot(`${shotName}-${w}`);
+    }
+  }
+  await viewport(1440, 900, false);
+}
+await checkMediaGeometry('media geometry', 4);
+const MIXED_COMPARE = JSON.stringify({
+  items: [
+    item(
+      'iphone-15-pro-128',
+      'Apple iPhone 15 Pro 128 ГБ, Натуральный титан',
+      109990,
+      124990,
+      4.8,
+      12,
+      'Apple',
+      128,
+      'Натуральный титан',
+    ),
+    item(
+      'macbook-air-13-m3-256',
+      'Apple MacBook Air 13 M3 8/256 ГБ, Полночь',
+      129990,
+      null,
+      4.9,
+      7,
+      'Apple',
+      256,
+      'Полночь',
+    ),
+  ],
+});
+await evaluate(`localStorage.setItem('${COMPARE}', ${JSON.stringify(MIXED_COMPARE)})`);
+await checkMediaGeometry('mixed smartphone + laptop media geometry', 2, 'compare-mixed');
+
 await evaluate(`localStorage.removeItem('${CART}'); localStorage.removeItem('${COMPARE}')`);
 
 check('no uncaught errors', consoleErrors.length === 0, consoleErrors.join(' ; '));

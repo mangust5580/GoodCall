@@ -27,6 +27,7 @@ import {
   hashHref,
   productDetailsHref,
 } from '../routePaths';
+import { useDocumentTitle } from '../useDocumentTitle';
 import { useCatalogCartSeam } from './useCatalogCartSeam';
 import { useCatalogCompareSeam } from './useCatalogCompareSeam';
 import { useCatalogFavoritesSeam } from './useCatalogFavoritesSeam';
@@ -60,6 +61,11 @@ const FALLBACK_CART_IMAGE: CartLineImage = { kind: 'catalog-fallback' };
 const LOADING_VIEW: ProductDetailsRouteView = { status: 'loading' };
 const NOT_FOUND_VIEW: ProductDetailsRouteView = { status: 'not-found' };
 const ERROR_VIEW: ProductDetailsRouteView = { status: 'error' };
+const STATE_TITLES = {
+  loading: 'Загрузка товара',
+  'not-found': 'Товар не найден',
+  error: 'Не удалось загрузить товар',
+} as const;
 
 function viewFromResult(
   result: ProductDetailsDataResult,
@@ -183,6 +189,7 @@ export function ProductDetailsRoute() {
         ? settled.view
         : LOADING_VIEW;
   const needsSmartphoneCatalog = view.status === 'ready' && view.smartphone;
+  useDocumentTitle(view.status === 'ready' ? view.product.title : STATE_TITLES[view.status]);
 
   useEffect(() => {
     if (!needsSmartphoneCatalog || smartphoneCatalogRequested.current) {

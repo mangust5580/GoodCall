@@ -9,7 +9,7 @@ export function CatalogReference() {
 
   return (
     <div className="catalog-reference">
-      <p className="catalog-reference__note">
+      <p className="catalog-reference__note" lang="en">
         Temporary development reference for the Catalog page family. Everything below is the real
         production shell around the real <code>CatalogPage</code>. Catalog A geometry is accepted.
         Catalog B filters are accepted. Catalog C renders the results region from deterministic
