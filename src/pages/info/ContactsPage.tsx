@@ -22,7 +22,6 @@ const STORE_WORDS: Readonly<Record<Intl.LDMLPluralRule, string>> = {
 
 const STORE_COUNT = `${String(DEMO_STORES.length)} ${STORE_WORDS[storePluralRules.select(DEMO_STORES.length)]} GoodCall`;
 const STORE_CITIES = [...new Set(DEMO_STORES.map((store) => store.city))].join(', ');
-const STORE_HOURS = [...new Set(DEMO_STORES.map((store) => store.hours))];
 
 interface ContactChannel {
   readonly icon: IconName;
@@ -63,7 +62,7 @@ export function ContactsPage({ links }: ContactsPageProps) {
       label: 'Магазины',
       value: STORE_COUNT,
       href: links.shops,
-      note: STORE_HOURS.length === 1 ? `${STORE_CITIES} · ${STORE_HOURS[0]}` : STORE_CITIES,
+      note: `Демо-точки самовывоза · ${STORE_CITIES}`,
     },
   ];
   const featuredStores = DEMO_STORES.slice(0, FEATURED_STORE_COUNT);
@@ -116,8 +115,9 @@ export function ContactsPage({ links }: ContactsPageProps) {
                 Наши магазины
               </h2>
               <p className="contacts-stores__lead">
-                Приходите в магазины GoodCall, чтобы посмотреть технику вживую и забрать заказ при
-                самовывозе.
+                Здесь показаны вымышленные магазины GoodCall для демонстрации самовывоза при
+                оформлении заказа. Реально посетить эти магазины или получить в них заказ нельзя.
+                Адреса и часы работы приведены для примера.
               </p>
             </div>
             <a

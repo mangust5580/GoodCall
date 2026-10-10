@@ -44,8 +44,9 @@ export function StoresPage({ homeHref, stores }: StoresPageProps) {
         <header className="stores-page__heading">
           <h1 className="stores-page__title">Магазины</h1>
           <p className="stores-page__lead">
-            Список фирменных магазинов GoodCall. Приходите, чтобы увидеть и протестировать технику
-            вживую.
+            Это демонстрационный список вымышленных магазинов GoodCall для сценария самовывоза. У
+            GoodCall нет действующих магазинов по указанным адресам: посетить их или получить
+            реальный заказ нельзя. Адреса и часы работы используются только как примеры.
           </p>
         </header>
 

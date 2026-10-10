@@ -35,11 +35,23 @@ async function open(page, path) {
 
 const page = await newPage();
 
+const SHOPS_DISCLOSURE =
+  'Это демонстрационный список вымышленных магазинов GoodCall для сценария самовывоза. У GoodCall нет действующих магазинов по указанным адресам: посетить их или получить реальный заказ нельзя. Адреса и часы работы используются только как примеры.';
+const CONTACTS_STORES_DISCLOSURE =
+  'Здесь показаны вымышленные магазины GoodCall для демонстрации самовывоза при оформлении заказа. Реально посетить эти магазины или получить в них заказ нельзя. Адреса и часы работы приведены для примера.';
+const VISIT_INVITATION = /приходите|вживую|протестировать технику/i;
+
 await open(page, '/shops');
 const shopNames = await page.evaluate(() =>
   [...document.querySelectorAll('.store-card__title')].map((el) => el.textContent.trim()),
 );
 check(shopNames.length === 6, `shops: demo store count ${shopNames.length}`);
+const shopsCopy = await page.evaluate(() => ({
+  lead: document.querySelector('.stores-page__lead')?.textContent.replace(/\s+/g, ' ').trim(),
+  mainText: document.querySelector('main').innerText,
+}));
+check(shopsCopy.lead === SHOPS_DISCLOSURE, `shops: demo disclosure lead ${shopsCopy.lead}`);
+check(!VISIT_INVITATION.test(shopsCopy.mainText), 'shops: no invitation to visit stores');
 
 await open(page, '/contacts');
 const facts = await page.evaluate(() => {
@@ -58,7 +70,12 @@ const facts = await page.evaluate(() => {
       label: li.querySelector('.contacts-channels__label').textContent.trim(),
       value: li.querySelector('.contacts-channels__value').textContent.trim(),
       href: li.querySelector('a.contacts-channels__value')?.getAttribute('href') ?? null,
+      note: li.querySelector('.contacts-channels__note')?.textContent.trim() ?? null,
     })),
+    storesLead: main
+      .querySelector('.contacts-stores__lead')
+      ?.textContent.replace(/\s+/g, ' ')
+      .trim(),
     stores: [...main.querySelectorAll('.contacts-store__title')].map((el) => el.textContent.trim()),
     storesCta: [...main.querySelectorAll('.contacts-stores a')].map((a) => [
       a.textContent.trim(),
@@ -97,6 +114,15 @@ check(
   channel('Магазины')?.value === '6 магазинов GoodCall' && channel('Магазины')?.href === '#/shops',
   `contacts: store channel ${JSON.stringify(channel('Магазины'))}`,
 );
+check(
+  channel('Магазины')?.note === 'Демо-точки самовывоза · Москва',
+  `contacts: store channel demo note ${channel('Магазины')?.note}`,
+);
+check(
+  facts.storesLead === CONTACTS_STORES_DISCLOSURE,
+  `contacts: stores demo disclosure ${facts.storesLead}`,
+);
+check(!VISIT_INVITATION.test(facts.mainText), 'contacts: no invitation to visit stores');
 check(facts.channels.length === 4, `contacts: four channels (${facts.channels.length})`);
 check(
   JSON.stringify(facts.stores) === JSON.stringify(shopNames.slice(0, 3)),
@@ -123,6 +149,55 @@ check(
   'contacts: no social destinations',
 );
 
+await open(page, '/privacy');
+const privacyText = await page.evaluate(() =>
+  document.querySelector('main').innerText.replace(/\s+/g, ' '),
+);
+check(
+  privacyText.includes(
+    'Данные демо-аккаунта, если вы в него вошли: признак входа, а после сохранения профиля — имя, фамилия, e-mail, телефон, дата рождения и пол.',
+  ),
+  'privacy: demo-account profile disclosure',
+);
+check(
+  privacyText.includes(
+    'Адреса доставки, сохранённые в демо-аккаунте: получатель, контактный телефон, город, адрес и почтовый индекс, если он указан.',
+  ),
+  'privacy: demo address book disclosure',
+);
+check(
+  privacyText.includes(
+    'Демо-аккаунт — признак входа, данные профиля и сохранённые адреса — тоже хранится в localStorage этого браузера.',
+  ),
+  'privacy: demo account localStorage disclosure',
+);
+check(
+  privacyText.includes(
+    'Данные демо-профиля и сохранённые адреса удаляются при выходе из демо-аккаунта. Корзина, избранное, сравнение и выбранный город при этом не очищаются.',
+  ),
+  'privacy: sign-out retention wording',
+);
+check(
+  !privacyText.includes('всё, что вы делаете в магазине, обрабатывается в вашем браузере'),
+  'privacy: no blanket in-browser processing claim',
+);
+
+const legalUpdated = () =>
+  page.evaluate(() => document.querySelector('.legal-document__updated')?.textContent.trim());
+check(
+  (await legalUpdated()) === 'Последнее обновление: 10 октября 2026 г.',
+  'privacy: updated date 10 October 2026',
+);
+for (const path of ['/terms', '/offer']) {
+  await open(page, path);
+  const updated = await legalUpdated();
+  check(
+    updated === 'Последнее обновление: 4 октября 2026 г.',
+    `${path}: updated date unchanged (${updated})`,
+  );
+}
+
+await open(page, '/contacts');
 const shell = await page.evaluate(() => ({
   header: [...document.querySelectorAll('.site-header__support')].map((a) => [
     a.textContent.trim(),

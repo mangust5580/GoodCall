@@ -144,12 +144,30 @@ Technically complete:
   owned by React Router using a GitHub Pages-safe hash strategy. See the
   Current routes section below.
 
-Active visual slice: none. Active implementation milestone: none. Quality G
-(Breakpoint Off-by-One Correction) is closed and published. No next milestone
-is approved; the next activity is selecting from the remaining Quality backlog
-when requested (see Quality remediation below).
+Active visual slice: none. Active implementation milestone: none. No next
+milestone is approved; select from `docs/master-backlog.md` when requested.
 
 Completed visual slices:
+
+- **WP-01A / Privacy & Demo Stores Truthfulness — USER VISUAL/UX PASS on
+  2026-10-10 (user-confirmed review of desktop and mobile Privacy, Shops and
+  Contacts), CLOSED and published.** It closes AUD-01 and AUD-02 from
+  `docs/master-backlog.md`, using the approved D-03 wording:
+  - `#/privacy` discloses the browser-local demo account (`goodcall.account.v1`:
+    sign-in flag, saved profile, address book). The data is removed on sign-out;
+    cart, favourites, compare and city stay.
+  - `#/shops` and the Contacts stores block state that the six GoodCall stores
+    are fictional demo pickup points with example addresses and hours, and no
+    longer invite visits.
+  - The Contacts «Магазины» row note reads «Демо-точки самовывоза · Москва».
+  - The Privacy «Последнее обновление» date is 10 October 2026, via the
+    optional `LegalDocumentPage.updatedDate` prop. Terms and Offer keep
+    4 October 2026.
+
+  `DEMO_STORES`, pickup and storage behaviour are unchanged. The `contacts`
+  suite asserts the wording and the legal dates. The rest of WP-01 (WP-01B:
+  support phone, store-heading affordance, FAQ/Terms/Offer copy, compare
+  retention wording) and store thumbnails remain open and not implemented.
 
 - **Quality G / Breakpoint Off-by-One Correction — USER VISUAL/UX PASS on
   2026-10-10, CLOSED and published.** Closes the Q-08 off-by-one slice only;
@@ -5366,11 +5384,11 @@ requested.
 
 ## Project closeout state
 
-Quality G is the last published milestone. **Active visual slice: none.
-Active implementation milestone: none.** No active code-level release blocker
-is known, and there is no approved next milestone. The next activity is
-selecting from the remaining Quality backlog when requested (see Quality
-remediation).
+WP-01A (Privacy & Demo Stores Truthfulness) is the last published milestone.
+**Active visual slice: none. Active implementation milestone: none.** No
+active code-level release blocker is known, and there is no approved next
+milestone. The next activity is selecting from `docs/master-backlog.md` when
+requested.
 
 Settings, Bonuses, Notifications, recently viewed, a real authenticated
 account and Checkout saved-address integration are intentionally omitted (not

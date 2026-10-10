@@ -8,7 +8,7 @@ import { InfoPageHeader } from './InfoPageHeader';
 import { legalSectionTitle } from './legalSection';
 import type { LegalContentsItem, LegalSection } from './legalSection';
 
-const LEGAL_UPDATED_NOTE = 'Последнее обновление: 4 октября 2026 г.';
+const DEFAULT_LEGAL_UPDATED_DATE = '4 октября 2026 г.';
 
 function legalHeadingId(id: string): string {
   return `${id}-title`;
@@ -78,6 +78,7 @@ interface LegalDocumentPageProps {
   readonly contentsIcon?: IconName;
   readonly intro?: ReactNode;
   readonly outro?: ReactNode;
+  readonly updatedDate?: string;
 }
 
 export function LegalDocumentPage({
@@ -89,6 +90,7 @@ export function LegalDocumentPage({
   contentsIcon = 'shield',
   intro,
   outro,
+  updatedDate = DEFAULT_LEGAL_UPDATED_DATE,
 }: LegalDocumentPageProps) {
   const contentsTitleId = `${className}-contents-title`;
 
@@ -131,7 +133,7 @@ export function LegalDocumentPage({
               </section>
             ))}
             {outro}
-            <p className="legal-document__updated">{LEGAL_UPDATED_NOTE}</p>
+            <p className="legal-document__updated">{`Последнее обновление: ${updatedDate}`}</p>
           </article>
         </div>
       </Container>
