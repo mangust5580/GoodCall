@@ -147,6 +147,23 @@ Technically complete:
 Active visual slice: none. Active implementation milestone: none. No next
 milestone is approved; select from `docs/master-backlog.md` when requested.
 
+- **WP-02 stage 1 / Honest catalog navigation — USER VISUAL PASS on
+  2026-10-10, CLOSED and published.** D-01 stage 1 was approved on 2026-10-10.
+
+- **Header:** «Каталог товаров»/«Каталог», «Ещё» and the seven unavailable
+  categories (Планшеты, Аксессуары, Наушники, Умные часы, ТВ и аудио, Игры и
+  консоли, Бытовая техника) no longer link to Home.
+  - `SiteHeader` renders an entry without an href as non-focusable text
+    (`<span>`, the Footer and Cart-categories pattern).
+  - Hover is limited to real links (`:any-link:hover`). Geometry, colours and
+    responsive behaviour are unchanged.
+  - Смартфоны and Ноутбуки stay links.
+- **CTAs:** the eleven generic «Перейти в каталог»/«В каталог» CTAs that open
+  `#/catalog/smartphones` now read «Перейти к смартфонам», and «К смартфонам»
+  on the PDP not-found and error states. Their destinations are unchanged.
+- **Stage 2** (`#/catalog`, a category landing page or a mega-menu) is
+  deferred until WP-11 and a separate decision.
+
 - **WP-05 / Cross-tab storage notifications — USER FUNCTIONAL PASS on
   2026-10-10 (two-tab acceptance), CLOSED and published.** No UI changed, so
   there is no visual gate.
@@ -5432,8 +5449,8 @@ requested.
 
 ## Project closeout state
 
-WP-05 (cross-tab storage notifications for four stores) is the last
-published milestone, after the Store Thumbnail Sizing Hotfix.
+WP-02 stage 1 (honest catalog navigation) is the last published milestone,
+after WP-05. WP-02 stage 2 stays deferred.
 **Active visual slice: none. Active implementation milestone: none.** No
 active code-level release blocker is known, and there is no approved next
 milestone. The next activity is selecting from `docs/master-backlog.md` when

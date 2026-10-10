@@ -699,7 +699,7 @@ console.log('stage: route states', new Date().toISOString());
       notFoundStatus.busy === null &&
       notFoundStatus.message === 'Такого товара нет или его страница пока недоступна.' &&
       JSON.stringify(notFoundStatus.actions) ===
-        JSON.stringify(['В каталог=#/catalog/smartphones', 'На главную=#/']) &&
+        JSON.stringify(['К смартфонам=#/catalog/smartphones', 'На главную=#/']) &&
       notFoundStatus.paddingTop === '96px' &&
       notFoundStatus.titleSize === '32px',
     `inactive: shared RouteStatus failure presentation ${JSON.stringify(notFoundStatus)}`,
@@ -719,7 +719,8 @@ console.log('stage: route states', new Date().toISOString());
       errorStatus.busy === null &&
       errorStatus.status === null &&
       errorStatus.message === 'Сервис временно недоступен. Попробуйте обновить страницу позже.' &&
-      JSON.stringify(errorStatus.actions) === JSON.stringify(['В каталог=#/catalog/smartphones']) &&
+      JSON.stringify(errorStatus.actions) ===
+        JSON.stringify(['К смартфонам=#/catalog/smartphones']) &&
       errorStatus.paddingTop === '96px' &&
       errorStatus.titleSize === '32px',
     `query error: shared RouteStatus failure semantics ${JSON.stringify(errorStatus)}`,

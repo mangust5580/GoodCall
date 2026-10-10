@@ -123,7 +123,7 @@ export function ComparePage({
 
         {itemCount === 0 ? (
           <EmptyState
-            action={{ label: 'Перейти в каталог', href: catalogHref }}
+            action={{ label: 'Перейти к смартфонам', href: catalogHref }}
             className="compare-empty"
             headingLevel="h1"
             icon="compare"

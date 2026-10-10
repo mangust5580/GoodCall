@@ -70,7 +70,7 @@ export function FavoritesPage({
 
         {itemCount === 0 ? (
           <EmptyState
-            action={{ label: 'Перейти в каталог', href: catalogHref }}
+            action={{ label: 'Перейти к смартфонам', href: catalogHref }}
             className="favorites-empty"
             headingLevel="h2"
             icon="heart"

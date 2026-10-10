@@ -111,7 +111,7 @@ export function AccountOrdersEmpty({ catalogHref, headingLevel }: AccountOrdersE
         Оформите заказ в каталоге — он появится здесь до конца сессии браузера.
       </p>
       <a className="ui-button ui-button--secondary account-orders-empty__action" href={catalogHref}>
-        Перейти в каталог
+        Перейти к смартфонам
       </a>
     </div>
   );

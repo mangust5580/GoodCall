@@ -950,16 +950,64 @@ for (const [width, height, suffix] of [
       tile.tagName,
       tile.getAttribute('href'),
     ]);
-    return { headerLinks, tiles };
+    const entryShape = (el) => ({
+      tag: el.tagName,
+      href: el.getAttribute('href'),
+      focusable: el.tabIndex >= 0,
+    });
+    const categoryShapes = Object.fromEntries(
+      [...document.querySelectorAll('.site-header__category')].map((el) => [
+        el.textContent.trim(),
+        entryShape(el),
+      ]),
+    );
+    const catalog = document.querySelector('.site-header__catalog');
+    const brandHref = document.querySelector('.site-header__brand')?.getAttribute('href');
+    const homeReloads = [
+      ...document.querySelectorAll('.site-header a, .site-header__categories a'),
+    ].filter(
+      (a) => !a.classList.contains('site-header__brand') && a.getAttribute('href') === brandHref,
+    ).length;
+    return {
+      headerLinks,
+      tiles,
+      categoryShapes,
+      catalog:
+        catalog === null
+          ? null
+          : { ...entryShape(catalog), cursor: getComputedStyle(catalog).cursor },
+      homeReloads,
+    };
   });
-  const unresolvedHeader = Object.entries(nav.headerLinks).filter(
+  const unresolvedHeader = Object.entries(nav.categoryShapes).filter(
     ([label]) => !['Смартфоны', 'Ноутбуки'].includes(label),
   );
   check(
     nav.headerLinks['Ноутбуки'] === '#/catalog/laptops' &&
       nav.headerLinks['Смартфоны'] === '#/catalog/smartphones' &&
-      unresolvedHeader.every(([, href]) => !href.startsWith('#/catalog/')),
-    `nav ${suffix}: header Ноутбуки link, others unchanged ${JSON.stringify(nav.headerLinks)}`,
+      nav.categoryShapes['Ноутбуки'].tag === 'A' &&
+      nav.categoryShapes['Смартфоны'].tag === 'A',
+    `nav ${suffix}: header Смартфоны and Ноутбуки stay real links ${JSON.stringify(nav.headerLinks)}`,
+  );
+  check(
+    unresolvedHeader.length === 8 &&
+      unresolvedHeader.some(([label]) => label === 'Ещё') &&
+      unresolvedHeader.every(
+        ([, shape]) => shape.tag === 'SPAN' && shape.href === null && !shape.focusable,
+      ),
+    `nav ${suffix}: unresolved categories and «Ещё» are non-interactive text ${JSON.stringify(unresolvedHeader)}`,
+  );
+  check(
+    nav.catalog !== null &&
+      nav.catalog.tag === 'SPAN' &&
+      nav.catalog.href === null &&
+      !nav.catalog.focusable &&
+      nav.catalog.cursor !== 'pointer',
+    `nav ${suffix}: «Каталог товаров» is non-interactive ${JSON.stringify(nav.catalog)}`,
+  );
+  check(
+    nav.homeReloads === 0,
+    `nav ${suffix}: no header catalog entry links back to Home (${nav.homeReloads})`,
   );
   const linkedTiles = nav.tiles.filter(([, tag]) => tag === 'A');
   check(
@@ -1498,7 +1546,7 @@ const HEADING_ROUTES = [
       variant: 'page',
       level: 'h2',
       icon: 'ui-icon--search',
-      actions: ['a:Перейти в каталог=#/catalog/smartphones', 'a:На главную=#/'],
+      actions: ['a:Перейти к смартфонам=#/catalog/smartphones', 'a:На главную=#/'],
     },
   },
   {
@@ -1511,7 +1559,7 @@ const HEADING_ROUTES = [
       variant: 'page',
       level: 'h2',
       icon: 'ui-icon--heart',
-      actions: ['a:Перейти в каталог=#/catalog/smartphones', 'a:На главную=#/'],
+      actions: ['a:Перейти к смартфонам=#/catalog/smartphones', 'a:На главную=#/'],
     },
   },
   {
@@ -1524,7 +1572,7 @@ const HEADING_ROUTES = [
       variant: 'page',
       level: 'h1',
       icon: 'ui-icon--compare',
-      actions: ['a:Перейти в каталог=#/catalog/smartphones'],
+      actions: ['a:Перейти к смартфонам=#/catalog/smartphones'],
     },
   },
   {
@@ -1537,7 +1585,7 @@ const HEADING_ROUTES = [
       variant: 'page',
       level: 'h1',
       icon: 'ui-icon--package',
-      actions: ['a:Перейти в каталог=#/catalog/smartphones', 'a:На главную=#/'],
+      actions: ['a:Перейти к смартфонам=#/catalog/smartphones', 'a:На главную=#/'],
     },
   },
   {

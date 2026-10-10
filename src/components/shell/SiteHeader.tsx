@@ -1,5 +1,6 @@
 import useEmblaCarousel from 'embla-carousel-react';
 import { useSyncExternalStore } from 'react';
+import type { ReactNode } from 'react';
 
 import { BrandLogo } from '../brand';
 import { Container } from '../layout';
@@ -12,7 +13,7 @@ import type { ShellAction, ShellActionInput } from './shellActions';
 
 export interface SiteHeaderCategory {
   readonly label: string;
-  readonly href: string;
+  readonly href?: string;
   readonly icon?: IconName;
 }
 
@@ -85,6 +86,22 @@ const CANONICAL_CATEGORIES: readonly { readonly label: string; readonly icon: Ic
   { label: 'Бытовая техника', icon: 'appliance' },
 ];
 
+interface HeaderEntryProps {
+  readonly className: string;
+  readonly href?: string;
+  readonly children: ReactNode;
+}
+
+function HeaderEntry({ className, href, children }: HeaderEntryProps) {
+  return href === undefined ? (
+    <span className={className}>{children}</span>
+  ) : (
+    <a className={className} href={href}>
+      {children}
+    </a>
+  );
+}
+
 function ActionLink(action: ShellAction) {
   const { label, icon, href, count } = action;
 
@@ -130,17 +147,16 @@ export function SiteHeader({
   );
   const [categoryViewportRef] = useEmblaCarousel(CATEGORY_CAROUSEL_OPTIONS);
   const home = homeHref ?? base;
-  const catalog = catalogHref ?? base;
   const categoryItems =
     categories ??
     CANONICAL_CATEGORIES.map((category) => ({
       ...category,
       href:
         category.label === SMARTPHONES_LABEL
-          ? (smartphonesHref ?? catalog)
+          ? (smartphonesHref ?? catalogHref)
           : category.label === LAPTOPS_LABEL
-            ? (laptopsHref ?? catalog)
-            : catalog,
+            ? (laptopsHref ?? catalogHref)
+            : catalogHref,
     }));
   const actions = shellActions({ fallbackHref: base, ...actionInput });
 
@@ -167,11 +183,11 @@ export function SiteHeader({
             <BrandLogo />
           </a>
 
-          <a className="site-header__catalog" href={catalog}>
+          <HeaderEntry className="site-header__catalog" href={catalogHref}>
             <Icon name="menu" />
             <span className="site-header__catalog-label">Каталог товаров</span>
             <span className="site-header__catalog-label-short">Каталог</span>
-          </a>
+          </HeaderEntry>
 
           <div className="site-header__search">
             <SearchField
@@ -210,17 +226,20 @@ export function SiteHeader({
             <ul className="site-header__category-list">
               {categoryItems.map((category) => (
                 <li className="site-header__category-item" key={category.label}>
-                  <a className="site-header__category" href={category.href}>
+                  <HeaderEntry className="site-header__category" href={category.href}>
                     {category.icon ? <Icon name={category.icon} /> : null}
                     <span className="site-header__category-label">{category.label}</span>
-                  </a>
+                  </HeaderEntry>
                 </li>
               ))}
               <li className="site-header__category-item">
-                <a className="site-header__category site-header__category--all" href={catalog}>
+                <HeaderEntry
+                  className="site-header__category site-header__category--all"
+                  href={catalogHref}
+                >
                   <Icon name="menu" />
                   <span className="site-header__category-label">Ещё</span>
-                </a>
+                </HeaderEntry>
               </li>
             </ul>
           </div>

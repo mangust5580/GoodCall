@@ -86,7 +86,7 @@ export function NotFoundPage({
                 className="ui-button ui-button--secondary not-found-hero__action"
                 href={catalogHref}
               >
-                Перейти в каталог
+                Перейти к смартфонам
               </a>
             </div>
             <div className="not-found-hero__search">

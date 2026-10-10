@@ -222,7 +222,7 @@ export function AboutPage({ links }: AboutPageProps) {
               Связаться с нами
             </a>
             <a className="ui-button ui-button--secondary about-cta__action" href={links.catalog}>
-              Перейти в каталог
+              Перейти к смартфонам
             </a>
           </div>
         </div>

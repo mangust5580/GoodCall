@@ -104,7 +104,7 @@ function ProductRouteNotFound() {
       actions={
         <>
           <Link className="ui-button ui-button--primary" to={CATALOG_SMARTPHONES_PATH}>
-            В каталог
+            К смартфонам
           </Link>
           <Link className="ui-button ui-button--secondary" to={HOME_PATH}>
             На главную
@@ -123,7 +123,7 @@ function ProductRouteError() {
     <RouteStatus
       actions={
         <Link className="ui-button ui-button--primary" to={CATALOG_SMARTPHONES_PATH}>
-          В каталог
+          К смартфонам
         </Link>
       }
       kind="failure"

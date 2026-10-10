@@ -117,7 +117,7 @@ export function OrderConfirmationPage({
 
         {order === undefined ? (
           <EmptyState
-            action={{ label: 'Перейти в каталог', href: catalogHref }}
+            action={{ label: 'Перейти к смартфонам', href: catalogHref }}
             className="order-empty"
             headingLevel="h1"
             icon="package"

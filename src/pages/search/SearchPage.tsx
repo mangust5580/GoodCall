@@ -336,7 +336,7 @@ export function SearchPage({
           filteredEmpty
         ) : (
           <EmptyState
-            action={{ label: 'Перейти в каталог', href: catalogHref }}
+            action={{ label: 'Перейти к смартфонам', href: catalogHref }}
             className="search-empty"
             headingLevel="h2"
             icon="search"

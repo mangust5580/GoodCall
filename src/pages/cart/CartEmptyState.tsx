@@ -26,7 +26,7 @@ export function CartEmptyState({ homeHref, catalogHref }: CartEmptyStateProps) {
         </p>
         <div className="cart-empty__actions">
           <a className="ui-button ui-button--primary cart-empty__action" href={catalogHref}>
-            Перейти в каталог
+            Перейти к смартфонам
           </a>
           <a className="ui-button ui-button--secondary cart-empty__action" href={homeHref}>
             На главную
