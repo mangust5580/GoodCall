@@ -1623,6 +1623,163 @@ for (const reference of ['catalog', 'product-details', 'home', 'header', 'compon
   await isolated.close();
 }
 
+console.log('stage: breakpoints', new Date().toISOString());
+const BLOG_ARTICLE_HASH = '#/blog/how-to-choose-smartphone-2024';
+const boundaryValue = ({ selector, property }) => {
+  const style = getComputedStyle(document.querySelector(selector));
+  return property === 'tracks'
+    ? style.gridTemplateColumns.split(' ').length
+    : style.getPropertyValue(property);
+};
+const BLOG_BOUNDARIES = [
+  {
+    name: 'blog hero stacks',
+    hash: '#/blog',
+    below: 899,
+    at: 900,
+    selector: '.blog-hero',
+    property: 'flex-direction',
+    narrow: 'column',
+    wide: 'row',
+  },
+  {
+    name: 'blog article split grid',
+    hash: BLOG_ARTICLE_HASH,
+    below: 767,
+    at: 768,
+    selector: '.blog-article__split',
+    property: 'tracks',
+    narrow: 1,
+    wide: 2,
+  },
+  {
+    name: 'blog article spec media offset',
+    hash: BLOG_ARTICLE_HASH,
+    below: 767,
+    at: 768,
+    selector: '.blog-article__spec-media',
+    property: 'margin-top',
+    narrow: '0px',
+    wide: '32px',
+  },
+  {
+    name: 'blog article media row',
+    hash: BLOG_ARTICLE_HASH,
+    below: 899,
+    at: 900,
+    selector: '.blog-article__media-row',
+    property: 'tracks',
+    narrow: 1,
+    wide: 2,
+  },
+  {
+    name: 'blog article tips grid',
+    hash: BLOG_ARTICLE_HASH,
+    below: 559,
+    at: 560,
+    selector: '.blog-article__tips',
+    property: 'tracks',
+    narrow: 1,
+    wide: 2,
+  },
+  {
+    name: 'blog article tips art',
+    hash: BLOG_ARTICLE_HASH,
+    below: 559,
+    at: 560,
+    selector: '.blog-article__tips-art',
+    property: 'width',
+    narrow: '120px',
+    wide: '200px',
+  },
+  {
+    name: 'blog related grid',
+    hash: BLOG_ARTICLE_HASH,
+    below: 1023,
+    at: 1024,
+    selector: '.blog-related__grid',
+    property: 'tracks',
+    narrow: 2,
+    wide: 3,
+  },
+];
+const BLOG_WIDTHS = [
+  ...new Set([
+    ...BLOG_BOUNDARIES.flatMap((boundary) => [boundary.below, boundary.at]),
+    1440,
+    1024,
+    768,
+    390,
+    320,
+  ]),
+].sort((a, b) => a - b);
+for (const width of BLOG_WIDTHS) {
+  const p = await newPage(width, 900);
+  for (const hash of ['#/blog', BLOG_ARTICLE_HASH]) {
+    await p.goto(`${NEW}${hash}`);
+    await p.waitForSelector('main h1');
+    await p.waitForTimeout(150);
+    const facts = await p.evaluate(() => ({
+      viewport: window.innerWidth,
+      overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+    }));
+    check(
+      facts.viewport === width && facts.overflow <= 0,
+      `breakpoints: ${hash} at width ${width} has no overflow ${JSON.stringify(facts)}`,
+    );
+    for (const boundary of BLOG_BOUNDARIES) {
+      if (boundary.hash !== hash || (width !== boundary.below && width !== boundary.at)) continue;
+      await p.waitForSelector(boundary.selector);
+      const value = await p.evaluate(boundaryValue, {
+        selector: boundary.selector,
+        property: boundary.property,
+      });
+      const expected = width === boundary.at ? boundary.wide : boundary.narrow;
+      check(
+        value === expected,
+        `breakpoints: ${boundary.name} at width ${width} → ${JSON.stringify(value)} (expected ${JSON.stringify(expected)}; switches at ${boundary.at})`,
+      );
+    }
+  }
+  await p.close();
+}
+for (const width of [559, 560, 1440, 390, 320]) {
+  const p = await newPage(width, 900);
+  await p.goto(`${NEW}#/login`);
+  await p.waitForSelector('main h1');
+  await p.click('main button', { hasText: 'Войти в демо-аккаунт' });
+  await p.waitForFunction(
+    () => document.querySelector('main h1')?.textContent === 'Личный кабинет',
+  );
+  await p.evaluate(() => {
+    location.hash = '#/account/profile';
+  });
+  await p.waitForSelector('.account-profile__submit');
+  const facts = await p.evaluate(() => {
+    const submit = document.querySelector('.account-profile__submit');
+    const parent = submit.parentElement;
+    const parentStyle = getComputedStyle(parent);
+    const content =
+      parent.clientWidth -
+      parseFloat(parentStyle.paddingLeft) -
+      parseFloat(parentStyle.paddingRight);
+    return {
+      viewport: window.innerWidth,
+      overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      fullWidth: Math.abs(submit.getBoundingClientRect().width - content) <= 1,
+    };
+  });
+  check(
+    facts.viewport === width && facts.overflow <= 0 && facts.fullWidth === width < 560,
+    `breakpoints: account profile submit at width ${width} is ${width < 560 ? 'full-width' : 'intrinsic'} with no overflow ${JSON.stringify(facts)}`,
+  );
+  await p.evaluate(() => {
+    localStorage.clear();
+    sessionStorage.clear();
+  });
+  await p.close();
+}
+
 console.log('stage: reference', new Date().toISOString());
 async function capture(base, path, width, ready, name) {
   const p = await newPage(width, 900);

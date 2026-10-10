@@ -1409,6 +1409,60 @@ for (const slug of ['iphone-15-128', 'apple-watch-series-9-45', 'airpods-pro-2-u
   }
 }
 
+console.log('stage: breakpoints', new Date().toISOString());
+const OFFER_BOUNDARY = {
+  767: { tablet: false, desktop: false },
+  768: { tablet: true, desktop: false },
+  1199: { tablet: true, desktop: false },
+  1200: { tablet: false, desktop: true },
+};
+for (const [widthKey, expected] of Object.entries(OFFER_BOUNDARY)) {
+  const width = Number(widthKey);
+  const page = await newPage(width, 900);
+  scenario = {};
+  await openPdp(page, 'iphone-15-128');
+  await page.waitForSelector('.product-key-specs .product-specs');
+  const layout = await page.evaluate(() => {
+    const offer = document.querySelector('.product-offer');
+    const sections = [...offer.querySelectorAll(':scope > .product-offer__section')];
+    const style = (el) => getComputedStyle(el);
+    const offerRect = offer.getBoundingClientRect();
+    const purchaseRect = document.querySelector('.product-purchase').getBoundingClientRect();
+    const galleryRect = document.querySelector('.product-gallery').getBoundingClientRect();
+    return {
+      viewport: window.innerWidth,
+      overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      offerTracks: style(offer).gridTemplateColumns.split(' ').length,
+      sections: sections.length,
+      secondPaddingTop: style(sections[1]).paddingTop,
+      thirdBorderBottom: style(sections[2]).borderBottomWidth,
+      specsColumns: style(document.querySelector('.product-key-specs .product-specs')).columnCount,
+      offerBesidePurchase: offerRect.left >= purchaseRect.right - 1,
+      offerBelowGallery: offerRect.top >= galleryRect.bottom - 1,
+    };
+  });
+  const tabletRules =
+    layout.offerTracks === 2 &&
+    layout.secondPaddingTop === '0px' &&
+    layout.thirdBorderBottom === '0px' &&
+    layout.specsColumns === '2';
+  const singleColumnRules =
+    layout.offerTracks === 1 &&
+    layout.secondPaddingTop !== '0px' &&
+    layout.thirdBorderBottom !== '0px' &&
+    layout.specsColumns === 'auto';
+  check(
+    layout.viewport === width &&
+      layout.overflow <= 0 &&
+      layout.sections >= 3 &&
+      (expected.tablet ? tabletRules : singleColumnRules) &&
+      layout.offerBesidePurchase === expected.desktop &&
+      layout.offerBelowGallery === !expected.desktop,
+    `breakpoints: PDP offer/key specs at width ${width} use the ${expected.desktop ? 'desktop' : expected.tablet ? 'tablet two-column' : 'mobile'} layout ${JSON.stringify(layout)}`,
+  );
+  await page.close();
+}
+
 console.log('stage: keyboard', new Date().toISOString());
 {
   const page = await newPage(1440, 900);

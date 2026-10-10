@@ -594,7 +594,7 @@
 
   @include product-details-surface;
 
-  @include h.media-range(768px, 1199px) {
+  @include h.media-range(768px, 1200px) {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     column-gap: 32px;
   }
@@ -613,7 +613,7 @@
       padding-top: 0;
     }
 
-    @include h.media-range(768px, 1199px) {
+    @include h.media-range(768px, 1200px) {
       &:nth-child(2) {
         padding-top: 0;
       }
@@ -1006,7 +1006,7 @@
   }
 
   .product-specs {
-    @include h.media-range(768px, 1199px) {
+    @include h.media-range(768px, 1200px) {
       columns: 2;
       column-gap: 40px;
     }

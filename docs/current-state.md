@@ -144,13 +144,16 @@ Technically complete:
   owned by React Router using a GitHub Pages-safe hash strategy. See the
   Current routes section below.
 
-Active visual slice: none. Active implementation milestone: none. Quality F
-(Cart Recommendations from Home Curation) is closed and published. No next
-milestone is approved; the next activity is selecting from the remaining
-Quality backlog when requested (see Quality remediation below).
+Active visual slice: none. Active implementation milestone: none. Quality G
+(Breakpoint Off-by-One Correction) is closed and published. No next milestone
+is approved; the next activity is selecting from the remaining Quality backlog
+when requested (see Quality remediation below).
 
 Completed visual slices:
 
+- **Quality G / Breakpoint Off-by-One Correction — USER VISUAL/UX PASS on
+  2026-10-10, CLOSED and published.** Closes the Q-08 off-by-one slice only;
+  residual Q-08 stays open. See the Quality remediation section below.
 - **Quality F / Cart Recommendations from Home Curation — USER VISUAL/UX PASS
   on 2026-10-10, CLOSED and published.** Closes audit item Q-03. See the
   Quality remediation section below.
@@ -5325,15 +5328,45 @@ Durable results:
   URL/thumbnail/artwork image precedence (card-for-card equal to Home) and the
   1440/1024/768/390/320 layout.
 
-Still open (not started): Q-07 typography roles, Q-08 breakpoints, Q-13 reference lazy loading, Q-14 footer destinations, Q-15
-cross-category Search (product decision), Q-18 rating separator.
+**Quality G / Breakpoint Off-by-One Correction — CLOSED, USER VISUAL/UX PASS
+on 2026-10-10 (accepted without screenshots).** Closes the Q-08 off-by-one
+defect slice only.
+
+Durable results:
+
+- 11 legacy `N-1px` upper bounds now use the system boundary `N`:
+  - PDP `h.media-range(768px, 1200px)` ×3 (`.product-offer`, its sections,
+    key-specs `.product-specs`);
+  - Blog `h.media-max` ×7 (`900px` hero and media row, `768px` split and spec
+    media, `560px` tips and tips art, `1024px` related grid);
+  - Account `.account-profile__submit` `h.media-max(560px)` ×1.
+- Mixin semantics are unchanged: `media-up` is inclusive (`width >= N`),
+  `media-max`/`media-range` upper bounds are exclusive (`width < N`). Pass the
+  boundary itself, never `N-1px`.
+- Each affected layout now switches at the same width as its sibling rules;
+  every other width is unchanged.
+- The `product-details` suite asserts the PDP offer/key-specs layout at
+  767/768/1199/1200. The `laptops` suite asserts Blog at 559/560, 767/768,
+  899/900 and 1023/1024, Account profile submit at 559/560, and no overflow at
+  those widths plus 1440/1024/768/390/320. Protected reference pixel diffs stay 0.
+
+**Q-08 residual — open, deferred, not approved for implementation.** Wider
+breakpoint harmonization remains a backlog item. The existing one-off values
+(`620`, `520`, `760`, `780`, `680`, `1080`, `1300`, …) are not defects by
+themselves. A named breakpoint system is not approved; it depends on a future
+Foundations/design decision.
+
+Still open (not started): Q-07 typography roles, Q-08 residual breakpoint
+harmonization (deferred), Q-13 reference lazy loading, Q-14 footer
+destinations, Q-15 cross-category Search (product decision), Q-18 rating
+separator.
 
 No next milestone is approved; select from the remaining backlog when
 requested.
 
 ## Project closeout state
 
-Quality F is the last published milestone. **Active visual slice: none.
+Quality G is the last published milestone. **Active visual slice: none.
 Active implementation milestone: none.** No active code-level release blocker
 is known, and there is no approved next milestone. The next activity is
 selecting from the remaining Quality backlog when requested (see Quality

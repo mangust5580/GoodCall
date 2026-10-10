@@ -65,7 +65,7 @@ $blog-card-radius: 16px;
     mask-image: linear-gradient(90deg, transparent 0%, #000 22%, #000 100%);
   }
 
-  @include h.media-max(899px) {
+  @include h.media-max(900px) {
     flex-direction: column;
     align-items: stretch;
     min-height: 0;
@@ -659,7 +659,7 @@ $blog-card-radius: 16px;
       line-height: 0;
     }
 
-    @include h.media-max(767px) {
+    @include h.media-max(768px) {
       grid-template-columns: minmax(0, 1fr);
       gap: 20px;
     }
@@ -696,7 +696,7 @@ $blog-card-radius: 16px;
     margin-top: 32px;
     border-radius: $blog-card-radius;
 
-    @include h.media-max(767px) {
+    @include h.media-max(768px) {
       margin-top: 0;
     }
   }
@@ -714,7 +714,7 @@ $blog-card-radius: 16px;
       line-height: 0;
     }
 
-    @include h.media-max(899px) {
+    @include h.media-max(900px) {
       grid-template-columns: minmax(0, 1fr);
       gap: 16px;
     }
@@ -775,7 +775,7 @@ $blog-card-radius: 16px;
       line-height: 0;
     }
 
-    @include h.media-max(559px) {
+    @include h.media-max(560px) {
       grid-template-columns: minmax(0, 1fr);
       gap: 12px;
 
@@ -837,7 +837,7 @@ $blog-card-radius: 16px;
     width: 200px;
     height: auto;
 
-    @include h.media-max(559px) {
+    @include h.media-max(560px) {
       width: 120px;
     }
   }
@@ -949,7 +949,7 @@ $blog-card-radius: 16px;
     padding: 0;
     list-style: none;
 
-    @include h.media-max(1023px) {
+    @include h.media-max(1024px) {
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
