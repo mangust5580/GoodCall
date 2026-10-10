@@ -149,6 +149,24 @@ milestone is approved; select from `docs/master-backlog.md` when requested.
 
 Completed visual slices:
 
+- **Store Thumbnails — USER VISUAL PASS on 2026-10-10 (user's explicit
+  «принимаю» for the square thumbnails and their integration), CLOSED and
+  published.**
+  - Six local 512×512 WebP illustrations are mapped by stable `DEMO_STORES`
+    ID through an optional `StorePoint.thumbnail` (`{ src, width, height }`).
+    They are AI-generated fictional retail interiors, not photographs of the
+    malls or of operating stores.
+  - They fill the existing square visual slots, unchanged in size: fluid
+    60–72px on `#/shops` (10px radius) and 52px in the Contacts «Наши
+    магазины» block (14px radius). Images are lazy, decorative `alt=""` and
+    use `object-fit: cover` clipped by the slot.
+  - `components/media/FallbackImage` renders the existing store icon when a
+    thumbnail is absent or fails to load. It does not retry.
+  - Copy, WP-01A disclosures, IDs, pickup and the dataset are otherwise
+    unchanged.
+  - The `contacts` suite asserts the ID mapping, uniqueness, lazy/decorative
+    attributes, 512×512 decoding, square slots and the error fallback.
+
 - **WP-01A / Privacy & Demo Stores Truthfulness — USER VISUAL/UX PASS on
   2026-10-10 (user-confirmed review of desktop and mobile Privacy, Shops and
   Contacts), CLOSED and published.** It closes AUD-01 and AUD-02 from
@@ -5384,7 +5402,7 @@ requested.
 
 ## Project closeout state
 
-WP-01A (Privacy & Demo Stores Truthfulness) is the last published milestone.
+Store Thumbnails is the last published milestone (after WP-01A).
 **Active visual slice: none. Active implementation milestone: none.** No
 active code-level release blocker is known, and there is no approved next
 milestone. The next activity is selecting from `docs/master-backlog.md` when

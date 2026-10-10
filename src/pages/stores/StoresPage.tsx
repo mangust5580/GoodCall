@@ -1,5 +1,6 @@
 import type { StorePoint } from '../../commerce/shops';
 import { Breadcrumbs, Container } from '../../components/layout';
+import { FallbackImage } from '../../components/media';
 import { Icon } from '../../components/ui';
 
 export interface StoresPageProps {
@@ -71,7 +72,11 @@ export function StoresPage({ homeHref, stores }: StoresPageProps) {
             <li className="stores-list__item" key={store.id}>
               <article aria-labelledby={storeTitleId(store)} className="store-card">
                 <span className="store-card__visual">
-                  <Icon className="store-card__visual-icon" name="store" />
+                  <FallbackImage
+                    className="store-card__image"
+                    fallback={<Icon className="store-card__visual-icon" name="store" />}
+                    image={store.thumbnail}
+                  />
                 </span>
                 <div className="store-card__body">
                   <h2 className="store-card__title" id={storeTitleId(store)}>

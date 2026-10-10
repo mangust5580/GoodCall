@@ -2,6 +2,7 @@ import { STOREFRONT_SUPPORT } from '../../commerce/storefront';
 import contactsStoreInterior from '../../assets/media/contacts/contacts-store-interior.webp';
 import { DEMO_STORES } from '../../commerce/shops';
 import { Container } from '../../components/layout';
+import { FallbackImage } from '../../components/media';
 import { Icon } from '../../components/ui';
 import type { IconName } from '../../components/ui';
 import type { InfoLinks } from './infoLinks';
@@ -132,7 +133,11 @@ export function ContactsPage({ links }: ContactsPageProps) {
               <li className="contacts-stores__item" key={store.id}>
                 <article aria-labelledby={`contacts-store-${store.id}`} className="contacts-store">
                   <span className="contacts-store__visual">
-                    <Icon name="store" />
+                    <FallbackImage
+                      className="contacts-store__image"
+                      fallback={<Icon name="store" />}
+                      image={store.thumbnail}
+                    />
                   </span>
                   <div className="contacts-store__body">
                     <h3 className="contacts-store__title" id={`contacts-store-${store.id}`}>

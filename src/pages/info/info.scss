@@ -1488,6 +1488,7 @@ $legal-sticky-top-compact: 92px;
     place-items: center;
     width: 52px;
     height: 52px;
+    overflow: hidden;
     background-color: var(--role-surface-brand-soft);
     border-radius: 14px;
     color: var(--role-text-link);
@@ -1495,6 +1496,13 @@ $legal-sticky-top-compact: 92px;
     .ui-icon {
       --control-icon-size: 26px;
     }
+  }
+
+  &__image {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
   }
 
   &__body {

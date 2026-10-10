@@ -1,3 +1,16 @@
+import storeAviapark from '../../assets/media/contacts/store-moscow-aviapark.webp';
+import storeColumbus from '../../assets/media/contacts/store-moscow-columbus.webp';
+import storeEvropeisky from '../../assets/media/contacts/store-moscow-evropeisky.webp';
+import storeMegapolis from '../../assets/media/contacts/store-moscow-megapolis.webp';
+import storeMetropolis from '../../assets/media/contacts/store-moscow-metropolis.webp';
+import storeRioDmitrovka from '../../assets/media/contacts/store-moscow-rio-dmitrovka.webp';
+
+export interface StoreThumbnail {
+  readonly src: string;
+  readonly width: number;
+  readonly height: number;
+}
+
 export interface StorePoint {
   readonly id: string;
   readonly name: string;
@@ -5,9 +18,15 @@ export interface StorePoint {
   readonly address: string;
   readonly hours: string;
   readonly metro?: string;
+  readonly thumbnail?: StoreThumbnail;
 }
 
 const DEMO_STORE_HOURS = 'Ежедневно 10:00 – 22:00';
+const STORE_THUMBNAIL_SIZE = 512;
+
+function storeThumbnail(src: string): StoreThumbnail {
+  return { src, width: STORE_THUMBNAIL_SIZE, height: STORE_THUMBNAIL_SIZE };
+}
 
 export const DEMO_STORES: readonly StorePoint[] = [
   {
@@ -17,6 +36,7 @@ export const DEMO_STORES: readonly StorePoint[] = [
     address: 'Ходынский бульвар, 4',
     hours: DEMO_STORE_HOURS,
     metro: 'ЦСКА',
+    thumbnail: storeThumbnail(storeAviapark),
   },
   {
     id: 'moscow-evropeisky',
@@ -25,6 +45,7 @@ export const DEMO_STORES: readonly StorePoint[] = [
     address: 'пл. Киевского вокзала, 2',
     hours: DEMO_STORE_HOURS,
     metro: 'Киевская',
+    thumbnail: storeThumbnail(storeEvropeisky),
   },
   {
     id: 'moscow-metropolis',
@@ -33,6 +54,7 @@ export const DEMO_STORES: readonly StorePoint[] = [
     address: 'Ленинградское ш., 16А, стр. 4',
     hours: DEMO_STORE_HOURS,
     metro: 'Войковская',
+    thumbnail: storeThumbnail(storeMetropolis),
   },
   {
     id: 'moscow-rio-dmitrovka',
@@ -41,6 +63,7 @@ export const DEMO_STORES: readonly StorePoint[] = [
     address: 'ул. Дмитровка, 163А',
     hours: DEMO_STORE_HOURS,
     metro: 'Алтуфьево',
+    thumbnail: storeThumbnail(storeRioDmitrovka),
   },
   {
     id: 'moscow-columbus',
@@ -49,6 +72,7 @@ export const DEMO_STORES: readonly StorePoint[] = [
     address: 'Кировоградская ул., 13А',
     hours: DEMO_STORE_HOURS,
     metro: 'Пражская',
+    thumbnail: storeThumbnail(storeColumbus),
   },
   {
     id: 'moscow-megapolis',
@@ -57,6 +81,7 @@ export const DEMO_STORES: readonly StorePoint[] = [
     address: 'Андропова проспект, 8',
     hours: DEMO_STORE_HOURS,
     metro: 'Технопарк',
+    thumbnail: storeThumbnail(storeMegapolis),
   },
 ];
 

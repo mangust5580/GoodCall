@@ -99,9 +99,17 @@
     justify-content: center;
     width: h.fluid(72, 60);
     aspect-ratio: 1;
+    overflow: hidden;
     background-color: var(--role-surface-brand-soft);
     border-radius: 10px;
     color: var(--role-text-link);
+  }
+
+  &__image {
+    display: block;
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
   }
 
   &__visual-icon {

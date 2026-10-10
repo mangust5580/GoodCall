@@ -40,6 +40,134 @@ const SHOPS_DISCLOSURE =
 const CONTACTS_STORES_DISCLOSURE =
   'Здесь показаны вымышленные магазины GoodCall для демонстрации самовывоза при оформлении заказа. Реально посетить эти магазины или получить в них заказ нельзя. Адреса и часы работы приведены для примера.';
 const VISIT_INVITATION = /приходите|вживую|протестировать технику/i;
+const STORE_IDS = [
+  'moscow-aviapark',
+  'moscow-evropeisky',
+  'moscow-metropolis',
+  'moscow-rio-dmitrovka',
+  'moscow-columbus',
+  'moscow-megapolis',
+];
+
+function storeVisuals(cardSelector, visualSelector) {
+  return page.evaluate(
+    ([cards, visual]) =>
+      [...document.querySelectorAll(cards)].map((card) => {
+        const slot = card.querySelector(visual);
+        const image = slot?.querySelector('img');
+        return {
+          id: card.querySelector('[id]')?.id ?? '',
+          src: image?.getAttribute('src') ?? null,
+          alt: image?.getAttribute('alt') ?? null,
+          loading: image?.getAttribute('loading') ?? null,
+          width: image?.getAttribute('width') ?? null,
+          height: image?.getAttribute('height') ?? null,
+          icon: slot?.querySelector('.ui-icon--store') !== null,
+          slotWidth: Math.round(slot?.getBoundingClientRect().width ?? 0),
+          slotHeight: Math.round(slot?.getBoundingClientRect().height ?? 0),
+        };
+      }),
+    [cardSelector, visualSelector],
+  );
+}
+
+function checkStoreVisuals(label, visuals, ids) {
+  check(
+    visuals.length === ids.length &&
+      visuals.every(
+        (visual, index) =>
+          visual.id.includes(ids[index]) &&
+          visual.src !== null &&
+          visual.src.includes(`store-${ids[index]}`) &&
+          visual.src.endsWith('.webp') &&
+          !visual.icon,
+      ),
+    `${label}: thumbnails mapped to store IDs ${JSON.stringify(visuals.map((v) => [v.id, v.src]))}`,
+  );
+  check(
+    new Set(visuals.map((visual) => visual.src)).size === visuals.length,
+    `${label}: unique thumbnails`,
+  );
+  check(
+    visuals.every(
+      (visual) =>
+        visual.alt === '' &&
+        visual.loading === 'lazy' &&
+        visual.width === '512' &&
+        visual.height === '512',
+    ),
+    `${label}: decorative lazy thumbnails with intrinsic size`,
+  );
+  check(
+    visuals.every((visual) => visual.slotWidth > 0 && visual.slotWidth === visual.slotHeight),
+    `${label}: square thumbnail slots ${JSON.stringify(visuals.map((v) => [v.slotWidth, v.slotHeight]))}`,
+  );
+}
+
+async function checkThumbnailsLoad(label, sources) {
+  const statuses = await page.evaluate(
+    (urls) =>
+      Promise.all(
+        urls.map((url) =>
+          fetch(url).then(
+            (response) => `${response.status} ${response.headers.get('content-type')}`,
+          ),
+        ),
+      ),
+    sources,
+  );
+  check(
+    statuses.every((status) => status.startsWith('200 image/webp')),
+    `${label}: thumbnail assets served ${JSON.stringify(statuses)}`,
+  );
+  const decoded = await page.evaluate(
+    (urls) =>
+      Promise.all(
+        urls.map(
+          (url) =>
+            new Promise((resolve) => {
+              const image = new Image();
+              image.onload = () => {
+                resolve(`${String(image.naturalWidth)}x${String(image.naturalHeight)}`);
+              };
+              image.onerror = () => {
+                resolve('error');
+              };
+              image.src = url;
+            }),
+        ),
+      ),
+    sources,
+  );
+  check(
+    decoded.every((size) => size === '512x512'),
+    `${label}: thumbnail assets decode as 512x512 squares ${JSON.stringify(decoded)}`,
+  );
+}
+
+async function checkThumbnailFallback(label, cardSelector, visualSelector) {
+  await page.evaluate(
+    ([cards, visual]) => {
+      document.querySelector(`${cards} ${visual} img`)?.dispatchEvent(new Event('error'));
+    },
+    [cardSelector, visualSelector],
+  );
+  await page.waitForFunction(
+    ([cards, visual]) => document.querySelector(`${cards} ${visual} .ui-icon--store`) !== null,
+    [cardSelector, visualSelector],
+  );
+  const after = await storeVisuals(cardSelector, visualSelector);
+  check(
+    after[0].icon &&
+      after[0].src === null &&
+      after.slice(1).every((visual) => visual.src !== null && !visual.icon),
+    `${label}: failed thumbnail falls back to store icon ${JSON.stringify(after[0])}`,
+  );
+  check(
+    after[0].slotWidth > 0 && after[0].slotWidth === after[0].slotHeight,
+    `${label}: fallback keeps slot size`,
+  );
+}
 
 await open(page, '/shops');
 const shopNames = await page.evaluate(() =>
@@ -52,6 +180,13 @@ const shopsCopy = await page.evaluate(() => ({
 }));
 check(shopsCopy.lead === SHOPS_DISCLOSURE, `shops: demo disclosure lead ${shopsCopy.lead}`);
 check(!VISIT_INVITATION.test(shopsCopy.mainText), 'shops: no invitation to visit stores');
+const shopVisuals = await storeVisuals('.store-card', '.store-card__visual');
+checkStoreVisuals('shops', shopVisuals, STORE_IDS);
+await checkThumbnailsLoad(
+  'shops',
+  shopVisuals.map((visual) => visual.src),
+);
+await checkThumbnailFallback('shops', '.store-card', '.store-card__visual');
 
 await open(page, '/contacts');
 const facts = await page.evaluate(() => {
@@ -123,6 +258,13 @@ check(
   `contacts: stores demo disclosure ${facts.storesLead}`,
 );
 check(!VISIT_INVITATION.test(facts.mainText), 'contacts: no invitation to visit stores');
+const contactVisuals = await storeVisuals('.contacts-store', '.contacts-store__visual');
+checkStoreVisuals('contacts', contactVisuals, STORE_IDS.slice(0, 3));
+check(
+  contactVisuals.every((visual, index) => visual.src === shopVisuals[index].src),
+  'contacts: same thumbnail sources as #/shops',
+);
+await checkThumbnailFallback('contacts', '.contacts-store', '.contacts-store__visual');
 check(facts.channels.length === 4, `contacts: four channels (${facts.channels.length})`);
 check(
   JSON.stringify(facts.stores) === JSON.stringify(shopNames.slice(0, 3)),
