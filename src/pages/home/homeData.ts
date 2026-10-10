@@ -3,6 +3,7 @@ import { formatPrice } from '../../commerce/format';
 import { supabaseClient } from '../../lib/supabase/client';
 import type { GoodCallSupabaseClient } from '../../lib/supabase/client';
 import type { Database } from '../../lib/supabase/database.types';
+import { withReadDeadline } from '../../lib/supabase/readDeadline';
 import { HOME_CATEGORY_TILES } from './homeFixtures';
 import type { HomeCategoryTile } from './homeFixtures';
 import type { HomeArtwork, HomeProduct } from './homeProduct';
@@ -23,6 +24,11 @@ type HomeDataResult =
       readonly reason: string;
     };
 
+interface HomeRead {
+  readonly promise: Promise<HomeDataResult>;
+  readonly expiresAt: number;
+}
+
 type HomeProductBadgePresentation =
   | { readonly badgeTone: 'sale' }
   | { readonly badgeTone: 'new'; readonly badge: string }
@@ -34,6 +40,8 @@ type HomeProductPresentation = HomeProductBadgePresentation & {
 };
 
 const CATALOG_MEDIA_BUCKET = 'catalog-media';
+const HOME_READ_TTL_MS = 5 * 60 * 1000;
+let homeRead: HomeRead | undefined;
 const EXPECTED_CATEGORY_COUNT = HOME_CATEGORY_TILES.length;
 const EXPECTED_PRODUCT_POSITIONS = [1, 2, 3, 4, 5] as const;
 const iconByCategorySlug = new Map(
@@ -181,7 +189,10 @@ function mapProduct(
   };
 }
 
-async function fetchCategories(client: GoodCallSupabaseClient): Promise<readonly CategoryRow[]> {
+async function fetchCategories(
+  client: GoodCallSupabaseClient,
+  signal: AbortSignal,
+): Promise<readonly CategoryRow[]> {
   const { data, error } = await client
     .from('categories')
     .select(
@@ -189,7 +200,8 @@ async function fetchCategories(client: GoodCallSupabaseClient): Promise<readonly
     )
     .eq('is_active', true)
     .order('sort_order', { ascending: true })
-    .order('slug', { ascending: true });
+    .order('slug', { ascending: true })
+    .abortSignal(signal);
 
   if (error !== null) {
     throw error;
@@ -200,11 +212,13 @@ async function fetchCategories(client: GoodCallSupabaseClient): Promise<readonly
 
 async function fetchHomePopularProducts(
   client: GoodCallSupabaseClient,
+  signal: AbortSignal,
 ): Promise<readonly HomePopularProductRow[]> {
   const { data, error } = await client
     .from('home_popular_products')
     .select('position, product_id')
-    .order('position', { ascending: true });
+    .order('position', { ascending: true })
+    .abortSignal(signal);
 
   if (error !== null) {
     throw error;
@@ -216,6 +230,7 @@ async function fetchHomePopularProducts(
 async function fetchProducts(
   client: GoodCallSupabaseClient,
   productIds: readonly string[],
+  signal: AbortSignal,
 ): Promise<readonly ProductRow[]> {
   const { data, error } = await client
     .from('products')
@@ -223,7 +238,8 @@ async function fetchProducts(
       'id, category_id, slug, name, brand, price, old_price, rating, review_count, is_new, popularity_score, is_active, created_at',
     )
     .in('id', productIds)
-    .eq('is_active', true);
+    .eq('is_active', true)
+    .abortSignal(signal);
 
   if (error !== null) {
     throw error;
@@ -235,13 +251,15 @@ async function fetchProducts(
 async function fetchProductImages(
   client: GoodCallSupabaseClient,
   productIds: readonly string[],
+  signal: AbortSignal,
 ): Promise<readonly ProductImageRow[]> {
   const { data, error } = await client
     .from('product_images')
     .select('id, product_id, storage_path, alt, position')
     .in('product_id', productIds)
     .order('position', { ascending: true })
-    .order('storage_path', { ascending: true });
+    .order('storage_path', { ascending: true })
+    .abortSignal(signal);
 
   if (error !== null) {
     throw error;
@@ -257,15 +275,21 @@ function positionsAreValid(rows: readonly HomePopularProductRow[]): boolean {
   );
 }
 
-export async function fetchHomeData(): Promise<HomeDataResult> {
-  const client = supabaseClient;
-
-  if (client === undefined) {
-    return { status: 'unavailable', reason: 'supabase-env-missing' };
-  }
-
+async function readHomeData(
+  client: GoodCallSupabaseClient,
+  signal: AbortSignal,
+): Promise<HomeDataResult> {
   try {
-    const categoryRows = await fetchCategories(client);
+    const [categoriesRead, curatedRead] = await Promise.allSettled([
+      fetchCategories(client, signal),
+      fetchHomePopularProducts(client, signal),
+    ]);
+
+    if (categoriesRead.status === 'rejected') {
+      throw categoriesRead.reason;
+    }
+
+    const categoryRows = categoriesRead.value;
     const categories = categoryRows
       .map((category) => mapCategory(category))
       .filter((category): category is HomeCategoryTile => category !== undefined);
@@ -275,21 +299,39 @@ export async function fetchHomeData(): Promise<HomeDataResult> {
     }
 
     const activeCategoryIds = new Set(categoryRows.map((category) => category.id));
-    const curatedRows = await fetchHomePopularProducts(client);
+
+    if (curatedRead.status === 'rejected') {
+      throw curatedRead.reason;
+    }
+
+    const curatedRows = curatedRead.value;
 
     if (!positionsAreValid(curatedRows)) {
       return { status: 'failure', reason: 'home-popular-products-invalid' };
     }
 
     const productIds = curatedRows.map((row) => row.product_id);
-    const productRows = await fetchProducts(client, productIds);
+    const [productsRead, imagesRead] = await Promise.allSettled([
+      fetchProducts(client, productIds, signal),
+      fetchProductImages(client, productIds, signal),
+    ]);
+
+    if (productsRead.status === 'rejected') {
+      throw productsRead.reason;
+    }
+
+    const productRows = productsRead.value;
     const productById = new Map(productRows.map((product) => [product.id, product]));
 
     if (productRows.length !== productIds.length) {
       return { status: 'failure', reason: 'home-popular-products-missing' };
     }
 
-    const images = await fetchProductImages(client, productIds);
+    if (imagesRead.status === 'rejected') {
+      throw imagesRead.reason;
+    }
+
+    const images = imagesRead.value;
     const imagesByProduct = groupImagesByProduct(images);
     const products = curatedRows
       .map((row) => {
@@ -314,4 +356,34 @@ export async function fetchHomeData(): Promise<HomeDataResult> {
       reason: error instanceof Error ? error.message : 'home-query-failed',
     };
   }
+}
+
+export function fetchHomeData(): Promise<HomeDataResult> {
+  const client = supabaseClient;
+
+  if (client === undefined) {
+    return Promise.resolve({ status: 'unavailable', reason: 'supabase-env-missing' });
+  }
+
+  if (homeRead !== undefined && homeRead.expiresAt > Date.now()) {
+    return homeRead.promise;
+  }
+
+  const promise = withReadDeadline<HomeDataResult>((signal) => readHomeData(client, signal), {
+    status: 'failure',
+    reason: 'home-read-timeout',
+  }).then((result) => {
+    if (homeRead?.promise === promise) {
+      homeRead =
+        result.status === 'ready'
+          ? { promise, expiresAt: Date.now() + HOME_READ_TTL_MS }
+          : undefined;
+    }
+
+    return result;
+  });
+
+  homeRead = { promise, expiresAt: Number.POSITIVE_INFINITY };
+
+  return promise;
 }

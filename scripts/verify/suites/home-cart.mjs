@@ -126,6 +126,10 @@ function mockBody(url, accept) {
   return accept.includes('vnd.pgrst.object') ? (rows[0] ?? null) : rows;
 }
 
+const restLog = [];
+let holdTables = new Set();
+let held = [];
+
 const browser = await launchBrowser();
 const cdp = await browser.newPage();
 const { send } = cdp;
@@ -135,6 +139,28 @@ const cors = () => [
   { name: 'Access-Control-Allow-Headers', value: '*' },
   { name: 'Access-Control-Allow-Methods', value: 'GET,POST,OPTIONS' },
 ];
+function fulfillRest(requestId, request) {
+  const accept = request.headers.Accept ?? request.headers.accept ?? '';
+  const body = JSON.stringify(mockBody(request.url, accept));
+  send('Fetch.fulfillRequest', {
+    requestId,
+    responseCode: 200,
+    responseHeaders: [...cors(), { name: 'Content-Type', value: 'application/json' }],
+    body: Buffer.from(body).toString('base64'),
+  });
+}
+function releaseHeld() {
+  const pending = held;
+  held = [];
+  for (const { requestId, request } of pending) fulfillRest(requestId, request);
+}
+async function waitForLog(table, label) {
+  const start = Date.now();
+  while (!restLog.includes(table)) {
+    if (Date.now() - start > 8000) throw new Error(`timeout: ${label}`);
+    await sleep(50);
+  }
+}
 cdp.onEvent((msg) => {
   if (msg.method === 'Fetch.requestPaused') {
     const { requestId, request } = msg.params;
@@ -151,14 +177,13 @@ cdp.onEvent((msg) => {
       });
       return;
     }
-    const accept = request.headers.Accept ?? request.headers.accept ?? '';
-    const body = JSON.stringify(mockBody(request.url, accept));
-    send('Fetch.fulfillRequest', {
-      requestId,
-      responseCode: 200,
-      responseHeaders: [...cors(), { name: 'Content-Type', value: 'application/json' }],
-      body: Buffer.from(body).toString('base64'),
-    });
+    const table = new URL(request.url).pathname.split('/').pop();
+    restLog.push(table);
+    if (holdTables.has(table)) {
+      held.push({ requestId, request });
+      return;
+    }
+    fulfillRest(requestId, request);
   }
   if (msg.method === 'Runtime.exceptionThrown')
     consoleErrors.push(msg.params.exceptionDetails.text);
@@ -742,6 +767,94 @@ check(
     ),
 );
 homeFails = false;
+
+const homeLive = `${homeCards}.length === 5 && !${card(0)}.querySelector('.product-card__cart').disabled`;
+const sortedLog = () => JSON.stringify([...restLog].sort());
+const HOME_READ = JSON.stringify(
+  ['categories', 'home_popular_products', 'product_images', 'products'].sort(),
+);
+holdTables = new Set(['categories']);
+restLog.length = 0;
+await send('Page.reload', {});
+await waitForLog('home_popular_products', 'curated read while categories held');
+check(
+  'read: Home requests curated positions while categories is still pending (stage A overlap)',
+  held.length === 1 && restLog.includes('categories') && !restLog.includes('products'),
+  JSON.stringify(restLog),
+);
+holdTables = new Set(['products']);
+releaseHeld();
+await waitForLog('product_images', 'images read while products held');
+check(
+  'read: Home requests images while products is still pending (stage B overlap)',
+  held.length === 1 && restLog.filter((t) => t === 'products').length === 1,
+  JSON.stringify(restLog),
+);
+holdTables = new Set();
+releaseHeld();
+await waitFor(homeLive, 'home live after held reads');
+check(
+  'read: cold Home read is exactly 4 requests and renders the curated live cards',
+  sortedLog() === HOME_READ &&
+    JSON.stringify(
+      await evaluate(
+        `${homeCards}.map((c) => c.querySelector('.product-card__title').textContent)`,
+      ),
+    ) === JSON.stringify(HOME.map((p) => p.name)),
+  JSON.stringify(restLog),
+);
+
+restLog.length = 0;
+await go('#/cart');
+await waitFor(`document.querySelectorAll('.product-card__link').length > 0`, 'cart live recs');
+await go('#/no-such-page');
+await waitFor(`document.querySelectorAll('.product-card__link').length > 0`, '404 live recs');
+await go('#/');
+await waitFor(homeLive, 'home live on revisit');
+check(
+  'read: Cart, NotFound and Home revisit reuse the cached Home read (0 requests)',
+  restLog.length === 0,
+  JSON.stringify(restLog),
+);
+
+await evaluate(`(() => { const now = Date.now; Date.now = () => now() + 301000; })()`);
+await go('#/cart');
+await waitFor(`document.querySelectorAll('.product-card__link').length > 0`, 'cart after ttl');
+await sleep(300);
+check(
+  'read: after the 5-minute TTL the next consumer re-reads Home (4 requests)',
+  sortedLog() === HOME_READ,
+  JSON.stringify(restLog),
+);
+
+await go('#/');
+homeFails = true;
+restLog.length = 0;
+await send('Page.reload', {});
+await sleep(1500);
+check(
+  'read: failed Home read stops after stage A (categories + curated) and shows the fixture fallback',
+  JSON.stringify([...restLog].sort()) === JSON.stringify(['categories', 'home_popular_products']) &&
+    !(await evaluate(homeLive)),
+  JSON.stringify(restLog),
+);
+restLog.length = 0;
+await go('#/cart');
+await sleep(600);
+check(
+  'read: a failed Home read is not cached; the next consumer issues a fresh read',
+  restLog.includes('categories'),
+  JSON.stringify(restLog),
+);
+homeFails = false;
+restLog.length = 0;
+await go('#/');
+await waitFor(homeLive, 'home recovers after failure');
+check(
+  'read: after the backend recovers, Home performs a full fresh read and renders live cards',
+  sortedLog() === HOME_READ,
+  JSON.stringify(restLog),
+);
 
 check('no uncaught errors', consoleErrors.length === 0, consoleErrors.join(' ; '));
 await cdp.close();

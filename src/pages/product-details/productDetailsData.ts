@@ -1,4 +1,6 @@
 import { supabaseClient } from '../../lib/supabase/client';
+import type { GoodCallSupabaseClient } from '../../lib/supabase/client';
+import { withReadDeadline } from '../../lib/supabase/readDeadline';
 
 export interface ProductDetailsLiveProduct {
   readonly slug: string;
@@ -26,13 +28,11 @@ export type ProductDetailsDataResult =
       readonly reason: string;
     };
 
-export async function fetchProductDetails(slug: string): Promise<ProductDetailsDataResult> {
-  const client = supabaseClient;
-
-  if (client === undefined) {
-    return { status: 'unavailable', reason: 'supabase-env-missing' };
-  }
-
+async function readProductDetails(
+  client: GoodCallSupabaseClient,
+  slug: string,
+  signal: AbortSignal,
+): Promise<ProductDetailsDataResult> {
   try {
     const { data: product, error } = await client
       .from('products')
@@ -41,6 +41,7 @@ export async function fetchProductDetails(slug: string): Promise<ProductDetailsD
       )
       .eq('slug', slug)
       .eq('is_active', true)
+      .abortSignal(signal)
       .maybeSingle();
 
     if (error !== null) {
@@ -87,4 +88,17 @@ export async function fetchProductDetails(slug: string): Promise<ProductDetailsD
       reason: error instanceof Error ? error.message : 'product-details-query-failed',
     };
   }
+}
+
+export function fetchProductDetails(slug: string): Promise<ProductDetailsDataResult> {
+  const client = supabaseClient;
+
+  if (client === undefined) {
+    return Promise.resolve({ status: 'unavailable', reason: 'supabase-env-missing' });
+  }
+
+  return withReadDeadline<ProductDetailsDataResult>(
+    (signal) => readProductDetails(client, slug, signal),
+    { status: 'failure', reason: 'product-details-read-timeout' },
+  );
 }

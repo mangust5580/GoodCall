@@ -122,9 +122,24 @@ const cors = () => [
   { name: 'Access-Control-Allow-Headers', value: '*' },
   { name: 'Access-Control-Allow-Methods', value: 'GET,POST,OPTIONS' },
 ];
+const restLog = [];
+const networkUrls = new Map();
+const canceledUrls = [];
 cdp.onEvent((msg) => {
+  if (msg.method === 'Network.requestWillBeSent' && msg.params.request.url.includes(MOCK_HOST))
+    networkUrls.set(msg.params.requestId, msg.params.request.url);
+  if (
+    msg.method === 'Network.loadingFailed' &&
+    msg.params.canceled &&
+    networkUrls.has(msg.params.requestId)
+  )
+    canceledUrls.push(networkUrls.get(msg.params.requestId));
   if (msg.method === 'Fetch.requestPaused') {
     const { requestId, request } = msg.params;
+    if (request.method === 'GET' && request.url.includes('/rest/v1/')) {
+      const url = new URL(request.url);
+      restLog.push(url.pathname.split('/').pop() + (url.searchParams.has('slug') ? ':slug' : ''));
+    }
     if (hangLive) {
       return;
     }
@@ -2001,6 +2016,81 @@ check(
     (await evaluate(`document.querySelector('.search-page .empty-state') !== null`)) &&
     (await evaluate(`document.querySelectorAll('.search-row').length`)) === 0,
 );
+const CATALOG_READ = JSON.stringify(['categories:slug', 'product_images', 'products']);
+const catalogLive = `document.querySelector('.catalog-grid .product-card') !== null && document.querySelector('main.route-status') === null`;
+await go(CATALOG_HASH);
+restLog.length = 0;
+await reload();
+await waitFor(catalogLive, 'catalog cold read');
+check(
+  'read: cold smartphones read is exactly 3 requests',
+  JSON.stringify([...restLog].sort()) === CATALOG_READ,
+  JSON.stringify(restLog),
+);
+restLog.length = 0;
+await go('#/search?q=iphone');
+await waitFor(`document.querySelector('.search-row')`, 'search from cache');
+await go(CATALOG_HASH);
+await waitFor(catalogLive, 'catalog revisit from cache');
+check(
+  'read: Search and Catalog revisit reuse the cached smartphones read (0 requests)',
+  restLog.length === 0,
+  JSON.stringify(restLog),
+);
+
+failLive = true;
+await reload();
+await waitFor(
+  `document.querySelector('main.route-status:not([aria-busy]) .route-status__actions button')`,
+  'catalog failure for eviction',
+  20000,
+);
+failLive = false;
+restLog.length = 0;
+await evaluate(`document.querySelector('.route-status__actions button').click()`);
+await waitFor(catalogLive, 'catalog retry after failure');
+check(
+  'read: a failed read is not cached; «Повторить» performs a full fresh read (3 requests)',
+  JSON.stringify([...restLog].sort()) === CATALOG_READ,
+  JSON.stringify(restLog),
+);
+
+await send('Network.enable', {});
+hangLive = true;
+restLog.length = 0;
+canceledUrls.length = 0;
+const hangStart = Date.now();
+await reload();
+await waitFor(
+  `document.querySelector('main.route-status:not([aria-busy]) .route-status__actions button')`,
+  'catalog timeout failure',
+  20000,
+);
+const hangElapsed = Date.now() - hangStart;
+await sleep(300);
+check(
+  'read: a hung read turns into the failure state at the 10 s deadline',
+  hangElapsed >= 9500 &&
+    hangElapsed < 14000 &&
+    (await evaluate(`document.querySelector('h1')?.textContent`)) === 'Товары временно недоступны',
+  `elapsed ${hangElapsed} ms`,
+);
+check(
+  'read: the deadline aborts the in-flight request (browser reports it canceled)',
+  canceledUrls.some((url) => url.includes('/rest/v1/categories')),
+  JSON.stringify(canceledUrls),
+);
+hangLive = false;
+restLog.length = 0;
+await evaluate(`document.querySelector('.route-status__actions button').click()`);
+await waitFor(catalogLive, 'catalog retry after timeout');
+check(
+  'read: a timed-out read is not cached; «Повторить» recovers with a fresh read',
+  JSON.stringify([...restLog].sort()) === CATALOG_READ,
+  JSON.stringify(restLog),
+);
+await send('Network.disable', {});
+
 check(
   'unrelated localStorage untouched',
   (await evaluate(`localStorage.getItem('goodcall.verify.marker')`)) === 'keep',

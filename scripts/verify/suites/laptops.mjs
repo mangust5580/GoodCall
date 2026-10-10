@@ -98,9 +98,13 @@ function applyFilters(rows, params) {
   return out;
 }
 
+const catalogCategoryReads = [];
+
 function stub(request) {
   const url = new URL(request.url);
   const table = url.pathname.replace('/rest/v1/', '');
+  if (table === 'categories' && url.searchParams.has('slug'))
+    catalogCategoryReads.push(url.searchParams.get('slug'));
   if (scenario.productsHang && table === 'products') return null;
   if (scenario.productsError && table === 'products') {
     return {
@@ -1914,6 +1918,30 @@ check(
   `reference: ?reference=catalog makes no Supabase request (${requests.length})`,
 );
 await network.close();
+
+const isolation = await newPage(1440, 900);
+scenario = {};
+catalogCategoryReads.length = 0;
+await isolation.goto(`${NEW}#/catalog/smartphones`);
+await isolation.waitForFunction(() => document.querySelector('.catalog-grid .product-card'));
+for (const hash of [LAPTOPS_HASH, '#/catalog/smartphones', LAPTOPS_HASH]) {
+  await isolation.evaluate((next) => {
+    location.hash = next;
+  }, hash);
+  await isolation.waitForFunction(
+    (next) =>
+      location.hash === next &&
+      document.querySelector('.catalog-grid .product-card') !== null &&
+      document.querySelector('main.route-status') === null,
+    hash,
+  );
+  await isolation.waitForTimeout(300);
+}
+check(
+  JSON.stringify(catalogCategoryReads) === JSON.stringify(['eq.smartphones', 'eq.laptops']),
+  `read cache: smartphones and laptops are cached separately and reused on revisit (${JSON.stringify(catalogCategoryReads)})`,
+);
+await isolation.close();
 
 await browser.close();
 reportCounts(passed, failures);

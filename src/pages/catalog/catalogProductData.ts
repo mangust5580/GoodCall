@@ -4,6 +4,7 @@ import type { PictureSource } from '../../components/media';
 import { supabaseClient } from '../../lib/supabase/client';
 import type { GoodCallSupabaseClient } from '../../lib/supabase/client';
 import type { Database } from '../../lib/supabase/database.types';
+import { withReadDeadline } from '../../lib/supabase/readDeadline';
 import type { CatalogProduct } from './catalogProduct';
 import { CATALOG_PRODUCTS } from './catalogProducts';
 
@@ -21,6 +22,14 @@ type CatalogProductDataResult =
     };
 
 export type CatalogCategorySlug = 'smartphones' | 'laptops';
+
+interface CatalogRead {
+  readonly promise: Promise<CatalogProductDataResult>;
+  readonly expiresAt: number;
+}
+
+const CATALOG_READ_TTL_MS = 5 * 60 * 1000;
+const catalogReads = new Map<CatalogCategorySlug, CatalogRead>();
 
 const CATALOG_MEDIA_BUCKET = 'catalog-media';
 const fixturePresentationBySlug = new Map(CATALOG_PRODUCTS.map((product) => [product.id, product]));
@@ -142,6 +151,7 @@ function mapCatalogProduct(
 async function fetchProductImages(
   client: GoodCallSupabaseClient,
   productIds: readonly string[],
+  signal: AbortSignal,
 ): Promise<readonly ProductImageRow[]> {
   if (productIds.length === 0) {
     return [];
@@ -152,7 +162,8 @@ async function fetchProductImages(
     .select('id, product_id, storage_path, alt, position')
     .in('product_id', productIds)
     .order('position', { ascending: true })
-    .order('storage_path', { ascending: true });
+    .order('storage_path', { ascending: true })
+    .abortSignal(signal);
 
   if (error !== null) {
     throw error;
@@ -161,21 +172,18 @@ async function fetchProductImages(
   return data;
 }
 
-export async function fetchCatalogProducts(
+async function readCatalogProducts(
+  client: GoodCallSupabaseClient,
   categorySlug: CatalogCategorySlug,
+  signal: AbortSignal,
 ): Promise<CatalogProductDataResult> {
-  const client = supabaseClient;
-
-  if (client === undefined) {
-    return { status: 'unavailable', reason: 'supabase-env-missing' };
-  }
-
   try {
     const { data: category, error: categoryError } = await client
       .from('categories')
       .select('id')
       .eq('slug', categorySlug)
       .eq('is_active', true)
+      .abortSignal(signal)
       .maybeSingle();
 
     if (categoryError !== null) {
@@ -194,7 +202,8 @@ export async function fetchCatalogProducts(
       .eq('category_id', category.id)
       .eq('is_active', true)
       .order('popularity_score', { ascending: false })
-      .order('slug', { ascending: true });
+      .order('slug', { ascending: true })
+      .abortSignal(signal);
 
     if (productsError !== null) {
       return { status: 'failure', reason: productsError.message };
@@ -207,6 +216,7 @@ export async function fetchCatalogProducts(
     const images = await fetchProductImages(
       client,
       products.map((product) => product.id),
+      signal,
     );
     const imagesByProduct = groupImagesByProduct(images);
     const mappedProducts = products
@@ -226,4 +236,39 @@ export async function fetchCatalogProducts(
       reason: error instanceof Error ? error.message : 'catalog-products-query-failed',
     };
   }
+}
+
+export function fetchCatalogProducts(
+  categorySlug: CatalogCategorySlug,
+): Promise<CatalogProductDataResult> {
+  const client = supabaseClient;
+
+  if (client === undefined) {
+    return Promise.resolve({ status: 'unavailable', reason: 'supabase-env-missing' });
+  }
+
+  const cached = catalogReads.get(categorySlug);
+
+  if (cached !== undefined && cached.expiresAt > Date.now()) {
+    return cached.promise;
+  }
+
+  const promise = withReadDeadline<CatalogProductDataResult>(
+    (signal) => readCatalogProducts(client, categorySlug, signal),
+    { status: 'failure', reason: `${categorySlug}-read-timeout` },
+  ).then((result) => {
+    if (catalogReads.get(categorySlug)?.promise === promise) {
+      if (result.status === 'ready') {
+        catalogReads.set(categorySlug, { promise, expiresAt: Date.now() + CATALOG_READ_TTL_MS });
+      } else {
+        catalogReads.delete(categorySlug);
+      }
+    }
+
+    return result;
+  });
+
+  catalogReads.set(categorySlug, { promise, expiresAt: Number.POSITIVE_INFINITY });
+
+  return promise;
 }

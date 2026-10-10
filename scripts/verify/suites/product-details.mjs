@@ -129,7 +129,7 @@ function stub(request) {
   const url = new URL(request.url);
   const table = url.pathname.replace('/rest/v1/', '');
   if (table === 'products') productRequests.push(url.search);
-  if (table === 'categories') categoryRequests += 1;
+  if (table === 'categories' && url.searchParams.has('slug')) categoryRequests += 1;
   if (scenario.productsHang && table === 'products') return null;
   if (scenario.catalogListError && table === 'categories') {
     return {
@@ -726,6 +726,7 @@ console.log('stage: route states', new Date().toISOString());
     `query error: shared RouteStatus failure semantics ${JSON.stringify(errorStatus)}`,
   );
   scenario = { productsHang: true };
+  const hangStart = Date.now();
   await page.goto(`${NEW}#/product/galaxy-s24-128`);
   await page.waitForSelector('main[aria-busy="true"]');
   await page.waitForTimeout(300);
@@ -738,6 +739,15 @@ console.log('stage: route states', new Date().toISOString());
       loadingStatus.h1.length === 0 &&
       loadingStatus.paddingTop === '96px',
     `pending read: shared RouteStatus loading semantics ${JSON.stringify(loadingStatus)}`,
+  );
+  await page.waitForFunction(() => document.querySelector('main.route-status:not([aria-busy]) h1'));
+  const hangElapsed = Date.now() - hangStart;
+  const timeoutStatus = await page.evaluate(routeStatusFacts);
+  check(
+    hangElapsed >= 9500 &&
+      hangElapsed < 14000 &&
+      JSON.stringify(timeoutStatus.h1) === JSON.stringify(['Не удалось загрузить товар']),
+    `pending read: 10 s deadline shows the existing error state (${hangElapsed} ms) ${JSON.stringify(timeoutStatus.h1)}`,
   );
   scenario = { extraProduct: true };
   productRequests = [];

@@ -147,6 +147,40 @@ Technically complete:
 Active visual slice: none. Active implementation milestone: none. No next
 milestone is approved; select from `docs/master-backlog.md` when requested.
 
+- **WP-04 / Data read resilience — USER FUNCTIONAL PASS on 2026-10-10,
+  CLOSED and published.** The contract was approved by the user on
+  2026-10-10. No UI changed, so there is no visual gate.
+
+- **Caching:** `fetchHomeData()` and `fetchCatalogProducts(category)` keep
+  a module-local in-memory promise cache.
+  - There is one Home entry and one entry per category (smartphones and
+    laptops are kept separately). Concurrent callers share the in-flight
+    read.
+  - A ready result is reused for 5 minutes after it arrives. Nothing goes to
+    any storage, and a reload starts empty.
+  - Failure, `unavailable` and timeout results are dropped as soon as they
+    settle, so WP-03 «Повторить» always makes a fresh network read.
+- **Deadline:** a 10 s deadline covers each whole read, including the PDP
+  details read (which is not cached).
+  - It aborts the queries via `AbortController` and `.abortSignal()` and
+    returns the existing `failure` result.
+  - The client's built-in retry is unchanged, and no retry was added.
+  - Leaving a page does not abort a shared read; the deadline bounds it.
+- **Home parallelism:** Home runs in two parallel stages, categories with
+  curated positions, then products with images. Checks run in the original
+  order, so curated order, validation and failure reasons are unchanged.
+- **Unchanged:** WP-03 states, URL state, public APIs, result shapes,
+  `?reference=` surfaces, schema and dependencies.
+- **Proof:** `home-cart`, `search`, `laptops` and `product-details` assert
+  simulated request counts, stage overlap, reuse, TTL expiry, category
+  separation, failure eviction, retry, and timeout with a canceled request.
+- **Known limitations:**
+  - Live Supabase was not tested by the agent, and the missing-env path is
+    not browser-tested. No latency was measured.
+  - Cached readonly arrays are shared by reference.
+  - A failed Home read can still issue the sibling request of its stage.
+  - The Cart and NotFound fixture fallbacks on failure are unchanged.
+
 - **WP-03 / Honest asynchronous states — USER VISUAL PASS on 2026-10-10,
   CLOSED and published.** D-02 was approved by the user on 2026-10-10 for the
   smartphone Catalog and Search only: no skeleton, and failure copy that
@@ -5484,9 +5518,8 @@ requested.
 
 ## Project closeout state
 
-WP-03 (honest asynchronous states for the smartphone Catalog and Search) is
-the last published milestone, after WP-02 stage 1. WP-02 stage 2 stays
-deferred.
+WP-04 (data read resilience) is the last published milestone, after WP-03.
+WP-02 stage 2 stays deferred.
 **Active visual slice: none. Active implementation milestone: none.** No
 active code-level release blocker is known, and there is no approved next
 milestone. The next activity is selecting from `docs/master-backlog.md` when
