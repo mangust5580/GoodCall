@@ -1,5 +1,20 @@
+import { register } from 'node:module';
+
 import { launchBrowser, sleep } from '../lib/browser.mjs';
+import {
+  CATEGORIES as CATALOG_CATEGORIES,
+  HOME_POPULAR_PRODUCTS,
+  PRODUCTS as CATALOG_ROWS,
+} from '../lib/catalog.mjs';
 import { appBase, outputDir, report } from '../lib/suite.mjs';
+
+register(new URL('../lib/ts-hook.mjs', import.meta.url));
+const { HOME_PRODUCTS } = await import(
+  new URL('../../../src/pages/home/homeFixtures.ts', import.meta.url).href
+);
+const { formatPrice } = await import(
+  new URL('../../../src/commerce/format.ts', import.meta.url).href
+);
 
 const OUT = outputDir();
 const BASE = appBase();
@@ -7,6 +22,18 @@ const MOCK_HOST = 'mock-goodcall.supabase.co';
 const KEY = 'goodcall.cart.v1';
 const results = [];
 let failLive = false;
+let homeFeed = 'fallback';
+const heldHomeRequests = [];
+const AIRPODS_ROW = CATALOG_ROWS.find((row) => row.slug === 'airpods-pro-2-usb-c');
+const RECOMMENDATION_IMAGES = [
+  {
+    id: 'rec-img-1',
+    product_id: AIRPODS_ROW.id,
+    storage_path: 'home/airpods-recommendation.png',
+    alt: 'AirPods Pro 2 (USB-C)',
+    position: 1,
+  },
+];
 
 const CATEGORY = { id: 'cat-smartphones' };
 const PRODUCTS = [
@@ -57,9 +84,28 @@ const PRODUCTS = [
   },
 ];
 
+function homeFeedRows(u, table) {
+  if (table === 'categories' && !u.searchParams.has('slug')) return CATALOG_CATEGORIES;
+  if (table === 'home_popular_products') return HOME_POPULAR_PRODUCTS;
+  const ids = u.searchParams.get('id');
+  if (table === 'products' && ids?.startsWith('in.(')) {
+    return CATALOG_ROWS.filter((row) => ids.includes(row.id) && row.is_active);
+  }
+  if (table === 'product_images') {
+    return RECOMMENDATION_IMAGES.filter((image) =>
+      (u.searchParams.get('product_id') ?? '').includes(image.product_id),
+    );
+  }
+  return undefined;
+}
+
 function mockBody(url, accept) {
   const u = new URL(url);
   const table = u.pathname.split('/').pop();
+  const homeRows = homeFeed === 'fallback' ? undefined : homeFeedRows(u, table);
+  if (homeRows !== undefined) {
+    return accept.includes('vnd.pgrst.object') ? (homeRows[0] ?? null) : homeRows;
+  }
   let rows = [];
   if (table === 'categories')
     rows = u.searchParams.get('slug') === 'eq.smartphones' ? [CATEGORY] : [];
@@ -88,6 +134,14 @@ cdp.onEvent(async (msg) => {
       return;
     }
     const accept = request.headers.Accept ?? request.headers.accept ?? '';
+    if (
+      homeFeed === 'hold' &&
+      request.method !== 'OPTIONS' &&
+      new URL(request.url).pathname.endsWith('/home_popular_products')
+    ) {
+      heldHomeRequests.push(requestId);
+      return;
+    }
     if (request.method === 'OPTIONS') {
       send('Fetch.fulfillRequest', { requestId, responseCode: 204, responseHeaders: cors() });
       return;
@@ -615,6 +669,330 @@ check(
       'product-details',
     ]),
 );
+await evaluate(`localStorage.removeItem('${KEY}')`);
+
+const spaces = (value) => value?.replace(/\s/g, ' ') ?? null;
+const recommendationCards = () =>
+  evaluate(`[...document.querySelectorAll('.cart-recommendations .product-card')].map((card) => ({
+    title: card.querySelector('.product-card__title')?.textContent.trim() ?? null,
+    href: card.querySelector('.product-card__title a')?.getAttribute('href') ?? null,
+    price: card.querySelector('.product-price')?.textContent.replace(/\\s/g, ' ') ?? null,
+    oldPrice: card.querySelector('.product-price-old')?.textContent.replace(/\\s/g, ' ') ?? null,
+    badge: card.querySelector('.product-card__badge')?.textContent.trim() ?? null,
+    imageSrc: card.querySelector('img')?.getAttribute('src') ?? null,
+    picture: Boolean(card.querySelector('picture')),
+    rating: card.querySelectorAll('.product-rating, [class*="rating"]').length,
+    controls: card.querySelectorAll('button, input, select, [role="button"]').length,
+    links: card.querySelectorAll('a').length,
+    focusable: card.querySelectorAll('a[href], button, input, [tabindex]').length,
+  }))`);
+const recommendationSection = () =>
+  evaluate(`(() => {
+    const section = document.querySelector('.cart-recommendations');
+    const heading = section?.querySelector('h2');
+    return {
+      count: document.querySelectorAll('.cart-recommendations').length,
+      heading: heading?.textContent.trim() ?? null,
+      labelledBy: section?.getAttribute('aria-labelledby') === heading?.id,
+      afterBenefits: section?.previousElementSibling?.classList.contains('cart-page__benefits') ?? false,
+      grid: Boolean(section?.querySelector('.cart-recommendations__grid')),
+    };
+  })()`);
+const fallbackExpected = HOME_PRODUCTS.map((product) => ({
+  title: product.title,
+  price: spaces(product.price),
+  oldPrice: spaces(product.oldPrice ?? null),
+  badge: product.badge ?? null,
+}));
+const readyRows = HOME_POPULAR_PRODUCTS.map((row) =>
+  CATALOG_ROWS.find((product) => product.id === row.product_id),
+);
+const readyExpected = readyRows.map((row) => ({
+  title: row.name,
+  price: spaces(formatPrice(row.price)),
+  oldPrice: row.old_price === null ? null : spaces(formatPrice(row.old_price)),
+}));
+const sameText = (cards, expected) =>
+  cards.length === expected.length &&
+  cards.every(
+    (card, index) =>
+      card.title === expected[index].title &&
+      card.price === expected[index].price &&
+      card.oldPrice === expected[index].oldPrice &&
+      (expected[index].badge === undefined || card.badge === expected[index].badge),
+  );
+const inert = (cards) =>
+  cards.every((card) => card.rating === 0 && card.controls === 0 && card.focusable === card.links);
+const POPULATED_CART = JSON.stringify({
+  lines: [
+    {
+      id: 'iphone-15-128',
+      productSlug: 'iphone-15-128',
+      title: 'Apple iPhone 15 128 ГБ, Розовый',
+      image: { kind: 'catalog-fallback' },
+      price: 79990,
+      oldPrice: 84990,
+      quantity: 1,
+      selected: true,
+    },
+  ],
+});
+
+homeFeed = 'fallback';
+await evaluate(`localStorage.removeItem('${KEY}')`);
+await reload();
+await go('#/cart');
+await waitFor(`document.querySelector('#cart-empty-title')`, 'recommendations empty fallback');
+await waitFor(
+  `document.querySelectorAll('.cart-recommendations .product-card').length > 0`,
+  'fallback recommendations',
+);
+await sleep(600);
+let recCards = await recommendationCards();
+let recSection = await recommendationSection();
+check(
+  'recommendations fallback (backend unavailable): Home fixtures in order, no links',
+  sameText(recCards, fallbackExpected) && recCards.every((card) => card.href === null),
+  JSON.stringify(
+    recCards.map((card) => [card.title, card.price, card.oldPrice, card.badge, card.href]),
+  ),
+);
+check(
+  'recommendations fallback: no rating, actions or extra focus targets',
+  inert(recCards) && recCards.every((card) => card.links === 0),
+  JSON.stringify(recCards.map((card) => [card.rating, card.controls, card.focusable])),
+);
+check(
+  'recommendations empty cart: h2 heading, after benefits, once',
+  recSection.count === 1 &&
+    recSection.heading === 'Вам может понравиться' &&
+    recSection.labelledBy &&
+    recSection.afterBenefits &&
+    recSection.grid,
+  JSON.stringify(recSection),
+);
+check(
+  'recommendations: Cart-only fixture cards (MacBook Air M2, 41 990 ₽ watch) gone',
+  !recCards.some((card) => /MacBook Air 13 M2|41 990/.test(`${card.title} ${card.price}`)),
+);
+
+failLive = true;
+await reload();
+await go('#/cart');
+await waitFor(
+  `document.querySelectorAll('.cart-recommendations .product-card').length > 0`,
+  'failure recommendations',
+);
+await sleep(800);
+recCards = await recommendationCards();
+check(
+  'recommendations backend failure: Home fixtures, no links, inert',
+  sameText(recCards, fallbackExpected) &&
+    recCards.every((card) => card.href === null) &&
+    inert(recCards) &&
+    (await evaluate(`document.querySelector('#cart-empty-title') !== null`)),
+);
+failLive = false;
+
+homeFeed = 'hold';
+heldHomeRequests.length = 0;
+await reload();
+await go('#/cart');
+await waitFor(
+  `document.querySelectorAll('.cart-recommendations .product-card').length > 0`,
+  'held recommendations',
+);
+await sleep(800);
+recCards = await recommendationCards();
+const heldCount = heldHomeRequests.length;
+check(
+  'recommendations while loading (request held): Home fixtures, no links',
+  heldCount > 0 &&
+    sameText(recCards, fallbackExpected) &&
+    recCards.every((card) => card.href === null) &&
+    inert(recCards),
+  `held=${heldCount}`,
+);
+homeFeed = 'ready';
+for (const requestId of heldHomeRequests.splice(0)) {
+  await send('Fetch.fulfillRequest', {
+    requestId,
+    responseCode: 200,
+    responseHeaders: [...cors(), { name: 'Content-Type', value: 'application/json' }],
+    body: Buffer.from(JSON.stringify(HOME_POPULAR_PRODUCTS)).toString('base64'),
+  });
+}
+await waitFor(
+  `[...document.querySelectorAll('.cart-recommendations .product-card__title')][0]?.textContent.trim() === ${JSON.stringify(readyRows[0].name)}`,
+  'held request released',
+);
+recCards = await recommendationCards();
+check(
+  'recommendations: released request swaps to the live curation',
+  sameText(recCards, readyExpected),
+  JSON.stringify(recCards.map((card) => card.title)),
+);
+
+await go('#/');
+await waitFor(
+  `document.querySelectorAll('.home-products .product-card').length === ${readyRows.length} && document.querySelector('.home-products .product-card__title')?.textContent.trim() === ${JSON.stringify(readyRows[0].name)}`,
+  'home ready curation',
+);
+const homeCards = await evaluate(
+  `[...document.querySelectorAll('.home-products .product-card')].map((card) => ({ title: card.querySelector('.product-card__title').textContent.trim(), href: card.querySelector('.product-card__title a')?.getAttribute('href') ?? null, badge: card.querySelector('.product-card__badge')?.textContent.trim() ?? null, imageSrc: card.querySelector('img')?.getAttribute('src') ?? null, picture: Boolean(card.querySelector('picture')) }))`,
+);
+await go('#/cart');
+await waitFor(
+  `document.querySelector('.cart-recommendations .product-card__title')?.textContent.trim() === ${JSON.stringify(readyRows[0].name)}`,
+  'cart ready curation',
+);
+recCards = await recommendationCards();
+check(
+  'recommendations ready: five live products in feed order with live prices',
+  readyRows.length === 5 && sameText(recCards, readyExpected),
+  JSON.stringify(recCards.map((card) => [card.title, card.price, card.oldPrice])),
+);
+check(
+  'recommendations ready: links and badges match the Home curation',
+  JSON.stringify(recCards.map((card) => [card.title, card.href, card.badge])) ===
+    JSON.stringify(homeCards.map((card) => [card.title, card.href, card.badge])) &&
+    recCards.some((card) => card.href !== null) &&
+    recCards.every(
+      (card, index) => card.href === null || card.href === `#/product/${readyRows[index].slug}`,
+    ),
+  JSON.stringify({ cart: recCards.map((card) => [card.href, card.badge]), home: homeCards }),
+);
+check(
+  'recommendations ready: no rating, actions; links only on titles',
+  inert(recCards) && recCards.every((card) => card.links === (card.href === null ? 0 : 1)),
+  JSON.stringify(recCards.map((card) => [card.rating, card.controls, card.links])),
+);
+const READY_MEDIA = {
+  'iphone-15-128': { picture: true, file: 'product-details-gallery-pink-hero-front-gallery' },
+  'galaxy-s24-128': { picture: true, file: 'product-details-galaxy-s24-128-hero-front-gallery' },
+  'redmi-note-13-pro-256': { picture: true, file: 'home-device-smartphone-card' },
+  'airpods-pro-2-usb-c': { picture: false, file: 'home/airpods-recommendation.png' },
+  'apple-watch-series-9-45': {
+    picture: true,
+    file: 'product-details-gallery-apple-watch-s9-black-gallery',
+  },
+};
+const readyCard = (slug) => recCards[readyRows.findIndex((row) => row.slug === slug)];
+const mediaMatches = (slug) =>
+  readyCard(slug)?.picture === READY_MEDIA[slug].picture &&
+  (readyCard(slug).imageSrc ?? '').includes(READY_MEDIA[slug].file);
+const mediaEvidence = JSON.stringify(
+  recCards.map((card, index) => [readyRows[index].slug, card.imageSrc, card.picture]),
+);
+check(
+  'recommendations ready: feed covers URL, thumbnail and artwork image cases',
+  readyRows.length === Object.keys(READY_MEDIA).length &&
+    readyRows.every((row) => Object.hasOwn(READY_MEDIA, row.slug)),
+  JSON.stringify(readyRows.map((row) => row.slug)),
+);
+check(
+  'recommendations ready: backend image URL wins without a picture source (AirPods)',
+  mediaMatches(AIRPODS_ROW.slug),
+  mediaEvidence,
+);
+check(
+  'recommendations ready: no URL -> registered slug thumbnail (iPhone 15, Galaxy S24, Watch S9)',
+  ['iphone-15-128', 'galaxy-s24-128', 'apple-watch-series-9-45'].every(mediaMatches) &&
+    recCards.every((card) => !(card.imageSrc ?? '').includes('home-device-watch-card')),
+  mediaEvidence,
+);
+check(
+  'recommendations ready: no URL and no thumbnail -> category artwork (Redmi Note 13 Pro)',
+  mediaMatches('redmi-note-13-pro-256'),
+  mediaEvidence,
+);
+check(
+  'recommendations ready: every card image equals the Home popular card image',
+  recCards.length === homeCards.length &&
+    recCards.every(
+      (card, index) =>
+        card.imageSrc !== null &&
+        card.imageSrc === homeCards[index].imageSrc &&
+        card.picture === homeCards[index].picture,
+    ),
+  JSON.stringify({
+    cart: recCards.map((card) => card.imageSrc),
+    home: homeCards.map((card) => card.imageSrc),
+  }),
+);
+const firstLinked = recCards.findIndex((card) => card.href !== null);
+await click(
+  `.cart-recommendations .product-card:nth-child(${firstLinked + 1}) .product-card__title a`,
+);
+await waitFor(
+  `location.hash === ${JSON.stringify(recCards[firstLinked].href)} && document.querySelector('h1')?.textContent === ${JSON.stringify(recCards[firstLinked].title)}`,
+  'recommendation PDP link',
+);
+check('recommendations ready: title link opens the product page', true);
+
+await evaluate(`localStorage.setItem('${KEY}', ${JSON.stringify(POPULATED_CART)})`);
+await reload();
+await go('#/cart');
+await waitFor(`document.querySelector('.cart-line')`, 'populated cart with recommendations');
+await waitFor(
+  `document.querySelector('.cart-recommendations .product-card__title')?.textContent.trim() === ${JSON.stringify(readyRows[0].name)}`,
+  'populated ready curation',
+);
+recSection = await recommendationSection();
+check(
+  'recommendations populated cart: after benefits, once, same live curation',
+  recSection.count === 1 &&
+    recSection.afterBenefits &&
+    recSection.heading === 'Вам может понравиться' &&
+    sameText(await recommendationCards(), readyExpected),
+  JSON.stringify(recSection),
+);
+
+const recGeometry = [];
+for (const [w, h, mobile] of [
+  [1440, 900, false],
+  [1024, 800, false],
+  [768, 1000, true],
+  [390, 844, true],
+  [320, 640, true],
+]) {
+  await send('Emulation.setDeviceMetricsOverride', {
+    width: w,
+    height: h,
+    deviceScaleFactor: 1,
+    mobile,
+  });
+  await sleep(400);
+  recGeometry.push(
+    await evaluate(`(() => {
+      const section = document.querySelector('.cart-recommendations').getBoundingClientRect();
+      const cards = [...document.querySelectorAll('.cart-recommendations .product-card')].map((card) => card.getBoundingClientRect());
+      const overlap = cards.some((a, i) => cards.some((b, j) => j > i && a.left < b.right - 1 && b.left < a.right - 1 && a.top < b.bottom - 1 && b.top < a.bottom - 1));
+      const outside = cards.some((card) => card.left < section.left - 1 || card.right > section.right + 1);
+      const clipped = [...document.querySelectorAll('.cart-recommendations .product-card__title, .cart-recommendations .product-price')].some((el) => el.scrollWidth > el.clientWidth + 1);
+      return { w: ${w}, overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth, cards: cards.length, overlap, outside, clipped };
+    })()`),
+  );
+}
+check(
+  'recommendations responsive 1440/1024/768/390/320: no overflow, overlap or clipping',
+  recGeometry.every(
+    (entry) =>
+      entry.overflow <= 0 &&
+      entry.cards === 5 &&
+      !entry.overlap &&
+      !entry.outside &&
+      !entry.clipped,
+  ),
+  JSON.stringify(recGeometry),
+);
+await send('Emulation.setDeviceMetricsOverride', {
+  width: 1440,
+  height: 900,
+  deviceScaleFactor: 1,
+  mobile: false,
+});
+homeFeed = 'fallback';
 await evaluate(`localStorage.removeItem('${KEY}')`);
 
 check('no uncaught errors', consoleErrors.length === 0, consoleErrors.join(' ; '));

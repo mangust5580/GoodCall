@@ -144,13 +144,16 @@ Technically complete:
   owned by React Router using a GitHub Pages-safe hash strategy. See the
   Current routes section below.
 
-Active visual slice: none. Active implementation milestone: none. Quality E
-(DateField Month–Year Navigation) is closed and published. No next milestone is
-approved; the next activity is selecting from the remaining Quality backlog
-when requested (see Quality remediation below).
+Active visual slice: none. Active implementation milestone: none. Quality F
+(Cart Recommendations from Home Curation) is closed and published. No next
+milestone is approved; the next activity is selecting from the remaining
+Quality backlog when requested (see Quality remediation below).
 
 Completed visual slices:
 
+- **Quality F / Cart Recommendations from Home Curation — USER VISUAL/UX PASS
+  on 2026-10-10, CLOSED and published.** Closes audit item Q-03. See the
+  Quality remediation section below.
 - **Quality C / Product Presentation Consistency — USER VISUAL/UX PASS on
   2026-10-08, CLOSED and published.** Closes audit items Q-05, Q-06, Q-19 and
   Q-20. See the Quality remediation section below.
@@ -2287,13 +2290,8 @@ Cart family only.
 **Illustration.** An original, hand-authored gradient SVG, following the
 `newsletter-gift.svg` convention. It is decorative (`alt=""`).
 
-**Recommendations fixture.**
-
-- `CART_RECOMMENDATIONS` is page-local presentation content, not a
-  recommendations contract.
-- Imagery comes from the `HOME_DEVICE_MEDIA` asset manifest.
-- Badges use the accepted `Chip`.
-- Cards have no title links, no add-to-cart and no favourite action.
+**Recommendations.** Superseded by Quality F: the section now reuses the Home
+curation (see Quality remediation). `CART_RECOMMENDATIONS` is removed.
 
 **Badge.** `ProductionShell` now reads the shared cart unit count (see
 Commerce A).
@@ -5305,8 +5303,29 @@ geometry); the `account` logout → demo re-entry step (also reproduced on the
 Quality D baseline) and the `product-details` related request-count checks
 fail intermittently and pass on rerun.
 
-Still open (not started): Q-03 Cart recommendations, Q-07 typography roles,
-Q-08 breakpoints, Q-13 reference lazy loading, Q-14 footer destinations, Q-15
+**Quality F / Cart Recommendations from Home Curation — CLOSED, USER
+VISUAL/UX PASS on 2026-10-10.** Closed item: Q-03.
+
+Durable results:
+
+- Cart «Вам может понравиться» reuses the Home «Популярные товары» curation.
+  `CartRoute` calls `fetchHomeData()` once per mount and passes the ready
+  products, otherwise `HOME_PRODUCTS` (while loading, on failure or when the
+  backend is unavailable; a DEV-only warning on failure).
+- Title links to `productDetailsHref(slug)` appear only for loaded backend
+  products; fallback cards are unlinked. No ratings, review counts, cart,
+  favourite or compare actions.
+- Card image precedence matches Home: `imageSrc` (backend URL) → slug
+  `thumbnail` → Cart-local `RECOMMENDATION_ARTWORK` category art from
+  `HOME_DEVICE_MEDIA`. No shared artwork mapper was introduced.
+- Heading, grid, placement after `BenefitsStrip` and responsive layout are
+  unchanged. `CART_RECOMMENDATIONS` is removed from `cartFixtures.ts`.
+- The `cart` suite (76 checks) locks fallback/loading/failure/ready states,
+  feed order and live prices, Home-equal links and badges, inert cards, the
+  URL/thumbnail/artwork image precedence (card-for-card equal to Home) and the
+  1440/1024/768/390/320 layout.
+
+Still open (not started): Q-07 typography roles, Q-08 breakpoints, Q-13 reference lazy loading, Q-14 footer destinations, Q-15
 cross-category Search (product decision), Q-18 rating separator.
 
 No next milestone is approved; select from the remaining backlog when
@@ -5314,7 +5333,7 @@ requested.
 
 ## Project closeout state
 
-Quality E is the last published milestone. **Active visual slice: none.
+Quality F is the last published milestone. **Active visual slice: none.
 Active implementation milestone: none.** No active code-level release blocker
 is known, and there is no approved next milestone. The next activity is
 selecting from the remaining Quality backlog when requested (see Quality

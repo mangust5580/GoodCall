@@ -1,28 +1,50 @@
 import { useEffect, useRef } from 'react';
 
+import { HOME_DEVICE_MEDIA } from '../../assets/media/home/homeMarketingMedia';
+
 import { cartTotals, formatUnitCount } from '../../commerce/cart';
 import type { CartLinesState } from '../../commerce/cart';
 import { BenefitsStrip } from '../../components/content';
 import { Breadcrumbs, Container } from '../../components/layout';
+import type { PictureSource } from '../../components/media';
 import { ProductCard } from '../../components/product';
 import { Button, Checkbox, Chip } from '../../components/ui';
 import { CartEmptyState } from './CartEmptyState';
 import { CartLineItem } from './CartLineItem';
 import { CartOrderSummary } from './CartOrderSummary';
-import { CART_BENEFITS, CART_RECOMMENDATIONS } from './cartFixtures';
+import type { HomeProduct } from '../home';
+import { CART_BENEFITS } from './cartFixtures';
 
 export interface CartPageProps {
   readonly homeHref: string;
   readonly catalogHref: string;
   readonly checkoutHref: string;
   readonly cart: CartLinesState;
+  readonly recommendations: readonly HomeProduct[];
+  readonly productHref?: (slug: string) => string | undefined;
 }
+
+const RECOMMENDATION_ARTWORK: Readonly<Record<HomeProduct['image'], PictureSource>> = {
+  smartphone: HOME_DEVICE_MEDIA.smartphone,
+  earbuds: HOME_DEVICE_MEDIA.earbuds,
+  watch: HOME_DEVICE_MEDIA.watch,
+  headphones: HOME_DEVICE_MEDIA.headphones,
+  laptop: HOME_DEVICE_MEDIA.laptop,
+  tablet: HOME_DEVICE_MEDIA.tablet,
+};
 
 const RECOMMENDATION_MEDIA_SIZES = '(max-width: 520px) 240px, 220px';
 const POPULATED_TITLE_ID = 'cart-title';
 const EMPTY_TITLE_ID = 'cart-empty-title';
 
-export function CartPage({ homeHref, catalogHref, checkoutHref, cart }: CartPageProps) {
+export function CartPage({
+  homeHref,
+  catalogHref,
+  checkoutHref,
+  cart,
+  recommendations,
+  productHref,
+}: CartPageProps) {
   const { lines } = cart;
   const totals = cartTotals(lines);
   const selectedLineCount = lines.filter((line) => line.selected).length;
@@ -102,23 +124,27 @@ export function CartPage({ homeHref, catalogHref, checkoutHref, cart }: CartPage
             Вам может понравиться
           </h2>
           <div className="cart-recommendations__grid">
-            {CART_RECOMMENDATIONS.map((product) => (
+            {recommendations.map((product) => (
               <ProductCard
                 badge={
                   product.badge === undefined ? undefined : (
-                    <Chip variant={product.badge.tone === 'sale' ? 'danger' : 'brand'}>
-                      {product.badge.label}
+                    <Chip variant={product.badgeTone === 'sale' ? 'danger' : 'brand'}>
+                      {product.badge}
                     </Chip>
                   )
                 }
-                image={product.image}
+                href={productHref?.(product.id)}
+                image={
+                  product.imageSrc === undefined
+                    ? (product.thumbnail ?? RECOMMENDATION_ARTWORK[product.image])
+                    : undefined
+                }
                 imageAlt={product.imageAlt}
                 imageSizes={RECOMMENDATION_MEDIA_SIZES}
+                imageSrc={product.imageSrc}
                 key={product.id}
                 oldPrice={product.oldPrice}
                 price={product.price}
-                rating={product.rating}
-                reviewCount={product.reviewCount}
                 title={product.title}
               />
             ))}
