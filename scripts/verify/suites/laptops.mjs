@@ -1943,5 +1943,56 @@ check(
 );
 await isolation.close();
 
+const layoutShiftFacts = () =>
+  new Promise((resolve) => {
+    const entries = [];
+    const observer = new PerformanceObserver((list) => entries.push(...list.getEntries()));
+    observer.observe({ type: 'layout-shift', buffered: true });
+    setTimeout(() => {
+      observer.disconnect();
+      const kept = entries.filter((entry) => !entry.hadRecentInput);
+      resolve({
+        total: kept.reduce((sum, entry) => sum + entry.value, 0),
+        shell: kept.filter((entry) =>
+          entry.sources.some((source) => source.node?.closest?.('.newsletter-band, .site-footer')),
+        ).length,
+      });
+    }, 300);
+  });
+const newsletterBelowFold = () => {
+  const band = document.querySelector('.newsletter-band');
+  return band !== null && band.getBoundingClientRect().top >= innerHeight;
+};
+for (const [width, height] of [
+  [1440, 900],
+  [390, 844],
+]) {
+  const hanging = await newPage(width, height);
+  scenario = { productsHang: true };
+  await hanging.goto(`${NEW}${LAPTOPS_HASH}`);
+  await hanging.waitForFunction(() =>
+    document.querySelector('main.route-status[aria-busy="true"]'),
+  );
+  check(
+    await hanging.evaluate(newsletterBelowFold),
+    `layout: laptops loading at ${width} keeps the Newsletter below the fold`,
+  );
+  await hanging.close();
+  scenario = {};
+  const layoutPage = await newPage(width, height);
+  await layoutPage.goto(`${NEW}${LAPTOPS_HASH}`);
+  await layoutPage.waitForFunction(
+    () =>
+      document.querySelector('.catalog-grid .product-card') !== null &&
+      document.querySelector('main.route-status') === null,
+  );
+  const shifts = await layoutPage.evaluate(layoutShiftFacts);
+  check(
+    shifts.shell === 0 && shifts.total < 0.1,
+    `layout: laptops loading → ready at ${width} causes no Newsletter/Footer shift ${JSON.stringify(shifts)}`,
+  );
+  await layoutPage.close();
+}
+
 await browser.close();
 reportCounts(passed, failures);

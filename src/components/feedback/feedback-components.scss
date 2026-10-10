@@ -245,6 +245,7 @@
 }
 
 .route-status {
+  min-height: 100lvh;
   background-color: var(--role-surface-page);
 
   &__inner {

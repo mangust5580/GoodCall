@@ -144,8 +144,37 @@ Technically complete:
   owned by React Router using a GitHub Pages-safe hash strategy. See the
   Current routes section below.
 
-Active visual slice: none. Active implementation milestone: none. No next
-milestone is approved; select from `docs/master-backlog.md` when requested.
+Active visual slice: none. Active implementation milestone: none. WP-06 as
+a whole stays open: Stage 0 (baseline) is complete and Stage 1 is closed. No
+next slice is approved; select from `docs/master-backlog.md` when requested.
+
+- **WP-06 Stage 1 / Async loading layout stability — USER VISUAL PASS on
+  2026-10-10, CLOSED and published.** The contract (including Search) was
+  approved by the user on 2026-10-10.
+
+- **Change:** `.route-status` reserves `min-height: 100lvh` for both loading
+  and failure. `RouteStatus` is used only by Catalog, Laptops, Search and PDP.
+  - Newsletter and Footer start below the fold, so ready content no longer
+    pushes them.
+  - The status copy, failure actions, a11y, routes, data and ready pages
+    are unchanged. There is no skeleton.
+- **Appearance:** loading and failure screens show page background below the
+  content down to the fold. The PDP's instant "not found" gets the same space.
+- **Lab CLS:** mocked Supabase build, headless Chrome 155, the Stage 0
+  profiles (desktop 1440×900; mobile 390×844 DPR 3, CPU 4×, 150 ms /
+  1.6384 Mbps), antivirus requests blocked, 3 cold runs, medians.
+  - Catalog, Laptops and PDP fell from 0.555 / 0.568 / 0.441 desktop and
+    0.521 mobile to 0.000.
+  - Search with results fell from 0.267 / 0.380 to 0.000.
+  - Search with no matches fell from 0.145 / 0.188 to 0.042 / 0.061.
+  - The loading → failure path fell from 0.052 / 0.115 to 0.000.
+  - These are lab values, not field Web Vitals. No latency claim is made.
+- **Proof:** `search`, `laptops` and `product-details` assert the Newsletter
+  is below the fold while loading (1440/390/320) and on failure (1440), and
+  that loading → ready causes no Newsletter/Footer layout shift.
+- **Remaining WP-06 work** (not approved): route splitting and a separate
+  `?reference=` entry, Contacts media (AUD-12), the PNG footprint decision
+  (AUD-11), and the after-comparison for those slices.
 
 - **WP-04 / Data read resilience — USER FUNCTIONAL PASS on 2026-10-10,
   CLOSED and published.** The contract was approved by the user on
@@ -5518,8 +5547,9 @@ requested.
 
 ## Project closeout state
 
-WP-04 (data read resilience) is the last published milestone, after WP-03.
-WP-02 stage 2 stays deferred.
+WP-06 Stage 1 (async loading layout stability) is the last published
+milestone, after WP-04. WP-06 as a whole stays open, and WP-02 stage 2 stays
+deferred.
 **Active visual slice: none. Active implementation milestone: none.** No
 active code-level release blocker is known, and there is no approved next
 milestone. The next activity is selecting from `docs/master-backlog.md` when

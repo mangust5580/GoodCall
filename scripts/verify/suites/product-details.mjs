@@ -167,6 +167,27 @@ function newPage(width = 1440, height = 900) {
   });
 }
 
+const layoutShiftFacts = () =>
+  new Promise((resolve) => {
+    const entries = [];
+    const observer = new PerformanceObserver((list) => entries.push(...list.getEntries()));
+    observer.observe({ type: 'layout-shift', buffered: true });
+    setTimeout(() => {
+      observer.disconnect();
+      const kept = entries.filter((entry) => !entry.hadRecentInput);
+      resolve({
+        total: kept.reduce((sum, entry) => sum + entry.value, 0),
+        shell: kept.filter((entry) =>
+          entry.sources.some((source) => source.node?.closest?.('.newsletter-band, .site-footer')),
+        ).length,
+      });
+    }, 300);
+  });
+const newsletterBelowFold = () => {
+  const band = document.querySelector('.newsletter-band');
+  return band !== null && band.getBoundingClientRect().top >= innerHeight;
+};
+
 async function openPdp(page, slug) {
   await page.goto(`${NEW}#/product/${slug}`);
   await page.waitForFunction(
@@ -740,6 +761,10 @@ console.log('stage: route states', new Date().toISOString());
       loadingStatus.paddingTop === '96px',
     `pending read: shared RouteStatus loading semantics ${JSON.stringify(loadingStatus)}`,
   );
+  check(
+    await page.evaluate(newsletterBelowFold),
+    'layout: PDP loading at 1440 keeps the Newsletter below the fold',
+  );
   await page.waitForFunction(() => document.querySelector('main.route-status:not([aria-busy]) h1'));
   const hangElapsed = Date.now() - hangStart;
   const timeoutStatus = await page.evaluate(routeStatusFacts);
@@ -1147,6 +1172,21 @@ console.log('stage: related', new Date().toISOString());
     check(!other.present, `${slug}: no related section`);
     check(categoryRequests === 0, `${slug}: no catalog read (${categoryRequests})`);
     await fresh.close();
+  }
+
+  for (const [width, height] of [
+    [1440, 900],
+    [390, 844],
+  ]) {
+    const layoutPage = await newPage(width, height);
+    scenario = {};
+    await openPdp(layoutPage, 'iphone-15-128');
+    const shifts = await layoutPage.evaluate(layoutShiftFacts);
+    check(
+      shifts.shell === 0 && shifts.total < 0.1,
+      `layout: PDP loading → ready at ${width} causes no Newsletter/Footer shift ${JSON.stringify(shifts)}`,
+    );
+    await layoutPage.close();
   }
 
   const failing = await newPage(1440, 900);

@@ -1711,6 +1711,12 @@ check(
     (await urlQuery()) === 'brand=Apple&quick=discounted',
   JSON.stringify(asyncState),
 );
+check(
+  'layout: failure RouteStatus keeps the actions visible and the Newsletter below the fold (1440)',
+  await evaluate(
+    `document.querySelector('.newsletter-band').getBoundingClientRect().top >= innerHeight && document.querySelector('.route-status__actions').getBoundingClientRect().bottom <= innerHeight`,
+  ),
+);
 await evaluate(`window.__goodcallNoReload = true`);
 await evaluate(`document.querySelector('.route-status__actions button').focus()`);
 check(
@@ -2090,6 +2096,51 @@ check(
   JSON.stringify(restLog),
 );
 await send('Network.disable', {});
+
+const shellBelowFold = `(() => { const band = document.querySelector('.newsletter-band'); return band !== null && band.getBoundingClientRect().top >= innerHeight; })()`;
+const layoutShifts = `new Promise((resolve) => {
+  const entries = [];
+  const observer = new PerformanceObserver((list) => entries.push(...list.getEntries()));
+  observer.observe({ type: 'layout-shift', buffered: true });
+  setTimeout(() => {
+    observer.disconnect();
+    const kept = entries.filter((entry) => !entry.hadRecentInput);
+    resolve({
+      total: kept.reduce((sum, entry) => sum + entry.value, 0),
+      shell: kept.filter((entry) => entry.sources.some((source) => source.node?.closest?.('.newsletter-band, .site-footer'))).length,
+    });
+  }, 300);
+})`;
+for (const [width, height, mobile] of [
+  [1440, 900, false],
+  [390, 844, true],
+  [320, 640, true],
+]) {
+  await viewport(width, height, mobile);
+  for (const hash of [CATALOG_HASH, '#/search?q=iphone']) {
+    await go(hash);
+    hangLive = true;
+    await reload();
+    check(
+      `layout: ${hash} loading at ${width} keeps the Newsletter below the fold`,
+      (await evaluate(`document.querySelector('main.route-status[aria-busy="true"]') !== null`)) &&
+        (await evaluate(shellBelowFold)),
+    );
+    hangLive = false;
+    await reload();
+    await waitFor(
+      `document.querySelector('main.route-status') === null && document.querySelector('.catalog-grid .product-card, .search-results .product-card, .search-row')`,
+      `${hash} ready at ${width}`,
+    );
+    const shifts = await evaluate(layoutShifts);
+    check(
+      `layout: ${hash} loading → ready at ${width} causes no Newsletter/Footer shift (CLS sum < 0.1)`,
+      shifts.shell === 0 && shifts.total < 0.1,
+      JSON.stringify(shifts),
+    );
+  }
+}
+await viewport(1440, 900, false);
 
 check(
   'unrelated localStorage untouched',
