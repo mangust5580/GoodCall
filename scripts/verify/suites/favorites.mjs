@@ -520,17 +520,19 @@ check(
 failLive = true;
 await reload();
 await go('#/catalog/smartphones');
-await sleep(1500);
+await waitFor(
+  `document.querySelector('main.route-status:not([aria-busy]) .route-status__actions button')`,
+  'catalog failure state',
+  20000,
+);
 check(
-  'fallback: catalog ♥ disabled',
+  'failure: catalog shows RouteStatus, no product cards or ♥ actions',
   await evaluate(
-    `document.querySelectorAll('.product-card__link').length === 0 && [...document.querySelectorAll('.catalog-grid .product-card__favorite')].every((b) => b.disabled)`,
+    `document.querySelectorAll('.product-card, .product-card__favorite').length === 0 && document.querySelector('h1')?.textContent === 'Товары временно недоступны'`,
   ),
 );
-await evaluate(`document.querySelector('.catalog-grid .product-card__favorite').click()`);
-await sleep(120);
 check(
-  'fallback: nothing persisted',
+  'failure: nothing persisted',
   (await evaluate(`localStorage.getItem('${FAV}')`)) === null && (await favBadge()) === '0',
 );
 await send('Page.navigate', { url: `${BASE}?reference=product-details` });

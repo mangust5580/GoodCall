@@ -542,23 +542,21 @@ await send('Emulation.setDeviceMetricsOverride', {
 failLive = true;
 await reload();
 await go('#/catalog/smartphones');
-await sleep(1500);
-check(
-  'fallback: no live links',
-  (await evaluate(`document.querySelectorAll('.product-card__link').length`)) === 0,
+await waitFor(
+  `document.querySelector('main.route-status:not([aria-busy]) .route-status__actions button')`,
+  'catalog failure state',
+  20000,
 );
 check(
-  'fallback: add buttons natively disabled',
-  await evaluate(
-    `[...document.querySelectorAll('.product-card__cart')].length > 0 && [...document.querySelectorAll('.product-card__cart')].every((b) => b.disabled)`,
-  ),
+  'failure: catalog shows RouteStatus, no product cards or cart actions',
+  (await evaluate(`document.querySelectorAll('.product-card, .product-card__cart').length`)) ===
+    0 &&
+    (await evaluate(`document.querySelector('h1')?.textContent`)) === 'Товары временно недоступны',
 );
-await evaluate(`document.querySelector('.product-card__cart').click()`);
-await sleep(150);
-check('fallback: click does not enter cart', (await stored()) === null && (await badge()) === '0');
+check('failure: cart untouched', (await stored()) === null && (await badge()) === '0');
 check(
-  'fallback: no stepper shown',
-  (await evaluate(`document.querySelectorAll('.catalog-grid .ui-stepper').length`)) === 0,
+  'failure: no stepper shown',
+  (await evaluate(`document.querySelectorAll('.ui-stepper').length`)) === 0,
 );
 
 failLive = false;

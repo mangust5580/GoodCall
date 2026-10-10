@@ -147,6 +147,39 @@ Technically complete:
 Active visual slice: none. Active implementation milestone: none. No next
 milestone is approved; select from `docs/master-backlog.md` when requested.
 
+- **WP-03 / Honest asynchronous states — USER VISUAL PASS on 2026-10-10,
+  CLOSED and published.** D-02 was approved by the user on 2026-10-10 for the
+  smartphone Catalog and Search only: no skeleton, and failure copy that
+  mirrors Laptops.
+
+- `#/catalog/smartphones` and `#/search` use explicit loading, ready and
+  failure states.
+  - **Loading:** `RouteStatus` «Загружаем товары…» (`aria-busy`, `role=status`).
+  - **Failure:** `RouteStatus` «Товары временно недоступны» with a focusable
+    «Повторить» button and «На главную». The messages are «Не удалось
+    загрузить смартфоны. Попробуйте ещё раз.» and «Не удалось выполнить поиск.
+    Попробуйте ещё раз.». No internal error details are shown. Missing
+    configuration (`unavailable`) shows the same failure state.
+  - **Retry** re-runs the read in place, with no reload. The effect cleanup
+    ignores completions from an earlier attempt or after unmount.
+- Production no longer shows the specimen catalog («2 546 товаров», fixture
+  facets) or fixture Search rows while loading or after a failure. Deep-link
+  filters, query, sort and page are kept and applied once live data arrives.
+- Ready results with no matches keep the existing empty states.
+- `?reference=catalog`, Laptops, `RouteStatus`, `fetchCatalogProducts`, routes
+  and dependencies are unchanged. Cache, timeout and automatic retry stay in
+  WP-04.
+- Proof: the `search` suite covers pending, failure, keyboard focus on retry,
+  repeated failure and successful retry for both routes. The `cart` and
+  `favorites` suites assert that a failure shows no cards and persists
+  nothing. Protected `?reference=` and production Catalog pixel diffs stay 0.
+- **Known limitations:** the missing-config browser scenario is not covered
+  directly (verify builds always mock the Supabase env). Stale-completion
+  races are reviewed in code and not injected in a browser. After «Повторить»,
+  focus returns to the document body (existing `RouteStatus` behaviour).
+  supabase-js retries network failures internally, so the failure state
+  appears after a few seconds; timeout policy belongs to WP-04.
+
 - **WP-02 stage 1 / Honest catalog navigation — USER VISUAL PASS on
   2026-10-10, CLOSED and published.** D-01 stage 1 was approved on 2026-10-10.
 
@@ -578,8 +611,9 @@ per-state screenshots.
   applied state (filters, quick filter, sort, page). `CatalogRoute` parses
   `useSearchParams()` against the live facets once products are `ready` and
   passes `applied` + `onAppliedChange` to `CatalogPage`; the page keeps no
-  second live copy. Specimen, pre-ready, fallback and `?reference=catalog` keep
-  local state and ignore Catalog params (left untouched).
+  second live copy. Specimen and `?reference=catalog` keep local state and
+  ignore Catalog params. Since WP-03 the production loading and failure states
+  render `RouteStatus` and leave the params untouched.
 - **Params** (pure `src/pages/catalog/catalogUrlState.ts`): repeated `brand`,
   `memory`, `colour`, `rating`; `price_from`, `price_to`, `quick`, `sort`,
   `page`. Sort is exactly `popular | cheap | expensive | rating` (no aliases);
@@ -707,7 +741,8 @@ USER VISUAL/UX PASS after reviewing the implemented thumbnail integration.
   `HOME_DEVICE_MEDIA` on Home). The lookup runs only in the live mappers
   (`catalogProductData.ts` sets `CatalogProduct.image`; `homeData.ts` sets
   `HomeProduct.thumbnail`), so fixtures, `?reference=catalog`,
-  `?reference=home` and the Search fixture fallback are unchanged. Search rows
+  and `?reference=home` are unchanged (the Search fixture fallback was later
+  removed by WP-03). Search rows
   render `Picture` when `image` is set, with the same row geometry.
 
 ### PDP Media Coverage A — Batch 1
@@ -1665,8 +1700,8 @@ builder extracted unchanged from `CatalogRoute`. It is called with
   `В корзину`. The row grid `136px / 1fr / auto` and the media, info and
   price hierarchy are unchanged. The only new styles are the two Search-owned
   flex rules in `search.scss`.
-- Fallback results (`CATALOG_PRODUCTS`) render the add control natively
-  `disabled`, with no stepper and no cart mutation.
+- Since WP-03 there are no fallback results: a failed read shows the
+  failure `RouteStatus`, with no rows and no cart mutation.
 - One visually hidden `role="status"` line in `SearchPage` announces
   «Товар добавлен в корзину: … В корзине: N шт.». Focus does not move.
 
@@ -1835,8 +1870,8 @@ added product and the resulting line quantity. Focus does not move. The
 
 **Local development.** Live product-backed commerce needs
 `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` in an untracked
-`.env.local`. Without them Catalog renders its fixture fallback with disabled
-`В корзину`, and `#/product/iphone-15-128` shows its error state. `VITE_*`
+`.env.local`. Without them Catalog and Search show the WP-03 failure
+`RouteStatus`, and `#/product/iphone-15-128` shows its error state. `VITE_*`
 values are compiled at build time, so `npm run preview` serves whatever the
 last `npm run build` saw. Rebuild after changing env, or use `npm run dev`.
 
@@ -2172,10 +2207,9 @@ obsolete evidence.
 **Data.**
 
 - `SearchRoute` reuses Catalog's unchanged `fetchCatalogProducts()` once per
-  mount (the smartphones category), with `CATALOG_PRODUCTS` as the fixture
-  fallback — the same philosophy as Catalog.
-- The search scope is therefore the current Catalog (16 live smartphones or
-  16 fixtures). Other categories are not searchable, because their mapping and
+  mount (the smartphones category). The original `CATALOG_PRODUCTS` fixture
+  fallback was replaced by WP-03 loading and failure states.
+- The search scope is therefore the current Catalog (16 live smartphones). Other categories are not searchable, because their mapping and
   imagery do not exist.
 - No backend schema, query or endpoint was added.
 - Results are derived synchronously from the corpus and the URL query, so
@@ -5058,7 +5092,8 @@ is the first ordered image for the product and its public URL is resolved throug
 the Supabase Storage bucket API. Once the live read is `ready`, the count,
 filter options and counts, quick filters and pagination are derived from the
 live products (Catalog Live Results A); the `2 546` count, fixture counts and
-65-page pagination remain the specimen/fallback contract.
+65-page pagination remain the specimen contract (`?reference=catalog`); since
+WP-03 production shows `RouteStatus` while loading and after a failure.
 
 The Supabase GitHub Actions variables are configured. Pages rerun attempt 2 for
 Integration A succeeded, the compiled Pages artifact was verified to contain the
@@ -5449,8 +5484,9 @@ requested.
 
 ## Project closeout state
 
-WP-02 stage 1 (honest catalog navigation) is the last published milestone,
-after WP-05. WP-02 stage 2 stays deferred.
+WP-03 (honest asynchronous states for the smartphone Catalog and Search) is
+the last published milestone, after WP-02 stage 1. WP-02 stage 2 stays
+deferred.
 **Active visual slice: none. Active implementation milestone: none.** No
 active code-level release blocker is known, and there is no approved next
 milestone. The next activity is selecting from `docs/master-backlog.md` when

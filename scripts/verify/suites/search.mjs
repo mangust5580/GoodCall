@@ -17,6 +17,7 @@ const MOCK_HOST = 'mock-goodcall.supabase.co';
 const KEY = 'goodcall.cart.v1';
 const results = [];
 let failLive = false;
+let hangLive = false;
 let catalogRows = false;
 
 const row = (slug, name, brand, price, oldPrice, pop) => ({
@@ -124,6 +125,9 @@ const cors = () => [
 cdp.onEvent((msg) => {
   if (msg.method === 'Fetch.requestPaused') {
     const { requestId, request } = msg.params;
+    if (hangLive) {
+      return;
+    }
     if (failLive) {
       send('Fetch.failRequest', { requestId, errorReason: 'Failed' });
       return;
@@ -205,6 +209,30 @@ const cardOf = (title) =>
   `[...document.querySelectorAll('.search-results .product-card')].find((c) => c.querySelector('.product-card__title')?.textContent === ${JSON.stringify(title)})`;
 const status = () =>
   evaluate(`document.querySelector('main.search-page > p[role="status"]')?.textContent ?? ''`);
+const asyncFacts = () =>
+  evaluate(`(() => {
+    const route = document.querySelector('main.route-status');
+    const text = document.body.textContent.replace(/\\s/g, ' ');
+    return {
+      mains: document.querySelectorAll('main').length,
+      routeStatus: route !== null,
+      busy: route?.getAttribute('aria-busy') ?? null,
+      status: route?.querySelector('[role="status"]')?.textContent ?? null,
+      h1: [...document.querySelectorAll('h1')].map((h) => h.textContent),
+      message: route?.querySelector('.route-status__message')?.textContent ?? null,
+      actions: [...(route?.querySelectorAll('.route-status__actions > *') ?? [])].map((el) =>
+        el.tagName === 'BUTTON'
+          ? 'button:' + el.textContent + ':' + el.type
+          : 'a:' + el.textContent + '=' + el.getAttribute('href'),
+      ),
+      cards: document.querySelectorAll('.product-card, .search-row').length,
+      catalogPage: document.querySelector('.catalog-page') !== null,
+      searchPage: document.querySelector('.search-page') !== null,
+      specimenCount: text.includes('2 546'),
+      title: document.title,
+    };
+  })()`);
+const FAILURE_ACTIONS = JSON.stringify(['button:Повторить:button', 'a:На главную=#/']);
 
 const GRAMMAR = [
   [0, '0 товаров'],
@@ -1625,18 +1653,88 @@ await sleep(200);
 await viewport(1440, 900, false);
 await goCatalog('');
 
+hangLive = true;
+await reload();
+await go(`${CATALOG_HASH}?brand=Apple&quick=discounted`);
+await sleep(600);
+let asyncState = await asyncFacts();
+check(
+  'catalog async: pending read → RouteStatus loading, no specimen products or counts',
+  asyncState.mains === 1 &&
+    asyncState.routeStatus &&
+    asyncState.busy === 'true' &&
+    asyncState.status === 'Загружаем товары…' &&
+    asyncState.h1.length === 0 &&
+    asyncState.cards === 0 &&
+    !asyncState.catalogPage &&
+    !asyncState.specimenCount &&
+    asyncState.title.startsWith('Смартфоны') &&
+    (await urlQuery()) === 'brand=Apple&quick=discounted',
+  JSON.stringify(asyncState),
+);
+hangLive = false;
 failLive = true;
 await reload();
-await go(`${CATALOG_HASH}?brand=Apple&quick=discounted&sort=cheap&page=3`);
-await sleep(1500);
+await waitFor(
+  `document.querySelector('main.route-status:not([aria-busy]) .route-status__actions button')`,
+  'failure state',
+  20000,
+);
+asyncState = await asyncFacts();
+check(
+  'catalog async: read failure → RouteStatus failure with retry, no specimen, URL kept',
+  asyncState.mains === 1 &&
+    asyncState.routeStatus &&
+    asyncState.busy === null &&
+    JSON.stringify(asyncState.h1) === JSON.stringify(['Товары временно недоступны']) &&
+    asyncState.message === 'Не удалось загрузить смартфоны. Попробуйте ещё раз.' &&
+    JSON.stringify(asyncState.actions) === FAILURE_ACTIONS &&
+    asyncState.cards === 0 &&
+    !asyncState.catalogPage &&
+    !asyncState.specimenCount &&
+    asyncState.title.startsWith('Товары временно недоступны') &&
+    (await urlQuery()) === 'brand=Apple&quick=discounted',
+  JSON.stringify(asyncState),
+);
+await evaluate(`window.__goodcallNoReload = true`);
+await evaluate(`document.querySelector('.route-status__actions button').focus()`);
+check(
+  'catalog async: retry is a keyboard-focusable native button',
+  await evaluate(`document.activeElement?.textContent === 'Повторить'`),
+);
+await evaluate(`document.querySelector('.route-status__actions button').click()`);
+await sleep(100);
+await waitFor(
+  `document.querySelector('main.route-status:not([aria-busy]) .route-status__actions button')`,
+  'failure state',
+  20000,
+);
+asyncState = await asyncFacts();
+check(
+  'catalog async: retry that fails again → failure again, same page, URL kept',
+  JSON.stringify(asyncState.h1) === JSON.stringify(['Товары временно недоступны']) &&
+    JSON.stringify(asyncState.actions) === FAILURE_ACTIONS &&
+    asyncState.cards === 0 &&
+    (await evaluate(`window.__goodcallNoReload === true`)) &&
+    (await urlQuery()) === 'brand=Apple&quick=discounted',
+  JSON.stringify(asyncState),
+);
+failLive = false;
+await evaluate(`document.querySelector('.route-status__actions button').click()`);
+await waitFor(`document.querySelector('.catalog-grid .product-card')`, 'catalog retry success');
+await sleep(300);
 urlState = await catalogState();
 check(
-  'catalog url: specimen fallback ignores Catalog params and leaves the URL untouched',
-  urlState.count === '2 546 товаров' &&
-    pressedQuick(urlState) === 'Все смартфоны' &&
-    urlState.quick.length === 7 &&
-    (await appliedUi()).sort === 'Сначала популярные' &&
-    (await urlQuery()) === 'brand=Apple&quick=discounted&sort=cheap&page=3',
+  'catalog async: retry success → live catalog without reload, deep-link filters applied',
+  (await evaluate(`window.__goodcallNoReload === true`)) &&
+    pressedQuick(urlState) === 'Со скидкой' &&
+    urlState.titles.length > 0 &&
+    urlState.titles.every((title) => title.startsWith('Apple')) &&
+    urlState.count !== '2 546 товаров' &&
+    (await appliedUi()).checked.includes('Apple') &&
+    (await urlQuery()) === 'brand=Apple&quick=discounted' &&
+    (await evaluate(`document.querySelectorAll('main.route-status').length`)) === 0 &&
+    (await evaluate(`document.title`)).startsWith('Смартфоны'),
   JSON.stringify(urlState),
 );
 failLive = false;
@@ -1823,32 +1921,85 @@ check(
 await send('Page.navigate', { url: `${BASE}#/` });
 await sleep(1500);
 
-failLive = true;
+hangLive = true;
 await reload();
 await go('#/search?q=iphone');
-await sleep(1500);
-check(
-  'E fallback: fixture results render (desktop rows)',
-  (await evaluate(`document.querySelectorAll('.search-row').length`)) > 0 &&
-    (await evaluate(`document.querySelectorAll('.search-row__link').length`)) === 0,
-);
-check(
-  'E fallback: row add natively disabled, no stepper',
-  await evaluate(
-    `[...document.querySelectorAll('.search-row .product-action--cart')].every((b) => b.disabled) && document.querySelectorAll('.search-row .ui-stepper').length === 0`,
-  ),
-);
-await evaluate(`document.querySelector('.search-row .product-action--cart').click()`);
-await sleep(150);
-check('E fallback: click → no cart mutation', (await stored()) === null && (await badge()) === '0');
-await viewport(390, 844, true);
-await go('#/search?q=iphone');
 await sleep(600);
+let searchAsync = await asyncFacts();
 check(
-  'E fallback: mobile card add disabled, no stepper',
-  await evaluate(
-    `document.querySelectorAll('.search-results .product-card__cart').length > 0 && [...document.querySelectorAll('.search-results .product-card__cart')].every((b) => b.disabled) && document.querySelectorAll('.search-results .ui-stepper').length === 0`,
-  ),
+  'search async: pending read → RouteStatus loading, no fixture rows',
+  searchAsync.mains === 1 &&
+    searchAsync.busy === 'true' &&
+    searchAsync.status === 'Загружаем товары…' &&
+    searchAsync.cards === 0 &&
+    !searchAsync.searchPage &&
+    searchAsync.title.startsWith('Результаты поиска «iphone»'),
+  JSON.stringify(searchAsync),
+);
+hangLive = false;
+failLive = true;
+await reload();
+await waitFor(
+  `document.querySelector('main.route-status:not([aria-busy]) .route-status__actions button')`,
+  'failure state',
+  20000,
+);
+searchAsync = await asyncFacts();
+check(
+  'search async: read failure → RouteStatus failure with retry, no fixture rows, query kept',
+  searchAsync.mains === 1 &&
+    searchAsync.busy === null &&
+    JSON.stringify(searchAsync.h1) === JSON.stringify(['Товары временно недоступны']) &&
+    searchAsync.message === 'Не удалось выполнить поиск. Попробуйте ещё раз.' &&
+    JSON.stringify(searchAsync.actions) === FAILURE_ACTIONS &&
+    searchAsync.cards === 0 &&
+    !searchAsync.searchPage &&
+    searchAsync.title.startsWith('Товары временно недоступны') &&
+    (await evaluate(`location.hash`)) === '#/search?q=iphone',
+  JSON.stringify(searchAsync),
+);
+check(
+  'search async: failure → no cart mutation',
+  (await stored()) === null && (await badge()) === '0',
+);
+await evaluate(`window.__goodcallNoReload = true`);
+await evaluate(`document.querySelector('.route-status__actions button').click()`);
+await sleep(100);
+await waitFor(
+  `document.querySelector('main.route-status:not([aria-busy]) .route-status__actions button')`,
+  'failure state',
+  20000,
+);
+searchAsync = await asyncFacts();
+check(
+  'search async: retry that fails again → failure again, no reload',
+  JSON.stringify(searchAsync.h1) === JSON.stringify(['Товары временно недоступны']) &&
+    searchAsync.cards === 0 &&
+    (await evaluate(`window.__goodcallNoReload === true`)),
+  JSON.stringify(searchAsync),
+);
+failLive = false;
+await evaluate(`document.querySelector('.route-status__actions button').click()`);
+await waitFor(`document.querySelector('.search-row')`, 'search retry success');
+await sleep(300);
+check(
+  'search async: retry success → live rows with links, no reload, query kept',
+  (await evaluate(`window.__goodcallNoReload === true`)) &&
+    (await evaluate(`document.querySelectorAll('.search-row__link').length`)) > 0 &&
+    (await evaluate(
+      `[...document.querySelectorAll('.search-row__title')].every((t) => /iphone/i.test(t.textContent))`,
+    )) &&
+    (await evaluate(`document.querySelectorAll('main.route-status').length`)) === 0 &&
+    (await evaluate(`location.hash`)) === '#/search?q=iphone' &&
+    (await evaluate(`document.title`)).startsWith('Результаты поиска «iphone»'),
+);
+await go('#/search?q=zzzz-no-match');
+await sleep(400);
+check(
+  'search async: ready with no matches keeps the designed empty state, not the failure state',
+  (await evaluate(`document.querySelectorAll('main.route-status').length`)) === 0 &&
+    (await evaluate(`document.querySelector('.search-page .empty-state') !== null`)) &&
+    (await evaluate(`document.querySelectorAll('.search-row').length`)) === 0,
 );
 check(
   'unrelated localStorage untouched',

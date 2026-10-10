@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 
+import { RouteStatus } from '../../components/feedback';
 import {
   CatalogPage,
   buildCatalogLiveFacets,
@@ -16,9 +17,40 @@ import { useCatalogCartSeam } from './useCatalogCartSeam';
 import { useCatalogCompareSeam } from './useCatalogCompareSeam';
 import { useCatalogFavoritesSeam } from './useCatalogFavoritesSeam';
 
+type SmartphonesRead =
+  | { readonly status: 'loading' }
+  | { readonly status: 'ready'; readonly products: readonly CatalogProduct[] }
+  | { readonly status: 'failure' };
+
+function SmartphonesLoading() {
+  return <RouteStatus kind="loading" message="Загружаем товары…" />;
+}
+
+function SmartphonesFailure({ onRetry }: { readonly onRetry: () => void }) {
+  return (
+    <RouteStatus
+      actions={
+        <>
+          <button className="ui-button ui-button--primary" onClick={onRetry} type="button">
+            Повторить
+          </button>
+          <Link className="ui-button ui-button--secondary" to={HOME_PATH}>
+            На главную
+          </Link>
+        </>
+      }
+      kind="failure"
+      message="Не удалось загрузить смартфоны. Попробуйте ещё раз."
+      title="Товары временно недоступны"
+    />
+  );
+}
+
 export function CatalogRoute() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [products, setProducts] = useState<readonly CatalogProduct[]>();
+  const [read, setRead] = useState<SmartphonesRead>({ status: 'loading' });
+  const [attempt, setAttempt] = useState(0);
+  const products = read.status === 'ready' ? read.products : undefined;
   const facets = useMemo(
     () => (products === undefined ? undefined : buildCatalogLiveFacets(products)),
     [products],
@@ -27,7 +59,7 @@ export function CatalogRoute() {
   const cart = useCatalogCartSeam(products !== undefined);
   const favorites = useCatalogFavoritesSeam(products !== undefined);
   const compare = useCatalogCompareSeam(products !== undefined);
-  useDocumentTitle('Смартфоны');
+  useDocumentTitle(read.status === 'failure' ? 'Товары временно недоступны' : 'Смартфоны');
 
   useEffect(() => {
     let mounted = true;
@@ -38,16 +70,26 @@ export function CatalogRoute() {
       }
 
       if (result.status === 'ready') {
-        setProducts(result.products);
-      } else if (result.status === 'failure' && import.meta.env.DEV) {
-        console.warn('Catalog Supabase fallback', result.reason);
+        setRead({ status: 'ready', products: result.products });
+        return;
       }
+
+      if (import.meta.env.DEV) {
+        console.warn('Smartphones catalog read failed', result.reason);
+      }
+
+      setRead({ status: 'failure' });
     });
 
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [attempt]);
+
+  const handleRetry = () => {
+    setRead({ status: 'loading' });
+    setAttempt((current) => current + 1);
+  };
 
   const handleAppliedChange = (next: CatalogAppliedState, history: CatalogHistoryMode) => {
     const serialized = serializeCatalogUrlState(next, searchParams);
@@ -61,17 +103,21 @@ export function CatalogRoute() {
 
   return (
     <ProductionShell>
-      <CatalogPage
-        applied={applied}
-        cart={cart}
-        compare={compare}
-        favorites={favorites}
-        homeHref={hashHref(HOME_PATH)}
-        mode={products === undefined ? 'specimen' : 'live'}
-        onAppliedChange={applied === undefined ? undefined : handleAppliedChange}
-        productHref={products === undefined ? undefined : productDetailsHref}
-        products={products}
-      />
+      {read.status === 'loading' ? <SmartphonesLoading /> : null}
+      {read.status === 'failure' ? <SmartphonesFailure onRetry={handleRetry} /> : null}
+      {products !== undefined && applied !== undefined ? (
+        <CatalogPage
+          applied={applied}
+          cart={cart}
+          compare={compare}
+          favorites={favorites}
+          homeHref={hashHref(HOME_PATH)}
+          mode="live"
+          onAppliedChange={handleAppliedChange}
+          productHref={productDetailsHref}
+          products={products}
+        />
+      ) : null}
     </ProductionShell>
   );
 }
