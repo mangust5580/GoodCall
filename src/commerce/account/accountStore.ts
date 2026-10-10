@@ -135,6 +135,35 @@ function currentState(): AccountState {
   return state;
 }
 
+function notify(): void {
+  listeners.forEach((listener) => {
+    listener();
+  });
+}
+
+function handleStorage(event: StorageEvent): void {
+  if (event.key !== null && event.key !== ACCOUNT_STORAGE_KEY) {
+    return;
+  }
+
+  if (event.storageArea !== window.localStorage) {
+    return;
+  }
+
+  state = undefined;
+  notify();
+}
+
+function listenForStorageChanges(): void {
+  try {
+    window.addEventListener('storage', handleStorage);
+  } catch {
+    return;
+  }
+}
+
+listenForStorageChanges();
+
 function commit(next: AccountState): void {
   state = next;
 
@@ -144,9 +173,7 @@ function commit(next: AccountState): void {
     removeStoredAccount();
   }
 
-  listeners.forEach((listener) => {
-    listener();
-  });
+  notify();
 }
 
 function updateSignedIn(

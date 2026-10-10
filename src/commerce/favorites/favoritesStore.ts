@@ -141,12 +141,39 @@ function currentItems(): readonly FavoriteItem[] {
   return items;
 }
 
-function commit(next: readonly FavoriteItem[]): void {
-  items = next;
-  writeStoredItems(next);
+function notify(): void {
   listeners.forEach((listener) => {
     listener();
   });
+}
+
+function handleStorage(event: StorageEvent): void {
+  if (event.key !== null && event.key !== FAVORITES_STORAGE_KEY) {
+    return;
+  }
+
+  if (event.storageArea !== window.localStorage) {
+    return;
+  }
+
+  items = undefined;
+  notify();
+}
+
+function listenForStorageChanges(): void {
+  try {
+    window.addEventListener('storage', handleStorage);
+  } catch {
+    return;
+  }
+}
+
+listenForStorageChanges();
+
+function commit(next: readonly FavoriteItem[]): void {
+  items = next;
+  writeStoredItems(next);
+  notify();
 }
 
 export function subscribeFavorites(listener: Listener): () => void {

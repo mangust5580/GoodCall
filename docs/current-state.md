@@ -147,6 +147,27 @@ Technically complete:
 Active visual slice: none. Active implementation milestone: none. No next
 milestone is approved; select from `docs/master-backlog.md` when requested.
 
+- **WP-05 / Cross-tab storage notifications — USER FUNCTIONAL PASS on
+  2026-10-10 (two-tab acceptance), CLOSED and published.** No UI changed, so
+  there is no visual gate.
+- The cart, favourites, compare and account stores listen to the native
+  `storage` event for their own `goodcall.*.v1` key (or `clear()`, key
+  `null`) on `localStorage`. They drop the module cache and notify their
+  subscribers. The next read goes through the existing parser and recovery
+  rules.
+- Keys, schemas and parsers are unchanged. Local writes still notify through
+  `commit`.
+- City (`goodcall.city.v1`) is excluded by user decision and deferred as a
+  separate follow-up. It has no store or subscriber contract, and the location
+  control reads it once.
+- `goodcall.lastOrder.v1` (sessionStorage) is not touched.
+- **Known limitation:** this fixes sequential changes only. Truly
+  simultaneous conflicting writes in two tabs remain last-write-wins. There
+  is no merge, locking or atomicity.
+- Proof: the Node `storage-sync` suite (simulated tabs) plus the user's
+  functional acceptance in two real tabs. There is no automated real-browser
+  two-tab gate.
+
 Completed visual slices:
 
 - **Store Thumbnail Sizing Hotfix — USER VISUAL PASS on 2026-10-10 (user's
@@ -5411,8 +5432,8 @@ requested.
 
 ## Project closeout state
 
-The Store Thumbnail Sizing Hotfix is the last published milestone (after Store
-Thumbnails and WP-01A).
+WP-05 (cross-tab storage notifications for four stores) is the last
+published milestone, after the Store Thumbnail Sizing Hotfix.
 **Active visual slice: none. Active implementation milestone: none.** No
 active code-level release blocker is known, and there is no approved next
 milestone. The next activity is selecting from `docs/master-backlog.md` when

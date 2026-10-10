@@ -17,6 +17,7 @@ const SUITES = [
   { name: 'home-cart', needs: ['app'] },
   { name: 'compare', needs: ['app'] },
   { name: 'compare-store', needs: [] },
+  { name: 'storage-sync', needs: [] },
   { name: 'search', needs: ['app'] },
   { name: 'cart', needs: ['app'] },
   { name: 'favorites', needs: ['app'] },

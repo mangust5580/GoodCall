@@ -175,12 +175,39 @@ function currentLines(): readonly CartLine[] {
   return lines;
 }
 
-function commit(next: readonly CartLine[]): void {
-  lines = next;
-  writeStoredLines(next);
+function notify(): void {
   listeners.forEach((listener) => {
     listener();
   });
+}
+
+function handleStorage(event: StorageEvent): void {
+  if (event.key !== null && event.key !== CART_STORAGE_KEY) {
+    return;
+  }
+
+  if (event.storageArea !== window.localStorage) {
+    return;
+  }
+
+  lines = undefined;
+  notify();
+}
+
+function listenForStorageChanges(): void {
+  try {
+    window.addEventListener('storage', handleStorage);
+  } catch {
+    return;
+  }
+}
+
+listenForStorageChanges();
+
+function commit(next: readonly CartLine[]): void {
+  lines = next;
+  writeStoredLines(next);
+  notify();
 }
 
 function update(transform: (current: readonly CartLine[]) => readonly CartLine[]): void {
