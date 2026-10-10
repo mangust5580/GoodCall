@@ -149,6 +149,15 @@ milestone is approved; select from `docs/master-backlog.md` when requested.
 
 Completed visual slices:
 
+- **Store Thumbnail Sizing Hotfix — USER VISUAL PASS on 2026-10-10 (user's
+  explicit «теперь то что нужно. visual pass» for `#/shops` and the Contacts
+  «Наши магазины» thumbnails), CLOSED and published.** On `#/shops` the
+  `<img>` took `height: 512px` from its `height` attribute, so
+  `aspect-ratio: 1` never applied: the 72px slot showed a magnified central
+  strip. `.store-card__image` now sets `height: auto`. The Contacts thumbnails
+  already fit their slot. The `contacts` suite asserts that each image box
+  equals its slot at 1440/390/320 on both pages.
+
 - **Store Thumbnails — USER VISUAL PASS on 2026-10-10 (user's explicit
   «принимаю» for the square thumbnails and their integration), CLOSED and
   published.**
@@ -5402,7 +5411,8 @@ requested.
 
 ## Project closeout state
 
-Store Thumbnails is the last published milestone (after WP-01A).
+The Store Thumbnail Sizing Hotfix is the last published milestone (after Store
+Thumbnails and WP-01A).
 **Active visual slice: none. Active implementation milestone: none.** No
 active code-level release blocker is known, and there is no approved next
 milestone. The next activity is selecting from `docs/master-backlog.md` when

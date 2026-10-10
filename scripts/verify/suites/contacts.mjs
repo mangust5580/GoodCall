@@ -65,6 +65,18 @@ function storeVisuals(cardSelector, visualSelector) {
           icon: slot?.querySelector('.ui-icon--store') !== null,
           slotWidth: Math.round(slot?.getBoundingClientRect().width ?? 0),
           slotHeight: Math.round(slot?.getBoundingClientRect().height ?? 0),
+          imageBox: (() => {
+            if (slot === null || image === null || image === undefined) return null;
+            const outer = slot.getBoundingClientRect();
+            const inner = image.getBoundingClientRect();
+            return {
+              left: Math.round(inner.left - outer.left),
+              top: Math.round(inner.top - outer.top),
+              width: Math.round(inner.width),
+              height: Math.round(inner.height),
+              fit: getComputedStyle(image).objectFit,
+            };
+          })(),
         };
       }),
     [cardSelector, visualSelector],
@@ -101,6 +113,18 @@ function checkStoreVisuals(label, visuals, ids) {
   check(
     visuals.every((visual) => visual.slotWidth > 0 && visual.slotWidth === visual.slotHeight),
     `${label}: square thumbnail slots ${JSON.stringify(visuals.map((v) => [v.slotWidth, v.slotHeight]))}`,
+  );
+  check(
+    visuals.every(
+      (visual) =>
+        visual.imageBox !== null &&
+        visual.imageBox.left === 0 &&
+        visual.imageBox.top === 0 &&
+        visual.imageBox.width === visual.slotWidth &&
+        visual.imageBox.height === visual.slotHeight &&
+        visual.imageBox.fit === 'cover',
+    ),
+    `${label}: thumbnail image box fills its slot exactly, whole square source shown ${JSON.stringify(visuals.map((v) => [v.slotWidth, v.slotHeight, v.imageBox]))}`,
   );
 }
 
@@ -466,6 +490,34 @@ for (const width of [1440, 390, 320]) {
   check(metrics.overflow <= 0, `${key}: horizontal overflow ${metrics.overflow}`);
   check(metrics.small.length === 0, `${key}: small touch targets ${metrics.small}`);
   check(metrics.clipped === 0, `${key}: clipped content ${metrics.clipped}`);
+  for (const [path, visual] of [
+    ['/contacts', '.contacts-store__visual'],
+    ['/shops', '.store-card__visual'],
+  ]) {
+    if (path !== '/contacts') {
+      await open(shot, path);
+    }
+    const boxes = await shot.evaluate(
+      (selector) =>
+        [...document.querySelectorAll(selector)].map((slot) => {
+          const outer = slot.getBoundingClientRect();
+          const inner = slot.querySelector('img')?.getBoundingClientRect();
+          return inner === undefined
+            ? null
+            : [
+                Math.round(inner.left - outer.left),
+                Math.round(inner.top - outer.top),
+                Math.round(inner.width - outer.width),
+                Math.round(inner.height - outer.height),
+              ];
+        }),
+      visual,
+    );
+    check(
+      boxes.length > 0 && boxes.every((box) => box !== null && box.every((delta) => delta === 0)),
+      `${path}@${width}: thumbnail images match their slots ${JSON.stringify(boxes)}`,
+    );
+  }
   await shot.close();
 }
 
