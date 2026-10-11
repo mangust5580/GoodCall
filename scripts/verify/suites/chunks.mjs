@@ -6,6 +6,8 @@ import { appChunksFile, appDir, referenceChunksFile, reportCounts } from '../lib
 
 const INFO_PAGES_DIR = 'src/pages/info/';
 const INFO_ROUTES_MODULE = 'src/app/routes/InfoRoutes.tsx';
+const REFERENCE_DIR = 'src/reference/';
+const REFERENCE_SURFACE_MODULE = 'src/reference/ReferenceSurface.tsx';
 
 let passed = 0;
 const failures = [];
@@ -16,6 +18,7 @@ function check(condition, message) {
 
 const readReport = (file) => JSON.parse(readFileSync(file, 'utf8'));
 const isInfoModule = (id) => id.startsWith(INFO_PAGES_DIR) || id === INFO_ROUTES_MODULE;
+const isReferenceModule = (id) => id.startsWith(REFERENCE_DIR);
 const kB = (bytes) => `${(bytes / 1000).toFixed(2)} kB`;
 
 function staticClosure(report, entry) {
@@ -31,12 +34,15 @@ function staticClosure(report, entry) {
   return [...seen.values()];
 }
 
-function infoBytes(chunks) {
+function moduleBytes(chunks, matches) {
   return chunks
     .flatMap((chunk) => chunk.modules)
-    .filter((module) => isInfoModule(module.id))
+    .filter((module) => matches(module.id))
     .reduce((sum, module) => sum + module.renderedLength, 0);
 }
+
+const infoBytes = (chunks) => moduleBytes(chunks, isInfoModule);
+const referenceBytes = (chunks) => moduleBytes(chunks, isReferenceModule);
 
 const app = readReport(appChunksFile());
 const reference = readReport(referenceChunksFile());
@@ -80,23 +86,64 @@ for (const chunk of infoChunks) {
   check(!html.includes(chunk.fileName), `index.html does not load or preload ${chunk.fileName}`);
 }
 
-const cssAssets = app.assets.filter((asset) => asset.fileName.endsWith('.css'));
-check(cssAssets.length === 1, `exactly one CSS asset (found ${cssAssets.length})`);
-check(
-  cssAssets.length === 1 && html.includes(cssAssets[0].fileName),
-  'index.html links the CSS asset',
+const initialReference = initial.flatMap((chunk) =>
+  chunk.modules.filter((module) => isReferenceModule(module.id)).map((module) => module.id),
 );
 check(
-  app.chunks.every((chunk) => chunk === entry || chunk.importedCss.length === 0),
-  'no CSS is split into lazy chunks',
+  initialReference.length === 0,
+  `no ?reference= module in the entry or its static imports (found ${initialReference.join(', ')})`,
+);
+
+const referenceModules = readdirSync(REFERENCE_DIR)
+  .filter((file) => file.endsWith('.tsx'))
+  .map((file) => `${REFERENCE_DIR}${file}`);
+for (const id of referenceModules) {
+  check(lazyModuleIds.has(id), `${id} is in a lazily loaded chunk`);
+}
+
+const surfaceChunk = app.chunks.find((chunk) => chunk.facadeModule === REFERENCE_SURFACE_MODULE);
+check(
+  surfaceChunk?.isDynamicEntry === true,
+  'ReferenceSurface.tsx is the facade of a dynamic entry',
+);
+check(
+  surfaceChunk !== undefined &&
+    initial.some((chunk) => chunk.dynamicImports.includes(surfaceChunk.fileName)),
+  'the initial chunks import the reference chunk only dynamically',
+);
+
+const referenceChunks = lazy.filter((chunk) =>
+  chunk.modules.some((module) => isReferenceModule(module.id)),
+);
+for (const chunk of referenceChunks) {
+  check(!html.includes(chunk.fileName), `index.html does not load or preload ${chunk.fileName}`);
+}
+
+const cssAssets = app.assets.filter((asset) => asset.fileName.endsWith('.css'));
+const linkedCss = cssAssets.filter((asset) => html.includes(asset.fileName));
+check(
+  linkedCss.length === 1 &&
+    JSON.stringify(entry.importedCss) === JSON.stringify([linkedCss[0].fileName]),
+  `index.html links exactly the entry CSS (${linkedCss.map((asset) => asset.fileName).join(', ')})`,
+);
+check(
+  infoChunks.every((chunk) => chunk.importedCss.length === 0),
+  'the Info chunks carry no CSS',
+);
+check(
+  app.chunks.every(
+    (chunk) => chunk === entry || chunk.importedCss.length === 0 || referenceChunks.includes(chunk),
+  ),
+  'only the reference chunk carries lazy CSS',
 );
 
 const lazyInfoBytes = infoBytes(infoChunks);
 check(lazyInfoBytes > 0, 'the lazy chunks carry the Info module code');
+check(referenceBytes(referenceChunks) > 0, 'the lazy chunks carry the ?reference= module code');
 
 const referenceEntry = reference.chunks.find((chunk) => chunk.isEntry);
-const referenceInitialInfoBytes = infoBytes(staticClosure(reference, referenceEntry));
-if (referenceInitialInfoBytes > 0) {
+const referenceInitial = staticClosure(reference, referenceEntry);
+if (infoBytes(referenceInitial) > 0 || referenceBytes(referenceInitial) > 0) {
   check(
     entry.bytes < referenceEntry.bytes,
     `entry shrinks against the unsplit reference (${kB(entry.bytes)} vs ${kB(referenceEntry.bytes)})`,
@@ -116,6 +163,11 @@ console.log(
 for (const chunk of infoChunks) {
   console.log(
     `INFO lazy ${chunk.fileName} ${kB(chunk.bytes)} raw / ${kB(gzipBytes(chunk.fileName))} gzip, Info modules before minification ${kB(infoBytes([chunk]))}`,
+  );
+}
+for (const chunk of referenceChunks) {
+  console.log(
+    `INFO lazy ${chunk.fileName} ${kB(chunk.bytes)} raw / ${kB(gzipBytes(chunk.fileName))} gzip, reference modules before minification ${kB(referenceBytes([chunk]))}`,
   );
 }
 for (const asset of cssAssets) {

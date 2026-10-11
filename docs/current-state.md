@@ -145,9 +145,50 @@ Technically complete:
   Current routes section below.
 
 Active visual slice: none. Active implementation milestone: none. WP-06 as a
-whole stays open: Stage 0 (baseline) is complete, and Stage 1, Stage 2B and
-Contacts media hygiene (AUD-12) are closed. No next slice is approved; select
-from `docs/master-backlog.md` when requested.
+whole stays open: Stage 0 (baseline) is complete, and Stage 1, Stage 2B,
+Contacts media hygiene (AUD-12) and Stage 2C are closed. No next slice is
+approved; select from `docs/master-backlog.md` when requested.
+
+- **WP-06 Stage 2C / lazy `?reference=` dispatch (Q-13) — USER VISUAL PASS
+  on 2026-10-11, CLOSED and published.** The user approved the scope and the
+  implementation GO on 2026-10-11. The measurements below were taken during
+  implementation. Production route behaviour is unchanged.
+- **Change:** `src/app/App.tsx` keeps `ProductionRouter` static and loads
+  every `?reference=` surface through one module-scope `React.lazy` boundary.
+  - The new `src/reference/ReferenceSurface.tsx` holds the unchanged key →
+    surface dispatch; an unknown key still renders `ReferenceIndex`.
+  - The `Suspense` fallback is reference-only: `<main aria-busy>` with an
+    English «Loading reference…» status. It sets no title and shows no
+    production shell.
+  - There is intentionally no chunk-error boundary. Reference pages are
+    developer surfaces, and a reload recovers them.
+  - A single boundary was chosen because one lazy import per key made
+    Rolldown extract the modules shared with the entry into ~10 common
+    chunks, so production would preload 11 JS files instead of 1.
+- **Chunks** (mock verify build; gzip is zlib level 9):
+  - Entry: 1,261.51 → 1,203.24 kB raw, 335.07 → 320.49 kB gzip
+    (−14.58 kB).
+  - Production CSS: 305.17 → 290.47 kB raw, 39.24 → 37.24 kB gzip. It is
+    the old file without its reference prefix, byte-for-byte; the former
+    prefix is now the lazy reference CSS.
+  - The reference chunk (59.32 kB / 15.91 kB gzip) and its CSS (14.72 kB)
+    load only on `?reference=`. Production still loads one JS and one CSS
+    file.
+  - Info/Legal stays split.
+- **Visual parity:** full-page pixel diff against the `a5e28a8` build was 0
+  for every reference key, the unknown key and Home, Catalog, PDP, Contacts
+  and Delivery, at 1440 and 390. Reference CSS now loads after the global
+  CSS with no pixel change.
+- **Lab measurements** (2026-10-11, same session; Stage 2B profiles; 3 cold
+  runs, medians): JS transfer per page 336.0 → 321.4 kB and CSS 39.9 → 37.9 kB.
+  Timings are mostly within noise: Home did not reproduce across two repeats,
+  and only mobile PDP LCP (3608 → 3280 ms) had non-overlapping runs in one
+  sample. A mobile LCP improvement is not established, and no timing
+  improvement is claimed.
+- **Verification:** `typecheck`; the `laptops`, `product-details`,
+  `info`, `contacts` and `chunks` verify suites are green (339, 707, 209,
+  91, 37 checks). The new `chunks` assertions fail on the `a5e28a8` build
+  (19/36).
 
 - **WP-06 Contacts media hygiene (AUD-12) — USER VISUAL PASS on 2026-10-11,
   CLOSED and published.** The user approved the build-time variant strategy
@@ -252,8 +293,8 @@ from `docs/master-backlog.md` when requested.
     and a working focus path on all eight routes.
 - **Closure:** published after the full release gate (`typecheck`, `lint`,
   `lint:styles`, `format:check`, `build`, full `npm run verify` including
-  `chunks`). AUD-05, Q-13 and GC-R61 stay open: other route families and the
-  `?reference=` entry are not split.
+  `chunks`). AUD-05 and GC-R61 stay open: other route families are not
+  split. Q-13 was resolved later by Stage 2C.
 
 - **WP-06 Stage 1 / Async loading layout stability — USER VISUAL PASS on
   2026-10-10, CLOSED and published.** The contract (including Search) was
@@ -5646,8 +5687,7 @@ themselves. A named breakpoint system is not approved; it depends on a future
 Foundations/design decision.
 
 Still open (not started): Q-07 typography roles, Q-08 residual breakpoint
-harmonization (deferred), Q-13 reference lazy loading, Q-14 footer
-destinations, Q-15 cross-category Search (product decision), Q-18 rating
+harmonization (deferred), Q-14 footer destinations, Q-15 cross-category Search (product decision), Q-18 rating
 separator.
 
 No next milestone is approved; select from the remaining backlog when
@@ -5655,8 +5695,8 @@ requested.
 
 ## Project closeout state
 
-WP-06 Contacts media hygiene (AUD-12) is the last published milestone, after
-WP-06 Stage 2B (Info/Legal route splitting). WP-06 as a whole stays open, and WP-02 stage 2 stays
+WP-06 Stage 2C (lazy `?reference=` dispatch, Q-13) is the last published
+milestone, after WP-06 Contacts media hygiene (AUD-12). WP-06 as a whole stays open, and WP-02 stage 2 stays
 deferred.
 **Active visual slice: none. Active implementation milestone: none.** No
 active code-level release blocker is known, and there is no approved next

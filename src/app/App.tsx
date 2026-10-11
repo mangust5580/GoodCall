@@ -1,18 +1,21 @@
-import { CatalogReference } from '../reference/CatalogReference';
-import { ComponentsReference } from '../reference/ComponentsReference';
-import { FooterReference } from '../reference/FooterReference';
-import { FoundationsColorReference } from '../reference/FoundationsColorReference';
-import { HeaderReference } from '../reference/HeaderReference';
-import { HomeReference } from '../reference/HomeReference';
-import { LayoutReference } from '../reference/LayoutReference';
-import { LocationReference } from '../reference/LocationReference';
-import { NewsletterReference } from '../reference/NewsletterReference';
-import { ProductDetailsReference } from '../reference/ProductDetailsReference';
-import { ReferenceIndex } from '../reference/TemporaryReference';
+import { Suspense, lazy } from 'react';
+
 import { ProductionRouter } from './ProductionRouter';
+
+const ReferenceSurface = lazy(() => import('../reference/ReferenceSurface'));
 
 function currentReference(): string | null {
   return new URLSearchParams(window.location.search).get('reference');
+}
+
+function ReferenceLoading() {
+  return (
+    <main aria-busy="true">
+      <p lang="en" role="status">
+        Loading reference…
+      </p>
+    </main>
+  );
 }
 
 export function App() {
@@ -22,45 +25,9 @@ export function App() {
     return <ProductionRouter />;
   }
 
-  if (reference === 'foundations') {
-    return <FoundationsColorReference />;
-  }
-
-  if (reference === 'components') {
-    return <ComponentsReference />;
-  }
-
-  if (reference === 'layout') {
-    return <LayoutReference />;
-  }
-
-  if (reference === 'header') {
-    return <HeaderReference />;
-  }
-
-  if (reference === 'location') {
-    return <LocationReference />;
-  }
-
-  if (reference === 'newsletter') {
-    return <NewsletterReference />;
-  }
-
-  if (reference === 'footer') {
-    return <FooterReference />;
-  }
-
-  if (reference === 'catalog') {
-    return <CatalogReference />;
-  }
-
-  if (reference === 'home') {
-    return <HomeReference />;
-  }
-
-  if (reference === 'product-details') {
-    return <ProductDetailsReference />;
-  }
-
-  return <ReferenceIndex />;
+  return (
+    <Suspense fallback={<ReferenceLoading />}>
+      <ReferenceSurface reference={reference} />
+    </Suspense>
+  );
 }
