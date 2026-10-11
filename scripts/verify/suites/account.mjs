@@ -2328,5 +2328,248 @@ check(
   `calendar: caption and 36px nav fit one row without overflow at 1440/1024/390/320 ${JSON.stringify(calendarShots)}`,
 );
 
+const FLOW_CHUNK = /\/assets\/AccountFlowRoutes-[\w-]+\.js$/;
+const FLOW_FAILURE_TITLE = 'Страница временно недоступна';
+const isFlowChunk = (request) => FLOW_CHUNK.test(new URL(request.url).pathname);
+const flowReady = () =>
+  document.querySelector('main h1') !== null &&
+  document.querySelector('main.route-status') === null;
+const flowShell = () => ({
+  shells: document.querySelectorAll('.production-shell').length,
+  mains: document.querySelectorAll('main').length,
+  headers: document.querySelectorAll('header.site-header').length,
+  footers: document.querySelectorAll('footer.site-footer').length,
+  h1: document.querySelectorAll('h1').length,
+  title: document.title,
+  hash: location.hash,
+});
+const singleFlowShell = (facts) =>
+  facts.shells === 1 && facts.mains === 1 && facts.headers === 1 && facts.footers === 1;
+const flowChunkLoaded = () =>
+  performance.getEntriesByType('resource').some((entry) => /\/AccountFlowRoutes-/.test(entry.name));
+const flowShiftFacts = () =>
+  new Promise((resolve) => {
+    const entries = [];
+    const observer = new PerformanceObserver((list) => entries.push(...list.getEntries()));
+    observer.observe({ type: 'layout-shift', buffered: true });
+    setTimeout(() => {
+      observer.disconnect();
+      const kept = entries.filter((entry) => !entry.hadRecentInput);
+      resolve({
+        total: Number(kept.reduce((sum, entry) => sum + entry.value, 0).toFixed(4)),
+        shell: kept.filter((entry) =>
+          entry.sources.some((source) => source.node?.closest?.('.newsletter-band, .site-footer')),
+        ).length,
+      });
+    }, 300);
+  });
+function flowChunkPage(width, height, chunkReply) {
+  return openPage(browser, {
+    width,
+    height,
+    interceptPatterns: [`*${MOCK_SUPABASE_HOST}*`, '*AccountFlowRoutes-*'],
+    respond: (request) => (isFlowChunk(request) ? chunkReply() : { status: 200, body: '[]' }),
+    onPageError: (message) => failures.push(`pageerror ${message}`),
+  });
+}
+async function flowEntry(page, path) {
+  await page.goto('about:blank');
+  await page.goto(`${BASE}#${path}`);
+  await page.waitForFunction(flowReady);
+  return page.evaluate(flowShell);
+}
+
+const flowHome = await newPage();
+await flowHome.goto(`${BASE}#/`);
+await flowHome.waitForSelector('.site-footer');
+check(
+  !(await flowHome.evaluate(flowChunkLoaded)),
+  'lazy flow: Home does not load the Checkout/Order/Account chunk',
+);
+await flowHome.close();
+
+const flowDirect = await newPage();
+const signedOut = await flowEntry(flowDirect, '/account/orders');
+check(
+  singleFlowShell(signedOut) &&
+    signedOut.hash === '#/login' &&
+    signedOut.title === 'Вход — GoodCall' &&
+    (await flowDirect.evaluate(flowChunkLoaded)),
+  `lazy flow: signed-out direct #/account/orders loads the chunk and redirects to Login ${JSON.stringify(signedOut)}`,
+);
+await flowDirect.click('main button', { hasText: 'Войти в демо-аккаунт' });
+await flowDirect.waitForFunction(() => location.hash === '#/account/orders');
+await flowDirect.waitForFunction(flowReady);
+const returned = await flowDirect.evaluate(flowShell);
+check(
+  singleFlowShell(returned) && returned.title === 'Мои заказы — GoodCall',
+  `lazy flow: sign-in returns to the intended #/account/orders ${JSON.stringify(returned)}`,
+);
+for (const [path, title] of [
+  ['/account', 'Личный кабинет — GoodCall'],
+  ['/account/orders', 'Мои заказы — GoodCall'],
+  ['/account/profile', 'Профиль — GoodCall'],
+  ['/account/addresses', 'Адреса доставки — GoodCall'],
+  ['/checkout', 'Оформление заказа — GoodCall'],
+  ['/order-confirmation', 'Заказ не найден — GoodCall'],
+]) {
+  const opened = await flowEntry(flowDirect, path);
+  await flowDirect.reload();
+  await flowDirect.waitForFunction(flowReady);
+  const reloaded = await flowDirect.evaluate(flowShell);
+  check(
+    singleFlowShell(opened) &&
+      singleFlowShell(reloaded) &&
+      opened.title === title &&
+      reloaded.title === title &&
+      opened.hash === `#${path}` &&
+      reloaded.hash === `#${path}` &&
+      opened.h1 === 1,
+    `lazy flow: direct #${path} and reload render one shell and "${title}" ${JSON.stringify({ opened, reloaded })}`,
+  );
+}
+await flowDirect.click('.site-footer a[href="#/delivery"]');
+await flowDirect.waitForFunction(() => location.hash === '#/delivery');
+await flowDirect.waitForFunction(flowReady);
+await flowDirect.evaluate(() => history.back());
+await flowDirect.waitForFunction(
+  () => location.hash === '#/order-confirmation' && document.title === 'Заказ не найден — GoodCall',
+);
+await flowDirect.waitForFunction(flowReady);
+check(
+  singleFlowShell(await flowDirect.evaluate(flowShell)),
+  'lazy flow: Back from Info returns to the family page with one shell',
+);
+await flowDirect.close();
+
+const signedOutLogin = await newPage();
+const login = await flowEntry(signedOutLogin, '/login');
+check(
+  singleFlowShell(login) && login.title === 'Вход — GoodCall' && login.hash === '#/login',
+  `lazy flow: direct #/login renders the Login page ${JSON.stringify(login)}`,
+);
+await signedOutLogin.close();
+
+for (const [width, height] of [
+  [1440, 900],
+  [390, 844],
+]) {
+  const tag = `lazy flow loading@${width}`;
+  let release;
+  const gate = new Promise((resolve) => {
+    release = resolve;
+  });
+  const slow = await flowChunkPage(width, height, () => gate.then(() => ({ continue: true })));
+  await slow.goto(`${BASE}#/login`);
+  await slow.waitForFunction(() =>
+    document.querySelector('main.route-status[aria-busy="true"] [role="status"]'),
+  );
+  const loading = await slow.evaluate(() => ({
+    message: document.querySelector('main.route-status [role="status"]').textContent,
+    newsletterBelowFold:
+      document.querySelector('.newsletter-band').getBoundingClientRect().top >= innerHeight,
+  }));
+  const loadingShell = await slow.evaluate(flowShell);
+  check(
+    loading.message === 'Загружаем страницу…' &&
+      loading.newsletterBelowFold &&
+      singleFlowShell(loadingShell) &&
+      loadingShell.h1 === 0,
+    `${tag}: fallback shows one shell, the loading status and keeps Newsletter below the fold ${JSON.stringify({ ...loading, ...loadingShell })}`,
+  );
+  release();
+  await slow.waitForFunction(flowReady);
+  const shifts = await slow.evaluate(flowShiftFacts);
+  check(
+    shifts.shell === 0 && shifts.total < 0.1,
+    `${tag}: fallback → ready causes no Newsletter/Footer shift ${JSON.stringify(shifts)}`,
+  );
+  check(
+    singleFlowShell(await slow.evaluate(flowShell)),
+    `${tag}: ready page replaces the fallback without a second shell`,
+  );
+  await slow.close();
+}
+
+let flowBlocked = true;
+let flowRequests = 0;
+const failing = await flowChunkPage(1440, 900, () => {
+  flowRequests += 1;
+  return flowBlocked ? { status: 404, body: '' } : { continue: true };
+});
+await failing.goto(`${BASE}#/checkout`);
+await failing.waitForFunction(() => document.querySelector('main.route-status h1'));
+const failed = await failing.evaluate(() => {
+  const status = document.querySelector('main.route-status');
+  const button = status.querySelector('button');
+  const link = status.querySelector('a');
+  return {
+    title: status.querySelector('h1').textContent,
+    message: status.querySelector('.route-status__message').textContent,
+    busy: status.getAttribute('aria-busy'),
+    button: button && { text: button.textContent, type: button.type },
+    link: link && { text: link.textContent, href: link.getAttribute('href') },
+  };
+});
+const failedShell = await failing.evaluate(flowShell);
+check(
+  failed.title === FLOW_FAILURE_TITLE &&
+    failed.busy === null &&
+    failed.button?.text === 'Обновить страницу' &&
+    failed.button.type === 'button' &&
+    failed.link?.text === 'На главную' &&
+    failed.link.href === '#/' &&
+    !/error|chunk|import|stack|undefined/i.test(failed.message) &&
+    singleFlowShell(failedShell) &&
+    failedShell.title === `${FLOW_FAILURE_TITLE} — GoodCall`,
+  `lazy flow failure: blocked chunk shows the shell and the failure status ${JSON.stringify({ ...failed, ...failedShell })}`,
+);
+await failing.focus('main.route-status button');
+await failing.keyboard.press('Tab');
+check(
+  await failing.evaluate(
+    () =>
+      document.activeElement?.textContent === 'На главную' &&
+      document.activeElement.tagName === 'A',
+  ),
+  'lazy flow failure: actions are focusable in order (Обновить страницу → На главную)',
+);
+await failing.evaluate(() => {
+  window.goodcallFlowMarker = true;
+});
+const flowRequestsAtFailure = flowRequests;
+await failing.waitForTimeout(2000);
+check(
+  (await failing.evaluate(() => window.goodcallFlowMarker === true)) &&
+    flowRequests === flowRequestsAtFailure &&
+    (await failing.evaluate(() => document.querySelector('main.route-status h1')?.textContent)) ===
+      FLOW_FAILURE_TITLE,
+  `lazy flow failure: no automatic reload or retry (chunk requests ${flowRequests})`,
+);
+await failing.click('main.route-status a', { hasText: 'На главную' });
+await failing.waitForFunction(
+  () => location.hash === '#/' && document.title === 'Главная — GoodCall',
+);
+check(
+  !(await failing.evaluate(() => document.body.innerText.includes('Страница временно недоступна'))),
+  'lazy flow failure: «На главную» leaves no failure UI behind',
+);
+flowBlocked = false;
+await failing.evaluate(() => {
+  location.hash = '#/login';
+});
+await failing.waitForFunction(() => document.querySelector('main.route-status h1'));
+await failing.click('main.route-status button', { hasText: 'Обновить страницу' });
+await failing.waitForFunction(() => window.goodcallFlowMarker === undefined);
+await failing.waitForFunction(flowReady);
+const recovered = await failing.evaluate(flowShell);
+check(
+  singleFlowShell(recovered) &&
+    recovered.title === 'Вход — GoodCall' &&
+    recovered.hash === '#/login',
+  `lazy flow failure: «Обновить страницу» reloads and recovers once the chunk is available ${JSON.stringify(recovered)}`,
+);
+await failing.close();
+
 await browser.close();
 reportCounts(passed, failures);

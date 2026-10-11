@@ -146,8 +146,60 @@ Technically complete:
 
 Active visual slice: none. Active implementation milestone: none. WP-06 as a
 whole stays open: Stage 0 (baseline) is complete, and Stage 1, Stage 2B,
-Contacts media hygiene (AUD-12) and Stage 2C are closed. No next slice is
-approved; select from `docs/master-backlog.md` when requested.
+Contacts media hygiene (AUD-12), Stage 2C and Stage 2D-1 are closed. Stage
+2D-2 (Fields split) is not approved. No next slice is approved; select from
+`docs/master-backlog.md` when requested.
+
+- **WP-06 Stage 2D-1 / lazy Checkout, Order and Account — USER VISUAL +
+  FUNCTIONAL PASS on 2026-10-11, CLOSED and published.** The user chose this
+  slice (not the combined route + Fields variant) and gave the implementation
+  GO on 2026-10-11. The measurements below were taken during implementation.
+- **Change:** the seven routes `#/checkout`, `#/order-confirmation`,
+  `#/login`, `#/account`, `#/account/orders`, `#/account/profile` and
+  `#/account/addresses` load through one module-scope `React.lazy` boundary.
+  - The new `src/app/routes/AccountFlowRoutes.tsx` dispatches a typed name
+    to the existing, unchanged route components.
+  - The new `src/app/routes/LazyAccountFlowRoute.tsx` copies the Stage 2B
+    Info contract: an immediate `ProductionShell` + `RouteStatus`
+    «Загружаем страницу…» fallback. A failed chunk import shows
+    «Страница временно недоступна» with «Обновить страницу» (reload on
+    click only) and «На главную». Only the chunk-load error is caught.
+  - `ProductionRouter` keeps its paths and order and uses one
+    `key` per route. `LazyInfoRoute`, `Fields.tsx`, the UI barrel, SCSS and
+    the family's own code are unchanged.
+- **Chunks** (mock verify build; gzip is zlib level 9):
+  - Entry: 1,203.24 → 1,136.20 kB raw, 320.49 → 304.65 kB gzip
+    (−15.84 kB).
+  - Family chunk `AccountFlowRoutes`: 63.97 kB / 16.18 kB gzip. A shared
+    `account` chunk (`components/account`, also used by `?reference=`) is
+    5.86 kB / 1.41 kB gzip.
+  - Production CSS is byte-identical. `index.html` still loads one JS and
+    one CSS file with no preload.
+  - DayPicker and Maskito stay in the entry (Stage 2D-2, not approved).
+- **Visual parity:** full-page pixel diff against the `1cb3ae1` build was 0
+  on 40/40 captures: every `?reference=` key; Home, Catalog, PDP, Contacts
+  and Delivery; and Checkout, Order Confirmation, Login and signed-out
+  Account, at 1440 and 390. The responsive check passed 35/35: all seven
+  family routes at 1440/1024/768/390/320 have no overflow, one shell and a
+  keyboard focus path.
+- **Lab measurements** (2026-10-11, same session; Stage 2B profiles; 3 cold
+  runs, medians):
+  - Home, Catalog and PDP: JS transfer 321.4 → 305.5 kB, and mobile DCL
+    medians are 36–169 ms lower. LCP ranges overlap, so no LCP improvement
+    is claimed.
+  - Cost side: a direct entry to Checkout or Account makes 3 JS requests
+    instead of 1, about +1.75 kB gzip in total (321.4 → 323.6 kB
+    transferred). On desktop, LCP and readiness are
+    ~300 ms later (Checkout 224 → 524 ms, Account/Login 220 → 552 ms), as
+    with the Stage 2B Info routes. On mobile the difference is within noise,
+    and a mobile LCP benefit is not established.
+  - CLS is 0.000 everywhere. These are mock-build lab values with 3 cold runs;
+    there is no field INP or RUM data.
+- **Verification:** `typecheck`; the `checkout`, `order`, `account`,
+  `form-unconfigured`, `cart`, `search`, `laptops`, `product-details`,
+  `chunks` and `info` verify suites are green (98, 60, 200, 41, 75, 186,
+  339, 707, 58, 209 checks). The new `chunks` assertions fail on the
+  `1cb3ae1` build (37/57).
 
 - **WP-06 Stage 2C / lazy `?reference=` dispatch (Q-13) — USER VISUAL PASS
   on 2026-10-11, CLOSED and published.** The user approved the scope and the
@@ -5695,8 +5747,8 @@ requested.
 
 ## Project closeout state
 
-WP-06 Stage 2C (lazy `?reference=` dispatch, Q-13) is the last published
-milestone, after WP-06 Contacts media hygiene (AUD-12). WP-06 as a whole stays open, and WP-02 stage 2 stays
+WP-06 Stage 2D-1 (lazy Checkout, Order and Account) is the last published
+milestone, after WP-06 Stage 2C (lazy `?reference=` dispatch, Q-13). WP-06 as a whole stays open, and WP-02 stage 2 stays
 deferred.
 **Active visual slice: none. Active implementation milestone: none.** No
 active code-level release blocker is known, and there is no approved next

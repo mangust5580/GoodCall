@@ -29,25 +29,17 @@ import {
   TERMS_PATH,
   WARRANTY_PATH,
 } from './routePaths';
-import {
-  AccountAddressesRoute,
-  AccountOrdersRoute,
-  AccountProfileRoute,
-  AccountRoute,
-  LoginRoute,
-} from './routes/AccountRoutes';
 import { BlogArticleRoute } from './routes/BlogArticleRoute';
 import { BlogRoute } from './routes/BlogRoute';
 import { CartRoute } from './routes/CartRoute';
 import { CatalogLaptopsRoute } from './routes/CatalogLaptopsRoute';
 import { CatalogRoute } from './routes/CatalogRoute';
-import { CheckoutRoute } from './routes/CheckoutRoute';
 import { CompareRoute } from './routes/CompareRoute';
 import { FavoritesRoute } from './routes/FavoritesRoute';
 import { HomeRoute } from './routes/HomeRoute';
+import { LazyAccountFlowRoute } from './routes/LazyAccountFlowRoute';
 import { LazyInfoRoute } from './routes/LazyInfoRoute';
 import { NotFoundRoute } from './routes/NotFoundRoute';
-import { OrderConfirmationRoute } from './routes/OrderConfirmationRoute';
 import { ProductDetailsRoute } from './routes/ProductDetailsRoute';
 import { SearchRoute } from './routes/SearchRoute';
 import { ShopsRoute } from './routes/ShopsRoute';
@@ -62,8 +54,14 @@ export function ProductionRouter() {
         <Route element={<CatalogLaptopsRoute />} path={CATALOG_LAPTOPS_PATH} />
         <Route element={<ProductDetailsRoute />} path={PRODUCT_PATH} />
         <Route element={<CartRoute />} path={CART_PATH} />
-        <Route element={<CheckoutRoute />} path={CHECKOUT_PATH} />
-        <Route element={<OrderConfirmationRoute />} path={ORDER_CONFIRMATION_PATH} />
+        <Route
+          element={<LazyAccountFlowRoute key="checkout" name="checkout" />}
+          path={CHECKOUT_PATH}
+        />
+        <Route
+          element={<LazyAccountFlowRoute key="order-confirmation" name="order-confirmation" />}
+          path={ORDER_CONFIRMATION_PATH}
+        />
         <Route element={<FavoritesRoute />} path={FAVORITES_PATH} />
         <Route element={<CompareRoute />} path={COMPARE_PATH} />
         <Route element={<SearchRoute />} path={SEARCH_PATH} />
@@ -78,11 +76,23 @@ export function ProductionRouter() {
         <Route element={<LazyInfoRoute key="offer" name="offer" />} path={OFFER_PATH} />
         <Route element={<BlogRoute />} path={BLOG_PATH} />
         <Route element={<BlogArticleRoute />} path={BLOG_ARTICLE_PATH} />
-        <Route element={<LoginRoute />} path={LOGIN_PATH} />
-        <Route element={<AccountRoute />} path={ACCOUNT_PATH} />
-        <Route element={<AccountOrdersRoute />} path={ACCOUNT_ORDERS_PATH} />
-        <Route element={<AccountProfileRoute />} path={ACCOUNT_PROFILE_PATH} />
-        <Route element={<AccountAddressesRoute />} path={ACCOUNT_ADDRESSES_PATH} />
+        <Route element={<LazyAccountFlowRoute key="login" name="login" />} path={LOGIN_PATH} />
+        <Route
+          element={<LazyAccountFlowRoute key="account" name="account" />}
+          path={ACCOUNT_PATH}
+        />
+        <Route
+          element={<LazyAccountFlowRoute key="account-orders" name="account-orders" />}
+          path={ACCOUNT_ORDERS_PATH}
+        />
+        <Route
+          element={<LazyAccountFlowRoute key="account-profile" name="account-profile" />}
+          path={ACCOUNT_PROFILE_PATH}
+        />
+        <Route
+          element={<LazyAccountFlowRoute key="account-addresses" name="account-addresses" />}
+          path={ACCOUNT_ADDRESSES_PATH}
+        />
         <Route element={<NotFoundRoute />} path="*" />
       </Routes>
     </HashRouter>

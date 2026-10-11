@@ -8,6 +8,17 @@ const INFO_PAGES_DIR = 'src/pages/info/';
 const INFO_ROUTES_MODULE = 'src/app/routes/InfoRoutes.tsx';
 const REFERENCE_DIR = 'src/reference/';
 const REFERENCE_SURFACE_MODULE = 'src/reference/ReferenceSurface.tsx';
+const ACCOUNT_FLOW_MODULE = 'src/app/routes/AccountFlowRoutes.tsx';
+const ACCOUNT_FLOW_PAGE_DIRS = [
+  'src/pages/checkout/',
+  'src/pages/order-confirmation/',
+  'src/pages/account/',
+];
+const ACCOUNT_FLOW_SEAMS = [
+  'src/app/routes/AccountRoutes.tsx',
+  'src/app/routes/CheckoutRoute.tsx',
+  'src/app/routes/OrderConfirmationRoute.tsx',
+];
 
 let passed = 0;
 const failures = [];
@@ -19,6 +30,10 @@ function check(condition, message) {
 const readReport = (file) => JSON.parse(readFileSync(file, 'utf8'));
 const isInfoModule = (id) => id.startsWith(INFO_PAGES_DIR) || id === INFO_ROUTES_MODULE;
 const isReferenceModule = (id) => id.startsWith(REFERENCE_DIR);
+const isAccountFlowModule = (id) =>
+  id === ACCOUNT_FLOW_MODULE ||
+  ACCOUNT_FLOW_SEAMS.includes(id) ||
+  ACCOUNT_FLOW_PAGE_DIRS.some((dir) => id.startsWith(dir));
 const kB = (bytes) => `${(bytes / 1000).toFixed(2)} kB`;
 
 function staticClosure(report, entry) {
@@ -43,6 +58,7 @@ function moduleBytes(chunks, matches) {
 
 const infoBytes = (chunks) => moduleBytes(chunks, isInfoModule);
 const referenceBytes = (chunks) => moduleBytes(chunks, isReferenceModule);
+const accountFlowBytes = (chunks) => moduleBytes(chunks, isAccountFlowModule);
 
 const app = readReport(appChunksFile());
 const reference = readReport(referenceChunksFile());
@@ -119,6 +135,45 @@ for (const chunk of referenceChunks) {
   check(!html.includes(chunk.fileName), `index.html does not load or preload ${chunk.fileName}`);
 }
 
+const initialAccountFlow = initial.flatMap((chunk) =>
+  chunk.modules.filter((module) => isAccountFlowModule(module.id)).map((module) => module.id),
+);
+check(
+  initialAccountFlow.length === 0,
+  `no Checkout/Order/Account module in the entry or its static imports (found ${initialAccountFlow.join(', ')})`,
+);
+
+const accountFlowPages = ACCOUNT_FLOW_PAGE_DIRS.flatMap((dir) =>
+  readdirSync(dir)
+    .filter((file) => file.endsWith('.tsx'))
+    .map((file) => `${dir}${file}`),
+);
+for (const id of [ACCOUNT_FLOW_MODULE, ...ACCOUNT_FLOW_SEAMS, ...accountFlowPages]) {
+  check(lazyModuleIds.has(id), `${id} is in a lazily loaded chunk`);
+}
+
+const accountFlowChunk = app.chunks.find((chunk) => chunk.facadeModule === ACCOUNT_FLOW_MODULE);
+check(
+  accountFlowChunk?.isDynamicEntry === true,
+  'AccountFlowRoutes.tsx is the facade of a dynamic entry',
+);
+check(
+  accountFlowChunk !== undefined &&
+    initial.some((chunk) => chunk.dynamicImports.includes(accountFlowChunk.fileName)),
+  'the initial chunks import the Checkout/Order/Account chunk only dynamically',
+);
+
+const accountFlowChunks = lazy.filter((chunk) =>
+  chunk.modules.some((module) => isAccountFlowModule(module.id)),
+);
+for (const chunk of accountFlowChunks) {
+  check(!html.includes(chunk.fileName), `index.html does not load or preload ${chunk.fileName}`);
+}
+check(
+  accountFlowChunks.every((chunk) => chunk.importedCss.length === 0),
+  'the Checkout/Order/Account chunks carry no CSS',
+);
+
 const cssAssets = app.assets.filter((asset) => asset.fileName.endsWith('.css'));
 const linkedCss = cssAssets.filter((asset) => html.includes(asset.fileName));
 check(
@@ -140,10 +195,18 @@ check(
 const lazyInfoBytes = infoBytes(infoChunks);
 check(lazyInfoBytes > 0, 'the lazy chunks carry the Info module code');
 check(referenceBytes(referenceChunks) > 0, 'the lazy chunks carry the ?reference= module code');
+check(
+  accountFlowBytes(accountFlowChunks) > 0,
+  'the lazy chunks carry the Checkout/Order/Account module code',
+);
 
 const referenceEntry = reference.chunks.find((chunk) => chunk.isEntry);
 const referenceInitial = staticClosure(reference, referenceEntry);
-if (infoBytes(referenceInitial) > 0 || referenceBytes(referenceInitial) > 0) {
+if (
+  infoBytes(referenceInitial) > 0 ||
+  referenceBytes(referenceInitial) > 0 ||
+  accountFlowBytes(referenceInitial) > 0
+) {
   check(
     entry.bytes < referenceEntry.bytes,
     `entry shrinks against the unsplit reference (${kB(entry.bytes)} vs ${kB(referenceEntry.bytes)})`,
@@ -168,6 +231,16 @@ for (const chunk of infoChunks) {
 for (const chunk of referenceChunks) {
   console.log(
     `INFO lazy ${chunk.fileName} ${kB(chunk.bytes)} raw / ${kB(gzipBytes(chunk.fileName))} gzip, reference modules before minification ${kB(referenceBytes([chunk]))}`,
+  );
+}
+for (const chunk of accountFlowChunks) {
+  console.log(
+    `INFO lazy ${chunk.fileName} ${kB(chunk.bytes)} raw / ${kB(gzipBytes(chunk.fileName))} gzip, Checkout/Order/Account modules before minification ${kB(accountFlowBytes([chunk]))}`,
+  );
+}
+for (const chunk of lazy.filter((c) => !c.isDynamicEntry)) {
+  console.log(
+    `INFO shared ${chunk.fileName} ${kB(chunk.bytes)} raw / ${kB(gzipBytes(chunk.fileName))} gzip`,
   );
 }
 for (const asset of cssAssets) {
