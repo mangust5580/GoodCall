@@ -145,9 +145,45 @@ Technically complete:
   Current routes section below.
 
 Active visual slice: none. Active implementation milestone: none. WP-06 as a
-whole stays open: Stage 0 (baseline) is complete, and Stages 1 and 2B are
-closed. No next slice is approved; select from `docs/master-backlog.md` when
-requested.
+whole stays open: Stage 0 (baseline) is complete, and Stage 1, Stage 2B and
+Contacts media hygiene (AUD-12) are closed. No next slice is approved; select
+from `docs/master-backlog.md` when requested.
+
+- **WP-06 Contacts media hygiene (AUD-12) — USER VISUAL PASS on 2026-10-11,
+  CLOSED and published.** The user approved the build-time variant strategy
+  and the implementation GO, and accepted AVIF → WebP delivery with no
+  JPEG/PNG fallback for this slice. This is not a site-wide browser-support
+  policy. Transcoding changed the photo's pixels; the user visually accepted
+  the result. The measurements below were taken during implementation.
+
+- **Change:** the Contacts lead image (`.contacts-card__image`) renders
+  through `Picture` from `src/assets/media/contacts/contactsMedia.ts`.
+  - That module imports the existing 1600×900 WebP master with explicit
+    vite-imagetools directives (`?w=640;960;1280;1600&format=avif;webp&as=picture`).
+    There is no PNG/JPEG master, so the `?picture` convention (PNG/JPEG only)
+    is deliberately not used and no PNG fallback is generated.
+  - `src/types/imagetools.d.ts` declares the `*&as=picture` module pattern.
+  - The image keeps `alt=""` and its class, and gains intrinsic 1600×900,
+    `sizes="(min-width: 900px) 860px, 100vw"` (860px is the cover width of
+    the ~480px-tall desktop slot), `loading="eager"` and
+    `fetchPriority="high"`. It is the measured LCP element on every profile.
+  - The `<img>` fallback is the re-encoded 1600w WebP. SCSS, crop, focal
+    point and card geometry are unchanged. About still uses the original WebP
+    unchanged. No dependency, `vite.config.ts`, Picture API or Info router
+    change.
+- **Delivery** (mock verify build, Chrome): 1440@1x gets AVIF 960w (35.4 kB),
+  390@3x gets AVIF 1280w (51.1 kB), 320@2x gets AVIF 640w (20.3 kB). Before,
+  every viewport got the 161.6 kB WebP. The chosen variant covers the
+  `object-fit: cover` box at 1440/1280/1024/900/899/768/390/320. Re-encoding
+  changes image pixels; the card text area is pixel-identical.
+- **Lab measurements** (2026-10-11, same session for before/after; Stage 2B
+  profiles; local gzip-6 server; 3 cold runs, medians): Contacts LCP 390@3x
+  4592 → 3868 ms and 320@2x 4396 → 3624 ms, with no overlap between runs;
+  desktop 532 → 556 ms within noise. CLS 0.000 before and after. Absolute
+  times vary between sessions; no field or INP claim is made.
+- **Verification:** `typecheck`; `npm run verify -- contacts info chunks`
+  green (91, 209, 19 checks). `contacts` adds lead-image checks at
+  1440/1024/768/390/320, which fail on the previous build (81/91).
 
 - **WP-06 Stage 2B / Info-Legal route splitting — USER VISUAL + FUNCTIONAL
   PASS on 2026-10-11, CLOSED and published.** The design contract and the
@@ -5619,8 +5655,8 @@ requested.
 
 ## Project closeout state
 
-WP-06 Stage 2B (Info/Legal route splitting) is the last published milestone,
-after WP-06 Stage 1. WP-06 as a whole stays open, and WP-02 stage 2 stays
+WP-06 Contacts media hygiene (AUD-12) is the last published milestone, after
+WP-06 Stage 2B (Info/Legal route splitting). WP-06 as a whole stays open, and WP-02 stage 2 stays
 deferred.
 **Active visual slice: none. Active implementation milestone: none.** No
 active code-level release blocker is known, and there is no approved next

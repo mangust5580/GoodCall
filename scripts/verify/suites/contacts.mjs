@@ -521,5 +521,75 @@ for (const width of [1440, 390, 320]) {
   await shot.close();
 }
 
+for (const [width, height] of [
+  [1440, 900],
+  [1024, 768],
+  [768, 1024],
+  [390, 844],
+  [320, 568],
+]) {
+  const tag = `contacts lead image@${width}`;
+  const lead = await newPage(width, height);
+  await open(lead, '/contacts');
+  await lead.waitForFunction(() => {
+    const image = document.querySelector('.contacts-card__image');
+    return image !== null && image.complete && image.naturalWidth > 0;
+  });
+  const facts = await lead.evaluate(() => {
+    const image = document.querySelector('.contacts-card__image');
+    const picture = image.parentElement;
+    const visual = document.querySelector('.contacts-card__visual').getBoundingClientRect();
+    const box = image.getBoundingClientRect();
+    const candidates = [...picture.querySelectorAll('source')].flatMap((source) =>
+      source.srcset.split(',').map((entry) => {
+        const [url, descriptor] = entry.trim().split(/\s+/);
+        return { url: new URL(url, location.href).href, width: Number.parseInt(descriptor, 10) };
+      }),
+    );
+    return {
+      inPicture:
+        picture.tagName === 'PICTURE' && picture.parentElement.matches('.contacts-card__visual'),
+      types: [...picture.querySelectorAll('source')].map((source) => source.type),
+      alt: image.getAttribute('alt'),
+      loading: image.getAttribute('loading'),
+      fetchPriority: image.getAttribute('fetchpriority'),
+      intrinsic: [image.getAttribute('width'), image.getAttribute('height')],
+      sizes: image.getAttribute('sizes'),
+      chosenWidth: candidates.find((candidate) => candidate.url === image.currentSrc)?.width ?? 0,
+      chosenFormat: image.currentSrc.split('.').pop(),
+      requiredWidth: Math.ceil(Math.max(box.width, (box.height * 16) / 9) * devicePixelRatio),
+      fills: [
+        box.x - visual.x,
+        box.y - visual.y,
+        box.width - visual.width,
+        box.height - visual.height,
+      ]
+        .map(Math.round)
+        .every((delta) => delta === 0),
+      fit: getComputedStyle(image).objectFit,
+      overflow: document.documentElement.scrollWidth - innerWidth,
+    };
+  });
+  check(
+    facts.inPicture &&
+      JSON.stringify(facts.types) === JSON.stringify(['image/avif', 'image/webp']) &&
+      facts.alt === '' &&
+      facts.loading === 'eager' &&
+      facts.fetchPriority === 'high' &&
+      JSON.stringify(facts.intrinsic) === JSON.stringify(['1600', '900']) &&
+      facts.sizes === '(min-width: 900px) 860px, 100vw',
+    `${tag}: decorative eager high-priority picture with AVIF/WebP sources and 1600×900 intrinsic size ${JSON.stringify(facts)}`,
+  );
+  check(
+    facts.chosenFormat === 'avif' && facts.chosenWidth >= facts.requiredWidth,
+    `${tag}: browser picks an AVIF variant wide enough for the cover box (${facts.chosenWidth}w ≥ ${facts.requiredWidth}px)`,
+  );
+  check(
+    facts.fills && facts.fit === 'cover' && facts.overflow <= 0,
+    `${tag}: image fills its visual slot with object-fit cover and no horizontal overflow ${JSON.stringify(facts)}`,
+  );
+  await lead.close();
+}
+
 await browser.close();
 reportCounts(passed, failures);

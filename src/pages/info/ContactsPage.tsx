@@ -1,8 +1,8 @@
 import { STOREFRONT_SUPPORT } from '../../commerce/storefront';
-import contactsStoreInterior from '../../assets/media/contacts/contacts-store-interior.webp';
+import { CONTACTS_STORE_INTERIOR } from '../../assets/media/contacts/contactsMedia';
 import { DEMO_STORES } from '../../commerce/shops';
 import { Container } from '../../components/layout';
-import { FallbackImage } from '../../components/media';
+import { FallbackImage, Picture } from '../../components/media';
 import { Icon } from '../../components/ui';
 import type { IconName } from '../../components/ui';
 import type { InfoLinks } from './infoLinks';
@@ -80,7 +80,14 @@ export function ContactsPage({ links }: ContactsPageProps) {
 
         <section aria-labelledby="contacts-channels-title" className="contacts-card">
           <div className="contacts-card__visual">
-            <img alt="" className="contacts-card__image" src={contactsStoreInterior} />
+            <Picture
+              alt=""
+              className="contacts-card__image"
+              fetchPriority="high"
+              loading="eager"
+              sizes="(min-width: 900px) 860px, 100vw"
+              source={CONTACTS_STORE_INTERIOR}
+            />
           </div>
           <div className="contacts-card__body">
             <h2 className="contacts-card__title" id="contacts-channels-title">
