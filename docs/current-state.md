@@ -144,11 +144,44 @@ Technically complete:
   owned by React Router using a GitHub Pages-safe hash strategy. See the
   Current routes section below.
 
-Active visual slice: none. Active implementation milestone: none. WP-06 as a
-whole stays open: Stage 0 (baseline) is complete, and Stage 1, Stage 2B,
-Contacts media hygiene (AUD-12), Stage 2C, Stage 2D-1, Stage 2D-2 and Stage 2E
-are closed. No next slice is approved; select from `docs/master-backlog.md` when
-requested.
+Active visual slice: none. Active implementation milestone: none. No next slice
+is approved; select from `docs/master-backlog.md` when requested.
+
+- **WP-06 / Performance — CLOSED on 2026-10-11 (documentation-only closeout,
+  user decision).** The bounded program is complete: Stage 0 baseline, Stage 1
+  async-loading CLS, Stage 2B/2C/2D-1/2D-2/2E splitting (Info, `?reference=`,
+  Checkout/Order/Account, heavy fields, Blog), Contacts media (AUD-12) and a
+  final controlled after-measurement. Each code slice received its own USER
+  PASS and was published; the closeout changes no code or visuals. Stage 2E is
+  still the latest code milestone.
+- **Final after-measurement** (read-only audit, 2026-10-11): `2336dcf`
+  (Stage 0) and `3d66b0e` rebuilt in one session with the mock verify
+  environment; Chrome 155; desktop 1440×900; mobile 390×844 @3, CPU 4×,
+  150 ms, 1.6384/0.768 Mbps; 3 cold runs per cell, 96/96 complete; Supabase
+  mocked and unthrottled.
+  - Entry JS 350,147 → 267,308 bytes gzip-9 (−82.84 kB, −23.7%); still 1
+    initial JS, 1 CSS (39.23 → 37.25 kB gzip-9), no modulepreload. Static
+    routes transfer 351.1 → 268.1 kB JS (local gzip-6).
+  - Mobile LCP medians improved on all 8 measured routes by 272–956 ms with
+    non-overlapping runs, e.g. Home 3460 → 2932, PDP 3552 → 2844, Contacts
+    4328 → 3372 ms. Catalog, Laptops and PDP loading CLS fell from 0.40–0.53
+    to 0.000.
+  - Accepted cost: a direct desktop entry to a lazy route is slower (LCP
+    Contacts 260 → 500, Checkout 296 → 572, Blog 268 → 492, Article
+    244 → 524 ms). Desktop Home/PDP LCP gains are not established, Laptops
+    desktop is not comparable (LCP element changed), and mobile Blog ready
+    time did not improve.
+  - Lab directional evidence only: no field INP/RUM, CDN/Pages, real
+    Supabase, other browsers or warm-cache data.
+- **Not part of WP-06; each needs its own decision:** AUD-05 and GC-R61 stay
+  partial because the PDP and its content registry remain in the entry
+  (synchronous `productDetailsHref` predicate, `noDeepPages`); GC-R62 has no
+  INP; AUD-11 PNG deploy policy stays open (~194 MB PNG in the deploy
+  artifact, 0 PNG requests in the lab). Unapproved candidates: a
+  PostgREST-only Supabase client (scratch prototype ~−48.7 kB gzip-9, needs an
+  approved direct `@supabase/postgrest-js` dependency), Contacts store
+  thumbnails (3 × 512×512 WebP, ~52 kB, non-LCP), the three duplicated
+  chunk-error boundaries and the desktop Suspense fallback delay.
 
 - **WP-06 Stage 2E / lazy Blog family — USER VISUAL + FUNCTIONAL PASS on
   2026-10-11 (user-reported), CLOSED and published.** The user approved the
@@ -207,7 +240,8 @@ requested.
   The closure release gate ran all 18 suites green.
 - **Not approved:** splitting the PDP (blocked on its content and the
   synchronous slug predicate in `productDetailsHref`), other media issues, the
-  PNG fallback policy (AUD-11) and the WP-06 after-measurement.
+  PNG fallback policy (AUD-11). The after-measurement was completed later in
+  the WP-06 closeout.
 
 - **WP-06 Stage 2D-2 / DateField + PhoneField split — USER VISUAL +
   FUNCTIONAL PASS on 2026-10-11, CLOSED and published.** The user approved API
@@ -484,7 +518,8 @@ requested.
 - **Proof:** `search`, `laptops` and `product-details` assert the Newsletter
   is below the fold while loading (1440/390/320) and on failure (1440), and
   that loading → ready causes no Newsletter/Footer layout shift.
-- **Remaining WP-06 work** (not approved): route splitting beyond the
+- **Remaining WP-06 work at Stage 1** (since completed or reclassified in the
+  WP-06 closeout): route splitting beyond the
   Info/Legal family (Stage 2B, closed) and a separate
   `?reference=` entry, Contacts media (AUD-12), the PNG footprint decision
   (AUD-11), and the after-comparison for those slices.
@@ -5860,9 +5895,9 @@ requested.
 
 ## Project closeout state
 
-WP-06 Stage 2E (lazy Blog family) is the last published milestone, after WP-06
-Stage 2D-2 (DateField + PhoneField split). WP-06 as a whole stays open, and
-WP-02 stage 2 stays deferred.
+WP-06 Stage 2E (lazy Blog family) is the last published code milestone. WP-06
+was closed on 2026-10-11 by a documentation-only closeout after its final
+after-measurement. WP-02 stage 2 stays deferred.
 **Active visual slice: none. Active implementation milestone: none.** No
 active code-level release blocker is known, and there is no approved next
 milestone. The next activity is selecting from `docs/master-backlog.md` when
