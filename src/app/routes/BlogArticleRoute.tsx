@@ -1,18 +1,12 @@
+import type { ReactNode } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { BlogArticlePage, blogArticleDetail, normalizeBlogQuery } from '../../pages/blog';
 import type { BlogCategoryId } from '../../pages/blog';
 import { ProductionShell } from '../ProductionShell';
-import {
-  BLOG_PATH,
-  HOME_PATH,
-  blogArticleHref,
-  blogArticlePath,
-  blogPath,
-  hashHref,
-} from '../routePaths';
+import { BLOG_PATH, HOME_PATH, blogArticlePath, blogPath, hashHref } from '../routePaths';
 import { useDocumentTitle } from '../useDocumentTitle';
-import { NotFoundRoute } from './NotFoundRoute';
+import { blogArticleHref } from './blogLinks';
 
 const CATEGORY_PARAM = 'category';
 const QUERY_PARAM = 'q';
@@ -21,14 +15,18 @@ function categoryHref(category: BlogCategoryId | undefined): string {
   return hashHref(category === undefined ? BLOG_PATH : blogPath({ [CATEGORY_PARAM]: category }));
 }
 
-export function BlogArticleRoute() {
+interface BlogArticleRouteProps {
+  readonly notFound: ReactNode;
+}
+
+export function BlogArticleRoute({ notFound }: BlogArticleRouteProps) {
   const { slug = '' } = useParams();
   const navigate = useNavigate();
   const detail = blogArticleDetail(slug);
   useDocumentTitle(detail?.article.title);
 
   if (detail === undefined) {
-    return <NotFoundRoute />;
+    return notFound;
   }
 
   const handleSearchSubmit = (value: string) => {

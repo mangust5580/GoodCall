@@ -9,8 +9,9 @@ import {
 } from '../../pages/blog';
 import type { BlogCategoryId } from '../../pages/blog';
 import { ProductionShell } from '../ProductionShell';
-import { HOME_PATH, blogArticleHref, hashHref } from '../routePaths';
+import { HOME_PATH, hashHref } from '../routePaths';
 import { useDocumentTitle } from '../useDocumentTitle';
+import { blogArticleHref } from './blogLinks';
 
 const CATEGORY_PARAM = 'category';
 const QUERY_PARAM = 'q';

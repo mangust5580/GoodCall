@@ -29,6 +29,7 @@ const SUITES = [
   { name: 'account', needs: ['app'] },
   { name: 'laptops', needs: ['app', 'reference'] },
   { name: 'chunks', needs: ['app', 'reference'] },
+  { name: 'blog', needs: ['app'] },
 ];
 
 const KNOWN_DRIFT = {};

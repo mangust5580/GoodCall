@@ -146,9 +146,68 @@ Technically complete:
 
 Active visual slice: none. Active implementation milestone: none. WP-06 as a
 whole stays open: Stage 0 (baseline) is complete, and Stage 1, Stage 2B,
-Contacts media hygiene (AUD-12), Stage 2C, Stage 2D-1 and Stage 2D-2 are
-closed. No next slice is approved; select from `docs/master-backlog.md` when
+Contacts media hygiene (AUD-12), Stage 2C, Stage 2D-1, Stage 2D-2 and Stage 2E
+are closed. No next slice is approved; select from `docs/master-backlog.md` when
 requested.
+
+- **WP-06 Stage 2E / lazy Blog family — USER VISUAL + FUNCTIONAL PASS on
+  2026-10-11 (user-reported), CLOSED and published.** The user approved the
+  B2fix design (moving `blogArticleHref`, passing `NotFoundRoute` as an
+  element, Info/AccountFlow loading and failure UX) and gave the
+  implementation GO with a dedicated `blog` verify suite on 2026-10-11. The
+  measurements below were taken during implementation.
+- **Change:** `#/blog` and `#/blog/:slug` load through one module-scope
+  `React.lazy` boundary.
+  - The new `src/app/routes/BlogFlowRoutes.tsx` dispatches `blog` /
+    `blog-article` to the unchanged `BlogRoute` / `BlogArticleRoute`.
+  - The new `src/app/routes/LazyBlogFlowRoute.tsx` follows the
+    AccountFlow contract: an immediate fallback «Загружаем страницу…», and on a
+    chunk failure «Страница временно недоступна» with «Обновить страницу» (on
+    click) and «На главную». Only the chunk-load error is caught.
+  - `blogArticleHref` moved unchanged from `routePaths.ts` to the new
+    `src/app/routes/blogLinks.ts`. Only the Blog seams use it. `routePaths` no
+    longer imports `pages/blog`. That import was what pinned Blog in the
+    entry.
+  - `BlogArticleRoute` takes a `notFound` element instead of importing
+    `NotFoundRoute`; `ProductionRouter` passes `<NotFoundRoute />`. A lazy
+    chunk that imports another route seam makes Rolldown split the entry into
+    a preloaded shared chunk, and this avoids it.
+  - Paths, link semantics (synchronous, `undefined` for articles without a
+    detail page, encoded slugs), filters, the share URL, titles and CSS are
+    unchanged. The PDP is untouched.
+- **Chunks** (mock verify build; gzip is zlib level 9):
+  - Entry: 1,038.49 → 997.99 kB raw, 277.54 → 267.31 kB gzip (−10.23 kB).
+  - Blog chunk `BlogFlowRoutes`: 42.14 kB raw / 10.42 kB gzip, holding all
+    Blog pages and Blog media.
+  - Still one initial JS and no modulepreload (now asserted by `chunks`).
+    Production CSS is byte-identical.
+  - A direct Blog entry makes 2 JS requests, about +0.4 kB.
+  - Inlining of the brand-mark SVG varies by about ±0.1 kB gzip between
+    builds.
+- **Visual and behaviour:** full-page pixel diff against the `940bf33` build was
+  0 on 50/50 captures: every `?reference=` key; Home, Catalog, Laptops, PDP,
+  Contacts, Delivery; the account family; and the Blog listing, filtered
+  listing, article and unknown article, at 1440 and 390. The Blog responsive
+  check passed 25/25 (five states at 1440/1024/768/390/320).
+- **Lab measurements** (2026-10-11, same session; Stage 2B profiles; 3 cold
+  runs, medians):
+  - Home, Catalog and PDP: JS transfer 278.4 → 268.1 kB. LCP ranges overlap,
+    so no LCP improvement is claimed.
+  - Direct Blog listing or article: LCP and readiness are ~290 ms later on
+    desktop (Blog 248 → 536 ms, article 252 → 544 ms, non-overlapping runs) —
+    the minimum Suspense fallback display, as with Info and AccountFlow. On
+    mobile, readiness is 290–400 ms later and LCP ranges overlap.
+  - CLS is 0.000 everywhere. These are mock-build lab values; there is no
+    field INP or RUM data.
+- **Verification:** `typecheck`; the `laptops`, `chunks`, `info`, `account`,
+  `search`, `home-cart`, `product-details`, `content` and the new `blog`
+  verify suites are green (339, 90, 209, 200, 186, 67, 707, 8089, 28 checks).
+  The runner now has 18 suites, with `blog` as the 18th. The new `chunks` Blog
+  assertions fail on the `940bf33` build (70/89, Blog-split assertions only).
+  The closure release gate ran all 18 suites green.
+- **Not approved:** splitting the PDP (blocked on its content and the
+  synchronous slug predicate in `productDetailsHref`), other media issues, the
+  PNG fallback policy (AUD-11) and the WP-06 after-measurement.
 
 - **WP-06 Stage 2D-2 / DateField + PhoneField split — USER VISUAL +
   FUNCTIONAL PASS on 2026-10-11, CLOSED and published.** The user approved API
@@ -2239,7 +2298,7 @@ architecture exists. Evidence: `Blog_details.png` (1920×3360).
   single-source Blog A corpus for title, category, date and cover.
   `HowToChooseSmartphone2024Body.tsx` owns the bespoke JSX body. There is no
   CMS, MDX, markdown or block renderer. `blogArticleHref()` in
-  `src/app/routePaths.ts` returns an href only for registered slugs, like
+  `src/app/routes/blogLinks.ts` returns an href only for registered slugs, like
   `productDetailsHref()`.
 - Copy is transcribed from the raster. Only obvious raster typos are
   normalized (`Выбрайте`, `робота`, `сьемки`, `SG`). The reading time `8 мин на
@@ -5289,9 +5348,10 @@ router owns only the fragment. The base path still lives solely in
 Route paths live in `src/app/routePaths.ts` as `HOME_PATH`,
 `CATALOG_SMARTPHONES_PATH`, `CATALOG_LAPTOPS_PATH`, `PRODUCT_PATH`, `CART_PATH`, `CHECKOUT_PATH`, `ORDER_CONFIRMATION_PATH`, `FAVORITES_PATH`, `COMPARE_PATH`, `SHOPS_PATH`, `DELIVERY_PATH`, `WARRANTY_PATH`, `FAQ_PATH`,
 `CONTACTS_PATH`, `ABOUT_PATH`, `PRIVACY_PATH`, `TERMS_PATH`, `OFFER_PATH`, `SEARCH_PATH`, `BLOG_PATH`, `BLOG_ARTICLE_PATH`, `LOGIN_PATH`, `ACCOUNT_PATH`, `ACCOUNT_ORDERS_PATH`, `ACCOUNT_PROFILE_PATH` and `ACCOUNT_ADDRESSES_PATH`.
-`hashHref()`, `productDetailsHref()`, `searchPath()`, `blogPath()`,
-`blogArticlePath()` and `blogArticleHref()` serve the `href` and navigation
-seams.
+`hashHref()`, `productDetailsHref()`, `searchPath()`, `blogPath()` and
+`blogArticlePath()` serve the `href` and navigation seams.
+`blogArticleHref()` lives in `src/app/routes/blogLinks.ts`, inside the lazy
+Blog family.
 
 ### Ownership
 
@@ -5800,9 +5860,9 @@ requested.
 
 ## Project closeout state
 
-WP-06 Stage 2D-2 (DateField + PhoneField split) is the last published
-milestone, after WP-06 Stage 2D-1 (lazy Checkout, Order and Account). WP-06 as a whole stays open, and WP-02 stage 2 stays
-deferred.
+WP-06 Stage 2E (lazy Blog family) is the last published milestone, after WP-06
+Stage 2D-2 (DateField + PhoneField split). WP-06 as a whole stays open, and
+WP-02 stage 2 stays deferred.
 **Active visual slice: none. Active implementation milestone: none.** No
 active code-level release blocker is known, and there is no approved next
 milestone. The next activity is selecting from `docs/master-backlog.md` when

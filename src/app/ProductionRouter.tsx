@@ -29,8 +29,6 @@ import {
   TERMS_PATH,
   WARRANTY_PATH,
 } from './routePaths';
-import { BlogArticleRoute } from './routes/BlogArticleRoute';
-import { BlogRoute } from './routes/BlogRoute';
 import { CartRoute } from './routes/CartRoute';
 import { CatalogLaptopsRoute } from './routes/CatalogLaptopsRoute';
 import { CatalogRoute } from './routes/CatalogRoute';
@@ -38,6 +36,7 @@ import { CompareRoute } from './routes/CompareRoute';
 import { FavoritesRoute } from './routes/FavoritesRoute';
 import { HomeRoute } from './routes/HomeRoute';
 import { LazyAccountFlowRoute } from './routes/LazyAccountFlowRoute';
+import { LazyBlogFlowRoute } from './routes/LazyBlogFlowRoute';
 import { LazyInfoRoute } from './routes/LazyInfoRoute';
 import { NotFoundRoute } from './routes/NotFoundRoute';
 import { ProductDetailsRoute } from './routes/ProductDetailsRoute';
@@ -74,8 +73,20 @@ export function ProductionRouter() {
         <Route element={<LazyInfoRoute key="privacy" name="privacy" />} path={PRIVACY_PATH} />
         <Route element={<LazyInfoRoute key="terms" name="terms" />} path={TERMS_PATH} />
         <Route element={<LazyInfoRoute key="offer" name="offer" />} path={OFFER_PATH} />
-        <Route element={<BlogRoute />} path={BLOG_PATH} />
-        <Route element={<BlogArticleRoute />} path={BLOG_ARTICLE_PATH} />
+        <Route
+          element={<LazyBlogFlowRoute key="blog" name="blog" notFound={<NotFoundRoute />} />}
+          path={BLOG_PATH}
+        />
+        <Route
+          element={
+            <LazyBlogFlowRoute
+              key="blog-article"
+              name="blog-article"
+              notFound={<NotFoundRoute />}
+            />
+          }
+          path={BLOG_ARTICLE_PATH}
+        />
         <Route element={<LazyAccountFlowRoute key="login" name="login" />} path={LOGIN_PATH} />
         <Route
           element={<LazyAccountFlowRoute key="account" name="account" />}

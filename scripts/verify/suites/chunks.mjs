@@ -27,6 +27,13 @@ const ACCOUNT_FLOW_SEAMS = [
   'src/app/routes/CheckoutRoute.tsx',
   'src/app/routes/OrderConfirmationRoute.tsx',
 ];
+const BLOG_FLOW_MODULE = 'src/app/routes/BlogFlowRoutes.tsx';
+const BLOG_PAGES_DIR = 'src/pages/blog/';
+const BLOG_FLOW_SEAMS = [
+  'src/app/routes/BlogRoute.tsx',
+  'src/app/routes/BlogArticleRoute.tsx',
+  'src/app/routes/blogLinks.ts',
+];
 
 let passed = 0;
 const failures = [];
@@ -42,6 +49,8 @@ const isAccountFlowModule = (id) =>
   id === ACCOUNT_FLOW_MODULE ||
   ACCOUNT_FLOW_SEAMS.includes(id) ||
   ACCOUNT_FLOW_PAGE_DIRS.some((dir) => id.startsWith(dir));
+const isBlogFlowModule = (id) =>
+  id === BLOG_FLOW_MODULE || BLOG_FLOW_SEAMS.includes(id) || id.startsWith(BLOG_PAGES_DIR);
 const kB = (bytes) => `${(bytes / 1000).toFixed(2)} kB`;
 
 function staticClosure(report, entry) {
@@ -67,6 +76,7 @@ function moduleBytes(chunks, matches) {
 const infoBytes = (chunks) => moduleBytes(chunks, isInfoModule);
 const referenceBytes = (chunks) => moduleBytes(chunks, isReferenceModule);
 const accountFlowBytes = (chunks) => moduleBytes(chunks, isAccountFlowModule);
+const blogFlowBytes = (chunks) => moduleBytes(chunks, isBlogFlowModule);
 const packageOf = (id) => id.match(/node_modules\/((?:@[^/]+\/)?[^/]+)\//)?.[1];
 const isHeavyFieldModule = (id) =>
   HEAVY_FIELD_MODULES.includes(id) ||
@@ -82,6 +92,11 @@ check(entries.length === 1, `exactly one entry chunk (found ${entries.length})`)
 const [entry] = entries;
 const initial = staticClosure(app, entry);
 const initialFiles = new Set(initial.map((chunk) => chunk.fileName));
+check(
+  initial.length === 1,
+  `the entry has no statically imported shared chunks (initial JS files: ${initial.map((chunk) => chunk.fileName).join(', ')})`,
+);
+check(!html.includes('modulepreload'), 'index.html has no modulepreload links');
 
 const initialInfo = initial.flatMap((chunk) =>
   chunk.modules.filter((module) => isInfoModule(module.id)).map((module) => module.id),
@@ -187,6 +202,45 @@ check(
   'the Checkout/Order/Account chunks carry no CSS',
 );
 
+const initialBlogFlow = initial.flatMap((chunk) =>
+  chunk.modules.filter((module) => isBlogFlowModule(module.id)).map((module) => module.id),
+);
+check(
+  initialBlogFlow.length === 0,
+  `no Blog module in the entry or its static imports (found ${initialBlogFlow.join(', ')})`,
+);
+const blogFlowSources = [
+  BLOG_FLOW_MODULE,
+  ...BLOG_FLOW_SEAMS,
+  ...readdirSync(BLOG_PAGES_DIR)
+    .filter((file) => /\.tsx?$/.test(file))
+    .map((file) => `${BLOG_PAGES_DIR}${file}`),
+];
+for (const id of blogFlowSources) {
+  check(lazyModuleIds.has(id), `${id} is in a lazily loaded chunk`);
+}
+const blogFlowChunk = app.chunks.find((chunk) => chunk.facadeModule === BLOG_FLOW_MODULE);
+check(
+  blogFlowChunk?.isDynamicEntry === true,
+  'BlogFlowRoutes.tsx is the facade of a dynamic entry',
+);
+check(
+  blogFlowChunk !== undefined &&
+    initial.some((chunk) => chunk.dynamicImports.includes(blogFlowChunk.fileName)),
+  'the initial chunks import the Blog chunk only dynamically',
+);
+const blogFlowChunks = lazy.filter((chunk) =>
+  chunk.modules.some((module) => isBlogFlowModule(module.id)),
+);
+for (const chunk of blogFlowChunks) {
+  check(!html.includes(chunk.fileName), `index.html does not load or preload ${chunk.fileName}`);
+}
+check(
+  blogFlowChunks.every((chunk) => chunk.importedCss.length === 0),
+  'the Blog chunks carry no CSS',
+);
+check(blogFlowBytes(blogFlowChunks) > 0, 'the lazy chunks carry the Blog module code');
+
 const initialHeavy = initial.flatMap((chunk) =>
   chunk.modules.filter((module) => isHeavyFieldModule(module.id)).map((module) => module.id),
 );
@@ -244,7 +298,8 @@ if (
   infoBytes(referenceInitial) > 0 ||
   referenceBytes(referenceInitial) > 0 ||
   accountFlowBytes(referenceInitial) > 0 ||
-  heavyFieldBytes(referenceInitial) > 0
+  heavyFieldBytes(referenceInitial) > 0 ||
+  blogFlowBytes(referenceInitial) > 0
 ) {
   check(
     entry.bytes < referenceEntry.bytes,
@@ -275,6 +330,11 @@ for (const chunk of referenceChunks) {
 for (const chunk of accountFlowChunks) {
   console.log(
     `INFO lazy ${chunk.fileName} ${kB(chunk.bytes)} raw / ${kB(gzipBytes(chunk.fileName))} gzip, Checkout/Order/Account modules before minification ${kB(accountFlowBytes([chunk]))}`,
+  );
+}
+for (const chunk of blogFlowChunks) {
+  console.log(
+    `INFO lazy ${chunk.fileName} ${kB(chunk.bytes)} raw / ${kB(gzipBytes(chunk.fileName))} gzip, Blog modules before minification ${kB(blogFlowBytes([chunk]))}`,
   );
 }
 for (const chunk of heavyChunks) {

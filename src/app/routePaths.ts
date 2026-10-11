@@ -1,4 +1,3 @@
-import { hasBlogArticleDetail } from '../pages/blog';
 import { hasProductDetailsContent } from '../pages/product-details';
 
 export const HOME_PATH = '/';
@@ -53,8 +52,4 @@ export function blogPath(params: Readonly<Record<string, string>> = {}): string 
 
 export function blogArticlePath(slug: string): string {
   return `${BLOG_PATH}/${encodeURIComponent(slug)}`;
-}
-
-export function blogArticleHref(slug: string): string | undefined {
-  return hasBlogArticleDetail(slug) ? hashHref(blogArticlePath(slug)) : undefined;
 }
