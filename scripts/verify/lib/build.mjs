@@ -38,9 +38,11 @@ function run(command, args, options) {
   });
 }
 
-export async function buildApp({ sourceRoot, outDir, envDir }) {
+export async function buildApp({ sourceRoot, outDir, envDir, chunkReportFile }) {
   mkdirSync(envDir, { recursive: true });
-  const output = await run(process.execPath, [viteBuildScript, sourceRoot, outDir, envDir], {
+  const args = [viteBuildScript, sourceRoot, outDir, envDir];
+  if (chunkReportFile) args.push(chunkReportFile);
+  const output = await run(process.execPath, args, {
     cwd: sourceRoot,
     env: controlledBuildEnv(),
   });

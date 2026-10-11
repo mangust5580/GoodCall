@@ -28,6 +28,7 @@ const SUITES = [
   { name: 'contacts', needs: ['app'] },
   { name: 'account', needs: ['app'] },
   { name: 'laptops', needs: ['app', 'reference'] },
+  { name: 'chunks', needs: ['app', 'reference'] },
 ];
 
 const KNOWN_DRIFT = {};
@@ -111,20 +112,30 @@ const suiteEnv = { ...controlledBuildEnv() };
 try {
   if (needs.has('app')) {
     const appDir = path.join(artifactsDir, 'app');
-    const mode = await buildApp({ sourceRoot: repoRoot, outDir: appDir, envDir: emptyEnvDir });
+    const chunkReportFile = path.join(artifactsDir, 'app-chunks.json');
+    const mode = await buildApp({
+      sourceRoot: repoRoot,
+      outDir: appDir,
+      envDir: emptyEnvDir,
+      chunkReportFile,
+    });
     console.log(`Built working tree → ${relativeToRepo(repoRoot, appDir)} (${mode})`);
     const server = await serveStatic(appDir);
     servers.push(server);
     suiteEnv.GOODCALL_VERIFY_BASE = server.base;
+    suiteEnv.GOODCALL_VERIFY_APP_DIR = appDir;
+    suiteEnv.GOODCALL_VERIFY_APP_CHUNKS = chunkReportFile;
   }
   if (needs.has('reference')) {
     const sourceDir = path.join(artifactsDir, 'reference-src');
     const referenceDir = path.join(artifactsDir, 'reference-app');
+    const referenceChunkReportFile = path.join(artifactsDir, 'reference-chunks.json');
     const sha = await exportGitRef({ repoRoot, ref: options.reference, targetDir: sourceDir });
     const mode = await buildApp({
       sourceRoot: sourceDir,
       outDir: referenceDir,
       envDir: emptyEnvDir,
+      chunkReportFile: referenceChunkReportFile,
     });
     console.log(
       `Built reference ${options.reference} (${sha.slice(0, 12)}) → ${relativeToRepo(repoRoot, referenceDir)} (${mode})`,
@@ -133,6 +144,7 @@ try {
     const server = await serveStatic(referenceDir);
     servers.push(server);
     suiteEnv.GOODCALL_VERIFY_REFERENCE_BASE = server.base;
+    suiteEnv.GOODCALL_VERIFY_REFERENCE_CHUNKS = referenceChunkReportFile;
   }
 
   const summaries = [];

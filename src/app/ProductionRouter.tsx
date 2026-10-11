@@ -45,16 +45,7 @@ import { CheckoutRoute } from './routes/CheckoutRoute';
 import { CompareRoute } from './routes/CompareRoute';
 import { FavoritesRoute } from './routes/FavoritesRoute';
 import { HomeRoute } from './routes/HomeRoute';
-import {
-  AboutRoute,
-  ContactsRoute,
-  DeliveryRoute,
-  FaqRoute,
-  OfferRoute,
-  PrivacyRoute,
-  TermsRoute,
-  WarrantyRoute,
-} from './routes/InfoRoutes';
+import { LazyInfoRoute } from './routes/LazyInfoRoute';
 import { NotFoundRoute } from './routes/NotFoundRoute';
 import { OrderConfirmationRoute } from './routes/OrderConfirmationRoute';
 import { ProductDetailsRoute } from './routes/ProductDetailsRoute';
@@ -77,14 +68,14 @@ export function ProductionRouter() {
         <Route element={<CompareRoute />} path={COMPARE_PATH} />
         <Route element={<SearchRoute />} path={SEARCH_PATH} />
         <Route element={<ShopsRoute />} path={SHOPS_PATH} />
-        <Route element={<DeliveryRoute />} path={DELIVERY_PATH} />
-        <Route element={<WarrantyRoute />} path={WARRANTY_PATH} />
-        <Route element={<FaqRoute />} path={FAQ_PATH} />
-        <Route element={<ContactsRoute />} path={CONTACTS_PATH} />
-        <Route element={<AboutRoute />} path={ABOUT_PATH} />
-        <Route element={<PrivacyRoute />} path={PRIVACY_PATH} />
-        <Route element={<TermsRoute />} path={TERMS_PATH} />
-        <Route element={<OfferRoute />} path={OFFER_PATH} />
+        <Route element={<LazyInfoRoute key="delivery" name="delivery" />} path={DELIVERY_PATH} />
+        <Route element={<LazyInfoRoute key="warranty" name="warranty" />} path={WARRANTY_PATH} />
+        <Route element={<LazyInfoRoute key="faq" name="faq" />} path={FAQ_PATH} />
+        <Route element={<LazyInfoRoute key="contacts" name="contacts" />} path={CONTACTS_PATH} />
+        <Route element={<LazyInfoRoute key="about" name="about" />} path={ABOUT_PATH} />
+        <Route element={<LazyInfoRoute key="privacy" name="privacy" />} path={PRIVACY_PATH} />
+        <Route element={<LazyInfoRoute key="terms" name="terms" />} path={TERMS_PATH} />
+        <Route element={<LazyInfoRoute key="offer" name="offer" />} path={OFFER_PATH} />
         <Route element={<BlogRoute />} path={BLOG_PATH} />
         <Route element={<BlogArticleRoute />} path={BLOG_ARTICLE_PATH} />
         <Route element={<LoginRoute />} path={LOGIN_PATH} />

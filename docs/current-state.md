@@ -144,9 +144,80 @@ Technically complete:
   owned by React Router using a GitHub Pages-safe hash strategy. See the
   Current routes section below.
 
-Active visual slice: none. Active implementation milestone: none. WP-06 as
-a whole stays open: Stage 0 (baseline) is complete and Stage 1 is closed. No
-next slice is approved; select from `docs/master-backlog.md` when requested.
+Active visual slice: none. Active implementation milestone: none. WP-06 as a
+whole stays open: Stage 0 (baseline) is complete, and Stages 1 and 2B are
+closed. No next slice is approved; select from `docs/master-backlog.md` when
+requested.
+
+- **WP-06 Stage 2B / Info-Legal route splitting — USER VISUAL + FUNCTIONAL
+  PASS on 2026-10-11, CLOSED and published.** The design contract and the
+  implementation GO were approved by the user on 2026-10-11. The measurements
+  below were taken during implementation.
+
+- **Change:** the eight Info/Legal routes (`#/delivery`, `#/warranty`,
+  `#/faq`, `#/contacts`, `#/about`, `#/privacy`, `#/terms`, `#/offer`) load
+  through one module-scope `React.lazy` boundary,
+  `src/app/routes/LazyInfoRoute.tsx`.
+  - `InfoRoutes.tsx` keeps the eight route components unchanged and adds a
+    default `InfoRoute({ name })` dispatch. `ProductionRouter` imports only
+    `LazyInfoRoute` and the `InfoRouteName` type. Paths, titles and ready
+    pages are unchanged.
+  - `Suspense` sits inside each route element, so a navigation always shows
+    the fallback instead of keeping the previous page.
+  - **Loading:** `ProductionShell` + `RouteStatus` «Загружаем страницу…»,
+    shown immediately, with no timer. The document title is left unchanged
+    while loading.
+  - **Chunk failure:** only a failed `import()` (wrapped as
+    `InfoChunkLoadError`) is caught. Other render errors are rethrown as
+    before.
+    - The screen is `ProductionShell` + `RouteStatus` «Страница временно
+      недоступна», a neutral message, a «Обновить страницу» button
+      (`location.reload()` on click) and a «На главную» link. The title
+      becomes «Страница временно недоступна — GoodCall».
+    - There is no automatic reload or retry, and no `vite:preloadError`
+      handler.
+    - `React.lazy` caches the failure, so other Info routes show the same
+      screen until the user reloads.
+  - No CSS, `?reference=`, `vite.config.ts` or other route family changed.
+- **Chunks** (mock-Supabase verify build; gzip is zlib level 9, measured):
+  - Entry before (`10c2c3e`): 1,331.83 kB raw / 350.15 kB gzip.
+  - Entry after: 1,261.48 kB raw / 335.08 kB gzip (−70.35 kB / −15.07 kB).
+  - New lazy chunk `InfoRoutes-*.js`: 72.55 kB raw / 16.01 kB gzip, 22
+    modules (Info pages, `InfoRoutes.tsx`, About/Contacts media manifests).
+  - CSS `index-DIW2EoU1.css` (305.17 kB / 39.24 kB) is byte-identical.
+  - A direct Info entry loads entry + chunk = 351.09 kB gzip (+0.94 kB).
+- **Lab measurements** (2026-10-11; Chrome headless; desktop 1440×900 DPR 1;
+  mobile 390×844 DPR 3, CPU 4×, 150 ms, 1.6384/0.768 Mbps; antivirus requests
+  blocked; 3 isolated cold runs; medians; before = `10c2c3e` build, after =
+  working tree, measured in the same session):
+  - Local server with gzip level 6. JS transfer per page: 351.1 → 336.0 kB;
+    Info routes 351.1 → 352.3 kB in two requests.
+  - Mobile, before → after: Home DCL 2672 → 2559 ms, LCP 3728 → 3448 ms;
+    Catalog LCP 3468 → 3388 ms; PDP LCP 3692 → 3616 ms; Delivery LCP 3340 →
+    3380 ms; Contacts LCP 4392 → 4588 ms.
+  - Desktop: unchanged within noise on Home, Catalog and PDP. A direct
+    Delivery or Contacts entry becomes ready about 280 ms later (234 → 512 ms,
+    243 → 495 ms), consistent with React's ~300 ms minimum Suspense fallback
+    display.
+  - CLS is 0.000 on every route and profile, including fallback → ready.
+  - Three runs per cell is a small sample. These are lab values, not field
+    Web Vitals; no INP or real-user claim is made. Stage 0 numbers came from
+    an earlier HEAD and are context only.
+- **Verification:** `typecheck`; targeted ESLint/Prettier; `git diff --check`.
+  The `info`, `contacts`, `laptops`, `product-details` and `chunks` verify
+  suites are green (209, 76, 339, 707, 20 checks), including the protected
+  pixel diffs.
+  - New `chunks` suite: build-level evidence from a read-only Rolldown chunk
+    report written by the verify build.
+  - `info` adds lazy-route checks: direct entry and reload of all eight
+    routes, Footer → Info and Back/Forward, the delayed-chunk fallback at
+    1440/390, and blocked chunk → failure → manual reload recovery.
+  - A scratch smoke (not a gate) at 1440/1024/768/390/320 found no overflow
+    and a working focus path on all eight routes.
+- **Closure:** published after the full release gate (`typecheck`, `lint`,
+  `lint:styles`, `format:check`, `build`, full `npm run verify` including
+  `chunks`). AUD-05, Q-13 and GC-R61 stay open: other route families and the
+  `?reference=` entry are not split.
 
 - **WP-06 Stage 1 / Async loading layout stability — USER VISUAL PASS on
   2026-10-10, CLOSED and published.** The contract (including Search) was
@@ -172,7 +243,8 @@ next slice is approved; select from `docs/master-backlog.md` when requested.
 - **Proof:** `search`, `laptops` and `product-details` assert the Newsletter
   is below the fold while loading (1440/390/320) and on failure (1440), and
   that loading → ready causes no Newsletter/Footer layout shift.
-- **Remaining WP-06 work** (not approved): route splitting and a separate
+- **Remaining WP-06 work** (not approved): route splitting beyond the
+  Info/Legal family (Stage 2B, closed) and a separate
   `?reference=` entry, Contacts media (AUD-12), the PNG footprint decision
   (AUD-11), and the after-comparison for those slices.
 
@@ -5547,8 +5619,8 @@ requested.
 
 ## Project closeout state
 
-WP-06 Stage 1 (async loading layout stability) is the last published
-milestone, after WP-04. WP-06 as a whole stays open, and WP-02 stage 2 stays
+WP-06 Stage 2B (Info/Legal route splitting) is the last published milestone,
+after WP-06 Stage 1. WP-06 as a whole stays open, and WP-02 stage 2 stays
 deferred.
 **Active visual slice: none. Active implementation milestone: none.** No
 active code-level release blocker is known, and there is no approved next

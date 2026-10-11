@@ -32,3 +32,15 @@ export function reportCounts(passed, failures) {
   for (const failure of failures) console.log(`FAIL ${failure}`);
   console.log(`RESULT ${passed}/${passed + failures.length}`);
 }
+
+export function appDir() {
+  return requireEnv('GOODCALL_VERIFY_APP_DIR');
+}
+
+export function appChunksFile() {
+  return requireEnv('GOODCALL_VERIFY_APP_CHUNKS');
+}
+
+export function referenceChunksFile() {
+  return requireEnv('GOODCALL_VERIFY_REFERENCE_CHUNKS');
+}

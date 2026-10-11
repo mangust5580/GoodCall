@@ -44,7 +44,7 @@ const INFO_LINKS: InfoLinks = {
   offer: hashHref(OFFER_PATH),
 };
 
-export function DeliveryRoute() {
+function DeliveryRoute() {
   useDocumentTitle('Доставка и оплата');
 
   return (
@@ -54,7 +54,7 @@ export function DeliveryRoute() {
   );
 }
 
-export function WarrantyRoute() {
+function WarrantyRoute() {
   useDocumentTitle('Гарантия и возврат');
 
   return (
@@ -64,7 +64,7 @@ export function WarrantyRoute() {
   );
 }
 
-export function FaqRoute() {
+function FaqRoute() {
   useDocumentTitle('Часто задаваемые вопросы');
 
   return (
@@ -74,7 +74,7 @@ export function FaqRoute() {
   );
 }
 
-export function AboutRoute() {
+function AboutRoute() {
   useDocumentTitle('О нас');
 
   return (
@@ -84,7 +84,7 @@ export function AboutRoute() {
   );
 }
 
-export function ContactsRoute() {
+function ContactsRoute() {
   useDocumentTitle('Контакты');
 
   return (
@@ -94,7 +94,7 @@ export function ContactsRoute() {
   );
 }
 
-export function PrivacyRoute() {
+function PrivacyRoute() {
   useDocumentTitle('Политика конфиденциальности');
 
   return (
@@ -104,7 +104,7 @@ export function PrivacyRoute() {
   );
 }
 
-export function TermsRoute() {
+function TermsRoute() {
   useDocumentTitle('Пользовательское соглашение');
 
   return (
@@ -114,7 +114,7 @@ export function TermsRoute() {
   );
 }
 
-export function OfferRoute() {
+function OfferRoute() {
   useDocumentTitle('Публичная оферта');
 
   return (
@@ -122,4 +122,32 @@ export function OfferRoute() {
       <OfferPage links={INFO_LINKS} />
     </ProductionShell>
   );
+}
+
+export type InfoRouteName =
+  'delivery' | 'warranty' | 'faq' | 'about' | 'contacts' | 'privacy' | 'terms' | 'offer';
+
+interface InfoRouteProps {
+  readonly name: InfoRouteName;
+}
+
+export default function InfoRoute({ name }: InfoRouteProps) {
+  switch (name) {
+    case 'delivery':
+      return <DeliveryRoute />;
+    case 'warranty':
+      return <WarrantyRoute />;
+    case 'faq':
+      return <FaqRoute />;
+    case 'about':
+      return <AboutRoute />;
+    case 'contacts':
+      return <ContactsRoute />;
+    case 'privacy':
+      return <PrivacyRoute />;
+    case 'terms':
+      return <TermsRoute />;
+    case 'offer':
+      return <OfferRoute />;
+  }
 }

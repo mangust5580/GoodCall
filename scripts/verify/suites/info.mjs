@@ -742,6 +742,252 @@ check(
 );
 await reference.close();
 
+const LAZY_TITLES = [
+  ['/delivery', 'Доставка и оплата'],
+  ['/warranty', 'Гарантия и возврат'],
+  ['/faq', 'Часто задаваемые вопросы'],
+  ['/contacts', 'Контакты'],
+  ['/about', 'О нас'],
+  ['/privacy', 'Политика конфиденциальности'],
+  ['/terms', 'Пользовательское соглашение'],
+  ['/offer', 'Публичная оферта'],
+];
+const INFO_CHUNK = /\/assets\/InfoRoutes-[\w-]+\.js$/;
+const FAILURE_TITLE = 'Страница временно недоступна';
+const isInfoChunk = (request) => INFO_CHUNK.test(new URL(request.url).pathname);
+const infoReady = () =>
+  document.querySelector('main h1') !== null &&
+  document.querySelector('main.route-status') === null;
+const shellFacts = () => ({
+  shells: document.querySelectorAll('.production-shell').length,
+  mains: document.querySelectorAll('main').length,
+  headers: document.querySelectorAll('header.site-header').length,
+  footers: document.querySelectorAll('footer.site-footer').length,
+  h1: [...document.querySelectorAll('h1')].map((h) => h.textContent.trim()),
+  title: document.title,
+  scrollY: Math.round(scrollY),
+});
+const singleShell = (facts) =>
+  facts.shells === 1 && facts.mains === 1 && facts.headers === 1 && facts.footers === 1;
+const infoChunkLoaded = () =>
+  performance.getEntriesByType('resource').some((entry) => /\/InfoRoutes-/.test(entry.name));
+const lazyShiftFacts = () =>
+  new Promise((resolve) => {
+    const entries = [];
+    const observer = new PerformanceObserver((list) => entries.push(...list.getEntries()));
+    observer.observe({ type: 'layout-shift', buffered: true });
+    setTimeout(() => {
+      observer.disconnect();
+      const kept = entries.filter((entry) => !entry.hadRecentInput);
+      resolve({
+        total: Number(kept.reduce((sum, entry) => sum + entry.value, 0).toFixed(4)),
+        shell: kept.filter((entry) =>
+          entry.sources.some((source) => source.node?.closest?.('.newsletter-band, .site-footer')),
+        ).length,
+      });
+    }, 300);
+  });
+
+function chunkPage(width, height, chunkReply) {
+  return openPage(browser, {
+    width,
+    height,
+    interceptPatterns: [`*${MOCK_SUPABASE_HOST}*`, '*InfoRoutes-*'],
+    respond: (request) => (isInfoChunk(request) ? chunkReply() : { status: 200, body: '[]' }),
+    onPageError: (message) => failures.push(`pageerror ${message}`),
+  });
+}
+
+const direct = await newPage();
+for (const [path, title] of LAZY_TITLES) {
+  const tag = `lazy ${path}`;
+  await direct.goto('about:blank');
+  await direct.goto(`${BASE}#${path}`);
+  await direct.waitForFunction(infoReady);
+  const opened = await direct.evaluate(shellFacts);
+  check(
+    singleShell(opened) && opened.h1.length === 1 && opened.title === `${title} — GoodCall`,
+    `${tag}: direct entry renders one shell, one h1 and the page title ${JSON.stringify(opened)}`,
+  );
+  await direct.reload();
+  await direct.waitForFunction(infoReady);
+  const reloaded = await direct.evaluate(shellFacts);
+  check(
+    singleShell(reloaded) &&
+      reloaded.h1[0] === opened.h1[0] &&
+      reloaded.title === `${title} — GoodCall`,
+    `${tag}: reload keeps the page and title ${JSON.stringify(reloaded)}`,
+  );
+}
+await direct.close();
+
+const lazyNav = await newPage();
+await lazyNav.goto(`${BASE}#/`);
+await lazyNav.waitForSelector('.site-footer');
+check(!(await lazyNav.evaluate(infoChunkLoaded)), 'lazy: Home does not load the Info chunk');
+await lazyNav.click('.site-footer a[href="#/delivery"]');
+await lazyNav.waitForFunction(() => location.hash === '#/delivery');
+await lazyNav.waitForFunction(infoReady);
+const navigated = await lazyNav.evaluate(shellFacts);
+check(
+  singleShell(navigated) &&
+    navigated.title === 'Доставка и оплата — GoodCall' &&
+    navigated.scrollY === 0 &&
+    (await lazyNav.evaluate(infoChunkLoaded)),
+  `lazy: Footer → Delivery loads the chunk, resets scroll and sets the title ${JSON.stringify(navigated)}`,
+);
+await lazyNav.click('.site-footer a[href="#/faq"]');
+await lazyNav.waitForFunction(
+  () => location.hash === '#/faq' && document.title === 'Часто задаваемые вопросы — GoodCall',
+);
+await lazyNav.waitForFunction(infoReady);
+check(
+  (await lazyNav.evaluate(() => scrollY)) === 0 && singleShell(await lazyNav.evaluate(shellFacts)),
+  'lazy: Info → Info navigation keeps one shell and resets scroll',
+);
+await lazyNav.evaluate(() => history.back());
+await lazyNav.waitForFunction(
+  () => location.hash === '#/delivery' && document.title === 'Доставка и оплата — GoodCall',
+);
+await lazyNav.waitForFunction(infoReady);
+await lazyNav.evaluate(() => history.back());
+await lazyNav.waitForFunction(
+  () => location.hash === '#/' && document.title === 'Главная — GoodCall',
+);
+await lazyNav.evaluate(() => history.forward());
+await lazyNav.waitForFunction(
+  () => location.hash === '#/delivery' && document.title === 'Доставка и оплата — GoodCall',
+);
+await lazyNav.waitForFunction(infoReady);
+check(
+  singleShell(await lazyNav.evaluate(shellFacts)),
+  'lazy: Back/Forward across Home and Info restores pages and titles',
+);
+await lazyNav.close();
+
+for (const [width, height] of [
+  [1440, 900],
+  [390, 844],
+]) {
+  const tag = `lazy loading@${width}`;
+  let release;
+  const gate = new Promise((resolve) => {
+    release = resolve;
+  });
+  const slow = await chunkPage(width, height, () => gate.then(() => ({ continue: true })));
+  await slow.goto(`${BASE}#/delivery`);
+  await slow.waitForFunction(() =>
+    document.querySelector('main.route-status[aria-busy="true"] [role="status"]'),
+  );
+  const loading = await slow.evaluate(() => ({
+    message: document.querySelector('main.route-status [role="status"]').textContent,
+    newsletterBelowFold:
+      document.querySelector('.newsletter-band').getBoundingClientRect().top >= innerHeight,
+  }));
+  const loadingShell = await slow.evaluate(shellFacts);
+  check(
+    loading.message === 'Загружаем страницу…' &&
+      loading.newsletterBelowFold &&
+      singleShell(loadingShell) &&
+      loadingShell.h1.length === 0,
+    `${tag}: fallback shows one shell, the loading status and keeps Newsletter below the fold ${JSON.stringify({ ...loading, ...loadingShell })}`,
+  );
+  release();
+  await slow.waitForFunction(infoReady);
+  const shifts = await slow.evaluate(lazyShiftFacts);
+  check(
+    shifts.shell === 0 && shifts.total < 0.1,
+    `${tag}: fallback → ready causes no Newsletter/Footer shift ${JSON.stringify(shifts)}`,
+  );
+  check(
+    singleShell(await slow.evaluate(shellFacts)),
+    `${tag}: ready page replaces the fallback without a second shell`,
+  );
+  await slow.close();
+}
+
+let chunkBlocked = true;
+let chunkRequests = 0;
+const failing = await chunkPage(1440, 900, () => {
+  chunkRequests += 1;
+  return chunkBlocked ? { status: 404, body: '' } : { continue: true };
+});
+await failing.goto(`${BASE}#/delivery`);
+await failing.waitForFunction(() => document.querySelector('main.route-status h1'));
+const failed = await failing.evaluate(() => {
+  const status = document.querySelector('main.route-status');
+  const button = status.querySelector('button');
+  const link = status.querySelector('a');
+  return {
+    title: status.querySelector('h1').textContent,
+    message: status.querySelector('.route-status__message').textContent,
+    busy: status.getAttribute('aria-busy'),
+    button: button && { text: button.textContent, type: button.type },
+    link: link && { text: link.textContent, href: link.getAttribute('href') },
+  };
+});
+const failedShell = await failing.evaluate(shellFacts);
+check(
+  failed.title === FAILURE_TITLE &&
+    failed.busy === null &&
+    failed.button?.text === 'Обновить страницу' &&
+    failed.button.type === 'button' &&
+    failed.link?.text === 'На главную' &&
+    failed.link.href === '#/' &&
+    !/error|chunk|import|stack|undefined/i.test(failed.message) &&
+    singleShell(failedShell) &&
+    failedShell.title === `${FAILURE_TITLE} — GoodCall`,
+  `lazy failure: blocked chunk shows the shell and the failure status ${JSON.stringify({ ...failed, ...failedShell })}`,
+);
+await failing.focus('main.route-status button');
+await failing.keyboard.press('Tab');
+check(
+  await failing.evaluate(
+    () =>
+      document.activeElement?.textContent === 'На главную' &&
+      document.activeElement.tagName === 'A',
+  ),
+  'lazy failure: actions are focusable in order (Обновить страницу → На главную)',
+);
+await failing.evaluate(() => {
+  window.goodcallNoReloadMarker = true;
+});
+const requestsAtFailure = chunkRequests;
+await failing.waitForTimeout(2000);
+check(
+  (await failing.evaluate(() => window.goodcallNoReloadMarker === true)) &&
+    chunkRequests === requestsAtFailure &&
+    (await failing.evaluate(() => document.querySelector('main.route-status h1')?.textContent)) ===
+      FAILURE_TITLE,
+  `lazy failure: no automatic reload or retry (chunk requests ${chunkRequests})`,
+);
+await failing.click('main.route-status a', { hasText: 'На главную' });
+await failing.waitForFunction(
+  () => location.hash === '#/' && document.title === 'Главная — GoodCall',
+);
+check(
+  (await failing.evaluate(() =>
+    document.body.innerText.includes('Страница временно недоступна'),
+  )) === false,
+  'lazy failure: «На главную» leaves no failure UI behind',
+);
+chunkBlocked = false;
+await failing.evaluate(() => {
+  location.hash = '#/delivery';
+});
+await failing.waitForFunction(() => document.querySelector('main.route-status h1'));
+await failing.click('main.route-status button', { hasText: 'Обновить страницу' });
+await failing.waitForFunction(() => window.goodcallNoReloadMarker === undefined);
+await failing.waitForFunction(infoReady);
+const recovered = await failing.evaluate(shellFacts);
+check(
+  singleShell(recovered) &&
+    recovered.title === 'Доставка и оплата — GoodCall' &&
+    recovered.h1.length === 1,
+  `lazy failure: «Обновить страницу» reloads and recovers once the chunk is available ${JSON.stringify(recovered)}`,
+);
+await failing.close();
+
 await browser.close();
 console.log(JSON.stringify({ responsive }, null, 1));
 reportCounts(passed, failures);

@@ -56,14 +56,19 @@ export async function openPage(
         });
         return;
       }
-      const reply = respond(request);
-      if (reply === null) return;
-      const { status, body } = reply;
-      send('Fetch.fulfillRequest', {
-        requestId,
-        responseCode: status,
-        responseHeaders: [...CORS_HEADERS, { name: 'Content-Type', value: 'application/json' }],
-        body: Buffer.from(body).toString('base64'),
+      void Promise.resolve(respond(request)).then((reply) => {
+        if (reply === null) return;
+        if (reply.continue) {
+          send('Fetch.continueRequest', { requestId });
+          return;
+        }
+        const { status, body } = reply;
+        send('Fetch.fulfillRequest', {
+          requestId,
+          responseCode: status,
+          responseHeaders: [...CORS_HEADERS, { name: 'Content-Type', value: 'application/json' }],
+          body: Buffer.from(body).toString('base64'),
+        });
       });
     }
   });
