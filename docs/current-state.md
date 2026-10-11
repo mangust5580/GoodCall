@@ -146,9 +146,62 @@ Technically complete:
 
 Active visual slice: none. Active implementation milestone: none. WP-06 as a
 whole stays open: Stage 0 (baseline) is complete, and Stage 1, Stage 2B,
-Contacts media hygiene (AUD-12), Stage 2C and Stage 2D-1 are closed. Stage
-2D-2 (Fields split) is not approved. No next slice is approved; select from
-`docs/master-backlog.md` when requested.
+Contacts media hygiene (AUD-12), Stage 2C, Stage 2D-1 and Stage 2D-2 are
+closed. No next slice is approved; select from `docs/master-backlog.md` when
+requested.
+
+- **WP-06 Stage 2D-2 / DateField + PhoneField split — USER VISUAL +
+  FUNCTIONAL PASS on 2026-10-11, CLOSED and published.** The user approved API
+  option A and the implementation GO on 2026-10-11. The measurements below were
+  taken during implementation. Markup, CSS, stores and routes are unchanged.
+- **API (option A):** `DateField` and `PhoneField` now live in
+  `src/components/ui/DateField.tsx` and `src/components/ui/PhoneField.tsx`.
+  - Consumers import them by direct path (`components/ui/DateField`,
+    `components/ui/PhoneField`). `components/ui/index.ts` no longer
+    re-exports them. This is intentional: re-exporting them would pull the
+    heavy libraries back into the entry. There is no compatibility re-export.
+  - `Fields.tsx` keeps `TextField`, `SearchField`, `SelectField` and
+    `TextareaField`, and exports `FieldShell`.
+  - `src/components/ui/fieldParts.ts` holds `describedBy`, `useControlId`
+    and `cx`. It is a separate file because `react-refresh` forbids helper
+    exports next to components.
+  - The moved code is byte-identical: props, ids, aria, mask, calendar,
+    locale and classes are unchanged.
+  - Updated consumers: `CheckoutForm`, `AccountProfilePage`,
+    `AccountAddressesPage` and `ComponentsReference`.
+- **Chunks** (mock verify build; gzip is zlib level 9):
+  - Entry: 1,136.20 → 1,039.08 kB raw, 304.65 → 277.64 kB gzip
+    (−27.01 kB).
+  - One shared lazy chunk (103.61 kB raw, 29.40 kB gzip) holds
+    DayPicker, date-fns, `@date-fns/tz`, Maskito and both field modules.
+    The family chunk imports it; Rolldown folded the former `account`
+    chunk into it. Checkout therefore also downloads DayPicker.
+  - A direct Checkout or Account entry still makes 3 JS requests, about
+    322.24 → 323.19 kB gzip in total (+0.95 kB). It is not cheaper.
+  - Production CSS is byte-identical, still one initial JS and no
+    modulepreload. Radix `Popover`/`Select` stay in the entry because the
+    shell, Catalog and Search use them.
+- **Visual and behaviour:** full-page pixel diff against the `5c5fc0f`
+  build was 0 on 40/40 captures: every `?reference=` key (including
+  `components`), Home, Catalog, PDP, Contacts, Delivery, Checkout, Order,
+  Login and Account, at 1440 and 390. The responsive check passed 35/35, and
+  the reference `DateField` behaves identically on both builds (open, Russian
+  locale, select, close).
+- **Lab measurements** (2026-10-11, same session; Stage 2B profiles; 3 cold
+  runs, medians):
+  - Home, Catalog and PDP: JS transfer 305.5 → 278.5 kB, and mobile DCL
+    medians are 70–250 ms lower. LCP ranges overlap, so no LCP improvement is
+    claimed.
+  - Direct Checkout and Account: still 3 JS requests (323.6 → 324.6 kB).
+    Desktop is unchanged within noise. Mobile Checkout LCP was 2908 → 2736 ms
+    with non-overlapping runs in one sample; Account overlaps.
+  - CLS is 0.000 everywhere. These are mock-build lab values; there is no
+    field INP or RUM data.
+- **Verification:** `typecheck`; the `account`, `checkout`,
+  `form-unconfigured`, `order`, `cart`, `search`, `laptops`,
+  `product-details`, `chunks` and `info` verify suites are green (200, 98,
+  41, 60, 75, 186, 339, 707, 68, 209 checks). The new `chunks` assertions fail
+  on the `5c5fc0f` build (58/67).
 
 - **WP-06 Stage 2D-1 / lazy Checkout, Order and Account — USER VISUAL +
   FUNCTIONAL PASS on 2026-10-11, CLOSED and published.** The user chose this
@@ -175,7 +228,7 @@ Contacts media hygiene (AUD-12), Stage 2C and Stage 2D-1 are closed. Stage
     5.86 kB / 1.41 kB gzip.
   - Production CSS is byte-identical. `index.html` still loads one JS and
     one CSS file with no preload.
-  - DayPicker and Maskito stay in the entry (Stage 2D-2, not approved).
+  - DayPicker and Maskito stayed in the entry until Stage 2D-2.
 - **Visual parity:** full-page pixel diff against the `1cb3ae1` build was 0
   on 40/40 captures: every `?reference=` key; Home, Catalog, PDP, Contacts
   and Delivery; and Checkout, Order Confirmation, Login and signed-out
@@ -5747,8 +5800,8 @@ requested.
 
 ## Project closeout state
 
-WP-06 Stage 2D-1 (lazy Checkout, Order and Account) is the last published
-milestone, after WP-06 Stage 2C (lazy `?reference=` dispatch, Q-13). WP-06 as a whole stays open, and WP-02 stage 2 stays
+WP-06 Stage 2D-2 (DateField + PhoneField split) is the last published
+milestone, after WP-06 Stage 2D-1 (lazy Checkout, Order and Account). WP-06 as a whole stays open, and WP-02 stage 2 stays
 deferred.
 **Active visual slice: none. Active implementation milestone: none.** No
 active code-level release blocker is known, and there is no approved next

@@ -9,6 +9,14 @@ const INFO_ROUTES_MODULE = 'src/app/routes/InfoRoutes.tsx';
 const REFERENCE_DIR = 'src/reference/';
 const REFERENCE_SURFACE_MODULE = 'src/reference/ReferenceSurface.tsx';
 const ACCOUNT_FLOW_MODULE = 'src/app/routes/AccountFlowRoutes.tsx';
+const HEAVY_FIELD_MODULES = ['src/components/ui/DateField.tsx', 'src/components/ui/PhoneField.tsx'];
+const HEAVY_FIELD_PACKAGES = [
+  'react-day-picker',
+  'date-fns',
+  '@date-fns/tz',
+  '@maskito/core',
+  '@maskito/react',
+];
 const ACCOUNT_FLOW_PAGE_DIRS = [
   'src/pages/checkout/',
   'src/pages/order-confirmation/',
@@ -59,6 +67,11 @@ function moduleBytes(chunks, matches) {
 const infoBytes = (chunks) => moduleBytes(chunks, isInfoModule);
 const referenceBytes = (chunks) => moduleBytes(chunks, isReferenceModule);
 const accountFlowBytes = (chunks) => moduleBytes(chunks, isAccountFlowModule);
+const packageOf = (id) => id.match(/node_modules\/((?:@[^/]+\/)?[^/]+)\//)?.[1];
+const isHeavyFieldModule = (id) =>
+  HEAVY_FIELD_MODULES.includes(id) ||
+  /^@daypicker\/|^react-day-picker$|^date-fns$|^@date-fns\/|^@maskito\//.test(packageOf(id) ?? '');
+const heavyFieldBytes = (chunks) => moduleBytes(chunks, isHeavyFieldModule);
 
 const app = readReport(appChunksFile());
 const reference = readReport(referenceChunksFile());
@@ -174,6 +187,31 @@ check(
   'the Checkout/Order/Account chunks carry no CSS',
 );
 
+const initialHeavy = initial.flatMap((chunk) =>
+  chunk.modules.filter((module) => isHeavyFieldModule(module.id)).map((module) => module.id),
+);
+check(
+  initialHeavy.length === 0,
+  `no DateField/PhoneField module or DayPicker/date-fns/Maskito package in the entry or its static imports (found ${initialHeavy.length}: ${initialHeavy.slice(0, 5).join(', ')})`,
+);
+for (const id of HEAVY_FIELD_MODULES) {
+  check(lazyModuleIds.has(id), `${id} is in a lazily loaded chunk`);
+}
+const lazyPackages = new Set([...lazyModuleIds].map(packageOf).filter(Boolean));
+for (const name of HEAVY_FIELD_PACKAGES) {
+  check(lazyPackages.has(name), `${name} is in a lazily loaded chunk`);
+}
+const heavyChunks = lazy.filter((chunk) =>
+  chunk.modules.some((module) => isHeavyFieldModule(module.id)),
+);
+for (const chunk of heavyChunks) {
+  check(!html.includes(chunk.fileName), `index.html does not load or preload ${chunk.fileName}`);
+}
+check(
+  heavyChunks.every((chunk) => chunk.importedCss.length === 0),
+  'the DateField/PhoneField chunks carry no CSS',
+);
+
 const cssAssets = app.assets.filter((asset) => asset.fileName.endsWith('.css'));
 const linkedCss = cssAssets.filter((asset) => html.includes(asset.fileName));
 check(
@@ -205,7 +243,8 @@ const referenceInitial = staticClosure(reference, referenceEntry);
 if (
   infoBytes(referenceInitial) > 0 ||
   referenceBytes(referenceInitial) > 0 ||
-  accountFlowBytes(referenceInitial) > 0
+  accountFlowBytes(referenceInitial) > 0 ||
+  heavyFieldBytes(referenceInitial) > 0
 ) {
   check(
     entry.bytes < referenceEntry.bytes,
@@ -236,6 +275,11 @@ for (const chunk of referenceChunks) {
 for (const chunk of accountFlowChunks) {
   console.log(
     `INFO lazy ${chunk.fileName} ${kB(chunk.bytes)} raw / ${kB(gzipBytes(chunk.fileName))} gzip, Checkout/Order/Account modules before minification ${kB(accountFlowBytes([chunk]))}`,
+  );
+}
+for (const chunk of heavyChunks) {
+  console.log(
+    `INFO heavy fields in ${chunk.fileName} ${kB(chunk.bytes)} raw / ${kB(gzipBytes(chunk.fileName))} gzip, DateField/PhoneField modules and packages before minification ${kB(heavyFieldBytes([chunk]))}`,
   );
 }
 for (const chunk of lazy.filter((c) => !c.isDynamicEntry)) {

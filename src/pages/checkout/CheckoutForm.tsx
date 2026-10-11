@@ -11,15 +11,9 @@ import type {
   HouseOption,
   StreetOption,
 } from '../../components/location';
-import {
-  Icon,
-  PhoneField,
-  Radio,
-  SelectField,
-  TextField,
-  TextareaField,
-} from '../../components/ui';
+import { Icon, Radio, SelectField, TextField, TextareaField } from '../../components/ui';
 import type { IconName } from '../../components/ui';
+import { PhoneField } from '../../components/ui/PhoneField';
 import { CheckoutAddressCombobox } from './CheckoutAddressCombobox';
 import { CheckoutOrderSummary } from './CheckoutOrderSummary';
 import {

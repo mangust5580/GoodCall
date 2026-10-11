@@ -14,7 +14,9 @@ import type {
   DemoAccountGender,
   DemoAccountProfile,
 } from '../../commerce/account';
-import { Button, DateField, Icon, PhoneField, SelectField, TextField } from '../../components/ui';
+import { Button, Icon, SelectField, TextField } from '../../components/ui';
+import { DateField } from '../../components/ui/DateField';
+import { PhoneField } from '../../components/ui/PhoneField';
 import { AccountLayout } from './AccountParts';
 import type { AccountLinks } from './AccountParts';
 

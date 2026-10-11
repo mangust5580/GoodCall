@@ -15,7 +15,8 @@ import type {
 } from '../../commerce/account';
 import { AddressCard } from '../../components/account';
 import { ConfirmationDialog } from '../../components/feedback';
-import { Button, Checkbox, Chip, Icon, PhoneField, TextField } from '../../components/ui';
+import { Button, Checkbox, Chip, Icon, TextField } from '../../components/ui';
+import { PhoneField } from '../../components/ui/PhoneField';
 import { AccountLayout } from './AccountParts';
 import type { AccountLinks } from './AccountParts';
 

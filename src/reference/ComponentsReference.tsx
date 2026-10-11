@@ -45,9 +45,7 @@ import {
   Button,
   Checkbox,
   Chip,
-  DateField,
   Pagination,
-  PhoneField,
   QuantityStepper,
   Radio,
   RangeSlider,
@@ -61,6 +59,8 @@ import {
   tabPanelId,
 } from '../components/ui';
 import type { TabItem } from '../components/ui';
+import { DateField } from '../components/ui/DateField';
+import { PhoneField } from '../components/ui/PhoneField';
 
 import './ComponentsReference.scss';
 

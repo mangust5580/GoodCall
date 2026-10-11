@@ -3,14 +3,7 @@ export type { ButtonVariant } from './Button';
 export { Checkbox } from './Checkbox';
 export { Chip } from './Chip';
 export type { ChipVariant } from './Chip';
-export {
-  DateField,
-  PhoneField,
-  SearchField,
-  SelectField,
-  TextField,
-  TextareaField,
-} from './Fields';
+export { SearchField, SelectField, TextField, TextareaField } from './Fields';
 export { Icon } from './Icon';
 export type { IconName } from './Icon';
 export { Pagination } from './Pagination';
