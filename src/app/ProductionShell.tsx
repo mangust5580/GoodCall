@@ -4,7 +4,11 @@ import { useAccountSignedIn } from '../commerce/account';
 import { useCartUnitCount } from '../commerce/cart';
 import { useCompareCount } from '../commerce/compare';
 import { useFavoritesCount } from '../commerce/favorites';
-import { STOREFRONT_PAYMENT_MARKS, STOREFRONT_SUPPORT } from '../commerce/storefront';
+import {
+  STOREFRONT_DEMO_CONTACT,
+  STOREFRONT_PAYMENT_MARKS,
+  STOREFRONT_SUPPORT,
+} from '../commerce/storefront';
 import { MobileActionBar, NewsletterBand, SiteFooter, SiteHeader } from '../components/shell';
 import {
   ABOUT_PATH,
@@ -97,6 +101,7 @@ export function ProductionShell({ children }: ProductionShellProps) {
       {children}
       <NewsletterBand />
       <SiteFooter
+        demoContacts={STOREFRONT_DEMO_CONTACT}
         helpLinks={FOOTER_HELP_LINKS}
         homeHref={home}
         companyLinks={FOOTER_COMPANY_LINKS}

@@ -144,16 +144,59 @@ Technically complete:
   owned by React Router using a GitHub Pages-safe hash strategy. See the
   Current routes section below.
 
-Active visual slice: none. Active implementation milestone: none. No next slice
-is approved; select from `docs/master-backlog.md` when requested.
+Active visual slice: none. Active implementation milestone: none. WP-01 and
+WP-01B stay open; no next slice is approved.
+
+- **WP-01B-1 / Demo Contact Actions — USER VISUAL + FUNCTIONAL PASS on
+  2026-10-11; overlay polish WP-01B-1A — USER VISUAL PASS on 2026-10-11;
+  CLOSED and published.** One bounded WP-01B slice and the latest published
+  code milestone. WP-01B as a whole stays open.
+  - Production phone and e-mail stay real anchors with the original values
+    and hrefs (`8 800 100-10-10` / `tel:+78001001010`,
+    `support@goodcall.example` / `mailto:support@goodcall.example`). A primary
+    click or Enter calls `preventDefault()` and opens the existing
+    `InfoDialog` («Демонстрационный телефон» / «Демонстрационная почта», one
+    «Понятно» action); Escape, overlay and «Понятно» close it and focus
+    returns to the link.
+  - `components/feedback/DemoContactLink` owns the link and its dialog and
+    opts in only when given a notice; the copy lives in
+    `STOREFRONT_DEMO_CONTACT` (`commerce/storefront`). `STOREFRONT_SUPPORT`
+    is unchanged.
+  - Covered: the production footer (every route, via `ProductionShell`),
+    Contacts, the support block on Delivery/FAQ/Warranty, Privacy and Offer
+    (links only; prose and legal dates unchanged) and both PDP phone links
+    (optional `supportPhoneNotice` on the production storewide data).
+  - Copy: footer and Contacts notes «Демо-номер, звонки не принимаются» /
+    «Демо-адрес, письма не обрабатываются», Contacts hours note and lead, the
+    FAQ return answer, the Warranty notice, the About contact line and the
+    Delivery/FAQ/Warranty support-block intros.
+  - Overlay: `InfoDialog` takes an optional `dimmed` prop that adds
+    `feedback-dialog__overlay--dimmed` (existing `--alpha-black-36`). Only
+    `DemoContactLink` passes it; other dialogs and `?reference=components`
+    keep the transparent overlay.
+  - `?reference=` surfaces keep their native links and defaults
+    (`mailto:info@goodcall.ru`, the PDP fixture `tel:88001001019`); their
+    pixel diffs against `c21b9d8` are 0.
+  - Interception is UX only: context menu, copy link, middle click, typing
+    the number and no-JS bypass it. The number's owner is unverified; AUD-15
+    stays PARTIALLY MITIGATED / OWNER UNVERIFIED.
+    `support@goodcall.example` receives no mail.
+  - Evidence: the targeted pre-closure gate was contacts 250/250, info
+    212/212, product-details 714/714, laptops 339/339 and chunks 89/89; the
+    full 18-suite `npm run verify` gate ran green before publication. The
+    `laptops` production catalog regression compares the `.catalog-page`
+    region (the footer copy changed intentionally); `?reference=` captures
+    stay full-page. Controlled mock build after the overlay: entry JS
+    267,601 bytes and CSS 37,266 bytes gzip-9, one JS, no modulepreload.
+    CI and GitHub Pages were not observed by the closure task.
 
 - **WP-06 / Performance — CLOSED on 2026-10-11 (documentation-only closeout,
   user decision).** The bounded program is complete: Stage 0 baseline, Stage 1
   async-loading CLS, Stage 2B/2C/2D-1/2D-2/2E splitting (Info, `?reference=`,
   Checkout/Order/Account, heavy fields, Blog), Contacts media (AUD-12) and a
   final controlled after-measurement. Each code slice received its own USER
-  PASS and was published; the closeout changes no code or visuals. Stage 2E is
-  still the latest code milestone.
+  PASS and was published; the closeout changes no code or visuals. Stage 2E
+  was its last code milestone.
 - **Final after-measurement** (read-only audit, 2026-10-11): `2336dcf`
   (Stage 0) and `3d66b0e` rebuilt in one session with the mock verify
   environment; Chrome 155; desktop 1440×900; mobile 390×844 @3, CPU 4×,
@@ -674,9 +717,10 @@ Completed visual slices:
     4 October 2026.
 
   `DEMO_STORES`, pickup and storage behaviour are unchanged. The `contacts`
-  suite asserts the wording and the legal dates. The rest of WP-01 (WP-01B:
-  support phone, store-heading affordance, FAQ/Terms/Offer copy, compare
-  retention wording) and store thumbnails remain open and not implemented.
+  suite asserts the wording and the legal dates. The rest of WP-01 (WP-01B)
+  stayed open; WP-01B-1 later covered the demo phone/e-mail actions (see
+  above). Store-heading affordance, Terms/Offer copy, compare retention
+  wording and store thumbnails remain open.
 
 - **Quality G / Breakpoint Off-by-One Correction — USER VISUAL/UX PASS on
   2026-10-10, CLOSED and published.** Closes the Q-08 off-by-one slice only;
@@ -5895,12 +5939,14 @@ requested.
 
 ## Project closeout state
 
-WP-06 Stage 2E (lazy Blog family) is the last published code milestone. WP-06
-was closed on 2026-10-11 by a documentation-only closeout after its final
+WP-01B-1 / Demo Contact Actions (with the WP-01B-1A overlay polish) is the
+last published code milestone, CLOSED on 2026-10-11. WP-06 was closed on
+2026-10-11 by a documentation-only closeout after its final
 after-measurement. WP-02 stage 2 stays deferred.
 **Active visual slice: none. Active implementation milestone: none.** No
-active code-level release blocker is known, and there is no approved next
-milestone. The next activity is selecting from `docs/master-backlog.md` when
+active code-level release blocker is known. WP-01B stays open (AUD-15 partial,
+GC-R43, GC-R41, GC-R52, GC-R23); the next activity is selecting the WP-01B
+remainder or another backlog item from `docs/master-backlog.md` when
 requested.
 
 Settings, Bonuses, Notifications, recently viewed, a real authenticated

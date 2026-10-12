@@ -1,4 +1,5 @@
-import { STOREFRONT_SUPPORT } from '../../commerce/storefront';
+import { STOREFRONT_DEMO_CONTACT, STOREFRONT_SUPPORT } from '../../commerce/storefront';
+import { DemoContactLink } from '../../components/feedback';
 import { Icon } from '../../components/ui';
 import { InfoIllustration } from './InfoParts';
 
@@ -30,10 +31,14 @@ export function InfoSupport({ titleId, title, text, links }: InfoSupportProps) {
             <Icon name="phone" />
           </span>
           <span className="info-support__contact-body">
-            <a className="info-support__contact-value" href={STOREFRONT_SUPPORT.phoneHref}>
+            <DemoContactLink
+              className="info-support__contact-value"
+              href={STOREFRONT_SUPPORT.phoneHref}
+              notice={STOREFRONT_DEMO_CONTACT.phoneNotice}
+            >
               {STOREFRONT_SUPPORT.phone}
-            </a>
-            <span className="info-support__contact-note">{STOREFRONT_SUPPORT.hours}</span>
+            </DemoContactLink>
+            <span className="info-support__contact-note">{STOREFRONT_DEMO_CONTACT.phoneNote}</span>
           </span>
         </li>
         <li className="info-support__contact">
@@ -41,10 +46,14 @@ export function InfoSupport({ titleId, title, text, links }: InfoSupportProps) {
             <Icon name="mail" />
           </span>
           <span className="info-support__contact-body">
-            <a className="info-support__contact-value" href={STOREFRONT_SUPPORT.emailHref}>
+            <DemoContactLink
+              className="info-support__contact-value"
+              href={STOREFRONT_SUPPORT.emailHref}
+              notice={STOREFRONT_DEMO_CONTACT.emailNotice}
+            >
               {STOREFRONT_SUPPORT.email}
-            </a>
-            <span className="info-support__contact-note">Вопросы по заказам и гарантии</span>
+            </DemoContactLink>
+            <span className="info-support__contact-note">{STOREFRONT_DEMO_CONTACT.emailNote}</span>
           </span>
         </li>
       </ul>

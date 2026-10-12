@@ -1833,7 +1833,7 @@ for (const width of [559, 560, 1440, 390, 320]) {
 }
 
 console.log('stage: reference', new Date().toISOString());
-async function capture(base, path, width, ready, name) {
+async function capture(base, path, width, ready, name, region) {
   const p = await newPage(width, 900);
   await p.goto(`${base}${path}`);
   await p.waitForSelector(ready);
@@ -1845,7 +1845,19 @@ async function capture(base, path, width, ready, name) {
   await p.evaluate(() => window.scrollTo(0, 0));
   await p.waitForTimeout(400);
   const file = `${SHOTS}/${name}.png`;
-  await p.screenshot({ path: file, fullPage: true });
+  if (region === undefined) {
+    await p.screenshot({ path: file, fullPage: true });
+  } else {
+    const box = await p.evaluate((selector) => {
+      const matches = document.querySelectorAll(selector);
+      const rect = matches[0]?.getBoundingClientRect();
+      return { count: matches.length, width: rect?.width ?? 0, height: rect?.height ?? 0 };
+    }, region);
+    if (box.count !== 1 || box.width <= 0 || box.height <= 0) {
+      throw new Error(`capture region ${region} on ${path} at ${width}: ${JSON.stringify(box)}`);
+    }
+    await p.elementScreenshot(region, file);
+  }
   await p.close();
   return file;
 }
@@ -1870,16 +1882,21 @@ const referenceTargets = [
   ['?reference=home', '.home-tiles', 'home-reference'],
   ['?reference=header', '.site-header', 'header-reference'],
   ['?reference=components', '.product-card', 'components-reference'],
-  ['#/catalog/smartphones', '.catalog-grid .product-card', 'catalog-smartphones-regression'],
+  [
+    '#/catalog/smartphones',
+    '.catalog-grid .product-card',
+    'catalog-smartphones-regression',
+    '.catalog-page',
+  ],
 ];
-for (const [path, ready, name] of referenceTargets) {
+for (const [path, ready, name, region] of referenceTargets) {
   for (const width of [1440, 390]) {
     const files = [];
     for (const [base, label] of [
       [HEAD, 'head'],
       [NEW, 'new'],
     ]) {
-      files.push(await capture(base, path, width, ready, `${name}-${label}-${width}`));
+      files.push(await capture(base, path, width, ready, `${name}-${label}-${width}`, region));
     }
     let diff = await pixelDiff(files);
     if (diff !== 0) {
@@ -1889,14 +1906,20 @@ for (const [path, ready, name] of referenceTargets) {
         [HEAD, 'head'],
         [NEW, 'new'],
       ]) {
-        files.push(await capture(base, path, width, ready, `${name}-${label}-${width}`));
+        files.push(await capture(base, path, width, ready, `${name}-${label}-${width}`, region));
       }
       diff = await pixelDiff(files);
     }
-    check(diff === 0, `reference: ${path} pixel diff at ${width} vs HEAD = ${diff}`);
+    check(
+      diff === 0,
+      `reference: ${path}${region === undefined ? '' : ` region ${region}`} pixel diff at ${width} vs HEAD = ${diff}`,
+    );
     if (name === 'catalog-smartphones-regression') {
       const copy = await sharp(files[1]).toFile(`${SHOTS}/${name}-${width}.png`);
-      check(copy.width > 0, `screenshot: ${name}-${width}`);
+      check(
+        copy.width > 0 && copy.height > 0,
+        `screenshot: ${name}-${width} ${copy.width}x${copy.height}`,
+      );
     }
   }
 }

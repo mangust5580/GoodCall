@@ -297,7 +297,7 @@ export function DeliveryPage({ links }: DeliveryPageProps) {
             { label: 'Частые вопросы', href: links.faq },
             { label: 'Гарантия и возврат', href: links.warranty },
           ]}
-          text="Служба поддержки GoodCall поможет с оформлением заказа, доставкой и оплатой."
+          text="Телефон и e-mail приведены для примера: в демо-версии обращения не принимаются. Информация о доставке и оплате — на этой странице."
           title="Остались вопросы?"
           titleId="delivery-support-title"
         />

@@ -1,4 +1,6 @@
 export { ConfirmationDialog } from './ConfirmationDialog';
+export { DemoContactLink } from './DemoContactLink';
+export type { DemoContactNotice } from './DemoContactLink';
 export { EmptyState } from './EmptyState';
 export { FAQAccordion } from './FAQAccordion';
 export type { FAQItem } from './FAQAccordion';

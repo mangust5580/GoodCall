@@ -2,6 +2,7 @@ import { DEMO_STORES } from '../../commerce/shops';
 import {
   PRODUCT_TRUST,
   PRODUCT_WARRANTY_TEXT as WARRANTY_TEXT,
+  STOREFRONT_DEMO_CONTACT,
   STOREFRONT_PAYMENT_METHODS,
   STOREFRONT_SUPPORT,
 } from '../../commerce/storefront';
@@ -61,4 +62,5 @@ export const PRODUCT_DETAILS_STOREWIDE: ProductDetailsStorewide = {
   paymentMethods: STOREWIDE_PAYMENT_METHODS,
   trust: STOREWIDE_TRUST,
   ...STOREWIDE_SUPPORT,
+  supportPhoneNotice: STOREFRONT_DEMO_CONTACT.phoneNotice,
 };

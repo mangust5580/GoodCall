@@ -1,4 +1,5 @@
 import { HOME_DEVICE_MEDIA } from '../../assets/media/home/homeMarketingMedia';
+import type { DemoContactNotice } from '../../components/feedback';
 import type { PictureSource } from '../../components/media';
 import type { IconName } from '../../components/ui';
 import type {
@@ -90,6 +91,7 @@ export interface ProductDetailsStorewide {
   readonly supportPhone: string;
   readonly supportPhoneHref: string;
   readonly supportHours: string;
+  readonly supportPhoneNotice?: DemoContactNotice;
   readonly chatNote?: string;
 }
 
@@ -132,6 +134,7 @@ export interface ProductDetailsView {
   readonly supportPhone: string;
   readonly supportPhoneHref: string;
   readonly supportHours: string;
+  readonly supportPhoneNotice?: DemoContactNotice;
   readonly chatNote?: string;
   readonly variants?: ProductDetailsVariants;
   readonly sku?: string;
@@ -201,6 +204,9 @@ export function buildProductDetailsView(
     supportPhone: storewide.supportPhone,
     supportPhoneHref: storewide.supportPhoneHref,
     supportHours: storewide.supportHours,
+    ...(storewide.supportPhoneNotice === undefined
+      ? {}
+      : { supportPhoneNotice: storewide.supportPhoneNotice }),
     ...(storewide.chatNote === undefined ? {} : { chatNote: storewide.chatNote }),
   };
 }

@@ -7,6 +7,8 @@ import socialTelegram from '../../assets/social/telegram.svg';
 import socialVk from '../../assets/social/vk.svg';
 import socialYoutube from '../../assets/social/youtube.svg';
 import { BrandLogo } from '../brand';
+import { DemoContactLink } from '../feedback';
+import type { DemoContactNotice } from '../feedback';
 import { Container } from '../layout';
 import { Icon } from '../ui';
 
@@ -42,6 +44,13 @@ export interface SiteFooterSupport {
   readonly hours: string;
 }
 
+export interface SiteFooterDemoContacts {
+  readonly phoneNotice: DemoContactNotice;
+  readonly emailNotice: DemoContactNotice;
+  readonly phoneNote: string;
+  readonly emailNote: string;
+}
+
 export interface SiteFooterProps {
   readonly homeHref?: string;
   readonly helpLinks?: SiteFooterHelpLinks;
@@ -50,6 +59,7 @@ export interface SiteFooterProps {
   readonly paymentMarks?: readonly SiteFooterPaymentMark[];
   readonly support?: SiteFooterSupport;
   readonly supportLabel?: string;
+  readonly demoContacts?: SiteFooterDemoContacts;
 }
 
 interface FooterItem {
@@ -138,6 +148,7 @@ export function SiteFooter({
   paymentMarks = PAYMENT_MARKS,
   support = SUPPORT,
   supportLabel,
+  demoContacts,
 }: SiteFooterProps) {
   const home = homeHref ?? import.meta.env.BASE_URL;
 
@@ -197,19 +208,31 @@ export function SiteFooter({
               <span className="site-footer__contact-tile">
                 <Icon name="phone" />
               </span>
-              <a className="site-footer__contact-value" href={support.phoneHref}>
+              <DemoContactLink
+                className="site-footer__contact-value"
+                href={support.phoneHref}
+                notice={demoContacts?.phoneNotice}
+              >
                 {support.phone}
-              </a>
-              <span className="site-footer__contact-note">Звонок по России бесплатный</span>
+              </DemoContactLink>
+              <span className="site-footer__contact-note">
+                {demoContacts?.phoneNote ?? 'Звонок по России бесплатный'}
+              </span>
             </div>
             <div className="site-footer__contact">
               <span className="site-footer__contact-tile">
                 <Icon name="mail" />
               </span>
-              <a className="site-footer__contact-value" href={support.emailHref}>
+              <DemoContactLink
+                className="site-footer__contact-value"
+                href={support.emailHref}
+                notice={demoContacts?.emailNotice}
+              >
                 {support.email}
-              </a>
-              <span className="site-footer__contact-note">{support.hours}</span>
+              </DemoContactLink>
+              <span className="site-footer__contact-note">
+                {demoContacts?.emailNote ?? support.hours}
+              </span>
             </div>
           </div>
         </div>

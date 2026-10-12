@@ -988,6 +988,44 @@ check(
 );
 await failing.close();
 
+const contactCopy = await newPage();
+const routeText = async (path) => {
+  await open(contactCopy, path);
+  await contactCopy.waitForFunction(() => document.querySelector('main.route-status') === null);
+  return contactCopy.evaluate(() => document.querySelector('main').textContent);
+};
+await routeText('/faq');
+await contactCopy.click('.faq-accordion__question', { hasText: 'Как вернуть или обменять товар?' });
+await contactCopy.waitForFunction(() =>
+  document.querySelector('main').textContent.includes('В демо-версии телефон и e-mail'),
+);
+const faqText = await contactCopy.evaluate(() => document.querySelector('main').textContent);
+check(
+  faqText.includes(
+    'Возврат и обмен проводятся по Закону РФ «О защите прав потребителей». Условия зависят от категории товара и от того, есть ли в нём недостаток.',
+  ) &&
+    faqText.includes(
+      'В демо-версии телефон и e-mail поддержки не подключены — обращения не принимаются.',
+    ) &&
+    !faqText.includes('начните с обращения в поддержку') &&
+    !faqText.includes('Телефон поддержки:'),
+  'faq: return answer carries the demo contact statement',
+);
+const warrantyText = await routeText('/warranty');
+check(
+  warrantyText.includes(
+    'В демо-версии возврат и обмен не оформляются: телефон и e-mail поддержки не подключены.',
+  ) && !warrantyText.includes('позвоните в поддержку'),
+  'warranty: demo notice replaces the call-support instruction',
+);
+const aboutText = await routeText('/about');
+check(
+  aboutText.includes('Телефон и e-mail — демонстрационные, обращения не обрабатываются.') &&
+    !aboutText.includes('Телефон и e-mail поддержки —'),
+  'about: demo contact line',
+);
+await contactCopy.close();
+
 await browser.close();
 console.log(JSON.stringify({ responsive }, null, 1));
 reportCounts(passed, failures);

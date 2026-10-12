@@ -428,8 +428,10 @@ for (const path of ['/', '/cart', '/checkout', '/delivery', '/faq']) {
   check(!/24\/7|в любое время|мы всегда на связи/i.test(text), `support claim truthful on ${path}`);
 }
 await open(page, '/checkout');
+await page.reload();
+await page.waitForSelector('main .benefits-strip');
 check(
-  (await page.evaluate(() => document.body.innerText)).includes(HOURS),
+  (await page.evaluate(() => document.querySelector('main').innerText)).includes(HOURS),
   'checkout: support benefit shows canonical hours',
 );
 await page.evaluate((key) => localStorage.removeItem(key), CART);
@@ -589,6 +591,428 @@ for (const [width, height] of [
     `${tag}: image fills its visual slot with object-fit cover and no horizontal overflow ${JSON.stringify(facts)}`,
   );
   await lead.close();
+}
+
+const PHONE_HREF = 'tel:+78001001010';
+const EMAIL_HREF = `mailto:${EMAIL}`;
+const DEMO_NOTICE = {
+  [PHONE_HREF]: {
+    title: 'Демонстрационный телефон',
+    message:
+      'GoodCall — демонстрационный проект. Телефонная поддержка не подключена. Звонки по этому номеру не принимаются.',
+  },
+  [EMAIL_HREF]: {
+    title: 'Демонстрационная почта',
+    message:
+      'GoodCall — демонстрационный проект. Почтовая поддержка не подключена. Письма на этот адрес не обрабатываются.',
+  },
+};
+const PHONE_NOTE = 'Демо-номер, звонки не принимаются';
+const DIMMED_BACKDROP = 'rgba(18, 19, 26, 0.36)';
+const EMAIL_NOTE = 'Демо-адрес, письма не обрабатываются';
+const HOURS_NOTE = 'Пример графика — в демо-версии поддержка не работает';
+const CONTACTS_LEAD =
+  'GoodCall — демонстрационный магазин: телефон и e-mail ниже показаны как пример, звонки и письма не обрабатываются.';
+
+async function openRoute(target, hash, ready) {
+  await target.goto(`${BASE}${hash}`);
+  await target.waitForFunction(
+    (selector) =>
+      document.querySelector(selector) !== null &&
+      document.querySelector('main.route-status') === null,
+    ready,
+  );
+  await target.evaluate(() => {
+    window.goodcallContactProbe = { clicks: [] };
+    window.addEventListener('click', (event) => {
+      const link = event.target instanceof Element ? event.target.closest('a[href]') : null;
+      const href = link?.getAttribute('href') ?? '';
+      if (!/^(tel|mailto):/.test(href)) return;
+      window.goodcallContactProbe.clicks.push({ href, prevented: event.defaultPrevented });
+      event.preventDefault();
+    });
+  });
+}
+
+function markContact(target, selector, nth) {
+  return target.evaluate(
+    ([css, index]) => {
+      const link = [...document.querySelectorAll(css)].filter(
+        (element) => element.getClientRects().length > 0,
+      )[index];
+      window.goodcallContactTarget = link ?? null;
+      return link === undefined
+        ? null
+        : {
+            href: link.getAttribute('href'),
+            text: link.textContent.trim(),
+            tag: link.tagName,
+            lines: link.getClientRects().length,
+          };
+    },
+    [selector, nth],
+  );
+}
+
+const dialogFacts = (target) =>
+  target.evaluate(() => {
+    const dialogs = [...document.querySelectorAll('[role="dialog"]')];
+    const dialog = dialogs[0];
+    const byId = (attribute) =>
+      document.getElementById(dialog?.getAttribute(attribute) ?? '')?.textContent.trim() ?? null;
+    const button = dialog?.querySelector('button');
+    const rect = dialog?.getBoundingClientRect();
+    const buttonRect = button?.getBoundingClientRect();
+    return {
+      count: dialogs.length,
+      title: dialog === undefined ? null : byId('aria-labelledby'),
+      message: dialog === undefined ? null : byId('aria-describedby'),
+      buttons:
+        dialog === undefined
+          ? []
+          : [...dialog.querySelectorAll('button')].map((b) => b.textContent.trim()),
+      focusInside: dialog?.contains(document.activeElement) ?? false,
+      fits:
+        rect !== undefined &&
+        rect.left >= 0 &&
+        rect.right <= innerWidth &&
+        buttonRect !== undefined &&
+        buttonRect.bottom <= innerHeight &&
+        buttonRect.width > 0,
+      overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      overlay: (() => {
+        const overlay = document.querySelector('.feedback-dialog__overlay');
+        if (overlay === null) return null;
+        const box = overlay.getBoundingClientRect();
+        const topmost = (x, y) => document.elementFromPoint(x, y) === overlay;
+        return {
+          dimmed: overlay.classList.contains('feedback-dialog__overlay--dimmed'),
+          background: getComputedStyle(overlay).backgroundColor,
+          covers:
+            box.left <= 0 && box.top <= 0 && box.right >= innerWidth && box.bottom >= innerHeight,
+          coversShell: topmost(4, 4) && topmost(4, innerHeight - 4),
+        };
+      })(),
+    };
+  });
+
+const waitDialogClosed = (target) =>
+  target.waitForFunction(() => document.querySelector('[role="dialog"]') === null);
+
+async function focusReturned(target) {
+  for (let attempt = 0; attempt < 20; attempt += 1) {
+    const returned = await target.evaluate(
+      () =>
+        window.goodcallContactTarget !== null &&
+        document.activeElement === window.goodcallContactTarget,
+    );
+    if (returned) return true;
+    await target.waitForTimeout(50);
+  }
+  return false;
+}
+
+async function checkDemoContact(target, tag, selector, nth, expectedHref) {
+  const link = await markContact(target, selector, nth);
+  check(
+    link !== null && link.tag === 'A' && link.href === expectedHref,
+    `${tag}: anchor keeps ${expectedHref} ${JSON.stringify(link)}`,
+  );
+  if (link === null) return;
+  const expected = DEMO_NOTICE[expectedHref];
+  const before = await target.evaluate(() => location.href);
+
+  if (link.lines === 1) {
+    await target.click(selector, { nth });
+  } else {
+    await target.evaluate(() => window.goodcallContactTarget.focus());
+    await target.keyboard.press('Enter');
+  }
+  await target.waitForFunction(() => document.querySelector('[role="dialog"]') !== null);
+  const pointer = await dialogFacts(target);
+  check(
+    pointer.count === 1 &&
+      pointer.title === expected.title &&
+      pointer.message === expected.message &&
+      JSON.stringify(pointer.buttons) === JSON.stringify(['Понятно']) &&
+      pointer.focusInside &&
+      pointer.fits &&
+      pointer.overflow <= 0 &&
+      pointer.overlay?.dimmed === true &&
+      pointer.overlay.background === DIMMED_BACKDROP &&
+      pointer.overlay.covers &&
+      pointer.overlay.coversShell,
+    `${tag}: ${link.lines === 1 ? 'click' : 'wrapped link, Enter'} opens one accessible demo dialog ${JSON.stringify(pointer)}`,
+  );
+  await target.click('[role="dialog"] .feedback-dialog__message');
+  await target.waitForTimeout(150);
+  check((await dialogFacts(target)).count === 1, `${tag}: clicking dialog content keeps it open`);
+  await target.evaluate(() =>
+    document.activeElement.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }),
+    ),
+  );
+  await waitDialogClosed(target);
+  check(await focusReturned(target), `${tag}: Escape closes and returns focus to the link`);
+
+  await target.evaluate(() => window.goodcallContactTarget.focus());
+  await target.keyboard.press('Enter');
+  await target.waitForFunction(() => document.querySelector('[role="dialog"]') !== null);
+  const keyboard = await dialogFacts(target);
+  check(
+    keyboard.count === 1 && keyboard.title === expected.title && keyboard.focusInside,
+    `${tag}: Enter opens the same dialog ${JSON.stringify(keyboard)}`,
+  );
+  await target.keyboard.press('Enter');
+  await waitDialogClosed(target);
+  check(await focusReturned(target), `${tag}: «Понятно» closes and returns focus to the link`);
+
+  const probe = await target.evaluate(() => ({
+    clicks: window.goodcallContactProbe.clicks,
+    href: location.href,
+    dialogs: document.querySelectorAll('[role="dialog"]').length,
+  }));
+  check(
+    probe.clicks.length === 2 &&
+      probe.clicks.every((click) => click.href === expectedHref && click.prevented) &&
+      probe.href === before &&
+      probe.dialogs === 0,
+    `${tag}: ordinary click and Enter are prevented, no navigation ${JSON.stringify(probe)}`,
+  );
+  await target.evaluate(() => {
+    window.goodcallContactProbe.clicks = [];
+  });
+}
+
+const PRODUCTION_CONTACTS = [
+  {
+    route: 'home',
+    hash: '#/',
+    ready: '.site-footer',
+    links: [
+      ['.site-footer__contact-value', 0, PHONE_HREF],
+      ['.site-footer__contact-value', 1, EMAIL_HREF],
+    ],
+  },
+  {
+    route: 'not-found',
+    hash: '#/no-such-page',
+    ready: 'main h1',
+    links: [['.site-footer__contact-value', 0, PHONE_HREF]],
+  },
+  {
+    route: 'contacts',
+    hash: '#/contacts',
+    ready: '.contacts-channels',
+    links: [
+      ['a.contacts-channels__value', 0, PHONE_HREF],
+      ['a.contacts-channels__value', 1, EMAIL_HREF],
+    ],
+  },
+  {
+    route: 'delivery',
+    hash: '#/delivery',
+    ready: '.info-support',
+    links: [
+      ['.info-support__contact-value', 0, PHONE_HREF],
+      ['.info-support__contact-value', 1, EMAIL_HREF],
+    ],
+  },
+  {
+    route: 'faq',
+    hash: '#/faq',
+    ready: '.info-support',
+    links: [
+      ['.info-support__contact-value', 0, PHONE_HREF],
+      ['.info-support__contact-value', 1, EMAIL_HREF],
+    ],
+  },
+  {
+    route: 'warranty',
+    hash: '#/warranty',
+    ready: '.info-support',
+    links: [
+      ['.info-support__contact-value', 0, PHONE_HREF],
+      ['.info-support__contact-value', 1, EMAIL_HREF],
+    ],
+  },
+  {
+    route: 'privacy',
+    hash: '#/privacy',
+    ready: 'main h1',
+    links: [
+      [`main a[href="${PHONE_HREF}"]`, 0, PHONE_HREF],
+      [`main a[href="${EMAIL_HREF}"]`, 0, EMAIL_HREF],
+    ],
+  },
+  {
+    route: 'offer',
+    hash: '#/offer',
+    ready: 'main h1',
+    links: [
+      [`main a[href="${PHONE_HREF}"]`, 0, PHONE_HREF],
+      [`main a[href="${PHONE_HREF}"]`, 1, PHONE_HREF],
+      [`main a[href="${EMAIL_HREF}"]`, 0, EMAIL_HREF],
+      [`main a[href="${EMAIL_HREF}"]`, 1, EMAIL_HREF],
+    ],
+  },
+];
+
+for (const { route, hash, ready, links } of PRODUCTION_CONTACTS) {
+  const target = await newPage();
+  await openRoute(target, hash, ready);
+  for (const [selector, nth, href] of links) {
+    await checkDemoContact(target, `demo contact ${route} ${selector}#${nth}`, selector, nth, href);
+  }
+  await target.close();
+}
+
+for (const [width, height] of [
+  [390, 844],
+  [320, 700],
+]) {
+  const target = await newPage(width, height);
+  await openRoute(target, '#/contacts', '.contacts-channels');
+  await checkDemoContact(
+    target,
+    `demo contact contacts@${width} phone`,
+    'a.contacts-channels__value',
+    0,
+    PHONE_HREF,
+  );
+  await checkDemoContact(
+    target,
+    `demo contact footer@${width} email`,
+    '.site-footer__contact-value',
+    1,
+    EMAIL_HREF,
+  );
+  await target.close();
+}
+
+{
+  const target = await newPage();
+  await openRoute(target, '#/contacts', '.contacts-channels');
+  const copy = await target.evaluate(() => ({
+    lead: document.querySelector('.info-page__lead')?.textContent.trim() ?? null,
+    channelNotes: [...document.querySelectorAll('.contacts-channels__note')].map((el) =>
+      el.textContent.trim(),
+    ),
+    footerNotes: [...document.querySelectorAll('.site-footer__contact-note')].map((el) =>
+      el.textContent.trim(),
+    ),
+    bodyText: document.body.innerText,
+  }));
+  check(copy.lead === CONTACTS_LEAD, `contacts: demo lead ${copy.lead}`);
+  check(
+    JSON.stringify(copy.channelNotes) ===
+      JSON.stringify([PHONE_NOTE, EMAIL_NOTE, HOURS_NOTE, 'Демо-точки самовывоза · Москва']),
+    `contacts: demo channel notes ${JSON.stringify(copy.channelNotes)}`,
+  );
+  check(
+    JSON.stringify(copy.footerNotes) === JSON.stringify([PHONE_NOTE, EMAIL_NOTE]),
+    `production footer: demo contact notes ${JSON.stringify(copy.footerNotes)}`,
+  );
+  check(
+    !/бесплатн|Отвечаем по телефону|Служба поддержки GoodCall поможет/.test(copy.bodyText),
+    'contacts: no free-call or live-support claims',
+  );
+  await target.close();
+}
+
+for (const route of ['#/delivery', '#/faq', '#/warranty']) {
+  const target = await newPage();
+  await openRoute(target, route, '.info-support');
+  const notes = await target.evaluate(() =>
+    [...document.querySelectorAll('.info-support__contact-note')].map((el) =>
+      el.textContent.trim(),
+    ),
+  );
+  check(
+    JSON.stringify(notes) === JSON.stringify([PHONE_NOTE, EMAIL_NOTE]),
+    `${route}: support block demo notes ${JSON.stringify(notes)}`,
+  );
+  await target.close();
+}
+
+for (const reference of ['footer', 'home', 'catalog']) {
+  const target = await newPage();
+  await target.goto(`${BASE}?reference=${reference}`);
+  await target.waitForSelector('.site-footer');
+  await target.evaluate(() => {
+    window.goodcallReferenceClicks = [];
+    window.addEventListener('click', (event) => {
+      const href = event.target.closest?.('a[href]')?.getAttribute('href') ?? '';
+      if (!/^(tel|mailto):/.test(href)) return;
+      window.goodcallReferenceClicks.push({ href, prevented: event.defaultPrevented });
+      event.preventDefault();
+    });
+  });
+  const facts = await target.evaluate(() => {
+    const values = [...document.querySelectorAll('.site-footer__contact-value')];
+    for (const link of values) {
+      link.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+    }
+    return {
+      values: values.map((link) => [link.textContent.trim(), link.getAttribute('href')]),
+      notes: [...document.querySelectorAll('.site-footer__contact-note')].map((el) =>
+        el.textContent.trim(),
+      ),
+      clicks: window.goodcallReferenceClicks,
+    };
+  });
+  await target.waitForTimeout(200);
+  const dialogs = await target.count('[role="dialog"]');
+  check(
+    JSON.stringify(facts.values) ===
+      JSON.stringify([
+        [PHONE, PHONE_HREF],
+        ['info@goodcall.ru', 'mailto:info@goodcall.ru'],
+      ]) &&
+      JSON.stringify(facts.notes) === JSON.stringify(['Звонок по России бесплатный', HOURS]) &&
+      facts.clicks.length === 2 &&
+      facts.clicks.every((click) => !click.prevented) &&
+      dialogs === 0,
+    `reference ${reference}: footer keeps its native default contacts without the demo dialog ${JSON.stringify({ ...facts, dialogs })}`,
+  );
+  await target.close();
+}
+
+{
+  const target = await newPage();
+  await target.goto(`${BASE}?reference=components`);
+  await target.waitForSelector('.product-card');
+  for (const [nth, title] of [
+    [0, 'Важно знать!'],
+    [1, 'Удалить товар из корзины?'],
+  ]) {
+    await target.click('.cmp-feedback-group--dialog button', { hasText: 'Показать окно', nth });
+    await target.waitForFunction(
+      () => document.querySelector('[role="dialog"], [role="alertdialog"]') !== null,
+    );
+    const facts = await target.evaluate(() => {
+      const overlay = document.querySelector('.feedback-dialog__overlay');
+      const dialog = document.querySelector('[role="dialog"], [role="alertdialog"]');
+      return {
+        title: document.getElementById(dialog.getAttribute('aria-labelledby'))?.textContent.trim(),
+        dimmed: overlay?.classList.contains('feedback-dialog__overlay--dimmed') ?? null,
+        background: overlay === null ? null : getComputedStyle(overlay).backgroundColor,
+      };
+    });
+    check(
+      facts.title === title && facts.dimmed === false && facts.background === 'rgba(0, 0, 0, 0)',
+      `reference components: non-contact dialog keeps the default transparent overlay ${JSON.stringify(facts)}`,
+    );
+    await target.evaluate(() =>
+      document.activeElement.dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }),
+      ),
+    );
+    await target.waitForFunction(
+      () => document.querySelector('[role="dialog"], [role="alertdialog"]') === null,
+    );
+  }
+  await target.close();
 }
 
 await browser.close();

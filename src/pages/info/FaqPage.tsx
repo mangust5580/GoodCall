@@ -194,7 +194,7 @@ export function FaqPage({ links }: FaqPageProps) {
                 { label: 'Доставка и оплата', href: links.delivery },
                 { label: 'Гарантия и возврат', href: links.warranty },
               ]}
-              text="Напишите или позвоните — поможем с заказом, доставкой и гарантией."
+              text="Телефон и e-mail — демонстрационные контакты: звонки и письма не обрабатываются. Ответы о заказах, доставке и гарантии ищите в справочных разделах."
               title="Не нашли ответ?"
               titleId="faq-support-title"
             />

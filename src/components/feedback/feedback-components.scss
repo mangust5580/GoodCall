@@ -344,6 +344,10 @@
     position: fixed;
     inset: 0;
     z-index: var(--control-floating-z-index);
+
+    &--dimmed {
+      background-color: var(--alpha-black-36);
+    }
   }
 
   &__title {

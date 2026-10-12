@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 
-import { STOREFRONT_SUPPORT } from '../../commerce/storefront';
+import { STOREFRONT_DEMO_CONTACT, STOREFRONT_SUPPORT } from '../../commerce/storefront';
+import { DemoContactLink } from '../../components/feedback';
 import { Icon } from '../../components/ui';
 import type { InfoLinks } from './infoLinks';
 import { LegalDocumentPage } from './LegalParts';
@@ -124,13 +125,21 @@ export function OfferPage({ links }: OfferPageProps) {
       content: (
         <p>
           Вопросы можно задать в поддержке GoodCall по телефону{' '}
-          <a className="legal-text__link" href={STOREFRONT_SUPPORT.phoneHref}>
+          <DemoContactLink
+            className="legal-text__link"
+            href={STOREFRONT_SUPPORT.phoneHref}
+            notice={STOREFRONT_DEMO_CONTACT.phoneNotice}
+          >
             {STOREFRONT_SUPPORT.phone}
-          </a>{' '}
+          </DemoContactLink>{' '}
           или по e-mail{' '}
-          <a className="legal-text__link" href={STOREFRONT_SUPPORT.emailHref}>
+          <DemoContactLink
+            className="legal-text__link"
+            href={STOREFRONT_SUPPORT.emailHref}
+            notice={STOREFRONT_DEMO_CONTACT.emailNotice}
+          >
             {STOREFRONT_SUPPORT.email}
-          </a>
+          </DemoContactLink>
           .
         </p>
       ),
@@ -145,17 +154,25 @@ export function OfferPage({ links }: OfferPageProps) {
     {
       label: 'Телефон',
       value: (
-        <a className="legal-text__link" href={STOREFRONT_SUPPORT.phoneHref}>
+        <DemoContactLink
+          className="legal-text__link"
+          href={STOREFRONT_SUPPORT.phoneHref}
+          notice={STOREFRONT_DEMO_CONTACT.phoneNotice}
+        >
           {STOREFRONT_SUPPORT.phone}
-        </a>
+        </DemoContactLink>
       ),
     },
     {
       label: 'E-mail',
       value: (
-        <a className="legal-text__link" href={STOREFRONT_SUPPORT.emailHref}>
+        <DemoContactLink
+          className="legal-text__link"
+          href={STOREFRONT_SUPPORT.emailHref}
+          notice={STOREFRONT_DEMO_CONTACT.emailNotice}
+        >
           {STOREFRONT_SUPPORT.email}
-        </a>
+        </DemoContactLink>
       ),
     },
     { label: 'Поддержка', value: STOREFRONT_SUPPORT.hours },

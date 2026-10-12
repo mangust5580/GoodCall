@@ -67,6 +67,7 @@ export function ProductDetailsSections({ product }: ProductDetailsSectionsProps)
             supportHours={product.supportHours}
             supportPhone={product.supportPhone}
             supportPhoneHref={product.supportPhoneHref}
+            supportPhoneNotice={product.supportPhoneNotice}
           />
         );
     }

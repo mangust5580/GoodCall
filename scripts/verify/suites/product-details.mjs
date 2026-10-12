@@ -1262,6 +1262,112 @@ console.log('stage: support', new Date().toISOString());
   await page.close();
 }
 
+console.log('stage: demo contact', new Date().toISOString());
+{
+  const PHONE_TITLE = 'Демонстрационный телефон';
+  const PHONE_MESSAGE =
+    'GoodCall — демонстрационный проект. Телефонная поддержка не подключена. Звонки по этому номеру не принимаются.';
+  const installProbe = (page) =>
+    page.evaluate(() => {
+      window.goodcallContactClicks = [];
+      window.addEventListener('click', (event) => {
+        const href = event.target.closest?.('a[href]')?.getAttribute('href') ?? '';
+        if (!href.startsWith('tel:')) return;
+        window.goodcallContactClicks.push({ href, prevented: event.defaultPrevented });
+        event.preventDefault();
+      });
+    });
+  const dialog = (page) =>
+    page.evaluate(() => {
+      const dialogs = [...document.querySelectorAll('[role="dialog"]')];
+      const text = (attribute) =>
+        document.getElementById(dialogs[0]?.getAttribute(attribute) ?? '')?.textContent.trim() ??
+        null;
+      return {
+        count: dialogs.length,
+        title: text('aria-labelledby'),
+        message: text('aria-describedby'),
+      };
+    });
+
+  for (const width of [1440, 390]) {
+    const page = await newPage(width, width === 390 ? 844 : 900);
+    await openPdp(page, 'iphone-15-128');
+    await installProbe(page);
+    await page.click('[role="tab"]', { hasText: 'Гарантия' });
+    await page.waitForSelector('.product-warranty__phone');
+    const before = await page.evaluate(() => location.href);
+    for (const selector of ['.product-offer__phone', '.product-warranty__phone']) {
+      const link = await page.evaluate((css) => {
+        const anchor = document.querySelector(css);
+        window.goodcallContactTarget = anchor;
+        return [anchor?.tagName, anchor?.getAttribute('href'), anchor?.textContent.trim()];
+      }, selector);
+      const wrapped = await page.evaluate(
+        () => window.goodcallContactTarget.getClientRects().length > 1,
+      );
+      if (wrapped) {
+        await page.evaluate(() => window.goodcallContactTarget.focus());
+        await page.keyboard.press('Enter');
+      } else {
+        await page.click(selector);
+      }
+      await page.waitForFunction(() => document.querySelector('[role="dialog"]') !== null);
+      const opened = await dialog(page);
+      await page.click('[role="dialog"] button', { hasText: 'Понятно' });
+      await page.waitForFunction(() => document.querySelector('[role="dialog"]') === null);
+      let focused = false;
+      for (let attempt = 0; attempt < 20 && !focused; attempt += 1) {
+        focused = await page.evaluate(
+          () => document.activeElement === window.goodcallContactTarget,
+        );
+        if (!focused) await page.waitForTimeout(50);
+      }
+      check(
+        JSON.stringify(link) ===
+          JSON.stringify(['A', STOREFRONT_SUPPORT.phoneHref, STOREFRONT_SUPPORT.phone]) &&
+          opened.count === 1 &&
+          opened.title === PHONE_TITLE &&
+          opened.message === PHONE_MESSAGE &&
+          focused,
+        `demo contact pdp ${selector} ${width}: phone link (${wrapped ? 'wrapped, Enter' : 'click'}) opens the demo dialog and returns focus ${JSON.stringify({ link, opened, focused })}`,
+      );
+    }
+    const probe = await page.evaluate(() => ({
+      clicks: window.goodcallContactClicks,
+      href: location.href,
+    }));
+    check(
+      probe.clicks.length === 2 && probe.clicks.every((c) => c.prevented) && probe.href === before,
+      `demo contact pdp ${width}: phone clicks are prevented without navigation ${JSON.stringify(probe)}`,
+    );
+    await page.close();
+  }
+
+  const page = await newPage();
+  await page.goto(`${NEW}?reference=product-details`);
+  await page.waitForSelector('.product-purchase__title');
+  await installProbe(page);
+  const reference = await page.evaluate(() => {
+    const anchor = document.querySelector('.product-offer__phone');
+    anchor.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+    return {
+      link: [anchor.getAttribute('href'), anchor.textContent.trim()],
+      clicks: window.goodcallContactClicks,
+    };
+  });
+  await page.waitForTimeout(200);
+  const referenceDialogs = await page.count('[role="dialog"]');
+  check(
+    JSON.stringify(reference.link) === JSON.stringify(['tel:88001001019', '8 800 100-10-19']) &&
+      reference.clicks.length === 1 &&
+      !reference.clicks[0].prevented &&
+      referenceDialogs === 0,
+    `demo contact reference pdp: fixture phone stays a native link ${JSON.stringify({ ...reference, referenceDialogs })}`,
+  );
+  await page.close();
+}
+
 console.log('stage: reference', new Date().toISOString());
 {
   const page = await newPage();

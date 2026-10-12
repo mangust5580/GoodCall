@@ -1,4 +1,5 @@
-import { STOREFRONT_SUPPORT } from '../../commerce/storefront';
+import { STOREFRONT_DEMO_CONTACT, STOREFRONT_SUPPORT } from '../../commerce/storefront';
+import { DemoContactLink } from '../../components/feedback';
 import type { InfoLinks } from './infoLinks';
 import { LegalDocumentPage } from './LegalParts';
 import type { LegalSection } from './legalSection';
@@ -140,13 +141,21 @@ export function PrivacyPage({ links }: PrivacyPageProps) {
       content: (
         <p>
           Вопросы о работе с данными можно задать в поддержке GoodCall по телефону{' '}
-          <a className="legal-text__link" href={STOREFRONT_SUPPORT.phoneHref}>
+          <DemoContactLink
+            className="legal-text__link"
+            href={STOREFRONT_SUPPORT.phoneHref}
+            notice={STOREFRONT_DEMO_CONTACT.phoneNotice}
+          >
             {STOREFRONT_SUPPORT.phone}
-          </a>{' '}
+          </DemoContactLink>{' '}
           или по e-mail{' '}
-          <a className="legal-text__link" href={STOREFRONT_SUPPORT.emailHref}>
+          <DemoContactLink
+            className="legal-text__link"
+            href={STOREFRONT_SUPPORT.emailHref}
+            notice={STOREFRONT_DEMO_CONTACT.emailNotice}
+          >
             {STOREFRONT_SUPPORT.email}
-          </a>
+          </DemoContactLink>
           , {STOREFRONT_SUPPORT.hours.toLowerCase()}. Все способы связи — на странице{' '}
           <a className="legal-text__link" href={links.contacts}>
             «Контакты»

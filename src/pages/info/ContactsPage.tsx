@@ -1,6 +1,8 @@
-import { STOREFRONT_SUPPORT } from '../../commerce/storefront';
+import { STOREFRONT_DEMO_CONTACT, STOREFRONT_SUPPORT } from '../../commerce/storefront';
 import { CONTACTS_STORE_INTERIOR } from '../../assets/media/contacts/contactsMedia';
 import { DEMO_STORES } from '../../commerce/shops';
+import { DemoContactLink } from '../../components/feedback';
+import type { DemoContactNotice } from '../../components/feedback';
 import { Container } from '../../components/layout';
 import { FallbackImage, Picture } from '../../components/media';
 import { Icon } from '../../components/ui';
@@ -29,6 +31,7 @@ interface ContactChannel {
   readonly label: string;
   readonly value: string;
   readonly href?: string;
+  readonly notice?: DemoContactNotice;
   readonly note: string;
 }
 
@@ -43,20 +46,22 @@ export function ContactsPage({ links }: ContactsPageProps) {
       label: 'Телефон',
       value: STOREFRONT_SUPPORT.phone,
       href: STOREFRONT_SUPPORT.phoneHref,
-      note: 'Звонок по России бесплатный',
+      notice: STOREFRONT_DEMO_CONTACT.phoneNotice,
+      note: STOREFRONT_DEMO_CONTACT.phoneNote,
     },
     {
       icon: 'mail',
       label: 'E-mail',
       value: STOREFRONT_SUPPORT.email,
       href: STOREFRONT_SUPPORT.emailHref,
-      note: 'Вопросы по заказам, доставке и гарантии',
+      notice: STOREFRONT_DEMO_CONTACT.emailNotice,
+      note: STOREFRONT_DEMO_CONTACT.emailNote,
     },
     {
       icon: 'clock',
       label: 'Часы работы поддержки',
       value: STOREFRONT_SUPPORT.hours,
-      note: 'Отвечаем по телефону и e-mail',
+      note: STOREFRONT_DEMO_CONTACT.hoursNote,
     },
     {
       icon: 'store',
@@ -74,7 +79,7 @@ export function ContactsPage({ links }: ContactsPageProps) {
         <InfoPageHeader
           crumb="Контакты"
           homeHref={links.home}
-          lead="Служба поддержки GoodCall поможет с выбором техники, заказом, доставкой и гарантией. Свяжитесь с нами по телефону или e-mail."
+          lead="GoodCall — демонстрационный магазин: телефон и e-mail ниже показаны как пример, звонки и письма не обрабатываются."
           title="Контакты"
         />
 
@@ -103,10 +108,18 @@ export function ContactsPage({ links }: ContactsPageProps) {
                     <span className="contacts-channels__label">{channel.label}</span>
                     {channel.href === undefined ? (
                       <span className="contacts-channels__value">{channel.value}</span>
-                    ) : (
+                    ) : channel.notice === undefined ? (
                       <a className="contacts-channels__value" href={channel.href}>
                         {channel.value}
                       </a>
+                    ) : (
+                      <DemoContactLink
+                        className="contacts-channels__value"
+                        href={channel.href}
+                        notice={channel.notice}
+                      >
+                        {channel.value}
+                      </DemoContactLink>
                     )}
                     <span className="contacts-channels__note">{channel.note}</span>
                   </span>

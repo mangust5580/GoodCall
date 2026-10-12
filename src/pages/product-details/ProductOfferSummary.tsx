@@ -1,4 +1,5 @@
 import { formatPrice } from '../../commerce/format';
+import { DemoContactLink } from '../../components/feedback';
 import { Chip, Icon } from '../../components/ui';
 import type { ProductDetailsView } from './productDetailsView';
 
@@ -71,9 +72,13 @@ export function ProductOfferSummary({ product }: ProductOfferSummaryProps) {
           <li className="product-offer__service">
             <Icon className="product-offer__icon" name="phone" />
             <span className="product-offer__service-body">
-              <a className="product-offer__phone" href={product.supportPhoneHref}>
+              <DemoContactLink
+                className="product-offer__phone"
+                href={product.supportPhoneHref}
+                notice={product.supportPhoneNotice}
+              >
                 {product.supportPhone}
-              </a>
+              </DemoContactLink>
               <span className="product-offer__service-line">{product.supportHours}</span>
             </span>
           </li>

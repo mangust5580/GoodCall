@@ -2,7 +2,6 @@ import { ABOUT_MEDIA } from '../../assets/media/about/aboutMedia';
 import contactsStoreInterior from '../../assets/media/contacts/contacts-store-interior.webp';
 import { COMPARE_LIMIT } from '../../commerce/compare';
 import { DEMO_STORES } from '../../commerce/shops';
-import { STOREFRONT_SUPPORT } from '../../commerce/storefront';
 import { Breadcrumbs, Container } from '../../components/layout';
 import { Picture } from '../../components/media';
 import { Icon } from '../../components/ui';
@@ -57,7 +56,7 @@ const CAPABILITIES: readonly AboutCapability[] = [
   {
     icon: 'headset',
     title: 'Поддержка',
-    text: `Телефон и e-mail поддержки — ${STOREFRONT_SUPPORT.hours.toLowerCase()}.`,
+    text: 'Телефон и e-mail — демонстрационные, обращения не обрабатываются.',
   },
 ];
 

@@ -11,6 +11,7 @@ interface InfoDialogProps {
   readonly message: ReactNode;
   readonly actionLabel: string;
   readonly onAcknowledge?: () => void;
+  readonly dimmed?: boolean;
 }
 
 export function InfoDialog({
@@ -20,13 +21,20 @@ export function InfoDialog({
   message,
   actionLabel,
   onAcknowledge,
+  dimmed = false,
 }: InfoDialogProps) {
   const returnFocus = useReturnFocus();
 
   return (
     <Dialog.Root onOpenChange={onOpenChange} open={open}>
       <Dialog.Portal>
-        <Dialog.Overlay className="feedback-dialog__overlay" />
+        <Dialog.Overlay
+          className={
+            dimmed
+              ? 'feedback-dialog__overlay feedback-dialog__overlay--dimmed'
+              : 'feedback-dialog__overlay'
+          }
+        />
         <Dialog.Content
           aria-modal
           className="feedback-dialog feedback-dialog--info"

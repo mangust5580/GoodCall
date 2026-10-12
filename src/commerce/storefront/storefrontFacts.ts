@@ -103,6 +103,26 @@ export const STOREFRONT_SUPPORT = {
   hours: 'Ежедневно с 9:00 до 21:00',
 } as const;
 
+const DEMO_CONTACT_ACTION_LABEL = 'Понятно';
+
+export const STOREFRONT_DEMO_CONTACT = {
+  phoneNotice: {
+    title: 'Демонстрационный телефон',
+    message:
+      'GoodCall — демонстрационный проект. Телефонная поддержка не подключена. Звонки по этому номеру не принимаются.',
+    actionLabel: DEMO_CONTACT_ACTION_LABEL,
+  },
+  emailNotice: {
+    title: 'Демонстрационная почта',
+    message:
+      'GoodCall — демонстрационный проект. Почтовая поддержка не подключена. Письма на этот адрес не обрабатываются.',
+    actionLabel: DEMO_CONTACT_ACTION_LABEL,
+  },
+  phoneNote: 'Демо-номер, звонки не принимаются',
+  emailNote: 'Демо-адрес, письма не обрабатываются',
+  hoursNote: 'Пример графика — в демо-версии поддержка не работает',
+} as const;
+
 export const PRODUCT_WARRANTY_MONTHS = 12;
 
 export const PRODUCT_WARRANTY_TEXT = `Официальная гарантия ${String(PRODUCT_WARRANTY_MONTHS)} месяцев`;

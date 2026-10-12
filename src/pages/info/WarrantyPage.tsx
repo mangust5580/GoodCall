@@ -183,9 +183,8 @@ export function WarrantyPage({ links }: WarrantyPageProps) {
             </div>
             <div className="warranty-block__notice">
               <InfoNotice>
-                Чтобы начать возврат или обмен, позвоните в поддержку: {STOREFRONT_SUPPORT.phone},{' '}
-                {STOREFRONT_SUPPORT.hours.toLowerCase()}, или напишите на {STOREFRONT_SUPPORT.email}
-                .
+                В демо-версии возврат и обмен не оформляются: телефон и e-mail поддержки не
+                подключены.
               </InfoNotice>
             </div>
           </div>
@@ -248,7 +247,7 @@ export function WarrantyPage({ links }: WarrantyPageProps) {
             { label: 'Частые вопросы', href: links.faq },
             { label: 'Доставка и оплата', href: links.delivery },
           ]}
-          text="Служба поддержки GoodCall поможет с возвратом, обменом и гарантийным обращением."
+          text="Телефон и e-mail показаны для демонстрации. Обращения по гарантии, возврату и обмену в демо-версии не принимаются."
           title="Остались вопросы?"
           titleId="warranty-support-title"
         />

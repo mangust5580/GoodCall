@@ -1,10 +1,6 @@
 import { COMPARE_LIMIT } from '../../commerce/compare';
 import { DEMO_STORES } from '../../commerce/shops';
-import {
-  STOREFRONT_DELIVERY_SLOTS,
-  STOREFRONT_PAYMENT_OPTIONS,
-  STOREFRONT_SUPPORT,
-} from '../../commerce/storefront';
+import { STOREFRONT_DELIVERY_SLOTS, STOREFRONT_PAYMENT_OPTIONS } from '../../commerce/storefront';
 import type { IconName } from '../../components/ui';
 import type { InfoLinkKey } from './infoLinks';
 
@@ -164,8 +160,8 @@ export const FAQ_ENTRIES: readonly FaqEntry[] = [
     category: 'returns',
     question: 'Как вернуть или обменять товар?',
     answer: [
-      'Возврат и обмен проводятся по Закону РФ «О защите прав потребителей». Условия зависят от категории товара и от того, есть ли в нём недостаток, поэтому начните с обращения в поддержку.',
-      `Телефон поддержки: ${STOREFRONT_SUPPORT.phone}, ${STOREFRONT_SUPPORT.hours.toLowerCase()}.`,
+      'Возврат и обмен проводятся по Закону РФ «О защите прав потребителей». Условия зависят от категории товара и от того, есть ли в нём недостаток.',
+      'В демо-версии телефон и e-mail поддержки не подключены — обращения не принимаются.',
     ],
     link: { label: 'Условия возврата', to: 'warranty' },
   },

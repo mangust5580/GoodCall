@@ -1,3 +1,5 @@
+import { DemoContactLink } from '../../components/feedback';
+import type { DemoContactNotice } from '../../components/feedback';
 import { Picture } from '../../components/media';
 import type { PictureSource } from '../../components/media';
 import { Icon } from '../../components/ui';
@@ -9,6 +11,7 @@ interface ProductWarrantyProps {
   readonly supportPhone: string;
   readonly supportPhoneHref: string;
   readonly supportHours: string;
+  readonly supportPhoneNotice?: DemoContactNotice;
 }
 
 const WARRANTY_IMAGE_SIZES = '(max-width: 767px) 100vw, (max-width: 1199px) 44vw, 360px';
@@ -19,6 +22,7 @@ export function ProductWarranty({
   supportPhone,
   supportPhoneHref,
   supportHours,
+  supportPhoneNotice,
 }: ProductWarrantyProps) {
   return (
     <div className="product-panel product-warranty">
@@ -62,9 +66,13 @@ export function ProductWarranty({
         <Icon className="product-info-list__icon" name="headset" />
         <span>
           Вопросы по гарантии и обмену:{' '}
-          <a className="product-warranty__phone" href={supportPhoneHref}>
+          <DemoContactLink
+            className="product-warranty__phone"
+            href={supportPhoneHref}
+            notice={supportPhoneNotice}
+          >
             {supportPhone}
-          </a>
+          </DemoContactLink>
           , {supportHours.toLowerCase()}
         </span>
       </p>
