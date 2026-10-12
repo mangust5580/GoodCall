@@ -492,6 +492,53 @@ for (const width of [1440, 390, 320]) {
   check(metrics.overflow <= 0, `${key}: horizontal overflow ${metrics.overflow}`);
   check(metrics.small.length === 0, `${key}: small touch targets ${metrics.small}`);
   check(metrics.clipped === 0, `${key}: clipped content ${metrics.clipped}`);
+  const storeHeadings = await shot.evaluate(() => {
+    const resolve = (role) => {
+      const probe = document.createElement('span');
+      probe.style.color = `var(${role})`;
+      document.body.append(probe);
+      const color = getComputedStyle(probe).color;
+      probe.remove();
+      return color;
+    };
+    const cta = [...document.querySelectorAll('.contacts-stores a')].find(
+      (a) => a.textContent.trim() === 'Все магазины',
+    );
+    return {
+      primary: resolve('--role-text-primary'),
+      link: resolve('--role-text-link'),
+      headings: [...document.querySelectorAll('.contacts-store__title')].map((el) => ({
+        tag: el.tagName,
+        color: getComputedStyle(el).color,
+        linked: el.closest('a') !== null || el.querySelector('a') !== null,
+        focusable: el.tabIndex >= 0 || el.hasAttribute('role') || el.hasAttribute('onclick'),
+      })),
+      cta: cta === undefined ? null : [cta.tagName, cta.getAttribute('href')],
+    };
+  });
+  check(
+    storeHeadings.headings.length === 3 &&
+      storeHeadings.headings.every(
+        (heading) => heading.tag === 'H3' && !heading.linked && !heading.focusable,
+      ),
+    `${key}: store headings are plain h3 ${JSON.stringify(storeHeadings.headings)}`,
+  );
+  check(
+    storeHeadings.primary !== storeHeadings.link &&
+      storeHeadings.headings.every((heading) => heading.color === storeHeadings.primary),
+    `${key}: store headings use --role-text-primary ${storeHeadings.primary} ${JSON.stringify(storeHeadings.headings.map((heading) => heading.color))}`,
+  );
+  check(
+    JSON.stringify(storeHeadings.cta) === JSON.stringify(['A', '#/shops']),
+    `${key}: «Все магазины» stays a link ${JSON.stringify(storeHeadings.cta)}`,
+  );
+  await shot.click('.contacts-stores__action', { hasText: 'Все магазины' });
+  await shot.waitForFunction(() => location.hash === '#/shops');
+  check(
+    (await shot.evaluate(() => location.hash)) === '#/shops',
+    `${key}: «Все магазины» opens #/shops`,
+  );
+  await open(shot, '/contacts');
   for (const [path, visual] of [
     ['/contacts', '.contacts-store__visual'],
     ['/shops', '.store-card__visual'],

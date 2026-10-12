@@ -147,10 +147,26 @@ Technically complete:
 Active visual slice: none. Active implementation milestone: none. WP-01 and
 WP-01B stay open; no next slice is approved.
 
+- **WP-01B-2 / GC-R43 Contacts store-heading affordance — USER VISUAL PASS
+  on 2026-10-12 (1440/390/320), CLOSED and published on 2026-10-12.** The
+  latest published code milestone; one bounded WP-01B slice.
+  - The three featured-store names on `#/contacts` are plain,
+    non-interactive `<h3>` headings but were coloured `--role-text-link`,
+    implying a false link. One declaration in `.contacts-store__title`
+    (`info.scss`) now uses `--role-text-primary`, matching the `#/shops`
+    store-card title.
+  - Markup, geometry, the brand-tinted icon tile and the real «Все магазины»
+    link to `#/shops` are unchanged. `?reference=` surfaces are unaffected.
+  - The `contacts` suite asserts at 1440/390/320 that the headings stay
+    unlinked, non-focusable `h3`, resolve to `--role-text-primary` (not
+    `--role-text-link`) and that the CTA stays a link that opens `#/shops`.
+    The full 18-suite `npm run verify` gate ran green before publication. CI
+    and GitHub Pages were not observed by the closure task.
+
 - **WP-01B-1 / Demo Contact Actions — USER VISUAL + FUNCTIONAL PASS on
   2026-10-11; overlay polish WP-01B-1A — USER VISUAL PASS on 2026-10-11;
-  CLOSED and published.** One bounded WP-01B slice and the latest published
-  code milestone. WP-01B as a whole stays open.
+  CLOSED and published.** One bounded WP-01B slice. WP-01B as a whole stays
+  open.
   - Production phone and e-mail stay real anchors with the original values
     and hrefs (`8 800 100-10-10` / `tel:+78001001010`,
     `support@goodcall.example` / `mailto:support@goodcall.example`). A primary
@@ -719,8 +735,8 @@ Completed visual slices:
   `DEMO_STORES`, pickup and storage behaviour are unchanged. The `contacts`
   suite asserts the wording and the legal dates. The rest of WP-01 (WP-01B)
   stayed open; WP-01B-1 later covered the demo phone/e-mail actions (see
-  above). Store-heading affordance, Terms/Offer copy, compare retention
-  wording and store thumbnails remain open.
+  above) and WP-01B-2 the store-heading affordance. Terms/Offer copy, compare
+  retention wording and store thumbnails remain open.
 
 - **Quality G / Breakpoint Off-by-One Correction — USER VISUAL/UX PASS on
   2026-10-10, CLOSED and published.** Closes the Q-08 off-by-one slice only;
@@ -5939,13 +5955,15 @@ requested.
 
 ## Project closeout state
 
-WP-01B-1 / Demo Contact Actions (with the WP-01B-1A overlay polish) is the
-last published code milestone, CLOSED on 2026-10-11. WP-06 was closed on
+WP-01B-2 / GC-R43 (Contacts store-heading affordance) is the last published
+code milestone, CLOSED and published on 2026-10-12. WP-01B-1 / Demo Contact
+Actions (with the WP-01B-1A overlay polish) was CLOSED on 2026-10-11. WP-06
+was closed on
 2026-10-11 by a documentation-only closeout after its final
 after-measurement. WP-02 stage 2 stays deferred.
 **Active visual slice: none. Active implementation milestone: none.** No
 active code-level release blocker is known. WP-01B stays open (AUD-15 partial,
-GC-R43, GC-R41, GC-R52, GC-R23); the next activity is selecting the WP-01B
+GC-R41, GC-R52, GC-R23); the next activity is selecting the WP-01B
 remainder or another backlog item from `docs/master-backlog.md` when
 requested.
 
