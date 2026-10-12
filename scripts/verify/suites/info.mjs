@@ -1014,9 +1014,9 @@ check(
 const warrantyText = await routeText('/warranty');
 check(
   warrantyText.includes(
-    'В демо-версии возврат и обмен не оформляются: телефон и e-mail поддержки не подключены.',
+    'GoodCall — демонстрационный магазин: заказы не выполняются, поэтому возврат, обмен и гарантийные обращения не оформляются.',
   ) && !warrantyText.includes('позвоните в поддержку'),
-  'warranty: demo notice replaces the call-support instruction',
+  'warranty: single demo notice replaces the call-support instruction',
 );
 const aboutText = await routeText('/about');
 check(
@@ -1028,7 +1028,17 @@ check(
 const SUPPORT_INVITATION = /Свяжитесь с поддержкой|позвоните в поддержку|поддержка подскажет/;
 const BROKEN_ITEM_ANSWER = [
   'Гарантийный ремонт обычно выполняют авторизованные сервисные центры производителя. Информацию о них можно уточнить по официальным каналам производителя.',
-  'В демо-версии поддержка GoodCall не работает — обращения о неисправностях не принимаются.',
+];
+const supportBlock = () =>
+  contactCopy.evaluate(() => ({
+    text: document.querySelector('.info-support__text')?.textContent.trim() ?? null,
+    notes: [...document.querySelectorAll('.info-support__contact-note')].map((note) =>
+      note.textContent.trim(),
+    ),
+  }));
+const DEMO_CONTACT_NOTES = [
+  'Демо-номер, звонки не принимаются',
+  'Демо-адрес, письма не обрабатываются',
 ];
 const highlightNotes = () =>
   contactCopy.evaluate(() =>
@@ -1042,23 +1052,27 @@ const TRUST_HIGHLIGHTS = [
   ['Оригинальная продукция', 'Только официальные поставки'],
   ['Обмен и возврат', 'По условиям законодательства о защите прав потребителей'],
 ];
-const DEMO_SUPPORT_HIGHLIGHT = [
-  'Поддержка',
-  'Пример графика — в демо-версии поддержка не работает',
-];
+const SUPPORT_HIGHLIGHT = ['Поддержка', 'Ежедневно с 9:00 до 21:00'];
 
 await routeText('/faq');
 check(
   JSON.stringify(await highlightNotes()) ===
-    JSON.stringify([...TRUST_HIGHLIGHTS, DEMO_SUPPORT_HIGHLIGHT]),
-  `faq: support highlight uses the demo hours note ${JSON.stringify(await highlightNotes())}`,
+    JSON.stringify([...TRUST_HIGHLIGHTS, SUPPORT_HIGHLIGHT]),
+  `faq: support highlight shows the storefront hours ${JSON.stringify(await highlightNotes())}`,
+);
+const faqSupport = await supportBlock();
+check(
+  faqSupport.text === 'Ответы о заказах, доставке и гарантии собраны в справочных разделах.' &&
+    JSON.stringify(faqSupport.notes) === JSON.stringify(DEMO_CONTACT_NOTES),
+  `faq: natural support intro, demo notes stay at the contacts ${JSON.stringify(faqSupport)}`,
 );
 await contactCopy.click('.faq-accordion__question', {
   hasText: 'Что делать, если товар неисправен?',
 });
 await contactCopy.waitForFunction(() =>
   [...document.querySelectorAll('.faq-accordion__content')].some(
-    (region) => !region.hidden && region.textContent.includes('В демо-версии поддержка GoodCall'),
+    (region) =>
+      !region.hidden && region.textContent.includes('по официальным каналам производителя'),
   ),
 );
 const brokenItem = await contactCopy.evaluate(() => {
@@ -1071,8 +1085,8 @@ const brokenItem = await contactCopy.evaluate(() => {
 check(
   brokenItem.question === 'Что делать, если товар неисправен?' &&
     JSON.stringify(brokenItem.paragraphs) === JSON.stringify(BROKEN_ITEM_ANSWER) &&
-    !brokenItem.paragraphs.some((p) => SUPPORT_INVITATION.test(p)),
-  `faq: broken-item demo answer ${JSON.stringify(brokenItem)}`,
+    !brokenItem.paragraphs.some((p) => SUPPORT_INVITATION.test(p) || p.includes('В демо-версии')),
+  `faq: broken-item natural answer ${JSON.stringify(brokenItem)}`,
 );
 const searchFaq = (value) =>
   contactCopy.evaluate((next) => {
@@ -1108,19 +1122,48 @@ check(
 const warrantyCopy = (await routeText('/warranty')).replace(/\s+/g, ' ');
 check(
   JSON.stringify(await highlightNotes()) ===
-    JSON.stringify([...TRUST_HIGHLIGHTS, DEMO_SUPPORT_HIGHLIGHT]),
-  `warranty: support highlight uses the demo hours note ${JSON.stringify(await highlightNotes())}`,
+    JSON.stringify([...TRUST_HIGHLIGHTS, SUPPORT_HIGHLIGHT]),
+  `warranty: support highlight shows the storefront hours ${JSON.stringify(await highlightNotes())}`,
+);
+const warrantySupport = await supportBlock();
+check(
+  warrantySupport.text ===
+    'Ответы на частые вопросы и условия доставки собраны в справочных разделах.' &&
+    JSON.stringify(warrantySupport.notes) === JSON.stringify(DEMO_CONTACT_NOTES),
+  `warranty: natural support intro, demo notes stay at the contacts ${JSON.stringify(warrantySupport)}`,
+);
+const warrantyNotices = await contactCopy.evaluate(() => ({
+  considerations: [...document.querySelectorAll('.warranty-block__note')].map((note) =>
+    note.textContent.trim(),
+  ),
+  notices: [...document.querySelectorAll('main .info-notice__text')].map((notice) =>
+    notice.textContent.replace(/s+/g, ' ').trim(),
+  ),
+}));
+check(
+  JSON.stringify(warrantyNotices.considerations) ===
+    JSON.stringify([
+      'Для товара надлежащего качества законом предусмотрены ограничения — для части категорий техники возврат и обмен недоступны',
+      'Если в товаре есть недостаток, решение принимается после проверки качества',
+    ]),
+  `warranty: two return considerations ${JSON.stringify(warrantyNotices.considerations)}`,
+);
+check(
+  warrantyNotices.notices.length === 3 &&
+    warrantyNotices.notices.filter((notice) => /демонстрационн|демо-/i.test(notice)).length === 1,
+  `warranty: one contextual demo notice among three ${JSON.stringify(warrantyNotices.notices)}`,
 );
 const warrantyDemoCopy = [
-  'Пример того, как обычно устроены возврат, обмен, гарантия и обращение в сервис. В демо-версии GoodCall эти услуги не оказываются.',
+  'Как обычно устроены возврат, обмен, гарантия и обращение в сервис.',
+  'GoodCall — демонстрационный магазин: заказы не выполняются, поэтому возврат, обмен и гарантийные обращения не оформляются.',
   'Обратитесь к продавцу по телефону или почте',
   'Продавец уточнит условия для категории товара',
-  'Производитель товара. В демо-версии GoodCall товары не продаются.',
+  'Производитель товара. Точные условия — в его гарантийных документах.',
   'Частые вопросы',
   'Ответы о гарантии и возврате — в разделе FAQ',
   'Проверьте срок и условия гарантии в документах',
   'Найдите авторизованный сервис производителя',
-  'GoodCall не управляет собственными сервисными центрами, а поддержка в демо-версии не работает. Контакты сервиса можно уточнить по официальным каналам производителя. Срок ремонта зависит от сложности и наличия запчастей.',
+  'GoodCall не управляет собственными сервисными центрами: контакты авторизованного сервиса можно уточнить по официальным каналам производителя. Срок ремонта зависит от сложности и наличия запчастей.',
 ];
 check(
   warrantyDemoCopy.every((text) => warrantyCopy.includes(text)),
@@ -1132,6 +1175,12 @@ check(
       warrantyCopy,
     ),
   'warranty: no live-support or sales claims',
+);
+check(
+  !/В демо-версии GoodCall эти услуги не оказываются|товары не продаются|поддержка в демо-версии не работает|Демо-заказы не выполняются|Телефон и e-mail показаны для демонстрации/.test(
+    warrantyCopy,
+  ),
+  'warranty: redundant demo statements removed',
 );
 
 await routeText('/delivery');

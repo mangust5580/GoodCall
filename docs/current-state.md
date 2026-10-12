@@ -147,9 +147,38 @@ Technically complete:
 Active visual slice: none. Active implementation milestone: none. WP-01 and
 WP-01B stay open; no next slice is approved.
 
-- **WP-01B-3 / GC-R41 FAQ & Warranty demo truthfulness — USER VISUAL +
+- **WP-01B-4 / product-natural FAQ & Warranty copy — USER VISUAL +
   FUNCTIONAL PASS on 2026-10-12, CLOSED and published on 2026-10-12.** The
-  latest published code milestone; one bounded, copy-only WP-01B slice.
+  latest published code milestone; a later editorial correction that keeps
+  WP-01B-3's closure and GC-R41's resolution intact.
+  - Rule: demo notes sit at non-working actions (phone / e-mail dialogs,
+    notes under contacts, demo checkout / payment / order) and once per
+    service page — not in tiles, leads, steps or support intros.
+  - Warranty: natural lead; the «Поддержка» highlight shows the storefront
+    hours again; one demo notice in the returns block («GoodCall —
+    демонстрационный магазин: заказы не выполняются, поэтому возврат, обмен
+    и гарантийные обращения не оформляются.»); the duplicate «Важно учесть»
+    point is removed (3 → 2); the manufacturer fact, repair text and support
+    intro read naturally. Steps, facts, sources, the other two notices and
+    the consumer-law wording are unchanged.
+  - FAQ: `broken-item` is one paragraph; the support highlight shows the
+    hours; the support intro is shortened. `return-item` keeps its demo
+    contact sentence; search, empty state and the 18 questions are
+    unchanged.
+  - `InfoSupport`, `DemoContactLink`, the contact notes and dialogs, PDP,
+    Delivery, shared storefront facts, CSS and `?reference=` are unchanged.
+    The `info` suite asserts the new copy, one demo notice among the three
+    Warranty notices and the preserved contact notes. The full 18-suite
+    `npm run verify` gate ran green before publication; CI and GitHub Pages
+    were not observed.
+  - D-5 editorial decision: PDP support copy («Нужна помощь?», hours, the
+    warranty-tab lead) stays unchanged and no D-5 implementation is
+    approved. Support is not operational; the risk stays mitigated by the
+    demo dialog on the phone link.
+
+- **WP-01B-3 / GC-R41 FAQ & Warranty demo truthfulness — USER VISUAL +
+  FUNCTIONAL PASS on 2026-10-12, CLOSED and published on 2026-10-12.** One
+  bounded, copy-only WP-01B slice.
   - FAQ: the `broken-item` answer is two paragraphs (authorised service
     centres, contacts via official manufacturer channels; demo support does
     not work) and the empty-search text points to «Доставка и оплата» /
@@ -5980,9 +6009,10 @@ requested.
 
 ## Project closeout state
 
-WP-01B-3 / GC-R41 (FAQ & Warranty demo truthfulness) is the last published
-code milestone, CLOSED and published on 2026-10-12. WP-01B-2 / GC-R43
-(Contacts store-heading affordance) was CLOSED and published on 2026-10-12.
+WP-01B-4 (product-natural FAQ & Warranty copy) is the last published code
+milestone, CLOSED and published on 2026-10-12. WP-01B-3 / GC-R41 (FAQ &
+Warranty demo truthfulness) and WP-01B-2 / GC-R43 (Contacts store-heading
+affordance) were CLOSED and published on 2026-10-12.
 WP-01B-1 / Demo Contact
 Actions (with the WP-01B-1A overlay polish) was CLOSED on 2026-10-11. WP-06
 was closed on
@@ -5991,8 +6021,8 @@ after-measurement. WP-02 stage 2 stays deferred.
 **Active visual slice: none. Active implementation milestone: none.** No
 active code-level release blocker is known. WP-01B stays open (AUD-15 partial,
 GC-R52, GC-R23) with pending decisions D-2 (warranty-term wording /
-`PRODUCT_WARRANTY_TEXT`), D-5 (PDP support copy) and the broader Home /
-Delivery / About / trust copy; the next activity is selecting the WP-01B
+`PRODUCT_WARRANTY_TEXT`) and the broader Home / Delivery / About / trust
+copy; D-5 is decided as "PDP support copy unchanged"; the next activity is selecting the WP-01B
 remainder or another backlog item from `docs/master-backlog.md` when
 requested.
 

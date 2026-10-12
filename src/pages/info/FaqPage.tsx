@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-import { STOREFRONT_DEMO_CONTACT, STOREFRONT_TRUST } from '../../commerce/storefront';
+import { STOREFRONT_SUPPORT, STOREFRONT_TRUST } from '../../commerce/storefront';
 import type { BenefitItem } from '../../components/content';
 import { FAQAccordion } from '../../components/feedback';
 import type { FAQItem } from '../../components/feedback';
@@ -17,7 +17,7 @@ import type { InfoLinks } from './infoLinks';
 
 const HIGHLIGHTS: readonly BenefitItem[] = [
   ...STOREFRONT_TRUST.map((item) => ({ title: item.title, note: item.text, icon: item.icon })),
-  { title: 'Поддержка', note: STOREFRONT_DEMO_CONTACT.hoursNote, icon: 'headset' },
+  { title: 'Поддержка', note: STOREFRONT_SUPPORT.hours, icon: 'headset' },
 ];
 
 const countFormatter = new Intl.NumberFormat('ru-RU');
@@ -194,7 +194,7 @@ export function FaqPage({ links }: FaqPageProps) {
                 { label: 'Доставка и оплата', href: links.delivery },
                 { label: 'Гарантия и возврат', href: links.warranty },
               ]}
-              text="Телефон и e-mail — демонстрационные контакты: звонки и письма не обрабатываются. Ответы о заказах, доставке и гарантии ищите в справочных разделах."
+              text="Ответы о заказах, доставке и гарантии собраны в справочных разделах."
               title="Не нашли ответ?"
               titleId="faq-support-title"
             />
