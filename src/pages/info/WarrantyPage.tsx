@@ -1,4 +1,4 @@
-import { STOREFRONT_SUPPORT, STOREFRONT_TRUST } from '../../commerce/storefront';
+import { STOREFRONT_DEMO_CONTACT, STOREFRONT_TRUST } from '../../commerce/storefront';
 import type { BenefitItem } from '../../components/content';
 import { Container } from '../../components/layout';
 import { Icon } from '../../components/ui';
@@ -31,13 +31,13 @@ const SECTIONS: readonly WarrantySectionLink[] = [
 
 const HIGHLIGHTS: readonly BenefitItem[] = [
   ...STOREFRONT_TRUST.map((item) => ({ title: item.title, note: item.text, icon: item.icon })),
-  { title: 'Поддержка', note: STOREFRONT_SUPPORT.hours, icon: 'headset' },
+  { title: 'Поддержка', note: STOREFRONT_DEMO_CONTACT.hoursNote, icon: 'headset' },
 ];
 
 const RETURN_STEPS: readonly InfoStep[] = [
-  { icon: 'headset', text: 'Свяжитесь с поддержкой по телефону или почте' },
+  { icon: 'headset', text: 'Обратитесь к продавцу по телефону или почте' },
   { icon: 'package', text: 'Подготовьте товар, комплектацию и документ о покупке' },
-  { icon: 'info', text: 'Поддержка уточнит условия для категории товара' },
+  { icon: 'info', text: 'Продавец уточнит условия для категории товара' },
   { icon: 'return', text: 'Возврат или обмен — по закону о защите прав потребителей' },
 ];
 
@@ -58,7 +58,7 @@ const WARRANTY_FACTS: readonly InfoFact[] = [
   {
     icon: 'shield',
     title: 'Кто даёт гарантию',
-    text: 'Производитель товара. GoodCall продаёт технику официальных поставок.',
+    text: 'Производитель товара. В демо-версии GoodCall товары не продаются.',
   },
   {
     icon: 'clock',
@@ -89,16 +89,16 @@ const WARRANTY_SOURCES: readonly InfoFact[] = [
     text: 'Гарантийный талон и условия обслуживания в комплекте',
   },
   {
-    icon: 'headset',
-    title: 'Поддержка GoodCall',
-    text: 'Подскажет, куда обратиться по вашему товару',
+    icon: 'message',
+    title: 'Частые вопросы',
+    text: 'Ответы о гарантии и возврате — в разделе FAQ',
   },
 ];
 
 const REPAIR_STEPS: readonly InfoStep[] = [
-  { icon: 'headset', text: 'Свяжитесь с поддержкой GoodCall' },
+  { icon: 'headset', text: 'Проверьте срок и условия гарантии в документах' },
   { icon: 'message', text: 'Опишите неисправность и подготовьте документ о покупке' },
-  { icon: 'map-pin', text: 'Получите контакты сервиса производителя' },
+  { icon: 'map-pin', text: 'Найдите авторизованный сервис производителя' },
   { icon: 'tools', text: 'Сервис проведёт диагностику и примет решение' },
 ];
 
@@ -123,7 +123,7 @@ export function WarrantyPage({ links }: WarrantyPageProps) {
       <Container>
         <InfoPageHeader
           homeHref={links.home}
-          lead="Как устроены возврат, обмен, гарантия и обращение в сервис для товаров GoodCall."
+          lead="Пример того, как обычно устроены возврат, обмен, гарантия и обращение в сервис. В демо-версии GoodCall эти услуги не оказываются."
           title="Гарантия и возврат"
         />
 
@@ -229,8 +229,9 @@ export function WarrantyPage({ links }: WarrantyPageProps) {
             <div className="warranty-block__body">
               <h3 className="info-panel__title">Как обратиться в сервис</h3>
               <p className="info-panel__text">
-                GoodCall не управляет собственными сервисными центрами — поддержка подскажет, куда
-                обратиться. Срок ремонта зависит от сложности и наличия запчастей.
+                GoodCall не управляет собственными сервисными центрами, а поддержка в демо-версии не
+                работает. Контакты сервиса можно уточнить по официальным каналам производителя. Срок
+                ремонта зависит от сложности и наличия запчастей.
               </p>
               <InfoSteps items={REPAIR_STEPS} label="Порядок обращения в сервис" />
             </div>

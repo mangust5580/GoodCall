@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-import { STOREFRONT_SUPPORT, STOREFRONT_TRUST } from '../../commerce/storefront';
+import { STOREFRONT_DEMO_CONTACT, STOREFRONT_TRUST } from '../../commerce/storefront';
 import type { BenefitItem } from '../../components/content';
 import { FAQAccordion } from '../../components/feedback';
 import type { FAQItem } from '../../components/feedback';
@@ -17,7 +17,7 @@ import type { InfoLinks } from './infoLinks';
 
 const HIGHLIGHTS: readonly BenefitItem[] = [
   ...STOREFRONT_TRUST.map((item) => ({ title: item.title, note: item.text, icon: item.icon })),
-  { title: 'Поддержка', note: STOREFRONT_SUPPORT.hours, icon: 'headset' },
+  { title: 'Поддержка', note: STOREFRONT_DEMO_CONTACT.hoursNote, icon: 'headset' },
 ];
 
 const countFormatter = new Intl.NumberFormat('ru-RU');
@@ -176,8 +176,8 @@ export function FaqPage({ links }: FaqPageProps) {
                 <Icon className="faq-empty__icon" name="search" />
                 <h3 className="faq-empty__title">Ничего не найдено</h3>
                 <p className="faq-empty__text">
-                  Попробуйте изменить запрос или выбрать другую тему. Если ответа нет — напишите или
-                  позвоните в поддержку.
+                  Попробуйте изменить запрос или выбрать другую тему. Ответы о доставке, оплате и
+                  гарантии есть на страницах «Доставка и оплата» и «Гарантия и возврат».
                 </p>
                 <Button className="faq-empty__action" onClick={resetFilters} variant="secondary">
                   Сбросить поиск

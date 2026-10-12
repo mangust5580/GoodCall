@@ -1024,6 +1024,122 @@ check(
     !aboutText.includes('Телефон и e-mail поддержки —'),
   'about: demo contact line',
 );
+
+const SUPPORT_INVITATION = /Свяжитесь с поддержкой|позвоните в поддержку|поддержка подскажет/;
+const BROKEN_ITEM_ANSWER = [
+  'Гарантийный ремонт обычно выполняют авторизованные сервисные центры производителя. Информацию о них можно уточнить по официальным каналам производителя.',
+  'В демо-версии поддержка GoodCall не работает — обращения о неисправностях не принимаются.',
+];
+const highlightNotes = () =>
+  contactCopy.evaluate(() =>
+    [...document.querySelectorAll('.info-highlights .benefits-strip__item')].map((item) => [
+      item.querySelector('.benefits-strip__title').textContent.trim(),
+      item.querySelector('.benefits-strip__note').textContent.trim(),
+    ]),
+  );
+const TRUST_HIGHLIGHTS = [
+  ['Официальная гарантия', 'Срок указан для конкретного товара'],
+  ['Оригинальная продукция', 'Только официальные поставки'],
+  ['Обмен и возврат', 'По условиям законодательства о защите прав потребителей'],
+];
+const DEMO_SUPPORT_HIGHLIGHT = [
+  'Поддержка',
+  'Пример графика — в демо-версии поддержка не работает',
+];
+
+await routeText('/faq');
+check(
+  JSON.stringify(await highlightNotes()) ===
+    JSON.stringify([...TRUST_HIGHLIGHTS, DEMO_SUPPORT_HIGHLIGHT]),
+  `faq: support highlight uses the demo hours note ${JSON.stringify(await highlightNotes())}`,
+);
+await contactCopy.click('.faq-accordion__question', {
+  hasText: 'Что делать, если товар неисправен?',
+});
+await contactCopy.waitForFunction(() =>
+  [...document.querySelectorAll('.faq-accordion__content')].some(
+    (region) => !region.hidden && region.textContent.includes('В демо-версии поддержка GoodCall'),
+  ),
+);
+const brokenItem = await contactCopy.evaluate(() => {
+  const region = [...document.querySelectorAll('.faq-accordion__content')].find((r) => !r.hidden);
+  return {
+    question: document.getElementById(region.getAttribute('aria-labelledby')).textContent.trim(),
+    paragraphs: [...region.querySelectorAll('.faq-answer__text')].map((p) => p.textContent.trim()),
+  };
+});
+check(
+  brokenItem.question === 'Что делать, если товар неисправен?' &&
+    JSON.stringify(brokenItem.paragraphs) === JSON.stringify(BROKEN_ITEM_ANSWER) &&
+    !brokenItem.paragraphs.some((p) => SUPPORT_INVITATION.test(p)),
+  `faq: broken-item demo answer ${JSON.stringify(brokenItem)}`,
+);
+const searchFaq = (value) =>
+  contactCopy.evaluate((next) => {
+    const input = document.querySelector('.faq-page__search input');
+    const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set;
+    setter.call(input, next);
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+  }, value);
+await searchFaq('неисправен');
+await contactCopy.waitForFunction(
+  () => document.querySelectorAll('.faq-accordion__question').length === 1,
+);
+check(
+  (await contactCopy.textContent('.faq-accordion__question')).trim() ===
+    'Что делать, если товар неисправен?',
+  'faq: search reaches broken-item',
+);
+await searchFaq('телепортация');
+await contactCopy.waitForSelector('.faq-empty');
+const emptyState = await contactCopy.evaluate(() => ({
+  text: document.querySelector('.faq-empty__text').textContent.replace(/\s+/g, ' ').trim(),
+  reset: document.querySelector('.faq-empty__action')?.textContent.trim() ?? null,
+}));
+check(
+  emptyState.text ===
+    'Попробуйте изменить запрос или выбрать другую тему. Ответы о доставке, оплате и гарантии есть на страницах «Доставка и оплата» и «Гарантия и возврат».' &&
+    !SUPPORT_INVITATION.test(emptyState.text) &&
+    !/напишите/.test(emptyState.text) &&
+    emptyState.reset === 'Сбросить поиск',
+  `faq: empty search state without support invitation ${JSON.stringify(emptyState)}`,
+);
+
+const warrantyCopy = (await routeText('/warranty')).replace(/\s+/g, ' ');
+check(
+  JSON.stringify(await highlightNotes()) ===
+    JSON.stringify([...TRUST_HIGHLIGHTS, DEMO_SUPPORT_HIGHLIGHT]),
+  `warranty: support highlight uses the demo hours note ${JSON.stringify(await highlightNotes())}`,
+);
+const warrantyDemoCopy = [
+  'Пример того, как обычно устроены возврат, обмен, гарантия и обращение в сервис. В демо-версии GoodCall эти услуги не оказываются.',
+  'Обратитесь к продавцу по телефону или почте',
+  'Продавец уточнит условия для категории товара',
+  'Производитель товара. В демо-версии GoodCall товары не продаются.',
+  'Частые вопросы',
+  'Ответы о гарантии и возврате — в разделе FAQ',
+  'Проверьте срок и условия гарантии в документах',
+  'Найдите авторизованный сервис производителя',
+  'GoodCall не управляет собственными сервисными центрами, а поддержка в демо-версии не работает. Контакты сервиса можно уточнить по официальным каналам производителя. Срок ремонта зависит от сложности и наличия запчастей.',
+];
+check(
+  warrantyDemoCopy.every((text) => warrantyCopy.includes(text)),
+  `warranty: illustrative demo copy ${JSON.stringify(warrantyDemoCopy.filter((text) => !warrantyCopy.includes(text)))}`,
+);
+check(
+  !SUPPORT_INVITATION.test(warrantyCopy) &&
+    !/Поддержка уточнит|Поддержка GoodCall|продаёт технику|Получите контакты сервиса/.test(
+      warrantyCopy,
+    ),
+  'warranty: no live-support or sales claims',
+);
+
+await routeText('/delivery');
+check(
+  JSON.stringify((await highlightNotes()).find(([title]) => title === 'Поддержка')) ===
+    JSON.stringify(['Поддержка', 'Ежедневно с 9:00 до 21:00']),
+  'delivery: support highlight unchanged',
+);
 await contactCopy.close();
 
 await browser.close();

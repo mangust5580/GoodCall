@@ -147,9 +147,34 @@ Technically complete:
 Active visual slice: none. Active implementation milestone: none. WP-01 and
 WP-01B stay open; no next slice is approved.
 
+- **WP-01B-3 / GC-R41 FAQ & Warranty demo truthfulness — USER VISUAL +
+  FUNCTIONAL PASS on 2026-10-12, CLOSED and published on 2026-10-12.** The
+  latest published code milestone; one bounded, copy-only WP-01B slice.
+  - FAQ: the `broken-item` answer is two paragraphs (authorised service
+    centres, contacts via official manufacturer channels; demo support does
+    not work) and the empty-search text points to «Доставка и оплата» /
+    «Гарантия и возврат» instead of inviting a call or message.
+  - Warranty is an illustrative example, not a GoodCall service: the lead
+    says so; return and repair steps refer to the seller / manufacturer; the
+    «Кто даёт гарантию» fact no longer claims GoodCall sells; the third
+    source is «Частые вопросы»; the repair text drops «поддержка подскажет».
+    Step, fact and source counts, headings, jump navigation, notices and the
+    consumer-law wording are unchanged.
+  - The «Поддержка» highlight on FAQ and Warranty only shows
+    `STOREFRONT_DEMO_CONTACT.hoursNote`; Delivery, `STOREFRONT_SUPPORT` and
+    the demo contact links/dialogs are unchanged.
+  - The `info` suite asserts the new copy, the absence of support
+    invitations and the unchanged Delivery highlight. Targeted gates ran
+    green before acceptance; the full 18-suite `npm run verify` gate ran
+    green before publication. CI and GitHub Pages were not observed.
+  - Deferred, not credited to GC-R41: D-2 (warranty-term wording and the
+    storewide `PRODUCT_WARRANTY_TEXT`), D-5 (PDP «Поддержка … доступна
+    ежедневно» and support hours) and the broader Home / Delivery / About /
+    trust copy. Consumer-law statements were not legally reviewed.
+
 - **WP-01B-2 / GC-R43 Contacts store-heading affordance — USER VISUAL PASS
-  on 2026-10-12 (1440/390/320), CLOSED and published on 2026-10-12.** The
-  latest published code milestone; one bounded WP-01B slice.
+  on 2026-10-12 (1440/390/320), CLOSED and published on 2026-10-12.** One
+  bounded WP-01B slice.
   - The three featured-store names on `#/contacts` are plain,
     non-interactive `<h3>` headings but were coloured `--role-text-link`,
     implying a false link. One declaration in `.contacts-store__title`
@@ -5955,15 +5980,19 @@ requested.
 
 ## Project closeout state
 
-WP-01B-2 / GC-R43 (Contacts store-heading affordance) is the last published
-code milestone, CLOSED and published on 2026-10-12. WP-01B-1 / Demo Contact
+WP-01B-3 / GC-R41 (FAQ & Warranty demo truthfulness) is the last published
+code milestone, CLOSED and published on 2026-10-12. WP-01B-2 / GC-R43
+(Contacts store-heading affordance) was CLOSED and published on 2026-10-12.
+WP-01B-1 / Demo Contact
 Actions (with the WP-01B-1A overlay polish) was CLOSED on 2026-10-11. WP-06
 was closed on
 2026-10-11 by a documentation-only closeout after its final
 after-measurement. WP-02 stage 2 stays deferred.
 **Active visual slice: none. Active implementation milestone: none.** No
 active code-level release blocker is known. WP-01B stays open (AUD-15 partial,
-GC-R41, GC-R52, GC-R23); the next activity is selecting the WP-01B
+GC-R52, GC-R23) with pending decisions D-2 (warranty-term wording /
+`PRODUCT_WARRANTY_TEXT`), D-5 (PDP support copy) and the broader Home /
+Delivery / About / trust copy; the next activity is selecting the WP-01B
 remainder or another backlog item from `docs/master-backlog.md` when
 requested.
 
