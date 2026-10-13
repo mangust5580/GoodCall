@@ -1,10 +1,11 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { HOME_DEVICE_MEDIA } from '../../assets/media/home/homeMarketingMedia';
 
 import { cartTotals, formatUnitCount } from '../../commerce/cart';
 import type { CartLinesState } from '../../commerce/cart';
 import { BenefitsStrip } from '../../components/content';
+import { ConfirmationDialog } from '../../components/feedback';
 import { Breadcrumbs, Container } from '../../components/layout';
 import type { PictureSource } from '../../components/media';
 import { ProductCard } from '../../components/product';
@@ -51,12 +52,22 @@ export function CartPage({
   const allSelected = selectedLineCount === lines.length;
   const lineCount = lines.length;
   const previousLineCount = useRef(lineCount);
+  const [confirmingRemoval, setConfirmingRemoval] = useState(false);
+  const focusAfterRemoval = useRef(false);
+
+  if (confirmingRemoval && selectedLineCount === 0) {
+    setConfirmingRemoval(false);
+  }
 
   useEffect(() => {
-    if (lineCount < previousLineCount.current && document.activeElement === document.body) {
+    if (
+      lineCount < previousLineCount.current &&
+      (focusAfterRemoval.current || document.activeElement === document.body)
+    ) {
       document.getElementById(lineCount === 0 ? EMPTY_TITLE_ID : POPULATED_TITLE_ID)?.focus();
     }
 
+    focusAfterRemoval.current = false;
     previousLineCount.current = lineCount;
   }, [lineCount]);
 
@@ -85,7 +96,10 @@ export function CartPage({
                 <Button
                   className="cart-items__remove-selected"
                   disabled={selectedLineCount === 0}
-                  onClick={cart.removeSelected}
+                  onClick={(event) => {
+                    event.currentTarget.focus();
+                    setConfirmingRemoval(true);
+                  }}
                   variant="text"
                 >
                   Удалить выбранные
@@ -114,6 +128,19 @@ export function CartPage({
             <CartOrderSummary checkoutHref={checkoutHref} totals={totals} />
           </div>
         )}
+
+        <ConfirmationDialog
+          cancelLabel="Отмена"
+          confirmLabel="Удалить"
+          message={`Из корзины будут удалены выбранные позиции: ${String(selectedLineCount)}.`}
+          onConfirm={() => {
+            focusAfterRemoval.current = true;
+            cart.removeSelected();
+          }}
+          onOpenChange={setConfirmingRemoval}
+          open={confirmingRemoval && selectedLineCount > 0}
+          title="Удалить выбранные товары?"
+        />
 
         <div className="cart-page__benefits">
           <BenefitsStrip items={CART_BENEFITS} label="Преимущества GoodCall" />

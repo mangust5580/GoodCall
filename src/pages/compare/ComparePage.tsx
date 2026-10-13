@@ -5,7 +5,7 @@ import { CartLineMedia } from '../../commerce/cart';
 import { COMPARE_LIMIT } from '../../commerce/compare';
 import type { CompareItem } from '../../commerce/compare';
 import { formatMemorySize, formatPrice } from '../../commerce/format';
-import { EmptyState } from '../../components/feedback';
+import { ConfirmationDialog, EmptyState } from '../../components/feedback';
 import { Breadcrumbs, Container } from '../../components/layout';
 import { ProductRating } from '../../components/product';
 import { Icon } from '../../components/ui';
@@ -73,6 +73,11 @@ export function ComparePage({
   const scrollRef = useRef<HTMLDivElement>(null);
   const focusRequest = useRef<FocusRequest>(undefined);
   const itemCount = items.length;
+  const [confirmingClear, setConfirmingClear] = useState(false);
+
+  if (confirmingClear && itemCount === 0) {
+    setConfirmingClear(false);
+  }
 
   useEffect(() => {
     const scroller = scrollRef.current;
@@ -148,10 +153,9 @@ export function ComparePage({
               </div>
               <button
                 className="ui-button ui-button--secondary compare__clear"
-                onClick={() => {
-                  onClear();
-                  setAnnouncement('Сравнение очищено');
-                  focusRequest.current = { kind: 'empty' };
+                onClick={(event) => {
+                  event.currentTarget.focus();
+                  setConfirmingClear(true);
                 }}
                 type="button"
               >
@@ -271,6 +275,19 @@ export function ComparePage({
       <p className="ui-visually-hidden" role="status">
         {announcement}
       </p>
+      <ConfirmationDialog
+        cancelLabel="Отмена"
+        confirmLabel="Очистить"
+        message={`Из сравнения будут убраны все товары: ${String(itemCount)}.`}
+        onConfirm={() => {
+          onClear();
+          setAnnouncement('Сравнение очищено');
+          focusRequest.current = { kind: 'empty' };
+        }}
+        onOpenChange={setConfirmingClear}
+        open={confirmingClear && itemCount > 0}
+        title="Очистить сравнение?"
+      />
     </main>
   );
 }

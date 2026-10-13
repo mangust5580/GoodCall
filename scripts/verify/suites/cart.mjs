@@ -425,13 +425,149 @@ check(
   'cart: remove selected disabled with none selected',
   await evaluate(`document.querySelector('.cart-items__remove-selected').disabled`),
 );
+const confirmOpen = () =>
+  waitFor(
+    `(() => { const d = document.querySelector('[role="alertdialog"]'); return d !== null && getComputedStyle(d).pointerEvents !== 'none'; })()`,
+    'bulk-delete confirmation open',
+  );
+const confirmClosed = () =>
+  waitFor(
+    `document.querySelector('[role="alertdialog"]') === null && getComputedStyle(document.body).pointerEvents !== 'none'`,
+    'bulk-delete confirmation closed',
+  );
+const confirmFacts = () =>
+  evaluate(`(() => {
+    const d = document.querySelector('[role="alertdialog"]');
+    if (d === null) return null;
+    const text = (a) => document.getElementById(d.getAttribute(a) ?? '')?.textContent.trim() ?? null;
+    return {
+      title: text('aria-labelledby'),
+      message: text('aria-describedby'),
+      buttons: [...d.querySelectorAll('button')].map((b) => b.textContent.trim()),
+      focused: d.contains(document.activeElement) ? document.activeElement.textContent.trim() : null,
+    };
+  })()`);
+const confirmButton = (label) =>
+  evaluate(
+    `[...document.querySelectorAll('[role="alertdialog"] button')].find((b) => b.textContent.trim() === ${JSON.stringify(label)}).click()`,
+  );
+const pressEscape = async () => {
+  const key = { key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27 };
+  await send('Input.dispatchKeyEvent', { type: 'rawKeyDown', ...key });
+  await send('Input.dispatchKeyEvent', { type: 'keyUp', ...key });
+};
+const cartSnapshot = () =>
+  evaluate(
+    `JSON.stringify({ lines: [...document.querySelectorAll('.cart-line')].map((l) => [l.querySelector('.cart-line__title').textContent, l.querySelector('input[type=checkbox]').checked, l.querySelector('output')?.textContent ?? null]), stored: localStorage.getItem('${KEY}'), badge: document.querySelector('.site-header__action[href="#/cart"] .site-header__badge')?.textContent ?? null })`,
+  );
+const settles = async (expression, timeout = 2000) => {
+  const start = Date.now();
+  while (Date.now() - start < timeout) {
+    if (await evaluate(`Boolean(${expression})`)) return true;
+    await sleep(50);
+  }
+  return false;
+};
+const settlesAndStays = async (expression) =>
+  (await settles(expression)) && (await sleep(300), await evaluate(`Boolean(${expression})`));
+const triggerFocused = () =>
+  settles(`document.activeElement?.classList.contains('cart-items__remove-selected') === true`);
+
 await evaluate(`document.querySelectorAll('.cart-line input[type=checkbox]')[0].click()`);
 await sleep(100);
+const twoLinesStored = await stored();
+const selectedTitle = await evaluate(
+  `document.querySelectorAll('.cart-line .cart-line__title')[0].textContent`,
+);
+const keptTitle = await evaluate(
+  `document.querySelectorAll('.cart-line .cart-line__title')[1].textContent`,
+);
+const beforeConfirm = await cartSnapshot();
+
 await click('.cart-items__remove-selected');
-await sleep(150);
+await confirmOpen();
+const facts = await confirmFacts();
+check(
+  'bulk delete: trigger opens one confirmation with live line count, Cancel focused',
+  facts?.title === 'Удалить выбранные товары?' &&
+    facts.message === 'Из корзины будут удалены выбранные позиции: 1.' &&
+    JSON.stringify(facts.buttons) === JSON.stringify(['Отмена', 'Удалить']) &&
+    facts.focused === 'Отмена' &&
+    (await evaluate(`document.querySelectorAll('[role="alertdialog"]').length`)) === 1,
+  JSON.stringify(facts),
+);
+check(
+  'bulk delete: opening does not mutate lines, selection, badge or storage',
+  (await cartSnapshot()) === beforeConfirm,
+);
+
+await pressEscape();
+await confirmClosed();
+check(
+  'bulk delete: Escape closes without deleting, focus back on trigger',
+  (await cartSnapshot()) === beforeConfirm && (await triggerFocused()),
+);
+
+await click('.cart-items__remove-selected');
+await confirmOpen();
+await confirmButton('Отмена');
+await confirmClosed();
+check(
+  'bulk delete: «Отмена» closes without deleting, focus back on trigger',
+  (await cartSnapshot()) === beforeConfirm && (await triggerFocused()),
+);
+
+await click('.cart-items__remove-selected');
+await confirmOpen();
+await evaluate(`(() => {
+  const value = JSON.parse(localStorage.getItem('${KEY}'));
+  const next = JSON.stringify({ lines: value.lines.map((line) => ({ ...line, selected: false })) });
+  localStorage.setItem('${KEY}', next);
+  window.dispatchEvent(new StorageEvent('storage', { key: '${KEY}', newValue: next, storageArea: localStorage }));
+})()`);
+await confirmClosed();
+check(
+  'bulk delete drift: another tab clears the selection → dialog closes, nothing deleted',
+  (await evaluate(`document.querySelectorAll('.cart-line').length`)) === 2 &&
+    (await evaluate(
+      `[...document.querySelectorAll('.cart-line input[type=checkbox]')].every((c) => !c.checked)`,
+    )),
+);
+await evaluate(`document.querySelectorAll('.cart-line input[type=checkbox]')[0].click()`);
+await waitFor(
+  `document.querySelector('.cart-items__remove-selected').disabled === false`,
+  'selection restored after drift',
+);
+await sleep(300);
+check(
+  'bulk delete drift: re-selecting does not reopen the stale dialog',
+  (await evaluate(`document.querySelector('[role="alertdialog"]') === null`)) &&
+    (await cartSnapshot()) === beforeConfirm,
+);
+
+await click('.cart-items__remove-selected');
+await confirmOpen();
+await confirmButton('Удалить');
+await confirmClosed();
+await waitFor(`document.querySelectorAll('.cart-line').length === 1`, 'bulk delete confirmed');
 check(
   'cart: remove selected removes 1 line',
   (await evaluate(`document.querySelectorAll('.cart-line').length`)) === 1,
+);
+check(
+  'bulk delete: confirm removes only the selected line, keeps the unselected one and persists',
+  (await evaluate(`document.querySelector('.cart-line .cart-line__title').textContent`)) ===
+    keptTitle &&
+    keptTitle !== selectedTitle &&
+    JSON.parse(await stored()).lines.length === 1 &&
+    JSON.parse(await stored()).lines[0].title === keptTitle &&
+    (await badge()) === (await evaluate(`document.querySelector('.cart-line output').textContent`)),
+  `badge=${await badge()}`,
+);
+check(
+  'bulk delete: lines remain → focus on the cart heading',
+  await settlesAndStays(`document.activeElement?.id === 'cart-title'`),
+  await evaluate(`document.activeElement?.outerHTML.slice(0, 80)`),
 );
 await evaluate(`document.querySelector('.cart-line__remove').click()`);
 await sleep(200);
@@ -443,6 +579,32 @@ check('cart: badge 0 after emptying', (await badge()) === '0');
 check(
   'cart: empty-state focus to h1',
   await evaluate(`document.activeElement?.id === 'cart-empty-title'`),
+);
+
+await evaluate(
+  `localStorage.setItem('${KEY}', ${JSON.stringify(
+    JSON.stringify({
+      lines: JSON.parse(twoLinesStored).lines.map((line) => ({ ...line, selected: true })),
+    }),
+  )})`,
+);
+await reload();
+await waitFor(`document.querySelectorAll('.cart-line').length === 2`, 'all-selected seed');
+await click('.cart-items__remove-selected');
+await confirmOpen();
+check(
+  'bulk delete all: live count 2',
+  (await confirmFacts())?.message === 'Из корзины будут удалены выбранные позиции: 2.',
+);
+await confirmButton('Удалить');
+await confirmClosed();
+await waitFor(`document.querySelector('#cart-empty-title')`, 'bulk delete all → empty');
+check(
+  'bulk delete all: empty state, badge 0, storage empty, focus on empty heading',
+  (await badge()) === '0' &&
+    JSON.parse(await stored()).lines.length === 0 &&
+    (await settlesAndStays(`document.activeElement?.id === 'cart-empty-title'`)),
+  await evaluate(`document.activeElement?.outerHTML.slice(0, 80)`),
 );
 
 for (const [label, value] of [

@@ -147,9 +147,34 @@ Technically complete:
 Active visual slice: none. Active implementation milestone: none. WP-01 and
 WP-01B stay open; no next slice is approved.
 
-- **WP-01B / AUD-15 B1 Non-dialable production demo phone — USER VISUAL +
+- **WP-08 / AUD-10 Bulk destructive confirmations (Option B) — USER VISUAL +
   FUNCTIONAL PASS on 2026-10-13, CLOSED and published on 2026-10-13.** The
-  latest published code milestone; one bounded technical AUD-15 mitigation.
+  latest published code milestone; one bounded WP-08 slice (D-07: confirm,
+  no undo). WP-08 stays open.
+  - `#/cart` «Удалить выбранные» and `#/compare` «Очистить все» only open the
+    shared `ConfirmationDialog` (Radix AlertDialog, «Отмена» focused first,
+    danger action). Copy: «Удалить выбранные товары?» / «Из корзины будут
+    удалены выбранные позиции: N.» / «Отмена» · «Удалить»; «Очистить
+    сравнение?» / «Из сравнения будут убраны все товары: N.» / «Отмена» ·
+    «Очистить». N is live: selected cart lines (not units), compare items.
+  - Escape or «Отмена» change nothing (lines, selection, quantities,
+    columns, badges, storage, live status) and return focus to the trigger.
+    Confirm runs the existing action once: the current selection is removed
+    and focus goes to «Корзина» (lines remain) or «Корзина пуста»; compare
+    keeps `onClear` → «Сравнение очищено» → focus «Сравнение пусто».
+  - Open is derived from live data: if another tab drops the selection or
+    the comparison to zero, the dialog closes without deleting and does not
+    reopen. Cart focus after confirm uses an explicit intent, because the
+    dialog unmounts one render after the store update; the old direct bulk
+    delete lost focus to `body`.
+  - `ConfirmationDialog`, styles, routes, stores and keys are unchanged.
+    Resting pages were pixel-identical before/after at 1440 / 390 / 320.
+    The `cart` and `compare` suites assert open-without-mutation, Escape,
+    Cancel, confirm, focus, storage and cross-tab closing.
+
+- **WP-01B / AUD-15 B1 Non-dialable production demo phone — USER VISUAL +
+  FUNCTIONAL PASS on 2026-10-13, CLOSED and published on 2026-10-13.** One
+  bounded technical AUD-15 mitigation.
   - `DemoContactLink` takes an opt-in `informational` prop: with a notice it
     renders `<button type="button" aria-haspopup="dialog">` (no `href`) that
     opens the same dimmed demo dialog; Enter, Space, Escape, «Понятно» and
@@ -6056,8 +6081,10 @@ requested.
 
 ## Project closeout state
 
-WP-01B / AUD-15 B1 (non-dialable production demo phone) is the last
-published code milestone, CLOSED and published on 2026-10-13. WP-01B /
+WP-08 / AUD-10 (bulk cart and compare confirmations) is the last published
+code milestone, CLOSED and published on 2026-10-13; WP-08 stays open.
+WP-01B / AUD-15 B1 (non-dialable production demo phone) was CLOSED and
+published on 2026-10-13. WP-01B /
 GC-R52-T1 (truthful Terms account access) was CLOSED and published on
 2026-10-13. WP-01B-4
 (product-natural FAQ & Warranty copy) was CLOSED and published on

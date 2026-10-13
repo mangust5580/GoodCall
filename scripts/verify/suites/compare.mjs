@@ -494,11 +494,102 @@ check(
   'persistence: reload keeps 2 items',
   (await evaluate(`document.querySelectorAll('thead th[scope=col]').length`)) === 2,
 );
+const confirmOpen = () =>
+  waitFor(
+    `(() => { const d = document.querySelector('[role="alertdialog"]'); return d !== null && getComputedStyle(d).pointerEvents !== 'none'; })()`,
+    'clear confirmation open',
+  );
+const confirmClosed = () =>
+  waitFor(
+    `document.querySelector('[role="alertdialog"]') === null && getComputedStyle(document.body).pointerEvents !== 'none'`,
+    'clear confirmation closed',
+  );
+const confirmButton = (label) =>
+  evaluate(
+    `[...document.querySelectorAll('[role="alertdialog"] button')].find((b) => b.textContent.trim() === ${JSON.stringify(label)}).click()`,
+  );
+const pressEscape = async () => {
+  const key = { key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27 };
+  await send('Input.dispatchKeyEvent', { type: 'rawKeyDown', ...key });
+  await send('Input.dispatchKeyEvent', { type: 'keyUp', ...key });
+};
+const compareSnapshot = async () =>
+  JSON.stringify({
+    columns: await evaluate(
+      `[...document.querySelectorAll('thead th[scope=col]')].map((th) => th.textContent.trim())`,
+    ),
+    stored: await stored(),
+    badge: await compareBadge(),
+    status: await evaluate(`document.querySelector('main [role="status"]')?.textContent ?? null`),
+    scroll: await evaluate(`document.querySelector('.compare__scroll')?.scrollLeft ?? null`),
+  });
+const settles = async (expression, timeout = 2000) => {
+  const start = Date.now();
+  while (Date.now() - start < timeout) {
+    if (await evaluate(`Boolean(${expression})`)) return true;
+    await sleep(50);
+  }
+  return false;
+};
+const settlesAndStays = async (expression) =>
+  (await settles(expression)) && (await sleep(300), await evaluate(`Boolean(${expression})`));
+const clearFocused = () =>
+  settles(`document.activeElement?.classList.contains('compare__clear') === true`);
+
+const beforeClear = await compareSnapshot();
 await evaluate(`document.querySelector('.compare__clear').click()`);
-await sleep(250);
+await confirmOpen();
+const clearFacts = await evaluate(`(() => {
+  const d = document.querySelector('[role="alertdialog"]');
+  const text = (a) => document.getElementById(d.getAttribute(a) ?? '')?.textContent.trim() ?? null;
+  return {
+    count: document.querySelectorAll('[role="alertdialog"]').length,
+    title: text('aria-labelledby'),
+    message: text('aria-describedby'),
+    buttons: [...d.querySelectorAll('button')].map((b) => b.textContent.trim()),
+    focused: d.contains(document.activeElement) ? document.activeElement.textContent.trim() : null,
+  };
+})()`);
+check(
+  'clear all: trigger opens one confirmation with live count, Cancel focused',
+  clearFacts.count === 1 &&
+    clearFacts.title === 'Очистить сравнение?' &&
+    clearFacts.message === 'Из сравнения будут убраны все товары: 2.' &&
+    JSON.stringify(clearFacts.buttons) === JSON.stringify(['Отмена', 'Очистить']) &&
+    clearFacts.focused === 'Отмена',
+  JSON.stringify(clearFacts),
+);
+check(
+  'clear all: opening changes no columns, badge, storage or status',
+  (await compareSnapshot()) === beforeClear,
+);
+await pressEscape();
+await confirmClosed();
+check(
+  'clear all: Escape keeps the comparison, no announcement, focus back on «Очистить все»',
+  (await compareSnapshot()) === beforeClear && (await clearFocused()),
+);
+await evaluate(`document.querySelector('.compare__clear').click()`);
+await confirmOpen();
+await confirmButton('Отмена');
+await confirmClosed();
+check(
+  'clear all: «Отмена» keeps the comparison, no announcement, focus back on «Очистить все»',
+  (await compareSnapshot()) === beforeClear && (await clearFocused()),
+);
+await evaluate(`document.querySelector('.compare__clear').click()`);
+await confirmOpen();
+await confirmButton('Очистить');
+await confirmClosed();
+await waitFor(`document.querySelector('#compare-empty-title')`, 'cleared');
+check(
+  'clear all: confirm announces «Сравнение очищено»',
+  (await evaluate(`document.querySelector('main [role="status"]')?.textContent`)) ===
+    'Сравнение очищено',
+);
 check(
   'clear all: empty state rendered, its h1 focused',
-  (await evaluate(`document.activeElement.id`)) === 'compare-empty-title' &&
+  (await settlesAndStays(`document.activeElement?.id === 'compare-empty-title'`)) &&
     (await evaluate(`[...document.querySelectorAll('h1')].map((h) => h.textContent).join('|')`)) ===
       'Сравнение пусто',
 );
@@ -518,6 +609,54 @@ check(
   ),
 );
 await shot('compare-empty-1440');
+
+{
+  const driftItem = JSON.stringify({
+    items: [
+      {
+        slug: 'drift-phone',
+        title: 'Drift Phone 128 ГБ',
+        image: { kind: 'catalog-fallback' },
+        price: 1000,
+        reviewCount: 0,
+      },
+    ],
+  });
+  const emitCompare = (value) =>
+    evaluate(`(() => {
+      localStorage.setItem('${COMPARE}', ${JSON.stringify(value)});
+      window.dispatchEvent(new StorageEvent('storage', { key: '${COMPARE}', newValue: ${JSON.stringify(value)}, storageArea: localStorage }));
+    })()`);
+  await evaluate(`localStorage.setItem('${COMPARE}', ${JSON.stringify(driftItem)})`);
+  await reload();
+  await waitFor(`document.querySelectorAll('thead th[scope=col]').length === 1`, 'drift seed');
+  await evaluate(`document.querySelector('.compare__clear').click()`);
+  await confirmOpen();
+  check(
+    'clear drift: live count 1',
+    (await evaluate(
+      `document.getElementById(document.querySelector('[role="alertdialog"]').getAttribute('aria-describedby')).textContent.trim()`,
+    )) === 'Из сравнения будут убраны все товары: 1.',
+  );
+  await emitCompare('{"items":[]}');
+  await confirmClosed();
+  await waitFor(`document.querySelector('#compare-empty-title')`, 'drift emptied');
+  check(
+    'clear drift: emptied in another tab → dialog closes, no local «Сравнение очищено»',
+    (await evaluate(`document.querySelector('main [role="status"]')?.textContent`)) === '' &&
+      (await compareBadge()) === '0',
+  );
+  await emitCompare(driftItem);
+  await waitFor(`document.querySelectorAll('thead th[scope=col]').length === 1`, 'drift refill');
+  await sleep(300);
+  check(
+    'clear drift: refilled comparison does not reopen the stale dialog',
+    await evaluate(`document.querySelector('[role="alertdialog"]') === null`),
+  );
+  await evaluate(`localStorage.removeItem('${COMPARE}')`);
+  await reload();
+  await waitFor(`document.querySelector('#compare-empty-title')`, 'drift cleanup');
+}
 
 const item = (slug, title, price, oldPrice, rating, reviewCount, brand, storage, colour) => ({
   slug,
