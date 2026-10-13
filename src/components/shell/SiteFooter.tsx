@@ -211,6 +211,7 @@ export function SiteFooter({
               <DemoContactLink
                 className="site-footer__contact-value"
                 href={support.phoneHref}
+                informational
                 notice={demoContacts?.phoneNotice}
               >
                 {support.phone}

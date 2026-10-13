@@ -1393,7 +1393,8 @@ $legal-sticky-top-compact: 92px;
     overflow-wrap: anywhere;
   }
 
-  a#{&}__value {
+  a#{&}__value,
+  button#{&}__value {
     color: var(--role-text-link);
 
     &:hover {

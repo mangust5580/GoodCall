@@ -34,6 +34,7 @@ export function InfoSupport({ titleId, title, text, links }: InfoSupportProps) {
             <DemoContactLink
               className="info-support__contact-value"
               href={STOREFRONT_SUPPORT.phoneHref}
+              informational
               notice={STOREFRONT_DEMO_CONTACT.phoneNotice}
             >
               {STOREFRONT_SUPPORT.phone}

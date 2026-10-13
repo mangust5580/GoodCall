@@ -1219,6 +1219,8 @@ console.log('stage: support', new Date().toISOString());
         items: items.map((li) => li.innerText.replace(/\s+/g, ' ').trim()),
         emptyItems: items.filter((li) => li.textContent.trim() === '').length,
         phoneHref: section?.querySelector('.product-offer__phone')?.getAttribute('href') ?? null,
+        phoneTag: section?.querySelector('.product-offer__phone')?.tagName ?? null,
+        telTargets: document.querySelectorAll('[href^="tel:"]').length,
         mainText: document.querySelector('main')?.innerText ?? '',
         overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
       };
@@ -1229,7 +1231,9 @@ console.log('stage: support', new Date().toISOString());
     facts.items.length === 1 &&
     facts.items[0] === expectedPhone &&
     facts.emptyItems === 0 &&
-    facts.phoneHref === STOREFRONT_SUPPORT.phoneHref &&
+    facts.phoneTag === 'BUTTON' &&
+    facts.phoneHref === null &&
+    facts.telTargets === 0 &&
     !facts.mainText.includes('Онлайн-чат') &&
     !facts.mainText.includes('Ответим в течение 1 минуты') &&
     facts.overflow <= 0;
@@ -1271,6 +1275,13 @@ console.log('stage: demo contact', new Date().toISOString());
     page.evaluate(() => {
       window.goodcallContactClicks = [];
       window.addEventListener('click', (event) => {
+        if (event.target.closest?.('.feedback-contact-button')) {
+          window.goodcallContactClicks.push({
+            href: 'phone-button',
+            prevented: event.defaultPrevented,
+          });
+          return;
+        }
         const href = event.target.closest?.('a[href]')?.getAttribute('href') ?? '';
         if (!href.startsWith('tel:')) return;
         window.goodcallContactClicks.push({ href, prevented: event.defaultPrevented });
@@ -1290,6 +1301,18 @@ console.log('stage: demo contact', new Date().toISOString());
       };
     });
 
+  const dialogReady = (page) =>
+    page.waitForFunction(() => {
+      const open = document.querySelector('[role="dialog"]');
+      return open !== null && getComputedStyle(open).pointerEvents !== 'none';
+    });
+  const dialogClosed = (page) =>
+    page.waitForFunction(
+      () =>
+        document.querySelector('[role="dialog"]') === null &&
+        getComputedStyle(document.body).pointerEvents !== 'none',
+    );
+
   for (const width of [1440, 390]) {
     const page = await newPage(width, width === 390 ? 844 : 900);
     await openPdp(page, 'iphone-15-128');
@@ -1297,11 +1320,21 @@ console.log('stage: demo contact', new Date().toISOString());
     await page.click('[role="tab"]', { hasText: 'Гарантия' });
     await page.waitForSelector('.product-warranty__phone');
     const before = await page.evaluate(() => location.href);
+    check(
+      (await page.count('[href^="tel:"]')) === 0,
+      `demo contact pdp ${width}: no tel: target in the DOM`,
+    );
     for (const selector of ['.product-offer__phone', '.product-warranty__phone']) {
       const link = await page.evaluate((css) => {
-        const anchor = document.querySelector(css);
-        window.goodcallContactTarget = anchor;
-        return [anchor?.tagName, anchor?.getAttribute('href'), anchor?.textContent.trim()];
+        const control = document.querySelector(css);
+        window.goodcallContactTarget = control;
+        return [
+          control?.tagName,
+          control?.getAttribute('href'),
+          control?.textContent.trim(),
+          control?.getAttribute('type'),
+          control?.getAttribute('aria-haspopup'),
+        ];
       }, selector);
       const wrapped = await page.evaluate(
         () => window.goodcallContactTarget.getClientRects().length > 1,
@@ -1312,10 +1345,10 @@ console.log('stage: demo contact', new Date().toISOString());
       } else {
         await page.click(selector);
       }
-      await page.waitForFunction(() => document.querySelector('[role="dialog"]') !== null);
+      await dialogReady(page);
       const opened = await dialog(page);
       await page.click('[role="dialog"] button', { hasText: 'Понятно' });
-      await page.waitForFunction(() => document.querySelector('[role="dialog"]') === null);
+      await dialogClosed(page);
       let focused = false;
       for (let attempt = 0; attempt < 20 && !focused; attempt += 1) {
         focused = await page.evaluate(
@@ -1325,12 +1358,12 @@ console.log('stage: demo contact', new Date().toISOString());
       }
       check(
         JSON.stringify(link) ===
-          JSON.stringify(['A', STOREFRONT_SUPPORT.phoneHref, STOREFRONT_SUPPORT.phone]) &&
+          JSON.stringify(['BUTTON', null, STOREFRONT_SUPPORT.phone, 'button', 'dialog']) &&
           opened.count === 1 &&
           opened.title === PHONE_TITLE &&
           opened.message === PHONE_MESSAGE &&
           focused,
-        `demo contact pdp ${selector} ${width}: phone link (${wrapped ? 'wrapped, Enter' : 'click'}) opens the demo dialog and returns focus ${JSON.stringify({ link, opened, focused })}`,
+        `demo contact pdp ${selector} ${width}: phone button (${wrapped ? 'wrapped, Enter' : 'click'}) opens the demo dialog and returns focus ${JSON.stringify({ link, opened, focused })}`,
       );
     }
     const probe = await page.evaluate(() => ({
@@ -1338,7 +1371,9 @@ console.log('stage: demo contact', new Date().toISOString());
       href: location.href,
     }));
     check(
-      probe.clicks.length === 2 && probe.clicks.every((c) => c.prevented) && probe.href === before,
+      probe.clicks.length === 2 &&
+        probe.clicks.every((c) => c.href === 'phone-button' && c.prevented) &&
+        probe.href === before,
       `demo contact pdp ${width}: phone clicks are prevented without navigation ${JSON.stringify(probe)}`,
     );
     await page.close();

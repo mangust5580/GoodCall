@@ -117,9 +117,10 @@ for (const route of ROUTES) {
   check(!INACTIVE_ACCOUNT.test(main), `${tag}: no Account/Auth/bonus claims in page body`);
   check(main.includes(SUPPORT_PHONE), `${tag}: canonical support phone in page`);
   check(
-    (await page.count('main a[href="tel:+78001001010"]')) >= 1 &&
+    (await page.count('main button.info-support__contact-value')) >= 1 &&
+      (await page.count('main [href^="tel:"]')) === 0 &&
       (await page.count('main a[href="mailto:support@goodcall.example"]')) >= 1,
-    `${tag}: support contact links`,
+    `${tag}: support phone button (no tel: target) and e-mail link`,
   );
   check(facts.sectionHeadings.length >= 2, `${tag}: section headings ${facts.sectionHeadings}`);
 }

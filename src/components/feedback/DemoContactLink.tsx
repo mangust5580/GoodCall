@@ -13,10 +13,17 @@ interface DemoContactLinkProps {
   readonly href: string;
   readonly className: string;
   readonly notice?: DemoContactNotice;
+  readonly informational?: boolean;
   readonly children: ReactNode;
 }
 
-export function DemoContactLink({ href, className, notice, children }: DemoContactLinkProps) {
+export function DemoContactLink({
+  href,
+  className,
+  notice,
+  informational = false,
+  children,
+}: DemoContactLinkProps) {
   const [open, setOpen] = useState(false);
 
   if (notice === undefined) {
@@ -27,7 +34,7 @@ export function DemoContactLink({ href, className, notice, children }: DemoConta
     );
   }
 
-  const handleClick = (event: MouseEvent<HTMLAnchorElement>) => {
+  const handleClick = (event: MouseEvent<HTMLAnchorElement | HTMLButtonElement>) => {
     event.preventDefault();
     event.currentTarget.focus();
     setOpen(true);
@@ -35,9 +42,20 @@ export function DemoContactLink({ href, className, notice, children }: DemoConta
 
   return (
     <>
-      <a className={className} href={href} onClick={handleClick}>
-        {children}
-      </a>
+      {informational ? (
+        <button
+          aria-haspopup="dialog"
+          className={`feedback-contact-button ${className}`}
+          onClick={handleClick}
+          type="button"
+        >
+          {children}
+        </button>
+      ) : (
+        <a className={className} href={href} onClick={handleClick}>
+          {children}
+        </a>
+      )}
       <InfoDialog
         actionLabel={notice.actionLabel}
         dimmed

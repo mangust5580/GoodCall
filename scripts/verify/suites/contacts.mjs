@@ -1,5 +1,5 @@
 import { MOCK_SUPABASE_HOST } from '../lib/build.mjs';
-import { launchBrowser } from '../lib/browser.mjs';
+import { launchBrowser, sleep } from '../lib/browser.mjs';
 import { openPage } from '../lib/page.mjs';
 import { appBase, reportCounts } from '../lib/suite.mjs';
 
@@ -229,6 +229,7 @@ const facts = await page.evaluate(() => {
       label: li.querySelector('.contacts-channels__label').textContent.trim(),
       value: li.querySelector('.contacts-channels__value').textContent.trim(),
       href: li.querySelector('a.contacts-channels__value')?.getAttribute('href') ?? null,
+      tag: li.querySelector('.contacts-channels__value').tagName,
       note: li.querySelector('.contacts-channels__note')?.textContent.trim() ?? null,
     })),
     storesLead: main
@@ -240,7 +241,9 @@ const facts = await page.evaluate(() => {
       a.textContent.trim(),
       a.getAttribute('href'),
     ]),
-    formControls: main.querySelectorAll('form, input, textarea, select, button').length,
+    formControls: main.querySelectorAll(
+      'form, input, textarea, select, button:not(.feedback-contact-button)',
+    ).length,
     maps: main.querySelectorAll('iframe, canvas').length,
     mainText: main.innerText,
     bodyText: document.body.innerText,
@@ -261,8 +264,10 @@ check(
 );
 const channel = (label) => facts.channels.find((c) => c.label === label);
 check(
-  channel('Телефон')?.value === PHONE && channel('Телефон')?.href === 'tel:+78001001010',
-  'contacts: canonical phone link',
+  channel('Телефон')?.value === PHONE &&
+    channel('Телефон')?.tag === 'BUTTON' &&
+    channel('Телефон')?.href === null,
+  'contacts: canonical phone is a non-dialable button',
 );
 check(
   channel('E-mail')?.value === EMAIL && channel('E-mail')?.href === `mailto:${EMAIL}`,
@@ -656,9 +661,10 @@ for (const [width, height] of [
 }
 
 const PHONE_HREF = 'tel:+78001001010';
+const PHONE_BUTTON = 'phone-button';
 const EMAIL_HREF = `mailto:${EMAIL}`;
 const DEMO_NOTICE = {
-  [PHONE_HREF]: {
+  [PHONE_BUTTON]: {
     title: 'Демонстрационный телефон',
     message:
       'GoodCall — демонстрационный проект. Телефонная поддержка не подключена. Звонки по этому номеру не принимаются.',
@@ -687,8 +693,15 @@ async function openRoute(target, hash, ready) {
   await target.evaluate(() => {
     window.goodcallContactProbe = { clicks: [] };
     window.addEventListener('click', (event) => {
-      const link = event.target instanceof Element ? event.target.closest('a[href]') : null;
-      const href = link?.getAttribute('href') ?? '';
+      if (!(event.target instanceof Element)) return;
+      if (event.target.closest('.feedback-contact-button') !== null) {
+        window.goodcallContactProbe.clicks.push({
+          href: 'phone-button',
+          prevented: event.defaultPrevented,
+        });
+        return;
+      }
+      const href = event.target.closest('a[href]')?.getAttribute('href') ?? '';
       if (!/^(tel|mailto):/.test(href)) return;
       window.goodcallContactProbe.clicks.push({ href, prevented: event.defaultPrevented });
       event.preventDefault();
@@ -709,6 +722,9 @@ function markContact(target, selector, nth) {
             href: link.getAttribute('href'),
             text: link.textContent.trim(),
             tag: link.tagName,
+            type: link.getAttribute('type'),
+            popup: link.getAttribute('aria-haspopup'),
+            telAncestor: link.closest('[href^="tel:"]') !== null,
             lines: link.getClientRects().length,
           };
     },
@@ -776,10 +792,23 @@ async function focusReturned(target) {
 
 async function checkDemoContact(target, tag, selector, nth, expectedHref) {
   const link = await markContact(target, selector, nth);
-  check(
-    link !== null && link.tag === 'A' && link.href === expectedHref,
-    `${tag}: anchor keeps ${expectedHref} ${JSON.stringify(link)}`,
-  );
+  if (expectedHref === PHONE_BUTTON) {
+    check(
+      link !== null &&
+        link.tag === 'BUTTON' &&
+        link.type === 'button' &&
+        link.popup === 'dialog' &&
+        link.href === null &&
+        !link.telAncestor &&
+        link.text === PHONE,
+      `${tag}: phone is a non-dialable button ${JSON.stringify(link)}`,
+    );
+  } else {
+    check(
+      link !== null && link.tag === 'A' && link.href === expectedHref,
+      `${tag}: anchor keeps ${expectedHref} ${JSON.stringify(link)}`,
+    );
+  }
   if (link === null) return;
   const expected = DEMO_NOTICE[expectedHref];
   const before = await target.evaluate(() => location.href);
@@ -852,7 +881,7 @@ const PRODUCTION_CONTACTS = [
     hash: '#/',
     ready: '.site-footer',
     links: [
-      ['.site-footer__contact-value', 0, PHONE_HREF],
+      ['.site-footer__contact-value', 0, PHONE_BUTTON],
       ['.site-footer__contact-value', 1, EMAIL_HREF],
     ],
   },
@@ -860,15 +889,15 @@ const PRODUCTION_CONTACTS = [
     route: 'not-found',
     hash: '#/no-such-page',
     ready: 'main h1',
-    links: [['.site-footer__contact-value', 0, PHONE_HREF]],
+    links: [['.site-footer__contact-value', 0, PHONE_BUTTON]],
   },
   {
     route: 'contacts',
     hash: '#/contacts',
     ready: '.contacts-channels',
     links: [
-      ['a.contacts-channels__value', 0, PHONE_HREF],
-      ['a.contacts-channels__value', 1, EMAIL_HREF],
+      ['button.contacts-channels__value', 0, PHONE_BUTTON],
+      ['a.contacts-channels__value', 0, EMAIL_HREF],
     ],
   },
   {
@@ -876,7 +905,7 @@ const PRODUCTION_CONTACTS = [
     hash: '#/delivery',
     ready: '.info-support',
     links: [
-      ['.info-support__contact-value', 0, PHONE_HREF],
+      ['.info-support__contact-value', 0, PHONE_BUTTON],
       ['.info-support__contact-value', 1, EMAIL_HREF],
     ],
   },
@@ -885,7 +914,7 @@ const PRODUCTION_CONTACTS = [
     hash: '#/faq',
     ready: '.info-support',
     links: [
-      ['.info-support__contact-value', 0, PHONE_HREF],
+      ['.info-support__contact-value', 0, PHONE_BUTTON],
       ['.info-support__contact-value', 1, EMAIL_HREF],
     ],
   },
@@ -894,7 +923,7 @@ const PRODUCTION_CONTACTS = [
     hash: '#/warranty',
     ready: '.info-support',
     links: [
-      ['.info-support__contact-value', 0, PHONE_HREF],
+      ['.info-support__contact-value', 0, PHONE_BUTTON],
       ['.info-support__contact-value', 1, EMAIL_HREF],
     ],
   },
@@ -903,7 +932,7 @@ const PRODUCTION_CONTACTS = [
     hash: '#/privacy',
     ready: 'main h1',
     links: [
-      [`main a[href="${PHONE_HREF}"]`, 0, PHONE_HREF],
+      ['main button.legal-text__link', 0, PHONE_BUTTON],
       [`main a[href="${EMAIL_HREF}"]`, 0, EMAIL_HREF],
     ],
   },
@@ -912,8 +941,8 @@ const PRODUCTION_CONTACTS = [
     hash: '#/offer',
     ready: 'main h1',
     links: [
-      [`main a[href="${PHONE_HREF}"]`, 0, PHONE_HREF],
-      [`main a[href="${PHONE_HREF}"]`, 1, PHONE_HREF],
+      ['main button.legal-text__link', 0, PHONE_BUTTON],
+      ['main button.legal-text__link', 1, PHONE_BUTTON],
       [`main a[href="${EMAIL_HREF}"]`, 0, EMAIL_HREF],
       [`main a[href="${EMAIL_HREF}"]`, 1, EMAIL_HREF],
     ],
@@ -923,10 +952,82 @@ const PRODUCTION_CONTACTS = [
 for (const { route, hash, ready, links } of PRODUCTION_CONTACTS) {
   const target = await newPage();
   await openRoute(target, hash, ready);
+  const dialTargets = await target.evaluate(() => ({
+    tel: document.querySelectorAll('[href^="tel:"]').length,
+    phoneButtons: document.querySelectorAll('button.feedback-contact-button').length,
+  }));
+  check(
+    dialTargets.tel === 0 && dialTargets.phoneButtons >= 1,
+    `production ${route}: no tel: target in the DOM ${JSON.stringify(dialTargets)}`,
+  );
   for (const [selector, nth, href] of links) {
     await checkDemoContact(target, `demo contact ${route} ${selector}#${nth}`, selector, nth, href);
   }
   await target.close();
+}
+
+async function spaceOpensPhoneDialog(hash, ready, selector, nth) {
+  const raw = await browser.newPage();
+  const evaluate = async (expression) =>
+    (await raw.send('Runtime.evaluate', { expression, returnByValue: true })).result?.result?.value;
+  const until = async (expression) => {
+    for (let attempt = 0; attempt < 100; attempt += 1) {
+      if (await evaluate(expression)) return true;
+      await sleep(50);
+    }
+    return false;
+  };
+  const press = async (key, code, keyCode, text) => {
+    const event = { key, code, windowsVirtualKeyCode: keyCode };
+    await raw.send(
+      'Input.dispatchKeyEvent',
+      text === undefined ? { type: 'rawKeyDown', ...event } : { type: 'keyDown', text, ...event },
+    );
+    await raw.send('Input.dispatchKeyEvent', { type: 'keyUp', ...event });
+  };
+  await raw.send('Page.enable');
+  await raw.send('Runtime.enable');
+  await raw.send('Page.navigate', { url: `${BASE}${hash}` });
+  await until(`document.querySelector(${JSON.stringify(ready)}) !== null`);
+  const before = await evaluate('location.href');
+  const tag = await evaluate(`(() => {
+    const el = [...document.querySelectorAll(${JSON.stringify(selector)})].filter(
+      (element) => element.getClientRects().length > 0,
+    )[${String(nth)}];
+    window.goodcallSpaceTarget = el ?? null;
+    el?.focus();
+    return el?.tagName ?? null;
+  })()`);
+  await press(' ', 'Space', 32, ' ');
+  const opened = await until(`document.querySelectorAll('[role="dialog"]').length === 1`);
+  const title = await evaluate(
+    `document.querySelector('[role="dialog"] .feedback-dialog__title')?.textContent.trim() ?? null`,
+  );
+  await press('Escape', 'Escape', 27);
+  const closed = await until(`document.querySelector('[role="dialog"]') === null`);
+  const returned = await until('document.activeElement === window.goodcallSpaceTarget');
+  const after = await evaluate('location.href');
+  await raw.close();
+  return { tag, opened, title, closed, returned, unchanged: before === after };
+}
+
+for (const [hash, ready, selector, nth] of [
+  ['#/contacts', '.contacts-channels', 'button.contacts-channels__value', 0],
+  ['#/contacts', '.site-footer', '.site-footer__contact-value', 0],
+  ['#/delivery', '.info-support', '.info-support__contact-value', 0],
+  ['#/privacy', 'main h1', 'main button.legal-text__link', 0],
+  ['#/offer', 'main h1', 'main button.legal-text__link', 1],
+]) {
+  const facts = await spaceOpensPhoneDialog(hash, ready, selector, nth);
+  check(
+    facts.tag === 'BUTTON' &&
+      facts.opened &&
+      facts.title === DEMO_NOTICE[PHONE_BUTTON].title &&
+      facts.closed &&
+      facts.returned &&
+      facts.unchanged,
+    `demo contact ${hash} ${selector}#${String(nth)}: Space opens the phone dialog, Escape returns focus ${JSON.stringify(facts)}`,
+  );
 }
 
 for (const [width, height] of [
@@ -938,9 +1039,9 @@ for (const [width, height] of [
   await checkDemoContact(
     target,
     `demo contact contacts@${width} phone`,
-    'a.contacts-channels__value',
+    'button.contacts-channels__value',
     0,
-    PHONE_HREF,
+    PHONE_BUTTON,
   );
   await checkDemoContact(
     target,

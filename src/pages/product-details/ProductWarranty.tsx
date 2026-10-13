@@ -69,6 +69,7 @@ export function ProductWarranty({
           <DemoContactLink
             className="product-warranty__phone"
             href={supportPhoneHref}
+            informational
             notice={supportPhoneNotice}
           >
             {supportPhone}

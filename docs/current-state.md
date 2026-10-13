@@ -147,10 +147,34 @@ Technically complete:
 Active visual slice: none. Active implementation milestone: none. WP-01 and
 WP-01B stay open; no next slice is approved.
 
-- **WP-01B / GC-R52-T1 Truthful Terms account access — USER VISUAL +
+- **WP-01B / AUD-15 B1 Non-dialable production demo phone — USER VISUAL +
   FUNCTIONAL PASS on 2026-10-13, CLOSED and published on 2026-10-13.** The
-  latest published code milestone; one bounded GC-R52 product-truthfulness
-  fix.
+  latest published code milestone; one bounded technical AUD-15 mitigation.
+  - `DemoContactLink` takes an opt-in `informational` prop: with a notice it
+    renders `<button type="button" aria-haspopup="dialog">` (no `href`) that
+    opens the same dimmed demo dialog; Enter, Space, Escape, «Понятно» and
+    focus return work as before. A scoped `:where(.feedback-contact-button)`
+    reset keeps the call-site styles; the Contacts value selector also
+    matches `button`.
+  - All eight production phone controls use it (Footer, Contacts, the
+    Delivery / FAQ / Warranty support block, Privacy, Offer prose and fact
+    row, PDP «Нужна помощь?» and warranty tab), so production pages carry no
+    `tel:` target. The number, notes, copy, e-mail `mailto:` links and
+    `STOREFRONT_SUPPORT.phoneHref` are unchanged; `?reference=` surfaces keep
+    their native anchors (no notice is passed there).
+  - Visible effect: in prose at narrow widths the number moves to the next
+    line whole instead of splitting; focus rings on legal-prose phones follow
+    the button box. Other surfaces were pixel-identical before/after.
+  - `contacts`, `info` and `product-details` assert phone buttons, zero
+    production `tel:` targets, a real Space key and preserved e-mail /
+    reference anchors.
+  - AUD-15 is TECHNICAL MITIGATION COMPLETE / OWNER UNVERIFIED: the visible
+    number can still be dialled manually, reference-only `tel:` examples
+    remain and the number's ownership is not verified.
+
+- **WP-01B / GC-R52-T1 Truthful Terms account access — USER VISUAL +
+  FUNCTIONAL PASS on 2026-10-13, CLOSED and published on 2026-10-13.** One
+  bounded GC-R52 product-truthfulness fix.
   - `#/terms` «Использование сайта» no longer says every section works
     without sign-in: it now says the site is browsable without registration,
     «Личный кабинет» opens after the one-click demo-account sign-in (no
@@ -267,7 +291,9 @@ WP-01B stay open; no next slice is approved.
     pixel diffs against `c21b9d8` are 0.
   - Interception is UX only: context menu, copy link, middle click, typing
     the number and no-JS bypass it. The number's owner is unverified; AUD-15
-    stays PARTIALLY MITIGATED / OWNER UNVERIFIED.
+    stays PARTIALLY MITIGATED / OWNER UNVERIFIED. (Current status: since
+    AUD-15 B1 on 2026-10-13, production phones are non-dialable buttons; see
+    above.)
     `support@goodcall.example` receives no mail.
   - Evidence: the targeted pre-closure gate was contacts 250/250, info
     212/212, product-details 714/714, laptops 339/339 and chunks 89/89; the
@@ -6030,8 +6056,10 @@ requested.
 
 ## Project closeout state
 
-WP-01B / GC-R52-T1 (truthful Terms account access) is the last published
-code milestone, CLOSED and published on 2026-10-13. WP-01B-4
+WP-01B / AUD-15 B1 (non-dialable production demo phone) is the last
+published code milestone, CLOSED and published on 2026-10-13. WP-01B /
+GC-R52-T1 (truthful Terms account access) was CLOSED and published on
+2026-10-13. WP-01B-4
 (product-natural FAQ & Warranty copy) was CLOSED and published on
 2026-10-12. WP-01B-3 / GC-R41 (FAQ &
 Warranty demo truthfulness) and WP-01B-2 / GC-R43 (Contacts store-heading
@@ -6042,7 +6070,7 @@ was closed on
 2026-10-11 by a documentation-only closeout after its final
 after-measurement. WP-02 stage 2 stays deferred.
 **Active visual slice: none. Active implementation milestone: none.** No
-active code-level release blocker is known. WP-01B stays open (AUD-15 partial,
+active code-level release blocker is known. WP-01B stays open (AUD-15 owner unverified,
 GC-R52 legal review of Terms / Offer) with pending decisions D-2 (warranty-term wording /
 `PRODUCT_WARRANTY_TEXT`) and the broader Home / Delivery / About / trust
 copy; D-5 is decided as "PDP support copy unchanged"; the next activity is selecting the WP-01B

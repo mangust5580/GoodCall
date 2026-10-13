@@ -75,6 +75,7 @@ export function ProductOfferSummary({ product }: ProductOfferSummaryProps) {
               <DemoContactLink
                 className="product-offer__phone"
                 href={product.supportPhoneHref}
+                informational
                 notice={product.supportPhoneNotice}
               >
                 {product.supportPhone}

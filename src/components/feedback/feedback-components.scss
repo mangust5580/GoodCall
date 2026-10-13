@@ -322,6 +322,19 @@
   }
 }
 
+:where(.feedback-contact-button) {
+  margin: 0;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  text-align: inherit;
+  text-decoration-thickness: 1px;
+  text-decoration-skip-ink: none;
+  cursor: pointer;
+  background: none;
+  border: 0;
+}
+
 .feedback-dialog {
   position: fixed;
   top: 50%;

@@ -32,6 +32,7 @@ interface ContactChannel {
   readonly value: string;
   readonly href?: string;
   readonly notice?: DemoContactNotice;
+  readonly informational?: boolean;
   readonly note: string;
 }
 
@@ -47,6 +48,7 @@ export function ContactsPage({ links }: ContactsPageProps) {
       value: STOREFRONT_SUPPORT.phone,
       href: STOREFRONT_SUPPORT.phoneHref,
       notice: STOREFRONT_DEMO_CONTACT.phoneNotice,
+      informational: true,
       note: STOREFRONT_DEMO_CONTACT.phoneNote,
     },
     {
@@ -116,6 +118,7 @@ export function ContactsPage({ links }: ContactsPageProps) {
                       <DemoContactLink
                         className="contacts-channels__value"
                         href={channel.href}
+                        informational={channel.informational}
                         notice={channel.notice}
                       >
                         {channel.value}
