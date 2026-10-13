@@ -354,14 +354,29 @@ check(
   (await legalUpdated()) === 'Последнее обновление: 10 октября 2026 г.',
   'privacy: updated date 10 October 2026',
 );
-for (const path of ['/terms', '/offer']) {
+for (const [path, date] of [
+  ['/terms', '13 октября 2026 г.'],
+  ['/offer', '4 октября 2026 г.'],
+]) {
   await open(page, path);
   const updated = await legalUpdated();
-  check(
-    updated === 'Последнее обновление: 4 октября 2026 г.',
-    `${path}: updated date unchanged (${updated})`,
-  );
+  check(updated === `Последнее обновление: ${date}`, `${path}: updated date ${date} (${updated})`);
 }
+
+await open(page, '/terms');
+const termsText = await page.evaluate(() =>
+  document.querySelector('main').innerText.replace(/\s+/g, ' '),
+);
+check(
+  termsText.includes(
+    'Сайт можно свободно просматривать без регистрации. Личный кабинет открывается после входа в демо-аккаунт — без пароля и без создания настоящей учётной записи. Корзина, избранное, сравнение и демо-аккаунт хранятся только в вашем браузере — подробнее в Политике конфиденциальности.',
+  ),
+  'terms: demo-account access wording',
+);
+check(
+  !termsText.includes('все разделы доступны без учётной записи'),
+  'terms: no "all sections without account" claim',
+);
 
 await open(page, '/contacts');
 const shell = await page.evaluate(() => ({

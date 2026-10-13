@@ -147,10 +147,28 @@ Technically complete:
 Active visual slice: none. Active implementation milestone: none. WP-01 and
 WP-01B stay open; no next slice is approved.
 
+- **WP-01B / GC-R52-T1 Truthful Terms account access — USER VISUAL +
+  FUNCTIONAL PASS on 2026-10-13, CLOSED and published on 2026-10-13.** The
+  latest published code milestone; one bounded GC-R52 product-truthfulness
+  fix.
+  - `#/terms` «Использование сайта» no longer says every section works
+    without sign-in: it now says the site is browsable without registration,
+    «Личный кабинет» opens after the one-click demo-account sign-in (no
+    password, no real account), and cart, favourites, compare and the demo
+    account stay in the browser, with the existing Privacy link.
+  - Terms «Последнее обновление» is 13 October 2026; Offer keeps 4 October
+    and Privacy 10 October. Offer (including the support-hours row), Privacy
+    and account behaviour are unchanged.
+  - The `contacts` suite asserts the exact Terms sentence, the absence of the
+    old claim and the three legal dates.
+  - GC-R52 stays open for qualified legal review of Terms / Offer (offer and
+    acceptance, liability, warranty / return effect, operator
+    identification); nothing is legally certified.
+
 - **WP-01B-4 / product-natural FAQ & Warranty copy — USER VISUAL +
-  FUNCTIONAL PASS on 2026-10-12, CLOSED and published on 2026-10-12.** The
-  latest published code milestone; a later editorial correction that keeps
-  WP-01B-3's closure and GC-R41's resolution intact.
+  FUNCTIONAL PASS on 2026-10-12, CLOSED and published on 2026-10-12.** A
+  later editorial correction that keeps WP-01B-3's closure and GC-R41's
+  resolution intact.
   - Rule: demo notes sit at non-working actions (phone / e-mail dialogs,
     notes under contacts, demo checkout / payment / order) and once per
     service page — not in tiles, leads, steps or support intros.
@@ -6012,8 +6030,10 @@ requested.
 
 ## Project closeout state
 
-WP-01B-4 (product-natural FAQ & Warranty copy) is the last published code
-milestone, CLOSED and published on 2026-10-12. WP-01B-3 / GC-R41 (FAQ &
+WP-01B / GC-R52-T1 (truthful Terms account access) is the last published
+code milestone, CLOSED and published on 2026-10-13. WP-01B-4
+(product-natural FAQ & Warranty copy) was CLOSED and published on
+2026-10-12. WP-01B-3 / GC-R41 (FAQ &
 Warranty demo truthfulness) and WP-01B-2 / GC-R43 (Contacts store-heading
 affordance) were CLOSED and published on 2026-10-12.
 WP-01B-1 / Demo Contact
@@ -6023,7 +6043,7 @@ was closed on
 after-measurement. WP-02 stage 2 stays deferred.
 **Active visual slice: none. Active implementation milestone: none.** No
 active code-level release blocker is known. WP-01B stays open (AUD-15 partial,
-GC-R52) with pending decisions D-2 (warranty-term wording /
+GC-R52 legal review of Terms / Offer) with pending decisions D-2 (warranty-term wording /
 `PRODUCT_WARRANTY_TEXT`) and the broader Home / Delivery / About / trust
 copy; D-5 is decided as "PDP support copy unchanged"; the next activity is selecting the WP-01B
 remainder or another backlog item from `docs/master-backlog.md` when
