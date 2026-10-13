@@ -790,7 +790,9 @@ Completed visual slices:
   suite asserts the wording and the legal dates. The rest of WP-01 (WP-01B)
   stayed open; WP-01B-1 later covered the demo phone/e-mail actions (see
   above) and WP-01B-2 the store-heading affordance. Terms/Offer copy, compare
-  retention wording and store thumbnails remain open.
+  retention wording and store thumbnails remain open. (Current status: compare
+  retention wording — GC-R23 — was confirmed ALREADY_DONE on 2026-10-13 with
+  no source change; see Project closeout state.)
 
 - **Quality G / Breakpoint Off-by-One Correction — USER VISUAL/UX PASS on
   2026-10-10, CLOSED and published.** Closes the Q-08 off-by-one slice only;
@@ -1621,7 +1623,8 @@ compare control; the Catalog card control is an approved extension.
   rating, review count, brand, storage, colour). Cap `COMPARE_LIMIT = 4`,
   insertion order, duplicate or over-cap add is a no-op; malformed JSON, a
   foreign shape, duplicate slugs or more than 4 items clear only this key.
-  No category rule, no cross-tab sync.
+  No category rule. Since WP-05 the store receives cross-tab `storage`
+  notifications (see WP-05 above).
 - **Entry point: Catalog only.** `ProductCard` gained optional
   `onCompareToggle` / `comparePressed` / `compareDisabled` / `compareLabel`;
   a `CompareButton` (native `aria-pressed` icon button) sits under ♥ on the
@@ -1648,7 +1651,7 @@ compare control; the Catalog card control is an approved extension.
 - **Deferred.** Richer spec rows (screen, CPU, RAM, battery, weight…),
   stock/«В наличии», share, highlight/hide-equal, category rules, reorder,
   sticky headers, the Modals #12 header popover, Quick View, Search/PD/Home
-  entry points, account/server/cross-tab sync.
+  entry points, account/server/cross-device sync.
 
 ### Order Confirmation A — Demo Order Handoff + Thank-you Page
 
@@ -6020,11 +6023,14 @@ was closed on
 after-measurement. WP-02 stage 2 stays deferred.
 **Active visual slice: none. Active implementation milestone: none.** No
 active code-level release blocker is known. WP-01B stays open (AUD-15 partial,
-GC-R52, GC-R23) with pending decisions D-2 (warranty-term wording /
+GC-R52) with pending decisions D-2 (warranty-term wording /
 `PRODUCT_WARRANTY_TEXT`) and the broader Home / Delivery / About / trust
 copy; D-5 is decided as "PDP support copy unchanged"; the next activity is selecting the WP-01B
 remainder or another backlog item from `docs/master-backlog.md` when
-requested.
+requested. GC-R23 (compare retention wording) is ALREADY_DONE, confirmed on
+2026-10-13 by a docs-only status resolution with no source change: Privacy
+and Terms already describe browser-local `localStorage` storage and promise
+no fixed retention period.
 
 Settings, Bonuses, Notifications, recently viewed, a real authenticated
 account and Checkout saved-address integration are intentionally omitted (not
