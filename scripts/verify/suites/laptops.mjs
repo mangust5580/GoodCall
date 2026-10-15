@@ -1240,6 +1240,25 @@ check(
     stored.compare?.items?.[0]?.brand === 'Apple',
   `downstream: cart, favourite, compare stored for ${firstSlug} with SSD 256 ${JSON.stringify(stored.compare)}`,
 );
+const laptopNotice = await flow.evaluate(() => ({
+  count: document.querySelectorAll('.action-notice').length,
+  message:
+    document.querySelector('.action-notice__message')?.textContent.replace(/\s+/g, ' ') ?? null,
+  href: document.querySelector('.action-notice__action')?.getAttribute('href') ?? null,
+  close: document.querySelector('.action-notice__close')?.getAttribute('aria-label') ?? null,
+  status:
+    document.querySelector('.production-shell > p[role="status"][aria-atomic="true"]')
+      ?.textContent ?? null,
+}));
+check(
+  laptopNotice.count === 1 &&
+    laptopNotice.message === 'Добавлено к сравнению · 1 из 4' &&
+    laptopNotice.href === '#/compare' &&
+    laptopNotice.close === 'Закрыть уведомление' &&
+    laptopNotice.status ===
+      `Товар добавлен к сравнению: ${bySlug.get(firstSlug)?.name}. В сравнении 1 из 4.`,
+  `downstream: GC-R21 laptop compare-add notice ${JSON.stringify(laptopNotice)}`,
+);
 for (const [hash, selector, label] of [
   ['#/cart', '.cart-line img, .cart-page img', 'Cart'],
   ['#/favorites', '.favorites-page main img, main img', 'Favourites'],

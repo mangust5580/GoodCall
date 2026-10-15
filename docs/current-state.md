@@ -147,10 +147,40 @@ Technically complete:
 Active visual slice: none. Active implementation milestone: none. WP-01 and
 WP-01B stay open; no next slice is approved.
 
+- **WP-08 / GC-R21 Compare-add feedback notice (Option B) — USER VISUAL +
+  FUNCTIONAL PASS on 2026-10-15, CLOSED and published on 2026-10-15.** The
+  latest published code milestone; one bounded WP-08 slice. WP-08 stays open.
+  - A successful new add-to-compare on the live smartphone catalog, the live
+    laptop catalog or the smartphone PDP «Другие смартфоны» rail shows one
+    route-local, non-modal fixed notice: check icon, «Добавлено к сравнению ·
+    N из 4» (live count), a native link «Перейти к сравнению» → `#/compare`
+    and a close button «Закрыть уведомление». No timer, no animation.
+  - Success is decided in `useCatalogCompareSeam` by the product's membership
+    before and after `toggleCompareItem`; duplicate, full (4 из 4), disabled
+    and other-tab changes never show it. A new add replaces the notice; a
+    removal from the card, the notified item leaving the store (also via
+    another tab's `storage` event), leaving the route or a PDP slug change
+    hide it. The presentational `ActionNotice` (`components/feedback`) owns
+    no store, route, timer or event bus.
+  - One always-mounted polite `role="status"` announces «Товар добавлен к
+    сравнению: {title}. В сравнении N из 4.»; link and close sit outside it,
+    and the text is cleared on hide so a repeated add is announced again.
+    Before this slice the card had only `aria-pressed` / label and the shell
+    badges, with no compare-add live announcement.
+  - Focus never moves on show; keyboard dismissal (Enter / Space, Escape on
+    the link or close) returns focus to the originating compare control, or
+    to the visible shell «Сравнение» link if that control is gone.
+  - Desktop: bottom-right, 24px insets, ≤400px. Below 768px: 16px insets,
+    8px above the measured 61px `MobileActionBar` plus
+    `env(safe-area-inset-bottom)`; Radix dialogs stack above it.
+    `goodcall.compare.v1`, `COMPARE_LIMIT = 4`, cards, badges, shell,
+    `#/compare` and `?reference=` are unchanged; resting Catalog / Laptops /
+    PDP and `?reference=` views were pixel-identical at 1440 / 390 / 320.
+    Physical-iPhone safe-area and real screen-reader output were not tested.
+
 - **WP-08 / AUD-10 Bulk destructive confirmations (Option B) — USER VISUAL +
-  FUNCTIONAL PASS on 2026-10-13, CLOSED and published on 2026-10-13.** The
-  latest published code milestone; one bounded WP-08 slice (D-07: confirm,
-  no undo). WP-08 stays open.
+  FUNCTIONAL PASS on 2026-10-13, CLOSED and published on 2026-10-13.** One
+  bounded WP-08 slice (D-07: confirm, no undo). WP-08 stays open.
   - `#/cart` «Удалить выбранные» and `#/compare` «Очистить все» only open the
     shared `ConfirmationDialog` (Radix AlertDialog, «Отмена» focused first,
     danger action). Copy: «Удалить выбранные товары?» / «Из корзины будут
@@ -6081,8 +6111,10 @@ requested.
 
 ## Project closeout state
 
-WP-08 / AUD-10 (bulk cart and compare confirmations) is the last published
-code milestone, CLOSED and published on 2026-10-13; WP-08 stays open.
+WP-08 / GC-R21 (compare-add feedback notice) is the last published code
+milestone, CLOSED and published on 2026-10-15; WP-08 stays open (GC-R19,
+GC-R20 / D-06, GC-R24, GC-R25, AUD-09). WP-08 / AUD-10 (bulk cart and
+compare confirmations) was CLOSED and published on 2026-10-13.
 WP-01B / AUD-15 B1 (non-dialable production demo phone) was CLOSED and
 published on 2026-10-13. WP-01B /
 GC-R52-T1 (truthful Terms account access) was CLOSED and published on

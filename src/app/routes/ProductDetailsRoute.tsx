@@ -4,7 +4,7 @@ import { Link, useParams } from 'react-router-dom';
 import { addCartLine, cartLineId } from '../../commerce/cart';
 import type { CartLineImage } from '../../commerce/cart';
 import { toggleFavorite, useFavoriteItems } from '../../commerce/favorites';
-import { RouteStatus } from '../../components/feedback';
+import { ActionNotice, RouteStatus } from '../../components/feedback';
 import { fetchCatalogProducts } from '../../pages/catalog';
 import type { CatalogProduct } from '../../pages/catalog';
 import {
@@ -142,7 +142,7 @@ export function ProductDetailsRoute() {
   const smartphoneCatalogRequested = useRef(false);
   const relatedCart = useCatalogCartSeam(true);
   const relatedFavorites = useCatalogFavoritesSeam(true);
-  const relatedCompare = useCatalogCompareSeam(true);
+  const { seam: relatedCompare, notice: relatedCompareNotice } = useCatalogCompareSeam(true, slug);
 
   useEffect(() => {
     if (slug === undefined || content === undefined) {
@@ -256,6 +256,7 @@ export function ProductDetailsRoute() {
           }
         />
       ) : null}
+      <ActionNotice {...relatedCompareNotice} />
     </ProductionShell>
   );
 }

@@ -1,3 +1,4 @@
+export { ActionNotice } from './ActionNotice';
 export { ConfirmationDialog } from './ConfirmationDialog';
 export { DemoContactLink } from './DemoContactLink';
 export type { DemoContactNotice } from './DemoContactLink';

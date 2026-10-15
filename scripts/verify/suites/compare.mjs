@@ -964,6 +964,363 @@ await checkMediaGeometry('storage 1 ТБ compare media geometry', 4, 'compare-st
 
 await evaluate(`localStorage.removeItem('${CART}'); localStorage.removeItem('${COMPARE}')`);
 
+const KEY_EVENTS = {
+  Enter: { code: 'Enter', windowsVirtualKeyCode: 13, text: '\r' },
+  Space: { code: 'Space', windowsVirtualKeyCode: 32, text: ' ', key: ' ' },
+  Tab: { code: 'Tab', windowsVirtualKeyCode: 9 },
+  Escape: { code: 'Escape', windowsVirtualKeyCode: 27 },
+};
+async function press(name) {
+  const { text, key = name, ...rest } = KEY_EVENTS[name];
+  const event = { key, ...rest };
+  await send(
+    'Input.dispatchKeyEvent',
+    text === undefined ? { type: 'rawKeyDown', ...event } : { type: 'keyDown', text, ...event },
+  );
+  await send('Input.dispatchKeyEvent', { type: 'keyUp', ...event });
+  await sleep(150);
+}
+const TITLES = PRODUCTS.map((product) => product.name);
+const noticeState = () =>
+  evaluate(`(() => {
+    const notices = [...document.querySelectorAll('.action-notice')];
+    const notice = notices[0];
+    const statuses = [...document.querySelectorAll('[role="status"]')];
+    const compareStatuses = statuses.filter((s) => s.textContent.includes('сравнени'));
+    const link = notice?.querySelector('.action-notice__action');
+    const close = notice?.querySelector('.action-notice__close');
+    return {
+      count: notices.length,
+      message: notice?.querySelector('.action-notice__message').textContent.replace(/\\s+/g, ' ') ?? null,
+      href: link?.getAttribute('href') ?? null,
+      linkTag: link?.tagName ?? null,
+      linkText: link?.textContent ?? null,
+      closeLabel: close?.getAttribute('aria-label') ?? null,
+      closeType: close?.type ?? null,
+      noticeInsideStatus: notice ? notice.closest('[role="status"]') !== null : false,
+      statusHasControls: statuses.some((s) => s.querySelector('a, button') !== null),
+      compareStatuses: compareStatuses.map((s) => s.textContent),
+      noticeStatus: document.querySelector('.production-shell > p.ui-visually-hidden[role="status"][aria-atomic="true"]')?.textContent ?? null,
+    };
+  })()`);
+const activeIsCard = (i) => evaluate(`document.activeElement === ${cardBtn(i)}`);
+const externalWrite = (items) =>
+  evaluate(`(() => {
+    localStorage.setItem('${COMPARE}', JSON.stringify({ items: ${JSON.stringify(items)} }));
+    window.dispatchEvent(new StorageEvent('storage', { key: '${COMPARE}', storageArea: localStorage }));
+  })()`);
+const storedItems = () =>
+  evaluate(`JSON.parse(localStorage.getItem('${COMPARE}') ?? '{"items":[]}').items`);
+
+await viewport(1440, 900, false);
+await go('#/');
+await evaluate(`localStorage.clear()`);
+await reload();
+await openCatalog();
+let notice = await noticeState();
+check(
+  'GC-R21 notice: none at rest; route status region mounted and empty',
+  notice.count === 0 && notice.noticeStatus === '',
+  JSON.stringify(notice),
+);
+
+await evaluate(`${cardBtn(0)}.focus()`);
+await click(cardBtn(0));
+notice = await noticeState();
+check(
+  'GC-R21 add: exactly one notice with live count copy',
+  notice.count === 1 && notice.message === 'Добавлено к сравнению · 1 из 4',
+  JSON.stringify(notice),
+);
+check(
+  'GC-R21 add: native link «Перейти к сравнению» to #/compare, close button named',
+  notice.linkTag === 'A' &&
+    notice.href === '#/compare' &&
+    notice.linkText === 'Перейти к сравнению' &&
+    notice.closeLabel === 'Закрыть уведомление' &&
+    notice.closeType === 'button',
+  JSON.stringify(notice),
+);
+check(
+  'GC-R21 add: one polite status with title and count, controls outside it',
+  notice.compareStatuses.length === 1 &&
+    notice.noticeStatus === `Товар добавлен к сравнению: ${TITLES[0]}. В сравнении 1 из 4.` &&
+    !notice.noticeInsideStatus &&
+    !notice.statusHasControls,
+  JSON.stringify(notice),
+);
+check(
+  'GC-R21 add: focus stays on the compare control; aria-pressed and badge unchanged contract',
+  (await activeIsCard(0)) &&
+    (await btnState(0)).pressed === 'true' &&
+    (await compareBadge()) === '1' &&
+    (await stored()).length === 1,
+);
+
+await click(cardBtn(1));
+notice = await noticeState();
+check(
+  'GC-R21 second add replaces the notice (no stack), count and announcement follow',
+  notice.count === 1 &&
+    notice.message === 'Добавлено к сравнению · 2 из 4' &&
+    notice.noticeStatus === `Товар добавлен к сравнению: ${TITLES[1]}. В сравнении 2 из 4.`,
+  JSON.stringify(notice),
+);
+
+await click(cardBtn(1));
+notice = await noticeState();
+check(
+  'GC-R21 remove: notice dismissed, no «removed» announcement',
+  notice.count === 0 && notice.noticeStatus === '' && notice.compareStatuses.length === 0,
+  JSON.stringify(notice),
+);
+
+await evaluate(`(() => {
+  const status = document.querySelector('.production-shell > p.ui-visually-hidden[role="status"][aria-atomic="true"]');
+  window.__noticeTexts = [];
+  new MutationObserver(() => window.__noticeTexts.push(status.textContent)).observe(status, { childList: true, characterData: true, subtree: true });
+})()`);
+await evaluate(`${cardBtn(2)}.click()`);
+await sleep(30);
+await evaluate(`${cardBtn(2)}.click()`);
+await sleep(30);
+await evaluate(`${cardBtn(2)}.click()`);
+await sleep(200);
+notice = await noticeState();
+const texts = await evaluate(`window.__noticeTexts`);
+const addedText = `Товар добавлен к сравнению: ${TITLES[2]}. В сравнении 2 из 4.`;
+check(
+  'GC-R21 rapid add→remove→add: one notice, store consistent',
+  notice.count === 1 &&
+    notice.message === 'Добавлено к сравнению · 2 из 4' &&
+    (await stored()).join() === 'iphone-15-pro-128,galaxy-s24-256',
+  JSON.stringify({ notice, stored: await stored() }),
+);
+check(
+  'GC-R21 rapid add→remove→add: live text is cleared and re-armed (announced twice)',
+  texts.filter((text) => text === addedText).length === 2 &&
+    texts.indexOf('') > texts.indexOf(addedText) &&
+    notice.noticeStatus === addedText,
+  JSON.stringify(texts),
+);
+
+await click(cardBtn(3));
+await click(cardBtn(4));
+notice = await noticeState();
+check(
+  'GC-R21 fourth add: notice reads 4 из 4',
+  notice.count === 1 && notice.message === 'Добавлено к сравнению · 4 из 4',
+  JSON.stringify(notice),
+);
+await evaluate(`document.querySelector('.action-notice__close').click()`);
+await sleep(150);
+await evaluate(`${cardBtn(5)}.click()`);
+await sleep(150);
+notice = await noticeState();
+check(
+  'GC-R21 full: disabled fifth control shows no notice and store stays at four',
+  (await btnState(5)).disabled &&
+    notice.count === 0 &&
+    notice.noticeStatus === '' &&
+    (await stored()).length === 4,
+  JSON.stringify(notice),
+);
+
+await click(cardBtn(4));
+await click(cardBtn(4));
+let items = await storedItems();
+check(
+  'GC-R21 cross-tab: notice shown for the re-added item',
+  (await noticeState()).count === 1 && items.at(-1).slug === 'nothing-phone-2a',
+);
+await externalWrite(items.filter((item) => item.slug !== 'nothing-phone-2a'));
+await sleep(250);
+notice = await noticeState();
+check(
+  'GC-R21 cross-tab: removing the notified item elsewhere hides the notice',
+  notice.count === 0 && notice.noticeStatus === '' && (await compareBadge()) === '3',
+  JSON.stringify(notice),
+);
+items = await storedItems();
+await externalWrite([...items, { ...items[0], slug: 'nothing-phone-2a', title: TITLES[4] }]);
+await sleep(250);
+notice = await noticeState();
+check(
+  'GC-R21 cross-tab: an addition in another tab creates no notice here',
+  notice.count === 0 &&
+    notice.noticeStatus === '' &&
+    (await compareBadge()) === '4' &&
+    (await btnState(4)).pressed === 'true',
+  JSON.stringify(notice),
+);
+await click(cardBtn(4));
+await click(cardBtn(4));
+await externalWrite([]);
+await sleep(250);
+check(
+  'GC-R21 cross-tab: clearing comparison elsewhere hides the notice',
+  (await noticeState()).count === 0 && (await compareBadge()) === '0',
+);
+
+await evaluate(`${cardBtn(0)}.focus()`);
+await press('Enter');
+check(
+  'GC-R21 keyboard: Enter on the compare control adds and shows the notice, focus kept',
+  (await noticeState()).count === 1 && (await activeIsCard(0)),
+);
+await evaluate(`document.querySelector('.action-notice__action').focus()`);
+await press('Tab');
+const closeFocus = await evaluate(`(() => {
+  const close = document.querySelector('.action-notice__close');
+  const style = getComputedStyle(close);
+  return { focused: document.activeElement === close, outline: style.outlineStyle, width: style.outlineWidth };
+})()`);
+check(
+  'GC-R21 keyboard: Tab reaches the close control with a visible focus ring',
+  closeFocus.focused && closeFocus.outline === 'solid' && closeFocus.width === '2px',
+  JSON.stringify(closeFocus),
+);
+await press('Space');
+check(
+  'GC-R21 keyboard: Space closes the notice and returns focus to the compare control',
+  (await noticeState()).count === 0 && (await activeIsCard(0)) && (await stored()).length === 1,
+);
+await evaluate(`${cardBtn(1)}.focus()`);
+await press('Enter');
+await evaluate(`document.querySelector('.action-notice__action').focus()`);
+const linkFocus = await evaluate(
+  `getComputedStyle(document.querySelector('.action-notice__action')).outlineStyle`,
+);
+await press('Escape');
+check(
+  'GC-R21 keyboard: Escape inside the notice dismisses it and returns focus to the control',
+  linkFocus === 'solid' && (await noticeState()).count === 0 && (await activeIsCard(1)),
+  linkFocus,
+);
+await click(cardBtn(1));
+await evaluate(`${cardBtn(2)}.focus()`);
+await press('Enter');
+await evaluate(
+  `[...document.querySelectorAll('.catalog-page__quick-filter')].find((b) => b.textContent === 'Со скидкой').click()`,
+);
+await sleep(300);
+const galaxyGone = await evaluate(
+  `![...document.querySelectorAll('.catalog-grid .product-card__title')].some((t) => t.textContent.startsWith('Samsung Galaxy S24'))`,
+);
+await evaluate(`document.querySelector('.action-notice__close').focus()`);
+await press('Enter');
+const fallbackFocus = await evaluate(`(() => {
+  const a = document.activeElement;
+  return { href: a.getAttribute('href'), header: a.classList.contains('site-header__action') };
+})()`);
+check(
+  'GC-R21 keyboard: origin control gone → focus falls back to the visible shell compare link',
+  galaxyGone &&
+    (await noticeState()).count === 0 &&
+    fallbackFocus.href === '#/compare' &&
+    fallbackFocus.header,
+  JSON.stringify(fallbackFocus),
+);
+
+await evaluate(`localStorage.removeItem('${COMPARE}')`);
+await go('#/');
+await reload();
+await openCatalog();
+await click(cardBtn(0));
+await evaluate(`document.querySelector('.action-notice__action').click()`);
+await sleep(500);
+check(
+  'GC-R21 link: navigates to #/compare with the added item; no notice on the compare page',
+  (await evaluate(`location.hash`)) === '#/compare' &&
+    (await evaluate(`document.querySelectorAll('.compare-product').length`)) === 1 &&
+    (await noticeState()).count === 0,
+);
+await click(`document.querySelector('.compare-product__remove')`);
+check(
+  'GC-R21 compare page: column removal keeps its own status, no notice',
+  (await noticeState()).count === 0 &&
+    (await evaluate(`document.querySelector('main [role="status"]')?.textContent`)) ===
+      `Товар убран из сравнения: ${TITLES[0]}`,
+);
+
+for (const [width, height] of [
+  [1440, 900],
+  [390, 844],
+  [320, 568],
+]) {
+  await viewport(width, height, width < 768);
+  await go('#/');
+  await evaluate(`localStorage.removeItem('${COMPARE}')`);
+  await reload();
+  await openCatalog();
+  await evaluate(`${cardBtn(1)}.scrollIntoView({ block: 'center' })`);
+  await click(cardBtn(1));
+  const geo = await evaluate(`(() => {
+    const notice = document.querySelector('.action-notice');
+    const r = notice.getBoundingClientRect();
+    const barEl = document.querySelector('.mobile-action-bar');
+    const bar = barEl.getBoundingClientRect();
+    const hit = (el) => { const b = el.getBoundingClientRect(); return document.elementFromPoint(b.left + b.width / 2, b.top + b.height / 2)?.closest('a, button') === el; };
+    const size = (el) => { const b = el.getBoundingClientRect(); return [Math.round(b.width), Math.round(b.height)]; };
+    return {
+      left: r.left, right: r.right, bottom: r.bottom, height: r.height, width: r.width,
+      vw: document.documentElement.clientWidth, vh: innerHeight,
+      overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      barVisible: getComputedStyle(barEl).display !== 'none', barTop: bar.top,
+      barLinks: [...barEl.querySelectorAll('a')].every(hit),
+      linkHit: hit(notice.querySelector('.action-notice__action')),
+      closeHit: hit(notice.querySelector('.action-notice__close')),
+      linkSize: size(notice.querySelector('.action-notice__action')),
+      closeSize: size(notice.querySelector('.action-notice__close')),
+      textFits: notice.querySelector('.action-notice__message').scrollWidth <= notice.querySelector('.action-notice__message').clientWidth,
+    };
+  })()`);
+  const desktop = width >= 768;
+  check(
+    `GC-R21 ${width}: placement (${desktop ? 'bottom-right 24px, ≤400px' : '16px insets, 8px above the mobile bar'})`,
+    desktop
+      ? geo.vw - geo.right === 24 && geo.vh - geo.bottom === 24 && geo.width <= 400
+      : geo.barVisible &&
+          geo.left === 16 &&
+          geo.vw - geo.right === 16 &&
+          geo.barTop - geo.bottom === 8,
+    JSON.stringify(geo),
+  );
+  check(
+    `GC-R21 ${width}: no horizontal overflow, text fits, link/close/bar actions reachable, targets ≥ 24px`,
+    geo.overflow === 0 &&
+      geo.textFits &&
+      geo.linkHit &&
+      geo.closeHit &&
+      (desktop || geo.barLinks) &&
+      geo.linkSize[1] >= 24 &&
+      geo.closeSize[0] >= 24 &&
+      geo.closeSize[1] >= 24,
+    JSON.stringify(geo),
+  );
+  await shot(`gc-r21-notice-${width}`, false);
+  if (!desktop) {
+    await evaluate(`document.querySelector('.catalog-filter-trigger').click()`);
+    await waitFor(`document.querySelector('.catalog-filter-dialog')`, 'catalog dialog');
+    await sleep(300);
+    const layer = await evaluate(`(() => {
+      const r = document.querySelector('.action-notice').getBoundingClientRect();
+      const points = [[r.left + 8, r.top + 8], [r.left + r.width / 2, r.top + r.height / 2], [r.right - 8, r.bottom - 8]];
+      return points.map(([x, y]) => document.elementFromPoint(x, y)).map((el) => ({ inNotice: el?.closest('.action-notice') !== null, inModal: el?.closest('.catalog-filter-dialog, .catalog-filter-dialog__overlay') !== null }));
+    })()`);
+    check(
+      `GC-R21 ${width}: Radix filter modal paints and intercepts pointer above the notice`,
+      layer.every((point) => !point.inNotice && point.inModal),
+      JSON.stringify(layer),
+    );
+    await shot(`gc-r21-modal-${width}`, false);
+    await press('Escape');
+    await sleep(300);
+  }
+}
+await viewport(1440, 900, false);
+await evaluate(`localStorage.removeItem('${COMPARE}')`);
+
 check('no uncaught errors', consoleErrors.length === 0, consoleErrors.join(' ; '));
 await cdp.close();
 await browser.close();

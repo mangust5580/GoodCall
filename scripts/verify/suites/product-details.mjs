@@ -1145,6 +1145,27 @@ console.log('stage: related', new Date().toISOString());
     `related: compare limit ${JSON.stringify(compare.fifth)}`,
   );
   check((await shellCounts(page)).includes('Сравнение: 4'), 'related: compare shell count');
+  const relatedNotice = await page.evaluate(
+    (titleSelector) => ({
+      count: document.querySelectorAll('.action-notice').length,
+      message:
+        document.querySelector('.action-notice__message')?.textContent.replace(/\s+/g, ' ') ?? null,
+      href: document.querySelector('.action-notice__action')?.getAttribute('href') ?? null,
+      status:
+        document.querySelector('.production-shell > p[role="status"][aria-atomic="true"]')
+          ?.textContent ?? null,
+      title: document.querySelector(titleSelector)?.textContent,
+    }),
+    `${cardOf(expected[3])} .product-card__title`,
+  );
+  check(
+    relatedNotice.count === 1 &&
+      relatedNotice.message === 'Добавлено к сравнению · 4 из 4' &&
+      relatedNotice.href === '#/compare' &&
+      relatedNotice.status ===
+        `Товар добавлен к сравнению: ${relatedNotice.title}. В сравнении 4 из 4.`,
+    `related: GC-R21 compare-add notice ${JSON.stringify(relatedNotice)}`,
+  );
   await page.evaluate(() => localStorage.clear());
 
   await page.click(`${first} .product-card__link`);
@@ -1153,6 +1174,17 @@ console.log('stage: related', new Date().toISOString());
       location.hash === `#/product/${slug}` &&
       document.querySelectorAll('.product-related .product-card').length > 0,
     firstSlug,
+  );
+  const noticeAfterSlug = await page.evaluate(() => ({
+    count: document.querySelectorAll('.action-notice').length,
+    status:
+      document.querySelector('.production-shell > p[role="status"][aria-atomic="true"]')
+        ?.textContent ?? null,
+    stored: JSON.parse(localStorage.getItem('goodcall.compare.v1') ?? 'null'),
+  }));
+  check(
+    noticeAfterSlug.count === 0 && noticeAfterSlug.status === '',
+    `related: GC-R21 notice resets on product slug change ${JSON.stringify(noticeAfterSlug)}`,
   );
   facts = await relatedFacts(page);
   check(

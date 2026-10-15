@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 
-import { RouteStatus } from '../../components/feedback';
+import { ActionNotice, RouteStatus } from '../../components/feedback';
 import {
   CatalogPage,
   buildCatalogLiveFacets,
@@ -58,7 +58,7 @@ export function CatalogRoute() {
   const applied = facets === undefined ? undefined : parseCatalogUrlState(searchParams, facets);
   const cart = useCatalogCartSeam(products !== undefined);
   const favorites = useCatalogFavoritesSeam(products !== undefined);
-  const compare = useCatalogCompareSeam(products !== undefined);
+  const { seam: compare, notice: compareNotice } = useCatalogCompareSeam(products !== undefined);
   useDocumentTitle(read.status === 'failure' ? 'Товары временно недоступны' : 'Смартфоны');
 
   useEffect(() => {
@@ -118,6 +118,7 @@ export function CatalogRoute() {
           products={products}
         />
       ) : null}
+      <ActionNotice {...compareNotice} />
     </ProductionShell>
   );
 }

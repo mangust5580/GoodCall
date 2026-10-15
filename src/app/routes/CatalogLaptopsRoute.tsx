@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 
-import { RouteStatus } from '../../components/feedback';
+import { ActionNotice, RouteStatus } from '../../components/feedback';
 import {
   LaptopCatalogPage,
   buildLaptopFacets,
@@ -51,7 +51,7 @@ export function CatalogLaptopsRoute() {
   );
   const cart = useCatalogCartSeam(products !== undefined);
   const favorites = useCatalogFavoritesSeam(products !== undefined);
-  const compare = useCatalogCompareSeam(products !== undefined);
+  const { seam: compare, notice: compareNotice } = useCatalogCompareSeam(products !== undefined);
   useDocumentTitle(read.status === 'failure' ? 'Товары временно недоступны' : 'Ноутбуки');
 
   useEffect(() => {
@@ -106,6 +106,7 @@ export function CatalogLaptopsRoute() {
           products={products}
         />
       ) : null}
+      <ActionNotice {...compareNotice} />
     </ProductionShell>
   );
 }
