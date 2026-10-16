@@ -10,6 +10,21 @@ import type { LegalContentsItem, LegalSection } from './legalSection';
 
 const DEFAULT_LEGAL_UPDATED_DATE = '4 октября 2026 г.';
 
+const sectionPluralRules = new Intl.PluralRules('ru-RU');
+
+const SECTION_WORDS: Readonly<Record<Intl.LDMLPluralRule, string>> = {
+  zero: 'разделов',
+  one: 'раздел',
+  two: 'раздела',
+  few: 'раздела',
+  many: 'разделов',
+  other: 'раздела',
+};
+
+function formatSectionCount(value: number): string {
+  return `${String(value)} ${SECTION_WORDS[sectionPluralRules.select(value)]}`;
+}
+
 function legalHeadingId(id: string): string {
   return `${id}-title`;
 }
@@ -34,18 +49,38 @@ interface LegalContentsProps {
 
 export function LegalContents({ titleId, icon, items, onNavigate }: LegalContentsProps) {
   const [currentId, setCurrentId] = useState(items[0]?.id);
+  const [expanded, setExpanded] = useState(false);
+  const listId = `${titleId}-list`;
 
   return (
-    <nav aria-labelledby={titleId} className="legal-contents">
+    <nav
+      aria-labelledby={titleId}
+      className="legal-contents"
+      data-collapsed={expanded ? undefined : ''}
+    >
       <div className="legal-contents__head">
         <span className="legal-contents__glyph">
           <Icon name={icon} />
         </span>
         <h2 className="legal-contents__title" id={titleId}>
-          Содержание
+          <span className="legal-contents__title-text">Содержание</span>
+          <button
+            aria-controls={listId}
+            aria-expanded={expanded}
+            className="legal-contents__toggle"
+            onClick={() => {
+              setExpanded((value) => !value);
+            }}
+            type="button"
+          >
+            <span className="legal-contents__toggle-label">
+              {`Содержание · ${formatSectionCount(items.length)}`}
+            </span>
+            <Icon className="legal-contents__toggle-icon" name="chevron-down" />
+          </button>
         </h2>
       </div>
-      <ol className="legal-contents__list">
+      <ol className="legal-contents__list" id={listId}>
         {items.map((item, index) => (
           <li key={item.id}>
             <button

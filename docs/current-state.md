@@ -147,10 +147,26 @@ Technically complete:
 Active visual slice: none. Active implementation milestone: none. WP-01 and
 WP-01B stay open; no next slice is approved.
 
-- **WP-09 / GC-R32 Mobile Account navigation (D-08, Variant A) — USER
+- **WP-09 / GC-R50 Mobile Legal contents disclosure (Option C) — USER
   VISUAL + FUNCTIONAL PASS on 2026-10-16 (owner, manual), CLOSED and
   published on 2026-10-16.** The latest published code milestone; one
   bounded WP-09 slice. WP-09 stays open.
+  - `LegalContents` (`LegalParts.tsx`) and `.legal-contents` (`info.scss`)
+    only. Below 1024px the contents card is collapsed by default to a
+    native button inside the existing h2, «Содержание · N разделов»
+    (Privacy 6, Terms 7, Offer 9; `Intl.PluralRules`), with
+    `aria-expanded` and `aria-controls` → `${titleId}-list`. Expanding
+    shows the full ordered list; the collapsed list is CSS-hidden only
+    below 1024px. Choosing a section keeps the scroll + heading focus and
+    does not collapse the list.
+  - From 1024px the toggle is `display: none` and the sticky contents card
+    is unchanged. Legal content, routing and `focusLegalSection` are
+    unchanged. Tests, build, lint, screenshots, pixel diff: NOT RUN, by
+    owner workflow.
+
+- **WP-09 / GC-R32 Mobile Account navigation (D-08, Variant A) — USER
+  VISUAL + FUNCTIONAL PASS on 2026-10-16 (owner, manual), CLOSED and
+  published on 2026-10-16.** One bounded WP-09 slice. WP-09 stays open.
   - `src/pages/account/account.scss` only: below 1024px
     (`h.media-max(1024px)`), rules scoped to `.account-page__rail` turn the
     `AccountNavigation` list into wrapping chips (`flex-flow: row wrap`,
@@ -1602,8 +1618,10 @@ is authoritative).
   no scroll-spy.
 - **Sticky contents.** From 1024px the «Содержание» card is `position: sticky`
   below the sticky header (`$legal-sticky-top` 112px, 92px between 1024 and
-  1080px, matching the header's height switch). Below 1024px it is a normal
-  block above the document. No internal scroller was needed.
+  1080px, matching the header's height switch). Below 1024px it is a
+  block above the document, collapsed by default behind a «Содержание ·
+  N разделов» disclosure button (WP-09 / GC-R50, closed and published
+  2026-10-16). No internal scroller was needed.
 - **Truthful content.** Privacy describes only what the code does: local
   storage for cart, favourites, comparison and city; session storage for the
   demo order (no name, phone, e-mail or comments); DaData suggestions, IP city
@@ -6246,8 +6264,10 @@ requested.
 
 ## Project closeout state
 
-WP-09 / GC-R32 (mobile Account navigation, Variant A) is the last published
-code milestone, CLOSED and published on 2026-10-16 with owner USER VISUAL +
+WP-09 / GC-R50 (mobile Legal contents disclosure, Option C) is the last
+published code milestone, CLOSED and published on 2026-10-16 with owner
+USER VISUAL + FUNCTIONAL PASS; automated checks NOT RUN by owner decision.
+WP-09 / GC-R32 (mobile Account navigation, Variant A) was CLOSED and published on 2026-10-16 with owner USER VISUAL +
 FUNCTIONAL PASS; automated checks NOT RUN by owner decision.
 WP-09 / GC-R40 (FAQ topics scroll affordance) was CLOSED and published on 2026-10-16 with owner USER VISUAL +
 FUNCTIONAL PASS; automated checks NOT RUN by owner decision. WP-09 stays open.

@@ -1689,6 +1689,73 @@ $legal-sticky-top-compact: 92px;
     min-width: 0;
     overflow-wrap: anywhere;
   }
+
+  &__toggle {
+    display: none;
+  }
+
+  @include h.media-max(1024px) {
+    &__title {
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+
+    &__title-text {
+      display: none;
+    }
+
+    &__toggle {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      min-height: 44px;
+      padding: 0;
+      background-color: transparent;
+      border: 0;
+      border-radius: 12px;
+      font: inherit;
+      color: inherit;
+      text-align: start;
+      cursor: pointer;
+
+      @include info-focus;
+    }
+
+    &__toggle-label {
+      min-width: 0;
+      overflow-wrap: anywhere;
+    }
+
+    &__toggle-icon {
+      --control-icon-size: 20px;
+
+      flex: none;
+      color: var(--role-text-link);
+      transition: transform 0.15s ease;
+
+      @media (prefers-reduced-motion: reduce) {
+        transition: none;
+      }
+    }
+
+    &__toggle[aria-expanded='true'] &__toggle-icon {
+      transform: rotate(180deg);
+    }
+
+    &[data-collapsed] {
+      padding-block: 8px;
+    }
+
+    &[data-collapsed] &__head {
+      padding-bottom: 0;
+    }
+
+    &[data-collapsed] &__list {
+      display: none;
+    }
+  }
 }
 
 .legal-document {
