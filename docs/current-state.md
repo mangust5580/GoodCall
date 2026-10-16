@@ -149,9 +149,40 @@ Technically complete:
 Active visual slice: none. Active implementation milestone: none. WP-01 and
 WP-01B stay open; no next slice is approved.
 
+- **WP-10 / GC-R47 — Article 8/9 (`goodcall-spring-sale`) — OWNER USER
+  VISUAL + FUNCTIONAL PASS 2026-10-16; CLOSED & PUBLISHED 2026-10-16.** The
+  latest published code milestone. New `GoodcallSpringSaleBody.tsx` (~650–700 words; a practical
+  archival buyer guide on judging whether a discount is genuinely worth it —
+  seven topical headings and a seven-point checklist — framed honestly as a
+  demo store: GoodCall runs no real sales or promotions, and no campaigns,
+  prices or percentages are invented), one registry entry in
+  `blogArticleDetails.ts` (6 minutes; related
+  `best-smartphones-under-30000`, `how-to-choose-smartphone-2024`,
+  `iphone-vs-samsung-2024`) and only the title and excerpt changed in
+  `blogArticles.ts` («Весенние скидки: как понять, что предложение
+  действительно выгодное» / «Архивный гид демо-магазина GOODCALL 2024 года:
+  как читать условия акций, сравнивать цены и не поддаваться искусственной
+  срочности. Реальные продажи и акции здесь не проводятся.»); category
+  `promotions`, slug, 2024-04-30 date and cover unchanged. Through the
+  existing link rule the listing card, «Акции» card, search results and
+  Latest entries on other pages link to it (no self-link on its own page;
+  Popular unchanged). Home «Из блога» keeps the three latest detailed
+  articles (05-12, 05-10, 05-08); `?reference=home` unchanged. The owner
+  confirmed all six manual checks (article and related; Blog card, «Акции»
+  and search; Latest links without self-link and Popular unchanged;
+  320/390/768/1024/1440 and keyboard; Home and reference unchanged; other
+  articles, Apple Watch without detail and unknown-slug 404); the agent ran
+  no browser, screenshots or automated checks; CI/Pages not verified.
+  Published 8/9; remaining `new-apple-watch-changes`; WP-10
+  requires 9/9 owner-accepted full articles and stays open; GC-R47 partial;
+  D-09 and AUD-16 open overall; GC-R48 published (crop accepted as is);
+  GC-R54 deferred. Article 7 (`005045f`) is the previous published code
+  milestone; the earlier Spring Sale preview correction (`a7621c7`) was a
+  separate published event.
+
 - **WP-10 / GC-R47 — Article 7/9 (`best-smartphones-under-30000`) — OWNER
   USER VISUAL + FUNCTIONAL PASS 2026-10-16; CLOSED & PUBLISHED
-  2026-10-16.** The latest published code milestone. New
+  2026-10-16.** Published as `005045f`. New
   `BestSmartphonesUnder30000Body.tsx`
   (archival budget guide, ~760 words: priorities, screen, battery and
   charging, camera, performance/storage/updates, model variants, checklist;
@@ -6488,8 +6519,11 @@ requested.
 
 ## Project closeout state
 
-WP-10 / Article 7/9 (`best-smartphones-under-30000`) is the last published
-code milestone, CLOSED & PUBLISHED on 2026-10-16 with owner USER VISUAL +
+WP-10 / Article 8/9 (`goodcall-spring-sale`) is the last published code
+milestone, CLOSED & PUBLISHED on 2026-10-16 with owner USER VISUAL +
+FUNCTIONAL PASS (8/9 published; WP-10 requires 9/9; Apple Watch remains).
+WP-10 / Article 7/9 (`best-smartphones-under-30000`) was CLOSED & PUBLISHED
+on 2026-10-16 (`005045f`) with owner USER VISUAL +
 FUNCTIONAL PASS (7/9 published; WP-10 requires 9/9).
 WP-10 / D-09 / AUD-16 Spring Sale preview accuracy correction was CLOSED &
 PUBLISHED on 2026-10-16 (`a7621c7`) with owner USER

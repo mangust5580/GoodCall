@@ -4,6 +4,7 @@ import { BLOG_ARTICLES } from './blogArticles';
 import type { BlogArticle } from './blogArticles';
 import { BestSmartphonesUnder30000Body } from './BestSmartphonesUnder30000Body';
 import { ExtendSmartphoneBatteryLifeBody } from './ExtendSmartphoneBatteryLifeBody';
+import { GoodcallSpringSaleBody } from './GoodcallSpringSaleBody';
 import { HowToChooseSmartphone2024Body } from './HowToChooseSmartphone2024Body';
 import { HowToChooseWirelessEarbudsBody } from './HowToChooseWirelessEarbudsBody';
 import { IphoneVsSamsung2024Body } from './IphoneVsSamsung2024Body';
@@ -86,6 +87,15 @@ const BLOG_ARTICLE_DETAILS: Readonly<Record<string, BlogArticleDetailEntry>> = {
       'iphone-vs-samsung-2024',
     ],
     Body: BestSmartphonesUnder30000Body,
+  },
+  'goodcall-spring-sale': {
+    readingMinutes: 6,
+    relatedSlugs: [
+      'best-smartphones-under-30000',
+      'how-to-choose-smartphone-2024',
+      'iphone-vs-samsung-2024',
+    ],
+    Body: GoodcallSpringSaleBody,
   },
 };
 
