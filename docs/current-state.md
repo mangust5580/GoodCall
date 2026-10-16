@@ -147,6 +147,14 @@ Technically complete:
 Active visual slice: none. Active implementation milestone: none. WP-01 and
 WP-01B stay open; no next slice is approved.
 
+- **WP-08 / GC-R25 Cart at 320px — USER VISUAL + FUNCTIONAL PASS on
+  2026-10-16 (owner), CLOSED and published on 2026-10-16 (docs only).** No
+  code change. A read-only review of `cart.scss` / Cart components found no rigid
+  width above the 288px content box and no confirmed defect; the owner
+  checked the empty and populated `#/cart` at 320px and accepted the
+  existing layout and interactions. Bulk-delete confirmation stays covered
+  by AUD-10. Automated checks NOT RUN, by owner decision. WP-08 stays open.
+
 - **WP-08 / GC-R20 Category-specific Compare facts (D-06 Option A) — USER
   VISUAL + FUNCTIONAL PASS on 2026-10-16 (owner), CLOSED and published on
   2026-10-16.** The latest published code milestone; one bounded WP-08
@@ -6190,8 +6198,10 @@ by owner decision.
 WP-08 / GC-R19 (compare horizontal scroll shadows) was CLOSED and published
 on 2026-10-16 with USER VISUAL + FUNCTIONAL PASS; automated checks NOT RUN
 by owner decision. WP-08 / GC-R21
-(compare-add feedback notice) was CLOSED and published on 2026-10-15. WP-08 stays open
-(GC-R25, AUD-09). WP-08 / AUD-10 (bulk cart and
+(compare-add feedback notice) was CLOSED and published on 2026-10-15.
+WP-08 / GC-R25 (Cart at 320px) was CLOSED and published on 2026-10-16
+(docs only) with owner USER VISUAL + FUNCTIONAL PASS and no code change;
+automated checks NOT RUN by owner decision. WP-08 stays open (AUD-09). WP-08 / AUD-10 (bulk cart and
 compare confirmations) was CLOSED and published on 2026-10-13.
 WP-01B / AUD-15 B1 (non-dialable production demo phone) was CLOSED and
 published on 2026-10-13. WP-01B /
