@@ -33,7 +33,7 @@ const CORPUS: readonly BlogArticle[] = [
     slug: 'iphone-vs-samsung-2024',
     title: 'Что выбрать: iPhone или Samsung в 2024 году',
     excerpt:
-      'Сравниваем ключевые флагманы по камерам, производительности, автономности и цене, чтобы помочь вам сделать правильный выбор.',
+      'Архивное сравнение iPhone 15 и Samsung Galaxy S24: экраны, камеры, характеристики и нюансы выбора в 2024 году.',
     category: 'comparisons',
     publishedAt: '2024-05-12',
     cover: BLOG_COVER_MEDIA.iphoneVsSamsung2024,
@@ -100,8 +100,9 @@ const CORPUS: readonly BlogArticle[] = [
   },
   {
     slug: 'macbook-air-m3-review',
-    title: 'Обзор MacBook Air M3: лёгкость и мощность',
-    excerpt: 'Тестируем новинку от Apple и рассказываем, кому подойдёт новый MacBook Air.',
+    title: 'MacBook Air M3: кому подойдёт',
+    excerpt:
+      'Разбираем характеристики MacBook Air M3 и объясняем, для каких повседневных и рабочих задач он подходит.',
     category: 'reviews',
     publishedAt: '2024-04-28',
     cover: BLOG_COVER_MEDIA.macbookAirM3Review,

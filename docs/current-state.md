@@ -149,9 +149,36 @@ Technically complete:
 Active visual slice: none. Active implementation milestone: none. WP-01 and
 WP-01B stay open; no next slice is approved.
 
+- **WP-10 / Slice 3 (tablet) and D-09 Editorial Batch — USER VISUAL +
+  FUNCTIONAL PASS on 2026-10-16 (owner, manual, whole package), CLOSED and
+  published on 2026-10-16.** The latest published code milestone.
+  - Slice 3: `tablet-for-work-and-study` (`TabletForWorkAndStudyBody.tsx`,
+    registered in `blogArticleDetails.ts`); title, category, cover and
+    `publishedAt: '2024-05-04'` unchanged; the earbuds article's related
+    tablet card links through the existing link logic.
+  - Editorial Batch: `iphone-vs-samsung-2024` (`IphoneVsSamsung2024Body.tsx`,
+    archived iPhone 15 vs Galaxy S24 comparison, no price claims) and
+    `macbook-air-m3-review` (`MacbookAirM3Body.tsx`, no first-hand tests);
+    two registry entries and only the approved `blogArticles.ts` changes
+    (iPhone excerpt; MacBook title «MacBook Air M3: кому подойдёт» and
+    excerpt). Dates 2024-05-12 / 2024-04-28, covers, slugs and categories
+    unchanged.
+  - D-09 limited policy approved by the owner on 2026-10-16: original
+    `publishedAt` kept (no 2026 republication); time-specific articles framed
+    as archival; source-backed product facts only; no invented tests, prices,
+    availability, promotions or measurements; only approved accuracy-driven
+    title/excerpt corrections; no `updatedAt` or data-contract change. Not a
+    licence to rewrite other entries.
+  - Counts: 9 preview records; 6 of 9 published full articles; 3 without
+    body (`best-smartphones-under-30000`,
+    `new-apple-watch-changes`, `goodcall-spring-sale`, deferred pending owner
+    decisions). WP-10 stays open; GC-R47 partial; GC-R48 open; GC-R54
+    deferred; AUD-16 not globally closed. Checks, agent browser and
+    screenshots NOT RUN; CI/Pages
+    NOT VERIFIED; owner PASS per owner statement.
+
 - **WP-10 / Slice 2 Wireless Earbuds Article — USER VISUAL + FUNCTIONAL
   PASS on 2026-10-16 (owner, manual), CLOSED and published on 2026-10-16.**
-  The latest published code milestone.
   `#/blog/how-to-choose-wireless-earbuds`: new
   `HowToChooseWirelessEarbudsBody.tsx` plus one import and one
   registry entry in `blogArticleDetails.ts` (6 minutes; related
@@ -161,8 +188,8 @@ WP-01B stay open; no next slice is approved.
   completed, not a 2026 republication. The listing card and existing related
   cards link through `blogArticleHref`; Popular stays unlinked by contract,
   records without detail stay unlinked and unknown slugs keep the designed
-  404. The Blog now has 3 published full articles among 9 records; 6 have
-  no detail body. Blog A/B, routes, Home, About and
+  404. At Slice 2 the Blog had 3 published full articles among 9 records.
+  Blog A/B, routes, Home, About and
   media are unchanged. WP-10 stays open; GC-R47 partial; GC-R46 / GC-R49
   stay published; GC-R48, AUD-16, GC-R54 and the rest of D-09 unchanged.
   Owner PASS per owner statement; the agent ran no browser or checks; CI /
@@ -6386,9 +6413,12 @@ requested.
 
 ## Project closeout state
 
-WP-10 / Slice 2 (wireless earbuds article) is the last published code
-milestone, CLOSED and published on 2026-10-16 with owner USER VISUAL +
-FUNCTIONAL PASS; checks NOT RUN; 3 of 9 Blog records have full articles.
+WP-10 / Slice 3 (tablet) and the D-09 Editorial Batch (iPhone 15 vs Galaxy
+S24, MacBook Air M3) are the last published code milestone, CLOSED and
+published on 2026-10-16 with owner USER VISUAL + FUNCTIONAL PASS; checks NOT
+RUN; 6 of 9 Blog records have full articles; WP-10 stays open.
+WP-10 / Slice 2 (wireless earbuds article) was CLOSED and published on
+2026-10-16 with owner USER VISUAL + FUNCTIONAL PASS; checks NOT RUN.
 WP-10 / GC-R46 and GC-R49 are ACCEPTED AS IS — CLOSED and published (docs
 only) on 2026-10-16 (owner decision, no code change).
 WP-10 / Slice 1 (battery article) was CLOSED and published on 2026-10-16

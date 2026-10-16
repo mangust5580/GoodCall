@@ -5,6 +5,9 @@ import type { BlogArticle } from './blogArticles';
 import { ExtendSmartphoneBatteryLifeBody } from './ExtendSmartphoneBatteryLifeBody';
 import { HowToChooseSmartphone2024Body } from './HowToChooseSmartphone2024Body';
 import { HowToChooseWirelessEarbudsBody } from './HowToChooseWirelessEarbudsBody';
+import { IphoneVsSamsung2024Body } from './IphoneVsSamsung2024Body';
+import { MacbookAirM3Body } from './MacbookAirM3Body';
+import { TabletForWorkAndStudyBody } from './TabletForWorkAndStudyBody';
 
 export interface BlogArticleDetail {
   readonly article: BlogArticle;
@@ -46,6 +49,33 @@ const BLOG_ARTICLE_DETAILS: Readonly<Record<string, BlogArticleDetailEntry>> = {
       'tablet-for-work-and-study',
     ],
     Body: HowToChooseWirelessEarbudsBody,
+  },
+  'tablet-for-work-and-study': {
+    readingMinutes: 6,
+    relatedSlugs: [
+      'how-to-choose-smartphone-2024',
+      'how-to-choose-wireless-earbuds',
+      'macbook-air-m3-review',
+    ],
+    Body: TabletForWorkAndStudyBody,
+  },
+  'iphone-vs-samsung-2024': {
+    readingMinutes: 6,
+    relatedSlugs: [
+      'how-to-choose-smartphone-2024',
+      'extend-smartphone-battery-life',
+      'how-to-choose-wireless-earbuds',
+    ],
+    Body: IphoneVsSamsung2024Body,
+  },
+  'macbook-air-m3-review': {
+    readingMinutes: 5,
+    relatedSlugs: [
+      'tablet-for-work-and-study',
+      'how-to-choose-smartphone-2024',
+      'how-to-choose-wireless-earbuds',
+    ],
+    Body: MacbookAirM3Body,
   },
 };
 
