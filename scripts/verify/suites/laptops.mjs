@@ -1321,7 +1321,18 @@ const legion = await pdp.evaluate(() => ({
     a.getAttribute('href'),
   ]),
   text: document.querySelector('main').innerText,
-  related: document.querySelector('.product-related') !== null,
+  related: {
+    title: document.querySelector('.product-related__title')?.textContent,
+    railLabel: document.querySelector('.product-related__rail')?.getAttribute('aria-label'),
+    allHref: document.querySelector('.product-related__all')?.getAttribute('href'),
+    items: document.querySelectorAll('.product-related__item').length,
+    hrefs: [...document.querySelectorAll('.product-related__item a[href^="#/product/"]')].map(
+      (a) => a.getAttribute('href'),
+    ),
+    navLabels: [...document.querySelectorAll('.product-related__nav')].map((b) =>
+      b.getAttribute('aria-label'),
+    ),
+  },
   galleryImages: [...document.querySelectorAll('.product-gallery img')].length,
 }));
 const legionGallery = await imageSources(pdp, '.product-gallery img');
@@ -1329,11 +1340,16 @@ check(
   legion.hash === `#/product/${LEGION}` &&
     legion.h1 === bySlug.get(LEGION).name &&
     legion.crumbs.some(([label, href]) => label === 'Ноутбуки' && href === LAPTOPS_HASH) &&
-    !legion.related &&
+    legion.related.title === 'Другие ноутбуки' &&
+    legion.related.railLabel === 'Другие ноутбуки' &&
+    legion.related.allHref === LAPTOPS_HASH &&
+    legion.related.items === Math.min(8, EXPECTED_SLUGS.length - 1) &&
+    !legion.related.hrefs.includes(`#/product/${LEGION}`) &&
+    legion.related.navLabels.every((label) => /ноутбуки$/.test(label)) &&
     legion.text.includes('AMD Ryzen 7 7840HS') &&
     legion.text.includes('NVIDIA GeForce RTX 4060') &&
     allLaptopArt(legionGallery),
-  `pdp: Legion handoff, category crumb, specs, laptop art, no related ${JSON.stringify({ ...legion, text: undefined })}`,
+  `pdp: Legion handoff, category crumb, specs, laptop art, «Другие ноутбуки» rail ${JSON.stringify({ ...legion, text: undefined })}`,
 );
 await shot(pdp, 'laptop-pdp-legion-1440');
 for (const slug of EXPECTED_SLUGS) {

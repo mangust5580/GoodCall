@@ -32,6 +32,15 @@ import { useCatalogCartSeam } from './useCatalogCartSeam';
 import { useCatalogCompareSeam } from './useCatalogCompareSeam';
 import { useCatalogFavoritesSeam } from './useCatalogFavoritesSeam';
 
+type RelatedCategory = 'smartphones' | 'laptops';
+
+interface RelatedCopy {
+  readonly title: string;
+  readonly previousLabel: string;
+  readonly nextLabel: string;
+  readonly allHref: string;
+}
+
 type ProductDetailsRouteView =
   | { readonly status: 'loading' }
   | {
@@ -39,7 +48,7 @@ type ProductDetailsRouteView =
       readonly product: ProductDetailsView;
       readonly cartImage: CartLineImage;
       readonly categoryHref?: string;
-      readonly smartphone: boolean;
+      readonly relatedCategory?: RelatedCategory;
     }
   | { readonly status: 'not-found' }
   | { readonly status: 'error' };
@@ -50,10 +59,33 @@ interface SettledProductRead {
 }
 
 const SMARTPHONES_CATEGORY_SLUG = 'smartphones';
+const LAPTOPS_CATEGORY_SLUG = 'laptops';
 const CATEGORY_HREFS: Readonly<Partial<Record<string, string>>> = {
   [SMARTPHONES_CATEGORY_SLUG]: hashHref(CATALOG_SMARTPHONES_PATH),
-  laptops: hashHref(CATALOG_LAPTOPS_PATH),
+  [LAPTOPS_CATEGORY_SLUG]: hashHref(CATALOG_LAPTOPS_PATH),
 };
+const RELATED_COPY: Readonly<Record<RelatedCategory, RelatedCopy>> = {
+  smartphones: {
+    title: 'Другие смартфоны',
+    previousLabel: 'Предыдущие смартфоны',
+    nextLabel: 'Следующие смартфоны',
+    allHref: hashHref(CATALOG_SMARTPHONES_PATH),
+  },
+  laptops: {
+    title: 'Другие ноутбуки',
+    previousLabel: 'Предыдущие ноутбуки',
+    nextLabel: 'Следующие ноутбуки',
+    allHref: hashHref(CATALOG_LAPTOPS_PATH),
+  },
+};
+
+function relatedCategory(categorySlug: string): RelatedCategory | undefined {
+  if (categorySlug === SMARTPHONES_CATEGORY_SLUG) {
+    return SMARTPHONES_CATEGORY_SLUG;
+  }
+
+  return categorySlug === LAPTOPS_CATEGORY_SLUG ? LAPTOPS_CATEGORY_SLUG : undefined;
+}
 const RELATED_PRODUCTS_LIMIT = 8;
 const FALLBACK_CART_IMAGE: CartLineImage = { kind: 'catalog-fallback' };
 const LOADING_VIEW: ProductDetailsRouteView = { status: 'loading' };
@@ -80,14 +112,12 @@ function viewFromResult(
       return NOT_FOUND_VIEW;
     }
 
-    const smartphone = live.categorySlug === SMARTPHONES_CATEGORY_SLUG;
-
     return {
       status: 'ready',
       product: buildProductDetailsView(live, content, PRODUCT_DETAILS_STOREWIDE),
       cartImage: content.media?.cartImage ?? FALLBACK_CART_IMAGE,
       categoryHref: CATEGORY_HREFS[live.categorySlug],
-      smartphone,
+      relatedCategory: relatedCategory(live.categorySlug),
     };
   }
 
@@ -138,8 +168,10 @@ export function ProductDetailsRoute() {
   const content = slug === undefined ? undefined : getProductDetailsContent(slug);
   const [settled, setSettled] = useState<SettledProductRead>();
   const favoriteItems = useFavoriteItems();
-  const [smartphoneCatalog, setSmartphoneCatalog] = useState<readonly CatalogProduct[] | null>();
-  const smartphoneCatalogRequested = useRef(false);
+  const [relatedCatalogs, setRelatedCatalogs] = useState<
+    Partial<Record<RelatedCategory, readonly CatalogProduct[] | null>>
+  >({});
+  const relatedCatalogsRequested = useRef(new Set<RelatedCategory>());
   const relatedCart = useCatalogCartSeam(true);
   const relatedFavorites = useCatalogFavoritesSeam(true);
   const { seam: relatedCompare, notice: relatedCompareNotice } = useCatalogCompareSeam(true, slug);
@@ -174,19 +206,25 @@ export function ProductDetailsRoute() {
       : settled !== undefined && settled.slug === slug
         ? settled.view
         : LOADING_VIEW;
-  const needsSmartphoneCatalog = view.status === 'ready' && view.smartphone;
+  const neededRelatedCategory = view.status === 'ready' ? view.relatedCategory : undefined;
   useDocumentTitle(view.status === 'ready' ? view.product.title : STATE_TITLES[view.status]);
 
   useEffect(() => {
-    if (!needsSmartphoneCatalog || smartphoneCatalogRequested.current) {
+    if (
+      neededRelatedCategory === undefined ||
+      relatedCatalogsRequested.current.has(neededRelatedCategory)
+    ) {
       return;
     }
 
-    smartphoneCatalogRequested.current = true;
+    relatedCatalogsRequested.current.add(neededRelatedCategory);
 
-    void fetchCatalogProducts('smartphones').then((result) => {
+    void fetchCatalogProducts(neededRelatedCategory).then((result) => {
       if (result.status === 'ready') {
-        setSmartphoneCatalog(result.products);
+        setRelatedCatalogs((current) => ({
+          ...current,
+          [neededRelatedCategory]: result.products,
+        }));
         return;
       }
 
@@ -194,14 +232,16 @@ export function ProductDetailsRoute() {
         console.warn('Product Details related read failed', result.reason);
       }
 
-      setSmartphoneCatalog(null);
+      setRelatedCatalogs((current) => ({ ...current, [neededRelatedCategory]: null }));
     });
-  }, [needsSmartphoneCatalog]);
+  }, [neededRelatedCategory]);
 
+  const relatedCatalog =
+    neededRelatedCategory === undefined ? undefined : relatedCatalogs[neededRelatedCategory];
   const relatedProducts =
-    needsSmartphoneCatalog && smartphoneCatalog !== undefined && smartphoneCatalog !== null
-      ? smartphoneCatalog.filter((product) => product.id !== slug).slice(0, RELATED_PRODUCTS_LIMIT)
-      : [];
+    relatedCatalog === undefined || relatedCatalog === null
+      ? []
+      : relatedCatalog.filter((product) => product.id !== slug).slice(0, RELATED_PRODUCTS_LIMIT);
 
   return (
     <ProductionShell>
@@ -243,11 +283,11 @@ export function ProductDetailsRoute() {
           }
           product={view.product}
           related={
-            relatedProducts.length === 0
+            neededRelatedCategory === undefined || relatedProducts.length === 0
               ? undefined
               : {
+                  ...RELATED_COPY[neededRelatedCategory],
                   products: relatedProducts,
-                  allHref: hashHref(CATALOG_SMARTPHONES_PATH),
                   productHref: productDetailsHref,
                   cart: relatedCart,
                   favorites: relatedFavorites,

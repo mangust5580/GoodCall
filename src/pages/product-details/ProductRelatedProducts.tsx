@@ -10,6 +10,9 @@ import type {
 } from '../catalog';
 
 export interface ProductRelatedProductsBinding {
+  readonly title: string;
+  readonly previousLabel: string;
+  readonly nextLabel: string;
   readonly products: readonly CatalogProduct[];
   readonly allHref: string;
   readonly productHref?: (slug: string) => string | undefined;
@@ -36,6 +39,9 @@ function readRailState(rail: HTMLElement): RailScrollState {
 }
 
 export function ProductRelatedProducts({
+  title,
+  previousLabel,
+  nextLabel,
   products,
   allHref,
   productHref,
@@ -91,7 +97,7 @@ export function ProductRelatedProducts({
     <section aria-labelledby="product-related-title" className="product-related">
       <div className="product-related__head">
         <h2 className="product-related__title" id="product-related-title">
-          Другие смартфоны
+          {title}
         </h2>
         <a className="product-related__all" href={allHref}>
           Смотреть все
@@ -99,7 +105,7 @@ export function ProductRelatedProducts({
         </a>
       </div>
       <div className="product-related__viewport">
-        <ul aria-label="Другие смартфоны" className="product-related__rail" ref={railRef}>
+        <ul aria-label={title} className="product-related__rail" ref={railRef}>
           {products.map((product) => (
             <li className="product-related__item" key={product.id}>
               <CatalogProductCard
@@ -116,7 +122,7 @@ export function ProductRelatedProducts({
         {overflowing ? (
           <>
             <button
-              aria-label="Предыдущие смартфоны"
+              aria-label={previousLabel}
               className="product-related__nav product-related__nav--previous"
               disabled={!railState.canPrevious}
               onClick={() => {
@@ -127,7 +133,7 @@ export function ProductRelatedProducts({
               <Icon name="chevron-left" />
             </button>
             <button
-              aria-label="Следующие смартфоны"
+              aria-label={nextLabel}
               className="product-related__nav product-related__nav--next"
               disabled={!railState.canNext}
               onClick={() => {

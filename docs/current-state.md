@@ -147,6 +147,25 @@ Technically complete:
 Active visual slice: none. Active implementation milestone: none. WP-01 and
 WP-01B stay open; no next slice is approved.
 
+- **WP-08 / AUD-09 Laptop PDP «Другие ноутбуки» — USER VISUAL + FUNCTIONAL
+  PASS on 2026-10-16 (owner), CLOSED and published on 2026-10-16.** The
+  latest published code milestone and the last open WP-08 item. **WP-08 is
+  CLOSED and published on 2026-10-16.**
+  - A laptop PDP renders the existing `ProductRelatedProducts` rail
+    «Другие ноутбуки»: `fetchCatalogProducts('laptops')` in canonical order,
+    the open laptop excluded, at most 8 (`RELATED_PRODUCTS_LIMIT`),
+    «Смотреть все» → `#/catalog/laptops`; nav labels «Предыдущие ноутбуки» /
+    «Следующие ноутбуки». It is not a similarity ranking (GC-R22 stays
+    DEFERRED). Empty result or read failure omits the section.
+  - `ProductDetailsRoute` reads the related catalog per category
+    (`smartphones` / `laptops`, once each per route lifetime);
+    `ProductRelatedProducts` takes title and nav labels from its binding.
+    Smartphone PDPs keep «Другие смартфоны» and their labels;
+    `?reference=product-details` is unchanged.
+  - `scripts/verify/suites/laptops.mjs` Legion PDP check now expects the
+    rail instead of its absence. Tests, suites, build, lint, browser,
+    screenshots, pixel diff: NOT RUN, by owner decision.
+
 - **WP-08 / GC-R25 Cart at 320px — USER VISUAL + FUNCTIONAL PASS on
   2026-10-16 (owner), CLOSED and published on 2026-10-16 (docs only).** No
   code change. A read-only review of `cart.scss` / Cart components found no rigid
@@ -157,7 +176,7 @@ WP-01B stay open; no next slice is approved.
 
 - **WP-08 / GC-R20 Category-specific Compare facts (D-06 Option A) — USER
   VISUAL + FUNCTIONAL PASS on 2026-10-16 (owner), CLOSED and published on
-  2026-10-16.** The latest published code milestone; one bounded WP-08
+  2026-10-16.** One bounded WP-08
   slice. WP-08 stays open.
   - `CompareRoute` resolves the category by slug at render time:
     `laptopFacts(slug)` → laptop; else PDP content category `smartphones`
@@ -1478,7 +1497,9 @@ CLOSED and published.** Evidence: the lower row of `Product_details.png`.
   (`RELATED_PRODUCTS_LIMIT`). The read runs once per route lifetime, only for a
   ready smartphone PDP, and is reused across smartphone slugs. Watch and
   headphones PDPs, read failure or an empty result omit the section; there is no
-  fixture fallback and no error surface.
+  fixture fallback and no error surface. Since WP-08 / AUD-09 (closed and
+  published 2026-10-16) laptop PDPs get the same rule as «Другие
+  ноутбуки»; see the AUD-09 entry above.
 - **Ownership.** `ProductRelatedProducts` (`src/pages/product-details/`) renders
   each item with `CatalogProductCard` (`src/pages/catalog/`, the canonical
   `ProductCard` mapping shared with `CatalogProductGrid`). Cart, quantity,
@@ -6188,10 +6209,14 @@ requested.
 
 ## Project closeout state
 
-WP-08 / GC-R20 (category-specific compare facts, D-06 Option A) is the last
-published code milestone, CLOSED and published on 2026-10-16 with owner USER
-VISUAL + FUNCTIONAL PASS, together with the `laptops.mjs` locator fix;
-automated checks NOT RUN by owner decision.
+WP-08 / AUD-09 (laptop PDP «Другие ноутбуки») is the last published code
+milestone, CLOSED and published on 2026-10-16 with owner USER VISUAL +
+FUNCTIONAL PASS; automated checks NOT RUN by owner decision. With it WP-08 is
+CLOSED and published on 2026-10-16. GC-R22 stays DEFERRED.
+WP-08 / GC-R20 (category-specific compare facts, D-06 Option A) was CLOSED
+and published on 2026-10-16 with owner USER VISUAL + FUNCTIONAL PASS,
+together with the `laptops.mjs` locator fix; automated checks NOT RUN by
+owner decision.
 WP-08 / GC-R24 (favourites «Очистить все») was CLOSED and published on
 2026-10-16 with owner USER VISUAL + FUNCTIONAL PASS; automated checks NOT RUN
 by owner decision.
@@ -6201,7 +6226,8 @@ by owner decision. WP-08 / GC-R21
 (compare-add feedback notice) was CLOSED and published on 2026-10-15.
 WP-08 / GC-R25 (Cart at 320px) was CLOSED and published on 2026-10-16
 (docs only) with owner USER VISUAL + FUNCTIONAL PASS and no code change;
-automated checks NOT RUN by owner decision. WP-08 stays open (AUD-09). WP-08 / AUD-10 (bulk cart and
+automated checks NOT RUN by owner decision.
+WP-08 / AUD-10 (bulk cart and
 compare confirmations) was CLOSED and published on 2026-10-13.
 WP-01B / AUD-15 B1 (non-dialable production demo phone) was CLOSED and
 published on 2026-10-13. WP-01B /
