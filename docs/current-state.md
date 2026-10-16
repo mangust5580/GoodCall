@@ -149,6 +149,22 @@ Technically complete:
 Active visual slice: none. Active implementation milestone: none. WP-01 and
 WP-01B stay open; no next slice is approved.
 
+- **D-13 / RTK — OWNER DECISION 2026-10-16; DECIDED, IMPLEMENTATION
+  PENDING.** GoodCall is a portfolio project: Redux Toolkit is mandatory in
+  the target architecture and must own real production domain state, not
+  sit as a decorative dependency. The read-only WP-13 state-ownership review
+  named RTK Foundation + Favorites as the first candidate bounded slice;
+  Compare, Cart and Account are later separate slices and GOs. That review
+  does not close WP-13's broader Architecture & Design System assessment.
+  Invariants: `goodcall.*.v1` keys and wire formats, WP-05 cross-tab sync
+  with last-write-wins, the session-only `goodcall.lastOrder.v1` handoff,
+  accepted UI/accessibility/visuals and current module ownership; form, URL
+  and ephemeral UI state stay local by default; City is a separate decision.
+  RTK Query is neither approved nor required here. M1 is docs-only: no
+  dependency or code change; tests/build/browser NOT RUN, CI/Pages NOT
+  VERIFIED. M2 needs an explicit owner GO, including adding
+  `@reduxjs/toolkit` and `react-redux`.
+
 - **WP-01B / Demo E-mail, production non-mailto — OWNER USER VISUAL +
   FUNCTIONAL PASS 2026-10-16; CLOSED & PUBLISHED 2026-10-16.** The six
   production e-mail elements (Footer, Contacts, shared Delivery/FAQ/Warranty
