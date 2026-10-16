@@ -147,6 +147,19 @@ Technically complete:
 Active visual slice: none. Active implementation milestone: none. WP-01 and
 WP-01B stay open; no next slice is approved.
 
+- **WP-07 / GC-R08 and GC-R09 — each ACCEPTED AS IS on 2026-10-16 (owner
+  USER VISUAL + FUNCTIONAL PASS, manual), CLOSED and published on
+  2026-10-16 (docs only).** GC-R08: Catalog filter and favourite/compare presentation
+  and interactions are accepted. GC-R09 (Option A): recognised colours stay
+  swatches and unrecognised names stay labelled checkbox rows; no colours or
+  hex mappings were added. Filters, swatches, rows, favourite/compare
+  buttons, keyboard/a11y behaviour and the Catalog/Search visual contracts
+  are unchanged; automated checks NOT RUN.
+- **WP-07 / GC-R16 — D-05 decided: Variant B** (owner product decision,
+  2026-10-16): Favourite and Compare actions in Search results on mobile and
+  desktop. Implementation is NOT AUTHORISED / NOT STARTED; GC-R16 and WP-07
+  stay open, with no active implementation milestone.
+
 - **WP-09 / GC-R04 Mobile SiteFooter — ACCEPTED AS IS on 2026-10-16 (owner
   visual decision after read-only discovery), CLOSED and published on
   2026-10-16 (docs only).** No CSS, TSX, behaviour, link or component change.
@@ -6312,6 +6325,10 @@ requested.
 
 ## Project closeout state
 
+WP-07 / GC-R08 and GC-R09 are ACCEPTED AS IS — CLOSED and published (docs
+only) on 2026-10-16 with owner USER VISUAL + FUNCTIONAL PASS (no code
+change). D-05 is decided as Variant B (Search favourite + compare); GC-R16
+is not implemented and WP-07 stays open.
 WP-09 / GC-R04 (mobile SiteFooter) is ACCEPTED AS IS — CLOSED and published
 (docs only) on 2026-10-16 by owner visual decision; no code change,
 automated checks NOT RUN.
