@@ -149,6 +149,21 @@ Technically complete:
 Active visual slice: none. Active implementation milestone: none. WP-01 and
 WP-01B stay open; no next slice is approved.
 
+- **WP-10 / GC-R46 About and GC-R49 mobile Blog article — Variant A,
+  ACCEPTED AS IS (owner decision 2026-10-16 after a read-only UX review),
+  CLOSED and published on 2026-10-16 (docs only).** No source or behaviour
+  change; no new owner browser PASS is claimed and the agent ran no browser
+  or visual comparison; About A and Blog A/B
+  acceptances stay the historical visual evidence. GC-R46: About keeps its
+  distinct demo disclosures (identity; illustrative prices, no payment,
+  browser-only order; simulated stores and support) and its CTA; minor
+  repeats of «демонстрационный заказ» are accepted. GC-R49: the article
+  keeps article and share → related → sidebar (search, popular, latest,
+  categories), the 1024px breakpoint, link policy and keyboard order; the
+  current article is already excluded from Latest links by
+  `otherArticleHref`. WP-10 stays open (2 of 9 Blog records have full
+  articles; GC-R47, GC-R48, GC-R54, AUD-16 and the rest of D-09 open).
+
 - **WP-10 / Slice 1 Battery Article — USER VISUAL + FUNCTIONAL PASS on
   2026-10-16 (owner, manual), CLOSED and published on 2026-10-16.** The
   latest published code milestone. `#/blog/extend-smartphone-battery-life`
@@ -6352,6 +6367,9 @@ requested.
 
 ## Project closeout state
 
+WP-10 / GC-R46 and GC-R49 are ACCEPTED AS IS — CLOSED and published (docs
+only) on 2026-10-16 (owner decision, no code change); WP-10 / Slice 1 stays
+the last published code milestone.
 WP-10 / Slice 1 (battery article) is the last published code milestone,
 CLOSED and published on 2026-10-16 with owner USER VISUAL + FUNCTIONAL PASS;
 automated checks NOT RUN; 2 of 9 Blog records have full articles; WP-10
