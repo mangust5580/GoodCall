@@ -9,6 +9,7 @@ import { HowToChooseSmartphone2024Body } from './HowToChooseSmartphone2024Body';
 import { HowToChooseWirelessEarbudsBody } from './HowToChooseWirelessEarbudsBody';
 import { IphoneVsSamsung2024Body } from './IphoneVsSamsung2024Body';
 import { MacbookAirM3Body } from './MacbookAirM3Body';
+import { NewAppleWatchChangesBody } from './NewAppleWatchChangesBody';
 import { TabletForWorkAndStudyBody } from './TabletForWorkAndStudyBody';
 
 export interface BlogArticleDetail {
@@ -96,6 +97,15 @@ const BLOG_ARTICLE_DETAILS: Readonly<Record<string, BlogArticleDetailEntry>> = {
       'iphone-vs-samsung-2024',
     ],
     Body: GoodcallSpringSaleBody,
+  },
+  'new-apple-watch-changes': {
+    readingMinutes: 6,
+    relatedSlugs: [
+      'iphone-vs-samsung-2024',
+      'how-to-choose-wireless-earbuds',
+      'extend-smartphone-battery-life',
+    ],
+    Body: NewAppleWatchChangesBody,
   },
 };
 

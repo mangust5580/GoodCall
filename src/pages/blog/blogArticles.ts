@@ -58,8 +58,9 @@ const CORPUS: readonly BlogArticle[] = [
   },
   {
     slug: 'new-apple-watch-changes',
-    title: 'Новый Apple Watch: что изменилось',
-    excerpt: 'Обзор обновлённой модели: новые функции, улучшения и стоит ли обновляться.',
+    title: 'Apple Watch Series 9: что изменилось по сравнению с Series 8',
+    excerpt:
+      'Архивный разбор 2024 года по данным Apple: чип S9, более яркий экран, жест «Двойное касание» и Siri на устройстве — а также что осталось прежним и кому имело смысл обновляться.',
     category: 'news',
     publishedAt: '2024-05-06',
     cover: BLOG_COVER_MEDIA.newAppleWatchChanges,

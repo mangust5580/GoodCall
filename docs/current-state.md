@@ -149,9 +149,39 @@ Technically complete:
 Active visual slice: none. Active implementation milestone: none. WP-01 and
 WP-01B stay open; no next slice is approved.
 
-- **WP-10 / GC-R47 — Article 8/9 (`goodcall-spring-sale`) — OWNER USER
+- **WP-10 / GC-R47 — Article 9/9 (`new-apple-watch-changes`) — OWNER USER
   VISUAL + FUNCTIONAL PASS 2026-10-16; CLOSED & PUBLISHED 2026-10-16.** The
-  latest published code milestone. New `GoodcallSpringSaleBody.tsx` (~650–700 words; a practical
+  latest published code milestone. New `NewAppleWatchChangesBody.tsx` (~740 words; archival
+  Apple Watch Series 9 vs Series 8 explainer sourced to official Apple
+  launch-era material — Newsroom 2023-09-12 and the Series 9 tech specs —
+  with qualified manufacturer claims, no first-hand tests, prices or
+  later-generation features), one registry entry in `blogArticleDetails.ts`
+  (6 minutes; related `iphone-vs-samsung-2024`,
+  `how-to-choose-wireless-earbuds`, `extend-smartphone-battery-life`) and
+  only the approved title/excerpt for this slug in `blogArticles.ts`
+  («Apple Watch Series 9: что изменилось по сравнению с Series 8» / «Архивный
+  разбор 2024 года по данным Apple: чип S9, более яркий экран, жест «Двойное
+  касание» и Siri на устройстве — а также что осталось прежним и кому имело
+  смысл обновляться.»). Slug, 2024-05-06 date, `news` category, cover and
+  the other 8 records unchanged; no route, Popular/Latest rule, Home,
+  reference, SCSS or media change. Through the existing rule the listing
+  card, «Новости», search results and the existing related card in
+  `how-to-choose-smartphone-2024` open `#/blog/new-apple-watch-changes`;
+  Popular stays unlinked text by contract and Latest is unchanged; Home «Из
+  блога» keeps 05-12, 05-10, 05-08; unknown slugs still 404. The owner
+  confirmed six manual checks (page, content, Apple claims and metadata;
+  Blog, «Новости» and search; Popular and Latest contracts; related
+  navigation and 404; 320/390/768/1024/1440 and keyboard; Home and
+  `?reference=home`); the agent ran no browser or automated checks; CI/Pages
+  NOT VERIFIED. **9/9 full articles published.** Final WP-10 completion
+  still needs a separate final remote verification and an explicit owner
+  closeout decision. Article 8 (`60c58ee`) is the previous published code
+  milestone. WP-10 open; GC-R47 awaiting final owner closeout; D-09 and AUD-16 open overall; GC-R48
+  published (crop accepted as is); GC-R54 deferred.
+
+- **WP-10 / GC-R47 — Article 8/9 (`goodcall-spring-sale`) — OWNER USER
+  VISUAL + FUNCTIONAL PASS 2026-10-16; CLOSED & PUBLISHED 2026-10-16.**
+  Published as `60c58ee`. New `GoodcallSpringSaleBody.tsx` (~650–700 words; a practical
   archival buyer guide on judging whether a discount is genuinely worth it —
   seven topical headings and a seven-point checklist — framed honestly as a
   demo store: GoodCall runs no real sales or promotions, and no campaigns,
@@ -6519,8 +6549,14 @@ requested.
 
 ## Project closeout state
 
-WP-10 / Article 8/9 (`goodcall-spring-sale`) is the last published code
+WP-10 / Article 9/9 (`new-apple-watch-changes`) is the last published code
 milestone, CLOSED & PUBLISHED on 2026-10-16 with owner USER VISUAL +
+FUNCTIONAL PASS; all 9/9 Blog records now have full bodies in the
+repository; agent checks NOT RUN, CI/Pages NOT VERIFIED. WP-10 and GC-R47
+stay open pending a separate final remote verification and explicit owner
+sign-off.
+WP-10 / Article 8/9 (`goodcall-spring-sale`) was CLOSED & PUBLISHED on
+2026-10-16 (`60c58ee`) with owner USER VISUAL +
 FUNCTIONAL PASS (8/9 published; WP-10 requires 9/9; Apple Watch remains).
 WP-10 / Article 7/9 (`best-smartphones-under-30000`) was CLOSED & PUBLISHED
 on 2026-10-16 (`005045f`) with owner USER VISUAL +
