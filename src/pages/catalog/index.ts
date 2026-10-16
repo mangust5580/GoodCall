@@ -28,6 +28,11 @@ export {
 } from './catalogFacets';
 export { LaptopCatalogPage } from './laptops/LaptopCatalogPage';
 export { buildLaptopFacets } from './laptops/laptopFacets';
-export { laptopFacts } from './laptops/laptopFacts';
+export {
+  LAPTOP_GPU_LABELS,
+  LAPTOP_OS_LABELS,
+  formatLaptopDiagonal,
+  laptopFacts,
+} from './laptops/laptopFacts';
 export { parseLaptopUrlState, serializeLaptopUrlState } from './laptops/laptopUrlState';
 export type { LaptopAppliedState } from './laptops/laptopUrlState';

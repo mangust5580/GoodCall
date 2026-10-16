@@ -67,6 +67,13 @@ $scroll-shadow-width: 16px;
     flex: none;
   }
 
+  &__note {
+    margin: 0 0 16px;
+    font-size: 14px;
+    line-height: 1.4;
+    color: var(--role-text-muted);
+  }
+
   &__scroll {
     $radius: 12px;
     $shadow-size: $scroll-shadow-width calc(100% - #{$radius * 2});

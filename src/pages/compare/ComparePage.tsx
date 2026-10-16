@@ -10,8 +10,20 @@ import { Breadcrumbs, Container } from '../../components/layout';
 import { ProductRating } from '../../components/product';
 import { Icon } from '../../components/ui';
 
+export interface CompareFactRow {
+  readonly label: string;
+  readonly value: (slug: string) => string | undefined;
+}
+
+export interface CompareFacts {
+  readonly rows: readonly CompareFactRow[];
+  readonly replacesStorage: boolean;
+  readonly mixedCategories: boolean;
+}
+
 export interface ComparePageProps {
   readonly items: readonly CompareItem[];
+  readonly facts: CompareFacts;
   readonly onRemove: (item: CompareItem) => void;
   readonly onClear: () => void;
   readonly onAddToCart: (item: CompareItem) => number;
@@ -29,6 +41,7 @@ type FocusRequest =
   { readonly kind: 'column'; readonly index: number } | { readonly kind: 'empty' };
 
 const EMPTY_TITLE_ID = 'compare-empty-title';
+const STORAGE_ROW_LABEL = 'Встроенная память';
 const MEDIA_SIZES = '120px';
 const MISSING = '—';
 
@@ -52,14 +65,29 @@ const COMPARE_ROWS: readonly CompareRow[] = [
   },
   { label: 'Бренд', value: (item) => item.brand ?? MISSING },
   {
-    label: 'Встроенная память',
+    label: STORAGE_ROW_LABEL,
     value: (item) => (item.storage === undefined ? MISSING : formatMemorySize(item.storage)),
   },
   { label: 'Цвет', value: (item) => item.colour ?? MISSING },
 ];
 
+function compareRows(facts: CompareFacts): readonly CompareRow[] {
+  const sharedRows = facts.replacesStorage
+    ? COMPARE_ROWS.filter((row) => row.label !== STORAGE_ROW_LABEL)
+    : COMPARE_ROWS;
+
+  return [
+    ...sharedRows,
+    ...facts.rows.map((row) => ({
+      label: row.label,
+      value: (item: CompareItem) => row.value(item.slug) ?? MISSING,
+    })),
+  ];
+}
+
 export function ComparePage({
   items,
+  facts,
   onRemove,
   onClear,
   onAddToCart,
@@ -73,6 +101,7 @@ export function ComparePage({
   const scrollRef = useRef<HTMLDivElement>(null);
   const focusRequest = useRef<FocusRequest>(undefined);
   const itemCount = items.length;
+  const rows = compareRows(facts);
   const [confirmingClear, setConfirmingClear] = useState(false);
 
   if (confirmingClear && itemCount === 0) {
@@ -163,6 +192,13 @@ export function ComparePage({
               </button>
             </header>
 
+            {facts.mixedCategories ? (
+              <p className="compare__note">
+                Характеристики по категориям показываются, когда в сравнении товары одной
+                категории.
+              </p>
+            ) : null}
+
             <div
               aria-label={
                 scrollable ? 'Таблица сравнения, прокручивается по горизонтали' : undefined
@@ -232,7 +268,7 @@ export function ComparePage({
                   </tr>
                 </thead>
                 <tbody>
-                  {COMPARE_ROWS.map((row) => (
+                  {rows.map((row) => (
                     <tr className="compare-table__row" key={row.label}>
                       <th className="compare-table__label" scope="row">
                         {row.label}

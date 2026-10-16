@@ -147,9 +147,35 @@ Technically complete:
 Active visual slice: none. Active implementation milestone: none. WP-01 and
 WP-01B stay open; no next slice is approved.
 
+- **WP-08 / GC-R20 Category-specific Compare facts (D-06 Option A) — USER
+  VISUAL + FUNCTIONAL PASS on 2026-10-16 (owner), CLOSED and published on
+  2026-10-16.** The latest published code milestone; one bounded WP-08
+  slice. WP-08 stays open.
+  - `CompareRoute` resolves the category by slug at render time:
+    `laptopFacts(slug)` → laptop; else PDP content category `smartphones`
+    → smartphone; else unknown. It passes presentation-ready `facts` to
+    `ComparePage`.
+  - All smartphones: the six shared rows plus Диагональ экрана, Тип экрана,
+    Процессор, Основная камера, Фронтальная камера, Оперативная память,
+    Операционная система, read from the PDP `specificationGroups` by exact
+    label. All laptops: the shared rows without «Встроенная память», plus
+    Диагональ, Процессор, Оперативная память, SSD, Видеокарта, ОС from the
+    typed `laptopFacts` (existing GPU / OS labels, re-exported from
+    `pages/catalog`). Missing values render «—».
+  - Smartphones + laptops: the six shared rows and the muted note «Характеристики
+    по категориям показываются, когда в сравнении товары одной категории.»
+    Any unknown slug: the six shared rows, no note.
+  - `CompareItem`, the store, `goodcall.compare.v1` and its parser are
+    unchanged; no migration.
+  - `scripts/verify/suites/laptops.mjs` «compare storage» now reads the
+    «SSD» row (still expects «1 ТБ»); `compare.mjs` six-row assertion is
+    unchanged and still valid (its fixture has content-less slugs). Suites,
+    tests, typecheck, lint, build, screenshots, pixel diff: NOT RUN, by owner
+    decision.
+
 - **WP-08 / GC-R24 Favourites «Очистить все» — USER VISUAL + FUNCTIONAL
-  PASS on 2026-10-16 (owner), CLOSED and published on 2026-10-16.** The
-  latest published code milestone; one bounded WP-08 slice. WP-08 stays open.
+  PASS on 2026-10-16 (owner), CLOSED and published on 2026-10-16.** One
+  bounded WP-08 slice. WP-08 stays open.
   - A non-empty `#/favorites` shows a secondary «Очистить все» in the page
     header; it is absent when the list is empty. It only opens the shared
     `ConfirmationDialog` (D-07): «Очистить избранное?» / «Из избранного
@@ -1775,8 +1801,9 @@ compare control; the Catalog card control is an approved extension.
   breadcrumb «Главная › Сравнение товаров», `h1` «Сравнение товаров» with
   «N из 4», «Очистить все»; a native `<table>` (hidden caption, product
   `th scope="col"` with ×, image, title, price/old price; `th scope="row"`
-  labels) with exactly six rows — Цена, Выгода (old − current, else «—»),
-  Рейтинг, Бренд, Встроенная память, Цвет — and a per-column «В корзину»
+  labels) with six shared rows — Цена, Выгода (old − current, else «—»),
+  Рейтинг, Бренд, Встроенная память, Цвет (category rows since WP-08 /
+  GC-R20, closed and published 2026-10-16) — and a per-column «В корзину»
   through the shared cart (merge by `cartLineId(slug)`; the item stays in
   comparison). Removing a column focuses the next (else previous) remove
   button; clearing focuses the empty-state `h1` «Сравнение пусто». The
@@ -6153,14 +6180,18 @@ requested.
 
 ## Project closeout state
 
-WP-08 / GC-R24 (favourites «Очистить все») is the last published code
-milestone, CLOSED and published on 2026-10-16 with owner USER VISUAL +
-FUNCTIONAL PASS; automated checks NOT RUN by owner decision.
+WP-08 / GC-R20 (category-specific compare facts, D-06 Option A) is the last
+published code milestone, CLOSED and published on 2026-10-16 with owner USER
+VISUAL + FUNCTIONAL PASS, together with the `laptops.mjs` locator fix;
+automated checks NOT RUN by owner decision.
+WP-08 / GC-R24 (favourites «Очистить все») was CLOSED and published on
+2026-10-16 with owner USER VISUAL + FUNCTIONAL PASS; automated checks NOT RUN
+by owner decision.
 WP-08 / GC-R19 (compare horizontal scroll shadows) was CLOSED and published
 on 2026-10-16 with USER VISUAL + FUNCTIONAL PASS; automated checks NOT RUN
 by owner decision. WP-08 / GC-R21
 (compare-add feedback notice) was CLOSED and published on 2026-10-15. WP-08 stays open
-(GC-R20 / D-06, GC-R25, AUD-09). WP-08 / AUD-10 (bulk cart and
+(GC-R25, AUD-09). WP-08 / AUD-10 (bulk cart and
 compare confirmations) was CLOSED and published on 2026-10-13.
 WP-01B / AUD-15 B1 (non-dialable production demo phone) was CLOSED and
 published on 2026-10-13. WP-01B /

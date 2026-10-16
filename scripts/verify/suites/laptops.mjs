@@ -1205,7 +1205,7 @@ console.log('stage: compare storage', new Date().toISOString());
   await p.waitForSelector('.compare-product');
   const storageCell = await p.evaluate(() => {
     const row = [...document.querySelectorAll('tbody tr')].find(
-      (tr) => tr.querySelector('th').textContent === 'Встроенная память',
+      (tr) => tr.querySelector('th').textContent === 'SSD',
     );
     return row?.querySelector('td')?.textContent.replace(/\s/g, ' ') ?? null;
   });
