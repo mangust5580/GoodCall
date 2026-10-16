@@ -149,6 +149,25 @@ Technically complete:
 Active visual slice: none. Active implementation milestone: none. WP-01 and
 WP-01B stay open; no next slice is approved.
 
+- **WP-10 / Slice 2 Wireless Earbuds Article — USER VISUAL + FUNCTIONAL
+  PASS on 2026-10-16 (owner, manual), CLOSED and published on 2026-10-16.**
+  The latest published code milestone.
+  `#/blog/how-to-choose-wireless-earbuds`: new
+  `HowToChooseWirelessEarbudsBody.tsx` plus one import and one
+  registry entry in `blogArticleDetails.ts` (6 minutes; related
+  `how-to-choose-smartphone-2024`, `extend-smartphone-battery-life`,
+  `tablet-for-work-and-study`). Corpus title, category,
+  `publishedAt: '2024-05-10'` and cover are unchanged — an archived preview
+  completed, not a 2026 republication. The listing card and existing related
+  cards link through `blogArticleHref`; Popular stays unlinked by contract,
+  records without detail stay unlinked and unknown slugs keep the designed
+  404. The Blog now has 3 published full articles among 9 records; 6 have
+  no detail body. Blog A/B, routes, Home, About and
+  media are unchanged. WP-10 stays open; GC-R47 partial; GC-R46 / GC-R49
+  stay published; GC-R48, AUD-16, GC-R54 and the rest of D-09 unchanged.
+  Owner PASS per owner statement; the agent ran no browser or checks; CI /
+  Pages NOT VERIFIED.
+
 - **WP-10 / GC-R46 About and GC-R49 mobile Blog article — Variant A,
   ACCEPTED AS IS (owner decision 2026-10-16 after a read-only UX review),
   CLOSED and published on 2026-10-16 (docs only).** No source or behaviour
@@ -165,12 +184,12 @@ WP-01B stay open; no next slice is approved.
   articles; GC-R47, GC-R48, GC-R54, AUD-16 and the rest of D-09 open).
 
 - **WP-10 / Slice 1 Battery Article — USER VISUAL + FUNCTIONAL PASS on
-  2026-10-16 (owner, manual), CLOSED and published on 2026-10-16.** The
-  latest published code milestone. `#/blog/extend-smartphone-battery-life`
+  2026-10-16 (owner, manual), CLOSED and published on 2026-10-16.**
+  `#/blog/extend-smartphone-battery-life`
   is a published registered detail page: new
   `ExtendSmartphoneBatteryLifeBody.tsx`, registered only in
-  `blogArticleDetails.ts` (6 minutes, existing related slugs). The Blog now
-  has 2 published full articles among 9 records; 7 have no detail body. Its
+  `blogArticleDetails.ts` (6 minutes, existing related slugs). At Slice 1
+  the Blog had 2 published full articles among 9 records. Its
   card, related and Latest links
   appear through the existing `blogArticleHref`; other unregistered
   articles stay unlinked and missing slugs still render the designed 404.
@@ -6367,12 +6386,13 @@ requested.
 
 ## Project closeout state
 
+WP-10 / Slice 2 (wireless earbuds article) is the last published code
+milestone, CLOSED and published on 2026-10-16 with owner USER VISUAL +
+FUNCTIONAL PASS; checks NOT RUN; 3 of 9 Blog records have full articles.
 WP-10 / GC-R46 and GC-R49 are ACCEPTED AS IS — CLOSED and published (docs
-only) on 2026-10-16 (owner decision, no code change); WP-10 / Slice 1 stays
-the last published code milestone.
-WP-10 / Slice 1 (battery article) is the last published code milestone,
-CLOSED and published on 2026-10-16 with owner USER VISUAL + FUNCTIONAL PASS;
-automated checks NOT RUN; 2 of 9 Blog records have full articles; WP-10
+only) on 2026-10-16 (owner decision, no code change).
+WP-10 / Slice 1 (battery article) was CLOSED and published on 2026-10-16
+with owner USER VISUAL + FUNCTIONAL PASS; automated checks NOT RUN; WP-10
 stays open.
 WP-07 / GC-R08 and GC-R09 are ACCEPTED AS IS — CLOSED and published (docs
 only) on 2026-10-16 with owner USER VISUAL + FUNCTIONAL PASS (no code

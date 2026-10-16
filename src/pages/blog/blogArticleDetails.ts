@@ -4,6 +4,7 @@ import { BLOG_ARTICLES } from './blogArticles';
 import type { BlogArticle } from './blogArticles';
 import { ExtendSmartphoneBatteryLifeBody } from './ExtendSmartphoneBatteryLifeBody';
 import { HowToChooseSmartphone2024Body } from './HowToChooseSmartphone2024Body';
+import { HowToChooseWirelessEarbudsBody } from './HowToChooseWirelessEarbudsBody';
 
 export interface BlogArticleDetail {
   readonly article: BlogArticle;
@@ -36,6 +37,15 @@ const BLOG_ARTICLE_DETAILS: Readonly<Record<string, BlogArticleDetailEntry>> = {
       'how-to-choose-wireless-earbuds',
     ],
     Body: ExtendSmartphoneBatteryLifeBody,
+  },
+  'how-to-choose-wireless-earbuds': {
+    readingMinutes: 6,
+    relatedSlugs: [
+      'how-to-choose-smartphone-2024',
+      'extend-smartphone-battery-life',
+      'tablet-for-work-and-study',
+    ],
+    Body: HowToChooseWirelessEarbudsBody,
   },
 };
 
