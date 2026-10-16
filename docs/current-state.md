@@ -147,6 +147,16 @@ Technically complete:
 Active visual slice: none. Active implementation milestone: none. WP-01 and
 WP-01B stay open; no next slice is approved.
 
+- **WP-09 / GC-R28 Mobile Checkout hierarchy — ACCEPTED AS IS on
+  2026-10-16 (owner USER VISUAL + FUNCTIONAL PASS, manual), CLOSED and
+  published on 2026-10-16 (docs only).** No code or visual change; GC-R50
+  stays the latest published code milestone. Read-only
+  discovery found no confirmed responsive defect: below 1024px the form is
+  followed by the order summary and «Подтвердить заказ» (fill → review →
+  confirm), matching DOM/Tab order and the accepted Checkout A / Pickup A.
+  No mobile raster exists; order-line media waits for the planned media
+  replacement. WP-09 stays open.
+
 - **WP-09 / GC-R50 Mobile Legal contents disclosure (Option C) — USER
   VISUAL + FUNCTIONAL PASS on 2026-10-16 (owner, manual), CLOSED and
   published on 2026-10-16.** The latest published code milestone; one
@@ -2027,7 +2037,8 @@ Pickup is not implemented.
 **Status: USER VISUAL/UX PASS on 2026-09-30 — CLOSED and published.** The PASS covers the accepted density scale, the live
 DaData address autocomplete (observed working by the user), and the
 manual/graceful-degradation address UX. Evidence: `Checkout.png` (desktop
-only). The mobile layout is derived.
+only). The mobile layout is derived; WP-09 / GC-R28 accepted it as is on
+2026-10-16 (owner manual PASS, no code change, published docs-only).
 
 **Pickup** is delivered separately by Pickup A (see above) as a demo
 contract, with no availability, pricing or scheduling.
@@ -6264,6 +6275,9 @@ requested.
 
 ## Project closeout state
 
+WP-09 / GC-R28 (mobile Checkout hierarchy) is ACCEPTED AS IS — CLOSED and
+published (docs only) on 2026-10-16 with owner USER VISUAL + FUNCTIONAL
+PASS; no code change, automated checks NOT RUN.
 WP-09 / GC-R50 (mobile Legal contents disclosure, Option C) is the last
 published code milestone, CLOSED and published on 2026-10-16 with owner
 USER VISUAL + FUNCTIONAL PASS; automated checks NOT RUN by owner decision.
