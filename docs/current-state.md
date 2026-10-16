@@ -147,6 +147,19 @@ Technically complete:
 Active visual slice: none. Active implementation milestone: none. WP-01 and
 WP-01B stay open; no next slice is approved.
 
+- **WP-09 / GC-R37 Delivery & Payment and GC-R38 Warranty mobile review —
+  each ACCEPTED AS IS on 2026-10-16 (owner USER VISUAL + FUNCTIONAL PASS,
+  manual), CLOSED and published on 2026-10-16 (docs only).** Two
+  independent decisions; no code, copy or visual change. GC-R37: the existing
+  `#/delivery` layout and interaction are accepted; the owner checked the
+  «Курьером / Самовывоз» tab focus ring and it is correct, so the
+  discovery's `.info-tabs` focus-clipping hypothesis was not reproduced and
+  no CSS fix is needed. GC-R38: the existing `#/warranty` layout and
+  section navigation are accepted; no confirmed defect. Info copy,
+  demo contacts and payment contract, WP-01B, D-2 and GC-R52 are
+  unaffected. Automated checks NOT RUN. GC-R50 stays the latest published
+  code milestone; WP-09 stays open.
+
 - **WP-09 / GC-R34 Mobile Account address form — ACCEPTED AS IS on
   2026-10-16 (owner USER VISUAL + FUNCTIONAL PASS, manual), CLOSED and
   published on 2026-10-16 (docs only).** No code or visual change. The
@@ -1695,7 +1708,9 @@ authoritative).
 
 **Status: USER VISUAL/UX PASS granted (manual desktop and mobile review),
 automated gates green, CLOSED.** Evidence: `Payment.png`, `Warranty.png`, `FAQ.png` (page body
-only; the production Global Shell is authoritative).
+only; the production Global Shell is authoritative). The mobile Delivery
+(GC-R37) and Warranty (GC-R38) pages were accepted as is by WP-09 on
+2026-10-16 (owner manual PASS, no code change, published docs-only).
 
 - **Routes.** `#/delivery` (Доставка и оплата), `#/warranty` (Гарантия и
   возврат) and `#/faq` (Часто задаваемые вопросы), each inside
@@ -6286,6 +6301,9 @@ requested.
 
 ## Project closeout state
 
+WP-09 / GC-R37 (Delivery & Payment) and GC-R38 (Warranty) are each ACCEPTED
+AS IS — CLOSED and published (docs only) on 2026-10-16 with owner USER VISUAL +
+FUNCTIONAL PASS; no code change, automated checks NOT RUN.
 WP-09 / GC-R34 (mobile Account address form) is ACCEPTED AS IS — CLOSED
 and published (docs only) on 2026-10-16 with owner USER VISUAL + FUNCTIONAL
 PASS; no code change, automated checks NOT RUN.
