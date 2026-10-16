@@ -7,7 +7,13 @@ import { EmptyState } from '../../components/feedback';
 import { Breadcrumbs, Container } from '../../components/layout';
 import { ProductBadge, ProductCard } from '../../components/product';
 import { Icon, Pagination } from '../../components/ui';
-import type { CatalogCartSeam, CatalogProduct, CatalogSortValue } from '../catalog';
+import type {
+  CatalogCartSeam,
+  CatalogCompareSeam,
+  CatalogFavoritesSeam,
+  CatalogProduct,
+  CatalogSortValue,
+} from '../catalog';
 import { CATALOG_SORT_OPTIONS, sortCatalogProducts } from '../catalog';
 import { SearchFilterDialog } from './SearchFilterDialog';
 import { SearchFilters } from './SearchFilters';
@@ -39,6 +45,8 @@ export interface SearchPageProps {
   readonly homeHref: string;
   readonly catalogHref: string;
   readonly cart?: CatalogCartSeam;
+  readonly favorites?: CatalogFavoritesSeam;
+  readonly compare?: CatalogCompareSeam;
 }
 
 const SORT_LABEL = 'Сортировка';
@@ -73,6 +81,8 @@ export function SearchPage({
   homeHref,
   catalogHref,
   cart,
+  favorites,
+  compare,
 }: SearchPageProps) {
   const facetsViewport = useSyncExternalStore(
     subscribeToFacetsViewport,
@@ -133,6 +143,24 @@ export function SearchPage({
     }
   };
 
+  const productActions = (product: CatalogProduct) => {
+    const compared = compare?.isCompared(product) ?? false;
+    const compareFull = compare !== undefined && compare.full && !compared;
+
+    return {
+      favoritePressed: favorites?.isFavorite(product) ?? false,
+      onFavoriteToggle: (pressed: boolean) => {
+        favorites?.toggle(product, pressed);
+      },
+      comparePressed: compared,
+      compareDisabled: compare === undefined || compareFull,
+      compareLabel: compare !== undefined && compareFull ? compare.fullLabel(product) : undefined,
+      onCompareToggle: (pressed: boolean) => {
+        compare?.toggle(product, pressed);
+      },
+    };
+  };
+
   const resetFilters = () => {
     setDraftFilters(EMPTY_SEARCH_FILTERS);
     setAppliedFilters(EMPTY_SEARCH_FILTERS);
@@ -158,6 +186,7 @@ export function SearchPage({
         {visibleMatches.map((product) => (
           <li key={product.id}>
             <ProductCard
+              {...productActions(product)}
               badge={
                 product.badge === undefined ? undefined : (
                   <ProductBadge tone={product.discounted === true ? 'sale' : 'new'}>
@@ -299,6 +328,7 @@ export function SearchPage({
                     {visibleMatches.map((product) => (
                       <li key={product.id}>
                         <SearchResultRow
+                          {...productActions(product)}
                           disabled={cart === undefined}
                           href={productHref?.(product.id)}
                           onAddToCart={() => {

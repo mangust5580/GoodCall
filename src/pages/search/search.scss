@@ -220,6 +220,21 @@
     z-index: 1;
   }
 
+  &__favorite,
+  &__compare {
+    position: absolute;
+    right: 4px;
+    z-index: 1;
+  }
+
+  &__favorite {
+    top: 4px;
+  }
+
+  &__compare {
+    top: calc(var(--product-action-size) + 8px);
+  }
+
   &__image {
     display: block;
     width: 100%;

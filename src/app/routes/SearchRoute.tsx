@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 
-import { RouteStatus } from '../../components/feedback';
+import { ActionNotice, RouteStatus } from '../../components/feedback';
 import { DEFAULT_CATALOG_SORT, fetchCatalogProducts } from '../../pages/catalog';
 import type { CatalogProduct, CatalogSortValue } from '../../pages/catalog';
 import {
@@ -20,6 +20,8 @@ import {
 } from '../routePaths';
 import { useDocumentTitle } from '../useDocumentTitle';
 import { useCatalogCartSeam } from './useCatalogCartSeam';
+import { useCatalogCompareSeam } from './useCatalogCompareSeam';
+import { useCatalogFavoritesSeam } from './useCatalogFavoritesSeam';
 
 const SORT_PARAM = 'sort';
 const PAGE_PARAM = 'page';
@@ -59,7 +61,12 @@ export function SearchRoute() {
   const [attempt, setAttempt] = useState(0);
   const products = read.status === 'ready' ? read.products : undefined;
   const cart = useCatalogCartSeam(products !== undefined);
+  const favorites = useCatalogFavoritesSeam(products !== undefined);
   const query = normalizeSearchQuery(searchParams.get(SEARCH_QUERY_PARAM) ?? '');
+  const { seam: compare, notice: compareNotice } = useCatalogCompareSeam(
+    products !== undefined,
+    query,
+  );
   const sort = parseSearchSort(searchParams.get(SORT_PARAM)) ?? DEFAULT_CATALOG_SORT;
   const page = parseSearchPage(searchParams.get(PAGE_PARAM));
   useDocumentTitle(
@@ -139,6 +146,8 @@ export function SearchRoute() {
           key={query}
           cart={cart}
           catalogHref={hashHref(CATALOG_SMARTPHONES_PATH)}
+          compare={compare}
+          favorites={favorites}
           homeHref={hashHref(HOME_PATH)}
           onPageChange={handlePageChange}
           onSortChange={handleSortChange}
@@ -149,6 +158,7 @@ export function SearchRoute() {
           sort={sort}
         />
       )}
+      <ActionNotice {...compareNotice} />
     </ProductionShell>
   );
 }

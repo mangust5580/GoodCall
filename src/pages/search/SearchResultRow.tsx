@@ -1,7 +1,13 @@
 import productPhone from '../../assets/products/product-phone.svg';
 import { formatPrice } from '../../commerce/format';
 import { Picture } from '../../components/media';
-import { AddToCartButton, ProductBadge, ProductRating } from '../../components/product';
+import {
+  AddToCartButton,
+  CompareButton,
+  FavoriteButton,
+  ProductBadge,
+  ProductRating,
+} from '../../components/product';
 import { QuantityStepper } from '../../components/ui';
 import type { CatalogProduct } from '../catalog';
 import { productColour, productRam, productStorage } from './searchFacets';
@@ -18,6 +24,12 @@ interface SearchResultRowProps {
   readonly onAddToCart: () => void;
   readonly onQuantityChange: (value: number) => void;
   readonly disabled: boolean;
+  readonly favoritePressed?: boolean;
+  readonly onFavoriteToggle?: (pressed: boolean) => void;
+  readonly comparePressed?: boolean;
+  readonly compareDisabled?: boolean;
+  readonly compareLabel?: string;
+  readonly onCompareToggle?: (pressed: boolean) => void;
 }
 
 export function SearchResultRow({
@@ -27,6 +39,12 @@ export function SearchResultRow({
   onAddToCart,
   onQuantityChange,
   disabled,
+  favoritePressed = false,
+  onFavoriteToggle,
+  comparePressed = false,
+  compareDisabled = false,
+  compareLabel,
+  onCompareToggle,
 }: SearchResultRowProps) {
   const ram = productRam(product);
   const storage = productStorage(product);
@@ -61,6 +79,32 @@ export function SearchResultRow({
             className="search-row__image"
             sizes={ROW_IMAGE_SIZES}
             source={product.image}
+          />
+        )}
+        {onFavoriteToggle === undefined ? null : (
+          <FavoriteButton
+            className="search-row__favorite"
+            label={
+              favoritePressed
+                ? `Убрать из избранного: ${product.title}`
+                : `Добавить в избранное: ${product.title}`
+            }
+            onToggle={onFavoriteToggle}
+            pressed={favoritePressed}
+          />
+        )}
+        {onCompareToggle === undefined ? null : (
+          <CompareButton
+            className="search-row__compare"
+            disabled={compareDisabled}
+            label={
+              compareLabel ??
+              (comparePressed
+                ? `Убрать из сравнения: ${product.title}`
+                : `Добавить к сравнению: ${product.title}`)
+            }
+            onToggle={onCompareToggle}
+            pressed={comparePressed}
           />
         )}
       </div>

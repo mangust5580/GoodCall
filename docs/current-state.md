@@ -155,10 +155,20 @@ WP-01B stay open; no next slice is approved.
   hex mappings were added. Filters, swatches, rows, favourite/compare
   buttons, keyboard/a11y behaviour and the Catalog/Search visual contracts
   are unchanged; automated checks NOT RUN.
-- **WP-07 / GC-R16 — D-05 decided: Variant B** (owner product decision,
-  2026-10-16): Favourite and Compare actions in Search results on mobile and
-  desktop. Implementation is NOT AUTHORISED / NOT STARTED; GC-R16 and WP-07
-  stay open, with no active implementation milestone.
+- **WP-07 / GC-R16 Search favourites + compare (D-05 Variant B) — USER
+  VISUAL + FUNCTIONAL PASS on 2026-10-16 (owner, manual), CLOSED and
+  published on 2026-10-16.** The latest published code milestone. `#/search`
+  shows the existing favourite and compare
+  actions on mobile (< 1024, `ProductCard layout="horizontal"`) and desktop
+  (≥ 1024, `SearchResultRow`, buttons over the 136px media), wired through
+  the existing `useCatalogFavoritesSeam`, `useCatalogCompareSeam` (reset by
+  the query) and one `ActionNotice`. The owner accepted add/remove, sync with
+  Favourites / Compare / Catalog, the compare limit of 4, the GC-R21 notice,
+  keyboard and focus, and the unchanged Search features on mobile and
+  desktop. Only `SearchRoute.tsx`, `SearchPage.tsx`, `SearchResultRow.tsx`
+  and `search.scss` changed. **WP-07 is CLOSED and published** (GC-R08 /
+  GC-R09 docs-only, GC-R16 code). Automated checks and agent
+  browser/screenshots NOT RUN; CI/Pages NOT VERIFIED.
 
 - **WP-09 / GC-R04 Mobile SiteFooter — ACCEPTED AS IS on 2026-10-16 (owner
   visual decision after read-only discovery), CLOSED and published on
@@ -203,8 +213,7 @@ WP-01B stay open; no next slice is approved.
 
 - **WP-09 / GC-R50 Mobile Legal contents disclosure (Option C) — USER
   VISUAL + FUNCTIONAL PASS on 2026-10-16 (owner, manual), CLOSED and
-  published on 2026-10-16.** The latest published code milestone; one
-  bounded WP-09 slice. WP-09 stays open.
+  published on 2026-10-16.** One bounded WP-09 slice. WP-09 stays open.
   - `LegalContents` (`LegalParts.tsx`) and `.legal-contents` (`info.scss`)
     only. Below 1024px the contents card is collapsed by default to a
     native button inside the existing h2, «Содержание · N разделов»
@@ -6327,8 +6336,10 @@ requested.
 
 WP-07 / GC-R08 and GC-R09 are ACCEPTED AS IS — CLOSED and published (docs
 only) on 2026-10-16 with owner USER VISUAL + FUNCTIONAL PASS (no code
-change). D-05 is decided as Variant B (Search favourite + compare); GC-R16
-is not implemented and WP-07 stays open.
+change). D-05 Variant B is implemented as WP-07 / GC-R16 (Search favourite +
+compare), accepted by owner USER VISUAL + FUNCTIONAL PASS on 2026-10-16;
+GC-R16 is the last published code milestone, and GC-R16 and WP-07 are CLOSED
+and published on 2026-10-16.
 WP-09 / GC-R04 (mobile SiteFooter) is ACCEPTED AS IS — CLOSED and published
 (docs only) on 2026-10-16 by owner visual decision; no code change,
 automated checks NOT RUN.
@@ -6341,8 +6352,8 @@ PASS; no code change, automated checks NOT RUN.
 WP-09 / GC-R28 (mobile Checkout hierarchy) is ACCEPTED AS IS — CLOSED and
 published (docs only) on 2026-10-16 with owner USER VISUAL + FUNCTIONAL
 PASS; no code change, automated checks NOT RUN.
-WP-09 / GC-R50 (mobile Legal contents disclosure, Option C) is the last
-published code milestone, CLOSED and published on 2026-10-16 with owner
+WP-09 / GC-R50 (mobile Legal contents disclosure, Option C) was CLOSED and
+published on 2026-10-16 with owner
 USER VISUAL + FUNCTIONAL PASS; automated checks NOT RUN by owner decision.
 WP-09 / GC-R32 (mobile Account navigation, Variant A) was CLOSED and published on 2026-10-16 with owner USER VISUAL +
 FUNCTIONAL PASS; automated checks NOT RUN by owner decision.
