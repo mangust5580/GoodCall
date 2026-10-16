@@ -1,6 +1,7 @@
 @use '../../styles/helpers' as h;
 
 $product-column-min: 168px;
+$scroll-shadow-width: 16px;
 
 .compare-page {
   padding-block: h.fluid(32, 20) h.fluid(40, 28);
@@ -67,10 +68,21 @@ $product-column-min: 168px;
   }
 
   &__scroll {
+    $radius: 12px;
+    $shadow-size: $scroll-shadow-width calc(100% - #{$radius * 2});
+    $cover: linear-gradient(var(--role-surface-card), var(--role-surface-card));
+
     position: relative;
     overflow-x: auto;
+    background:
+      $cover left center / $shadow-size no-repeat local,
+      $cover right center / $shadow-size no-repeat local,
+      linear-gradient(to right, var(--alpha-black-24), transparent) left center / $shadow-size
+        no-repeat scroll,
+      linear-gradient(to left, var(--alpha-black-24), transparent) right center / $shadow-size
+        no-repeat scroll;
     border: var(--control-border-width) solid var(--role-border-default);
-    border-radius: 12px;
+    border-radius: $radius;
 
     &:focus-visible {
       outline: 2px solid var(--role-border-focus);

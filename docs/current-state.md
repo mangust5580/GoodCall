@@ -147,9 +147,25 @@ Technically complete:
 Active visual slice: none. Active implementation milestone: none. WP-01 and
 WP-01B stay open; no next slice is approved.
 
+- **WP-08 / GC-R19 Compare horizontal scroll shadows — USER VISUAL +
+  FUNCTIONAL PASS on 2026-10-16, CLOSED and published on 2026-10-16.** The
+  latest published code milestone; one bounded WP-08 slice; the only code
+  change is `src/pages/compare/compare.scss`. WP-08 stays open.
+  - CSS-only: `.compare__scroll` paints two 16px `--alpha-black-24` edge
+    gradients (`background-attachment: scroll`) under two
+    `--role-surface-card` covers (`local`). With overflow the right shadow
+    shows at the start, both in the middle, the left at the end; without
+    overflow there is none. Shadows are inset 12px top and bottom to stay
+    clear of the unchanged 12px radius.
+  - React state, routing, the compare store, `ComparePage.tsx`, the region
+    / caption / status semantics and the verify suite are unchanged.
+  - Automated checks (typecheck, lint, build, verify suites, screenshots,
+    pixel diff): NOT RUN, by owner decision. Acceptance rests on the owner's
+    manual pass only.
+
 - **WP-08 / GC-R21 Compare-add feedback notice (Option B) — USER VISUAL +
-  FUNCTIONAL PASS on 2026-10-15, CLOSED and published on 2026-10-15.** The
-  latest published code milestone; one bounded WP-08 slice. WP-08 stays open.
+  FUNCTIONAL PASS on 2026-10-15, CLOSED and published on 2026-10-15.** One
+  bounded WP-08 slice. WP-08 stays open.
   - A successful new add-to-compare on the live smartphone catalog, the live
     laptop catalog or the smartphone PDP «Другие смартфоны» rail shows one
     route-local, non-modal fixed notice: check icon, «Добавлено к сравнению ·
@@ -1747,6 +1763,8 @@ compare control; the Catalog card control is an approved extension.
 - **Responsive.** The matrix fits at desktop; below that it scrolls inside
   its own wrapper (label ≥120px, columns ≥168px), which becomes a focusable
   `role="region"` only while it overflows. The page never scrolls sideways.
+  Since WP-08 / GC-R19 (closed and published 2026-10-16) the
+  wrapper shows CSS-only 16px edge shadows toward the hidden side.
 - **Deferred.** Richer spec rows (screen, CPU, RAM, battery, weight…),
   stock/«В наличии», share, highlight/hide-equal, category rules, reorder,
   sticky headers, the Modals #12 header popover, Quick View, Search/PD/Home
@@ -6111,9 +6129,11 @@ requested.
 
 ## Project closeout state
 
-WP-08 / GC-R21 (compare-add feedback notice) is the last published code
-milestone, CLOSED and published on 2026-10-15; WP-08 stays open (GC-R19,
-GC-R20 / D-06, GC-R24, GC-R25, AUD-09). WP-08 / AUD-10 (bulk cart and
+WP-08 / GC-R19 (compare horizontal scroll shadows) is the last published code
+milestone, CLOSED and published on 2026-10-16 with USER VISUAL + FUNCTIONAL
+PASS; automated checks NOT RUN by owner decision. WP-08 / GC-R21
+(compare-add feedback notice) was CLOSED and published on 2026-10-15. WP-08 stays open
+(GC-R20 / D-06, GC-R24, GC-R25, AUD-09). WP-08 / AUD-10 (bulk cart and
 compare confirmations) was CLOSED and published on 2026-10-13.
 WP-01B / AUD-15 B1 (non-dialable production demo phone) was CLOSED and
 published on 2026-10-13. WP-01B /
