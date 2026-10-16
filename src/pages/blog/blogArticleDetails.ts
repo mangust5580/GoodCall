@@ -2,6 +2,7 @@ import type { ComponentType } from 'react';
 
 import { BLOG_ARTICLES } from './blogArticles';
 import type { BlogArticle } from './blogArticles';
+import { BestSmartphonesUnder30000Body } from './BestSmartphonesUnder30000Body';
 import { ExtendSmartphoneBatteryLifeBody } from './ExtendSmartphoneBatteryLifeBody';
 import { HowToChooseSmartphone2024Body } from './HowToChooseSmartphone2024Body';
 import { HowToChooseWirelessEarbudsBody } from './HowToChooseWirelessEarbudsBody';
@@ -76,6 +77,15 @@ const BLOG_ARTICLE_DETAILS: Readonly<Record<string, BlogArticleDetailEntry>> = {
       'how-to-choose-wireless-earbuds',
     ],
     Body: MacbookAirM3Body,
+  },
+  'best-smartphones-under-30000': {
+    readingMinutes: 6,
+    relatedSlugs: [
+      'how-to-choose-smartphone-2024',
+      'extend-smartphone-battery-life',
+      'iphone-vs-samsung-2024',
+    ],
+    Body: BestSmartphonesUnder30000Body,
   },
 };
 

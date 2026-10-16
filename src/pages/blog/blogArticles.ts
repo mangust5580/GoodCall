@@ -49,10 +49,10 @@ const CORPUS: readonly BlogArticle[] = [
   },
   {
     slug: 'best-smartphones-under-30000',
-    title: 'Лучшие смартфоны до 30\u00a0000\u00a0₽',
+    title: 'Смартфон до 30\u00a0000\u00a0₽: на что обращать внимание в 2024 году',
     excerpt:
-      'Подборка оптимальных смартфонов в среднем бюджете с отличной камерой и производительностью.',
-    category: 'selections',
+      'Архивный гид 2024 года: какие характеристики важны в бюджете до 30\u00a0000\u00a0₽, где допустимы компромиссы и как сравнивать модели без переплаты.',
+    category: 'guides',
     publishedAt: '2024-05-08',
     cover: BLOG_COVER_MEDIA.bestSmartphonesUnder30000,
   },

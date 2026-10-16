@@ -149,9 +149,43 @@ Technically complete:
 Active visual slice: none. Active implementation milestone: none. WP-01 and
 WP-01B stay open; no next slice is approved.
 
+- **WP-10 / GC-R47 — Article 7/9 (`best-smartphones-under-30000`) — OWNER
+  USER VISUAL + FUNCTIONAL PASS 2026-10-16; CLOSED & PUBLISHED
+  2026-10-16.** The latest published code milestone. New
+  `BestSmartphonesUnder30000Body.tsx`
+  (archival budget guide, ~760 words: priorities, screen, battery and
+  charging, camera, performance/storage/updates, model variants, checklist;
+  no models, historical prices, availability, rankings, promotions or tests),
+  one registry entry in `blogArticleDetails.ts` (6 minutes; related
+  `how-to-choose-smartphone-2024`, `extend-smartphone-battery-life`,
+  `iphone-vs-samsung-2024`) and the approved `blogArticles.ts` changes: title
+  «Смартфон до 30 000 ₽: на что обращать внимание в 2024 году», excerpt
+  «Архивный гид 2024 года: какие характеристики важны в бюджете до 30 000 ₽,
+  где допустимы компромиссы и как сравнивать модели без переплаты.»,
+  category `selections` → `guides` (the empty «Подборки» category is
+  accepted). Slug, 2024-05-08 date, cover and corpus order unchanged. The
+  listing card and the battery article's related card link through the
+  existing rule; Popular stays text. Without Home code changes the third
+  Home «Из блога» card becomes this guide (after iPhone vs Samsung and
+  earbuds, replacing the tablet), with the accepted 4:1 crop;
+  `?reference=home` unchanged. The owner confirmed all six manual checks
+  (article page and related; listing, categories, search, Popular; related
+  navigation, other articles and 404; 320/390/768/1024/1440 layout and
+  keyboard; Home card and reference; Spring Sale and Apple Watch status); the
+  agent ran no browser, screenshots or automated checks; CI/Pages not
+  verified. **Owner decision 2026-10-16: WP-10 closes only with 9/9 registered
+  full article bodies**, each with real links and owner visual/functional
+  acceptance. Published 7/9; remaining:
+  `new-apple-watch-changes` (needs a supportable generation and sourced
+  facts) and `goodcall-spring-sale` (preview copy already corrected and
+  published; body absent). Neither is authorised yet. The Spring Sale
+  correction (`a7621c7`) is the previous published milestone. WP-10 open;
+  GC-R47 partial; D-09 and AUD-16 not globally closed; GC-R48 published;
+  GC-R54 deferred.
+
 - **WP-10 / D-09 / AUD-16 — Spring Sale Preview Accuracy Correction — OWNER
   USER VISUAL + FUNCTIONAL PASS 2026-10-16; CLOSED & PUBLISHED 2026-10-16.**
-  The latest published code milestone. Change in
+  Published as `a7621c7`. Change in
   `src/pages/blog/blogArticles.ts` only:
   the `goodcall-spring-sale` preview's title is now «Весенние скидки в
   GOODCALL — архивный демо-анонс» and its excerpt «Архивная демонстрационная
@@ -163,9 +197,10 @@ WP-01B stay open; no next slice is approved.
   all five manual checks passed (`#/blog` preview, «Акции» category, search
   for «скидки» and «весенние», Latest sidebar, 320/390 wrapping with Home «Из
   блога» unchanged); the agent ran no browser, screenshots, tests, lint,
-  typecheck or build. `best-smartphones-under-30000` and
-  `new-apple-watch-changes` stay deferred and unchanged; 9/9 is not a
-  requirement. WP-10 stays open; GC-R47 partial (6/9); D-09 and AUD-16 open
+  typecheck or build. At this publication `best-smartphones-under-30000` and
+  `new-apple-watch-changes` stayed deferred and 9/9 was not required —
+  superseded on 2026-10-16 by the owner's mandatory 9/9 decision and
+  Article 7 above. WP-10 stays open; GC-R47 partial (6/9); D-09 and AUD-16 open
   overall; GC-R54 deferred. GC-R48 (`7f0fe5c`) is the previous published
   milestone, with its 4:1 Home crop accepted as is.
 
@@ -212,7 +247,7 @@ WP-01B stay open; no next slice is approved.
   - Counts: 9 preview records; 6 of 9 published full articles; 3 without
     body (`best-smartphones-under-30000`,
     `new-apple-watch-changes`, `goodcall-spring-sale`, deferred pending owner
-    decisions). WP-10 stays open; GC-R47 partial; GC-R48 open; GC-R54
+    decisions at this publication; see Article 7 above). WP-10 stays open; GC-R47 partial; GC-R48 open; GC-R54
     deferred; AUD-16 not globally closed. Checks, agent browser and
     screenshots NOT RUN; CI/Pages
     NOT VERIFIED; owner PASS per owner statement.
@@ -6453,8 +6488,11 @@ requested.
 
 ## Project closeout state
 
-WP-10 / D-09 / AUD-16 Spring Sale preview accuracy correction is the last
-published code milestone, CLOSED & PUBLISHED on 2026-10-16 with owner USER
+WP-10 / Article 7/9 (`best-smartphones-under-30000`) is the last published
+code milestone, CLOSED & PUBLISHED on 2026-10-16 with owner USER VISUAL +
+FUNCTIONAL PASS (7/9 published; WP-10 requires 9/9).
+WP-10 / D-09 / AUD-16 Spring Sale preview accuracy correction was CLOSED &
+PUBLISHED on 2026-10-16 (`a7621c7`) with owner USER
 VISUAL + FUNCTIONAL PASS; checks NOT RUN.
 WP-10 / GC-R48 (Home ↔ Blog, Variant A) was ACCEPTED AS IS — CLOSED &
 PUBLISHED on 2026-10-16 (`7f0fe5c`); the owner
