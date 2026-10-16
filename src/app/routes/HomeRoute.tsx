@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 
+import { BLOG_ARTICLES } from '../../pages/blog';
 import { HomePage, fetchHomeData } from '../../pages/home';
-import type { HomeCategoryTile, HomeProduct } from '../../pages/home';
+import type { HomeCategoryTile, HomePageProps, HomeProduct } from '../../pages/home';
 import { ProductionShell } from '../ProductionShell';
 import {
   BLOG_PATH,
@@ -10,7 +11,33 @@ import {
   productDetailsHref,
 } from '../routePaths';
 import { useDocumentTitle } from '../useDocumentTitle';
+import { blogArticleHref } from './blogLinks';
 import { useHomeCartSeam } from './useHomeCartSeam';
+
+const HOME_BLOG_ARTICLE_LIMIT = 3;
+
+function homeBlogArticles(): NonNullable<HomePageProps['blogArticles']> {
+  const linkedArticles = BLOG_ARTICLES.flatMap((article) => {
+    const href = blogArticleHref(article.slug);
+
+    return href === undefined
+      ? []
+      : [
+          {
+            slug: article.slug,
+            title: article.title,
+            excerpt: article.excerpt,
+            publishedAt: article.publishedAt,
+            cover: article.cover,
+            href,
+          },
+        ];
+  });
+
+  return linkedArticles.slice(0, HOME_BLOG_ARTICLE_LIMIT);
+}
+
+const HOME_BLOG_ARTICLES = homeBlogArticles();
 
 interface HomeRouteData {
   readonly categories: readonly HomeCategoryTile[];
@@ -46,6 +73,7 @@ export function HomeRoute() {
     <ProductionShell>
       <HomePage
         articlesPath={BLOG_PATH}
+        blogArticles={HOME_BLOG_ARTICLES}
         cart={cart}
         categories={homeData?.categories}
         laptopsPath={CATALOG_LAPTOPS_PATH}

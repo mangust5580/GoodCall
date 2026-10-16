@@ -44,6 +44,41 @@ export interface HomePageProps {
   readonly productHref?: (slug: string) => string | undefined;
   readonly cart?: HomeCartSeam;
   readonly benefits?: readonly BenefitItem[];
+  readonly blogArticles?: readonly HomeBlogArticle[];
+}
+
+export interface HomeBlogArticle {
+  readonly slug: string;
+  readonly title: string;
+  readonly excerpt: string;
+  readonly publishedAt: string;
+  readonly cover: PictureSource;
+  readonly href: string;
+}
+
+interface HomeArticleCard {
+  readonly key: string;
+  readonly title: string;
+  readonly excerpt: string;
+  readonly media: PictureSource;
+  readonly date: string;
+  readonly dateTime?: string;
+  readonly href?: string;
+}
+
+const articleDateFormatter = new Intl.DateTimeFormat('ru-RU', {
+  day: 'numeric',
+  month: 'long',
+  year: 'numeric',
+  timeZone: 'UTC',
+});
+
+function formatArticleDate(isoDate: string): string {
+  const parts = articleDateFormatter.formatToParts(new Date(`${isoDate}T00:00:00Z`));
+  const part = (type: Intl.DateTimeFormatPartTypes) =>
+    parts.find((item) => item.type === type)?.value ?? '';
+
+  return `${part('day')} ${part('month')} ${part('year')}`;
 }
 
 const SMARTPHONES_SLUG = 'smartphones';
@@ -82,8 +117,27 @@ export function HomePage({
   productHref,
   cart,
   benefits = HOME_BENEFITS,
+  blogArticles,
 }: HomePageProps) {
   const [announcement, setAnnouncement] = useState('');
+  const articleCards: readonly HomeArticleCard[] =
+    blogArticles === undefined
+      ? HOME_ARTICLES.map((article) => ({
+          key: article.id,
+          title: article.title,
+          excerpt: article.excerpt,
+          media: ARTICLE_MEDIA[article.id],
+          date: article.date,
+        }))
+      : blogArticles.map((article) => ({
+          key: article.slug,
+          title: article.title,
+          excerpt: article.excerpt,
+          media: article.cover,
+          date: formatArticleDate(article.publishedAt),
+          dateTime: article.publishedAt,
+          href: article.href,
+        }));
   const categoryLink = (slug: string, content: ReactNode, className: string) => {
     const path =
       slug === SMARTPHONES_SLUG ? smartphonesPath : slug === LAPTOPS_SLUG ? laptopsPath : undefined;
@@ -298,7 +352,7 @@ export function HomePage({
         <section className="home-section" aria-labelledby="home-articles-title">
           <header className="home-section__header">
             <h2 className="home-section__title" id="home-articles-title">
-              Последние статьи
+              {blogArticles === undefined ? 'Последние статьи' : 'Из блога'}
             </h2>
             {articlesPath === undefined ? null : (
               <Link className="home-section__link" to={articlesPath}>
@@ -307,21 +361,33 @@ export function HomePage({
             )}
           </header>
           <ul className="home-articles">
-            {HOME_ARTICLES.map((article) => (
-              <li key={article.id}>
+            {articleCards.map((article) => (
+              <li key={article.key}>
                 <article className="home-article">
                   <Picture
                     alt=""
                     className="home-article__media"
                     sizes={ARTICLE_MEDIA_SIZES}
-                    source={ARTICLE_MEDIA[article.id]}
+                    source={article.media}
                   />
                   <div className="home-article__body">
-                    <h3 className="home-article__title">{article.title}</h3>
+                    <h3 className="home-article__title">
+                      {article.href === undefined ? (
+                        article.title
+                      ) : (
+                        <a className="home-article__link" href={article.href}>
+                          {article.title}
+                        </a>
+                      )}
+                    </h3>
                     <p className="home-article__excerpt">{article.excerpt}</p>
                     <p className="home-article__date">
                       <Icon className="home-article__date-icon" name="calendar" />
-                      {article.date}
+                      {article.dateTime === undefined ? (
+                        article.date
+                      ) : (
+                        <time dateTime={article.dateTime}>{article.date}</time>
+                      )}
                     </p>
                   </div>
                 </article>

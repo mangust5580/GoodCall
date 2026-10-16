@@ -149,9 +149,29 @@ Technically complete:
 Active visual slice: none. Active implementation milestone: none. WP-01 and
 WP-01B stay open; no next slice is approved.
 
+- **WP-10 / GC-R48 — Home ↔ Blog Variant A — OWNER ACCEPTED AS IS
+  2026-10-16; CLOSED & PUBLISHED 2026-10-16.** The latest published code
+  milestone (`HomeRoute.tsx`, `HomePage.tsx`, `home.scss`). Production `#/` takes
+  Blog-owned records from the existing `BLOG_ARTICLES` and shows the three
+  latest that have a detail body — iPhone vs Samsung (2024-05-12), wireless
+  earbuds (2024-05-10), tablet (2024-05-04) — with no new corpus or articles.
+  The section is titled «Из блога» and uses canonical Blog
+  title/excerpt/date/cover, three real detail links through the existing
+  `blogArticleHref`, and the unchanged «Читать все статьи» CTA to Blog.
+  `?reference=home` keeps the fixture cards, artwork, «Последние статьи» and
+  no links; other visuals, Blog A/B and Blog data are unchanged. Accepted
+  trade-off: 16:7 Blog covers sit in the existing 4:1 Home frame
+  (`object-fit: cover`); the owner noticed the vertical crop on a screenshot
+  and accepted it as is — no aspect-ratio, CSS or media change; any image
+  replacement is a future separate owner decision. Acceptance per owner
+  messages 2026-10-16; the agent ran no browser, screenshots or automated
+  checks. WP-10 stays open; GC-R47 partial (6/9 full
+  published); D-09 limited policy approved; AUD-16 not globally closed;
+  GC-R54 deferred.
+
 - **WP-10 / Slice 3 (tablet) and D-09 Editorial Batch — USER VISUAL +
   FUNCTIONAL PASS on 2026-10-16 (owner, manual, whole package), CLOSED and
-  published on 2026-10-16.** The latest published code milestone.
+  published on 2026-10-16.** Published as `84dff6d`.
   - Slice 3: `tablet-for-work-and-study` (`TabletForWorkAndStudyBody.tsx`,
     registered in `blogArticleDetails.ts`); title, category, cover and
     `publishedAt: '2024-05-04'` unchanged; the earbuds article's related
@@ -6413,9 +6433,11 @@ requested.
 
 ## Project closeout state
 
+WP-10 / GC-R48 (Home ↔ Blog, Variant A) is the last published code
+milestone, ACCEPTED AS IS — CLOSED & PUBLISHED on 2026-10-16; the owner
+accepted the existing 4:1 cover crop.
 WP-10 / Slice 3 (tablet) and the D-09 Editorial Batch (iPhone 15 vs Galaxy
-S24, MacBook Air M3) are the last published code milestone, CLOSED and
-published on 2026-10-16 with owner USER VISUAL + FUNCTIONAL PASS; checks NOT
+S24, MacBook Air M3) were CLOSED and published on 2026-10-16 with owner USER VISUAL + FUNCTIONAL PASS; checks NOT
 RUN; 6 of 9 Blog records have full articles; WP-10 stays open.
 WP-10 / Slice 2 (wireless earbuds article) was CLOSED and published on
 2026-10-16 with owner USER VISUAL + FUNCTIONAL PASS; checks NOT RUN.

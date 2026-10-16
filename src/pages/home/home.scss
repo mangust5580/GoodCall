@@ -712,6 +712,20 @@ $home-offers-width: 280px;
     color: var(--role-text-primary);
   }
 
+  &__link {
+    color: inherit;
+    text-decoration-line: none;
+
+    &:hover {
+      color: var(--role-text-link);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--role-border-focus);
+      outline-offset: 2px;
+    }
+  }
+
   &__excerpt {
     margin: 10px 0 0;
     font-size: 14px;
