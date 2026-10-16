@@ -227,6 +227,7 @@ export function SiteFooter({
               <DemoContactLink
                 className="site-footer__contact-value"
                 href={support.emailHref}
+                informational
                 notice={demoContacts?.emailNotice}
               >
                 {support.email}

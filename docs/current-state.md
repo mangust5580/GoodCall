@@ -149,6 +149,25 @@ Technically complete:
 Active visual slice: none. Active implementation milestone: none. WP-01 and
 WP-01B stay open; no next slice is approved.
 
+- **WP-01B / Demo E-mail, production non-mailto — OWNER USER VISUAL +
+  FUNCTIONAL PASS 2026-10-16; CLOSED & PUBLISHED 2026-10-16.** The six
+  production e-mail elements (Footer, Contacts, shared Delivery/FAQ/Warranty
+  support, Privacy, Offer ×2) now pass `informational` to the existing
+  `DemoContactLink`, rendering an accessible `<button type="button"
+  aria-haspopup="dialog">` with no `href`/`mailto:` that opens the existing
+  dimmed demo `InfoDialog`; the production phone was already non-dialable.
+  Addresses, wording, styles, routes, media, the shared component contract,
+  `STOREFRONT_SUPPORT` and the `?reference=` fixtures (native `mailto:`
+  anchors without `demoContacts`) are unchanged. The owner accepted
+  click/Enter/Space, dialog close and focus return, a production DOM without
+  contact `mailto:`/`tel:`, 320/390/768/1024/1440 and the retained reference
+  states. `scripts/verify/suites/contacts.mjs` expectations were updated but
+  NOT RUN; typecheck, lint, format, build, browser and screenshots NOT RUN by
+  the agent; CI/Pages NOT VERIFIED. The six code changes and these docs were
+  published together on 2026-10-16; `fd727eb` was the previous published
+  baseline.
+  WP-01B overall stays open; GC-R52 and AUD-15 unchanged.
+
 - **WP-10 / GC-R47 — OWNER FINAL CLOSEOUT GO 2026-10-16; CLOSED &
   PUBLISHED 2026-10-16.** WP-10 closed; GC-R47 resolved. All 9/9 Blog articles are published and
   owner-accepted; every preview slug has a registered full body and a route
@@ -6561,6 +6580,9 @@ requested.
 
 ## Project closeout state
 
+WP-01B / Demo E-mail (production non-mailto) is owner-accepted and CLOSED &
+PUBLISHED on 2026-10-16 (six code changes and docs in one commit; CI/Pages
+NOT VERIFIED); WP-01B overall stays open.
 WP-10 / GC-R47 are CLOSED & PUBLISHED on 2026-10-16 by the owner's explicit
 final GO (9/9 articles published and accepted; docs-only closeout
 published). D-09, AUD-16 and GC-R54 remain independent.

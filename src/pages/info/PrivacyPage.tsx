@@ -153,6 +153,7 @@ export function PrivacyPage({ links }: PrivacyPageProps) {
           <DemoContactLink
             className="legal-text__link"
             href={STOREFRONT_SUPPORT.emailHref}
+            informational
             notice={STOREFRONT_DEMO_CONTACT.emailNotice}
           >
             {STOREFRONT_SUPPORT.email}

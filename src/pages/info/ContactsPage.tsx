@@ -57,6 +57,7 @@ export function ContactsPage({ links }: ContactsPageProps) {
       value: STOREFRONT_SUPPORT.email,
       href: STOREFRONT_SUPPORT.emailHref,
       notice: STOREFRONT_DEMO_CONTACT.emailNotice,
+      informational: true,
       note: STOREFRONT_DEMO_CONTACT.emailNote,
     },
     {
