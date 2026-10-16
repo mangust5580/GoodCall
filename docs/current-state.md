@@ -147,10 +147,28 @@ Technically complete:
 Active visual slice: none. Active implementation milestone: none. WP-01 and
 WP-01B stay open; no next slice is approved.
 
+- **WP-09 / GC-R40 FAQ topics scroll affordance — USER VISUAL + FUNCTIONAL
+  PASS on 2026-10-16 (owner, manual), CLOSED and published on
+  2026-10-16.** The latest published code milestone; one bounded WP-09
+  slice. WP-09 stays open.
+  - Below 1024px `FaqPage` measures `.faq-topics__list` (`scrollWidth`,
+    `clientWidth`, `scrollLeft`, 2px tolerance) via `ResizeObserver` on the
+    list and its topic buttons plus a passive `scroll` listener, and sets
+    `data-more-before` / `data-more-after` on `nav.faq-topics`. State
+    changes only when a boolean flips.
+  - `info.scss`: 16px `::before` / `::after` edge overlays on the
+    non-scrolling `nav` (`--role-surface-page` → transparent,
+    `pointer-events: none`), shown only with the matching attribute; none
+    without overflow; hidden from 1024px. `scroll-padding-inline: 16px`
+    keeps a focused topic clear of the overlay. No new dependency; DOM,
+    `role="group"`, `aria-pressed` and handlers unchanged.
+  - The pre-existing focus-ring clipping by `overflow-x: auto` (no top
+    padding) is not addressed by this slice.
+  - Tests, build, lint, screenshots, pixel diff: NOT RUN, by owner decision.
+
 - **WP-08 / AUD-09 Laptop PDP «Другие ноутбуки» — USER VISUAL + FUNCTIONAL
   PASS on 2026-10-16 (owner), CLOSED and published on 2026-10-16.** The
-  latest published code milestone and the last open WP-08 item. **WP-08 is
-  CLOSED and published on 2026-10-16.**
+  last open WP-08 item. **WP-08 is CLOSED and published on 2026-10-16.**
   - A laptop PDP renders the existing `ProductRelatedProducts` rail
     «Другие ноутбуки»: `fetchCatalogProducts('laptops')` in canonical order,
     the open laptop excluded, at most 8 (`RELATED_PRODUCTS_LIMIT`),
@@ -1678,7 +1696,8 @@ only; the production Global Shell is authoritative).
   the raster's filled segments; Warranty section navigation instead of tabs;
   the FAQ support card moved from the sidebar to below the results; one bordered `FAQAccordion` surface instead of
   separate cards; the FAQ topic sidebar and chip row merged into one control
-  (sidebar ≥1024px, scrolling chips below); delivery methods reduced to the
+  (sidebar ≥1024px, scrolling chips below — with edge overlays since WP-09 /
+  GC-R40, closed and published 2026-10-16); delivery methods reduced to the
   two that exist; the raster's prices, 14-day return promise, 24/7 copy,
   Visa/Mastercard/ЮMoney/QIWI/Tinkoff marks and «Аккаунт и бонусы» omitted.
 - **Verification.** New `info` suite in `npm run verify` (128 checks,
@@ -6209,9 +6228,11 @@ requested.
 
 ## Project closeout state
 
-WP-08 / AUD-09 (laptop PDP «Другие ноутбуки») is the last published code
+WP-09 / GC-R40 (FAQ topics scroll affordance) is the last published code
 milestone, CLOSED and published on 2026-10-16 with owner USER VISUAL +
-FUNCTIONAL PASS; automated checks NOT RUN by owner decision. With it WP-08 is
+FUNCTIONAL PASS; automated checks NOT RUN by owner decision. WP-09 stays open.
+WP-08 / AUD-09 (laptop PDP «Другие ноутбуки») was CLOSED and published on
+2026-10-16 with owner USER VISUAL + FUNCTIONAL PASS; automated checks NOT RUN by owner decision. With it WP-08 is
 CLOSED and published on 2026-10-16. GC-R22 stays DEFERRED.
 WP-08 / GC-R20 (category-specific compare facts, D-06 Option A) was CLOSED
 and published on 2026-10-16 with owner USER VISUAL + FUNCTIONAL PASS,

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { STOREFRONT_SUPPORT, STOREFRONT_TRUST } from '../../commerce/storefront';
 import type { BenefitItem } from '../../components/content';
@@ -70,10 +70,66 @@ interface FaqPageProps {
   readonly links: InfoLinks;
 }
 
+interface TopicsScrollState {
+  readonly moreBefore: boolean;
+  readonly moreAfter: boolean;
+}
+
+const TOPICS_EDGE_TOLERANCE = 2;
+const INITIAL_TOPICS_SCROLL: TopicsScrollState = { moreBefore: false, moreAfter: false };
+
+function readTopicsScroll(list: HTMLElement): TopicsScrollState {
+  const maxScroll = list.scrollWidth - list.clientWidth;
+
+  return {
+    moreBefore: list.scrollLeft > TOPICS_EDGE_TOLERANCE,
+    moreAfter: list.scrollLeft < maxScroll - TOPICS_EDGE_TOLERANCE,
+  };
+}
+
 export function FaqPage({ links }: FaqPageProps) {
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState<FaqCategoryId | undefined>();
   const [openId, setOpenId] = useState<string | undefined>(FAQ_DEFAULT_OPEN_ID);
+  const topicsRef = useRef<HTMLDivElement>(null);
+  const [topicsScroll, setTopicsScroll] = useState<TopicsScrollState>(INITIAL_TOPICS_SCROLL);
+
+  const syncTopicsScroll = useCallback(() => {
+    const list = topicsRef.current;
+
+    if (list === null) {
+      return;
+    }
+
+    const next = readTopicsScroll(list);
+
+    setTopicsScroll((current) =>
+      current.moreBefore === next.moreBefore && current.moreAfter === next.moreAfter
+        ? current
+        : next,
+    );
+  }, []);
+
+  useEffect(() => {
+    const list = topicsRef.current;
+
+    if (list === null) {
+      return;
+    }
+
+    const observer = new ResizeObserver(syncTopicsScroll);
+
+    observer.observe(list);
+    [...list.children].forEach((child) => {
+      observer.observe(child);
+    });
+    list.addEventListener('scroll', syncTopicsScroll, { passive: true });
+
+    return () => {
+      observer.disconnect();
+      list.removeEventListener('scroll', syncTopicsScroll);
+    };
+  }, [syncTopicsScroll]);
 
   const terms = faqQueryTerms(query);
   const visible = filterFaqEntries(FAQ_ENTRIES, category, terms);
@@ -149,11 +205,21 @@ export function FaqPage({ links }: FaqPageProps) {
         />
 
         <div className="faq-workspace">
-          <nav aria-labelledby="faq-topics-title" className="faq-topics">
+          <nav
+            aria-labelledby="faq-topics-title"
+            className="faq-topics"
+            data-more-after={topicsScroll.moreAfter ? '' : undefined}
+            data-more-before={topicsScroll.moreBefore ? '' : undefined}
+          >
             <h2 className="ui-visually-hidden" id="faq-topics-title">
               Темы вопросов
             </h2>
-            <div className="faq-topics__list" role="group" aria-labelledby="faq-topics-title">
+            <div
+              className="faq-topics__list"
+              ref={topicsRef}
+              role="group"
+              aria-labelledby="faq-topics-title"
+            >
               {categoryButton(undefined, 'Все вопросы', 'message')}
               {FAQ_CATEGORIES.map((item) => categoryButton(item.id, item.label, item.icon))}
             </div>
