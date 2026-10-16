@@ -147,6 +147,15 @@ Technically complete:
 Active visual slice: none. Active implementation milestone: none. WP-01 and
 WP-01B stay open; no next slice is approved.
 
+- **WP-09 / GC-R34 Mobile Account address form — ACCEPTED AS IS on
+  2026-10-16 (owner USER VISUAL + FUNCTIONAL PASS, manual), CLOSED and
+  published on 2026-10-16 (docs only).** No code or visual change. The
+  existing `#/account/addresses` layout (one-column form; list and form
+  stacked below 1200px, side by side from 1200px), validation, focus flow
+  and CRUD are accepted; read-only discovery found no source-confirmed
+  layout defect. No mobile raster exists. Automated checks NOT RUN. GC-R50
+  stays the latest published code milestone; WP-09 stays open.
+
 - **WP-09 / GC-R28 Mobile Checkout hierarchy — ACCEPTED AS IS on
   2026-10-16 (owner USER VISUAL + FUNCTIONAL PASS, manual), CLOSED and
   published on 2026-10-16 (docs only).** No code or visual change; GC-R50
@@ -1183,7 +1192,9 @@ at 1440, the overview address card empty/populated at 1440/390, the compact
 shell at 1024 and the Account A/B regression states are agent-verified
 (`account` suite and screenshots). Evidence: `Account_profile_address.png`
 main area and the `Account_profile.png` address card; the Account A/B shell
-and rail stay canonical.
+and rail stay canonical. The mobile address form was accepted as is by
+WP-09 / GC-R34 on 2026-10-16 (owner manual PASS, no code change, published
+docs-only).
 
 - **Address book.** `#/account/addresses` is an empty-by-default, browser-local
   demo address book: add, edit and delete (with `ConfirmationDialog`) up to 5
@@ -6275,6 +6286,9 @@ requested.
 
 ## Project closeout state
 
+WP-09 / GC-R34 (mobile Account address form) is ACCEPTED AS IS — CLOSED
+and published (docs only) on 2026-10-16 with owner USER VISUAL + FUNCTIONAL
+PASS; no code change, automated checks NOT RUN.
 WP-09 / GC-R28 (mobile Checkout hierarchy) is ACCEPTED AS IS — CLOSED and
 published (docs only) on 2026-10-16 with owner USER VISUAL + FUNCTIONAL
 PASS; no code change, automated checks NOT RUN.
