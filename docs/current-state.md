@@ -147,6 +147,15 @@ Technically complete:
 Active visual slice: none. Active implementation milestone: none. WP-01 and
 WP-01B stay open; no next slice is approved.
 
+- **WP-09 / GC-R04 Mobile SiteFooter — ACCEPTED AS IS on 2026-10-16 (owner
+  visual decision after read-only discovery), CLOSED and published on
+  2026-10-16 (docs only).** No CSS, TSX, behaviour, link or component change.
+  The accepted Global Shell E footer, including its one-column 320/390
+  composition and existing responsive steps, is retained; discovery found no
+  confirmed overflow, focus or layout defect. Q-14 destinations stay
+  externally blocked. Automated checks NOT RUN. GC-R50 stays the latest
+  published code milestone; WP-09 stays open.
+
 - **WP-09 / GC-R37 Delivery & Payment and GC-R38 Warranty mobile review —
   each ACCEPTED AS IS on 2026-10-16 (owner USER VISUAL + FUNCTIONAL PASS,
   manual), CLOSED and published on 2026-10-16 (docs only).** Two
@@ -4128,7 +4137,9 @@ product-cluster photography (only the synthetic `product-phone.svg` exists).
 ### Global Shell E — SiteFooter
 
 **Accepted as-is for project closeout.** The integrated 1440/390 review found no
-layout, spacing or hierarchy blocker; no Footer milestone is open.
+layout, spacing or hierarchy blocker; no Footer milestone is open. WP-09 /
+GC-R04 accepted the mobile footer as is on 2026-10-16 (owner decision, no
+code change, published docs-only).
 
 `src/components/shell/` owns `SiteFooter`, the canonical global shell footer,
 with its styles in `footer.scss`. There is no `src/components/footer/`,
@@ -6301,6 +6312,9 @@ requested.
 
 ## Project closeout state
 
+WP-09 / GC-R04 (mobile SiteFooter) is ACCEPTED AS IS — CLOSED and published
+(docs only) on 2026-10-16 by owner visual decision; no code change,
+automated checks NOT RUN.
 WP-09 / GC-R37 (Delivery & Payment) and GC-R38 (Warranty) are each ACCEPTED
 AS IS — CLOSED and published (docs only) on 2026-10-16 with owner USER VISUAL +
 FUNCTIONAL PASS; no code change, automated checks NOT RUN.
