@@ -147,10 +147,26 @@ Technically complete:
 Active visual slice: none. Active implementation milestone: none. WP-01 and
 WP-01B stay open; no next slice is approved.
 
+- **WP-09 / GC-R32 Mobile Account navigation (D-08, Variant A) — USER
+  VISUAL + FUNCTIONAL PASS on 2026-10-16 (owner, manual), CLOSED and
+  published on 2026-10-16.** The latest published code milestone; one
+  bounded WP-09 slice. WP-09 stays open.
+  - `src/pages/account/account.scss` only: below 1024px
+    (`h.media-max(1024px)`), rules scoped to `.account-page__rail` turn the
+    `AccountNavigation` list into wrapping chips (`flex-flow: row wrap`,
+    8px gap), size rows to content, hide the icons and their gap. All six
+    entries (five links + «Выход») stay; the existing card surface, row
+    height, active and focus styles are inherited.
+  - Desktop ≥1024px, DOM/Tab order, `aria-current`, destinations, logout,
+    routing, the Account store, `AccountNavigation.tsx`,
+    `account-components.scss` and `?reference=components` are unchanged.
+  - No mobile Account raster exists; reviewed against accepted
+    Foundations/Components. Tests, build, lint, screenshots, pixel diff:
+    NOT RUN, by owner workflow.
+
 - **WP-09 / GC-R40 FAQ topics scroll affordance — USER VISUAL + FUNCTIONAL
   PASS on 2026-10-16 (owner, manual), CLOSED and published on
-  2026-10-16.** The latest published code milestone; one bounded WP-09
-  slice. WP-09 stays open.
+  2026-10-16.** One bounded WP-09 slice. WP-09 stays open.
   - Below 1024px `FaqPage` measures `.faq-topics__list` (`scrollWidth`,
     `clientWidth`, `scrollLeft`, 2px tolerance) via `ResizeObserver` on the
     list and its topic buttons plus a passive `scroll` listener, and sets
@@ -1258,7 +1274,9 @@ other Account rasters are a divergent older shell and are not shell evidence.
   Rail (Account A): Профиль / Избранное / Сравнение / Выход — extended by
   Account B. Bonuses,
   addresses, recently viewed, profile edit and settings are omitted, not
-  placeheld. Below 1024px the rail stacks above the content.
+  placeheld. Below 1024px the rail stacks above the content as compact
+  wrapping chips without icons (WP-09 / GC-R32, closed and published
+  2026-10-16).
 - **Shell.** `shellActions` gained `accountLabel` (default «Войти»):
   production passes «Войти» → `#/login` signed out and «Профиль» → `#/account`
   signed in, to both SiteHeader and MobileActionBar. Reference surfaces keep
@@ -6228,8 +6246,10 @@ requested.
 
 ## Project closeout state
 
-WP-09 / GC-R40 (FAQ topics scroll affordance) is the last published code
-milestone, CLOSED and published on 2026-10-16 with owner USER VISUAL +
+WP-09 / GC-R32 (mobile Account navigation, Variant A) is the last published
+code milestone, CLOSED and published on 2026-10-16 with owner USER VISUAL +
+FUNCTIONAL PASS; automated checks NOT RUN by owner decision.
+WP-09 / GC-R40 (FAQ topics scroll affordance) was CLOSED and published on 2026-10-16 with owner USER VISUAL +
 FUNCTIONAL PASS; automated checks NOT RUN by owner decision. WP-09 stays open.
 WP-08 / AUD-09 (laptop PDP «Другие ноутбуки») was CLOSED and published on
 2026-10-16 with owner USER VISUAL + FUNCTIONAL PASS; automated checks NOT RUN by owner decision. With it WP-08 is

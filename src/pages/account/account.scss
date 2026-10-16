@@ -212,6 +212,26 @@
 
   &__rail {
     min-width: 0;
+
+    @include h.media-max(1024px) {
+      .account-navigation__list {
+        flex-flow: row wrap;
+        gap: 8px;
+      }
+
+      .account-navigation__item {
+        max-width: 100%;
+      }
+
+      .account-navigation__row {
+        gap: 0;
+        width: auto;
+      }
+
+      .account-navigation__icon {
+        display: none;
+      }
+    }
   }
 
   &__main {
