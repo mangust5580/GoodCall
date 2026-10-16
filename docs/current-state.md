@@ -149,9 +149,29 @@ Technically complete:
 Active visual slice: none. Active implementation milestone: none. WP-01 and
 WP-01B stay open; no next slice is approved.
 
+- **WP-10 / D-09 / AUD-16 — Spring Sale Preview Accuracy Correction — OWNER
+  USER VISUAL + FUNCTIONAL PASS 2026-10-16; CLOSED & PUBLISHED 2026-10-16.**
+  The latest published code milestone. Change in
+  `src/pages/blog/blogArticles.ts` only:
+  the `goodcall-spring-sale` preview's title is now «Весенние скидки в
+  GOODCALL — архивный демо-анонс» and its excerpt «Архивная демонстрационная
+  карточка 2024 года. GOODCALL — демо-магазин: реальные продажи и скидочные
+  акции здесь не проводятся.»; the misleading «этой недели» / «Успейте» copy
+  is gone. Slug, `promotions` category, 2024-04-30 date, cover, ordering,
+  link policy, the other 8 previews and the absent detail are unchanged
+  (9 previews / 6 details); the preview stays unlinked. The owner reports
+  all five manual checks passed (`#/blog` preview, «Акции» category, search
+  for «скидки» and «весенние», Latest sidebar, 320/390 wrapping with Home «Из
+  блога» unchanged); the agent ran no browser, screenshots, tests, lint,
+  typecheck or build. `best-smartphones-under-30000` and
+  `new-apple-watch-changes` stay deferred and unchanged; 9/9 is not a
+  requirement. WP-10 stays open; GC-R47 partial (6/9); D-09 and AUD-16 open
+  overall; GC-R54 deferred. GC-R48 (`7f0fe5c`) is the previous published
+  milestone, with its 4:1 Home crop accepted as is.
+
 - **WP-10 / GC-R48 — Home ↔ Blog Variant A — OWNER ACCEPTED AS IS
-  2026-10-16; CLOSED & PUBLISHED 2026-10-16.** The latest published code
-  milestone (`HomeRoute.tsx`, `HomePage.tsx`, `home.scss`). Production `#/` takes
+  2026-10-16; CLOSED & PUBLISHED 2026-10-16.** Published as `7f0fe5c`
+  (`HomeRoute.tsx`, `HomePage.tsx`, `home.scss`). Production `#/` takes
   Blog-owned records from the existing `BLOG_ARTICLES` and shows the three
   latest that have a detail body — iPhone vs Samsung (2024-05-12), wireless
   earbuds (2024-05-10), tablet (2024-05-04) — with no new corpus or articles.
@@ -6433,8 +6453,11 @@ requested.
 
 ## Project closeout state
 
-WP-10 / GC-R48 (Home ↔ Blog, Variant A) is the last published code
-milestone, ACCEPTED AS IS — CLOSED & PUBLISHED on 2026-10-16; the owner
+WP-10 / D-09 / AUD-16 Spring Sale preview accuracy correction is the last
+published code milestone, CLOSED & PUBLISHED on 2026-10-16 with owner USER
+VISUAL + FUNCTIONAL PASS; checks NOT RUN.
+WP-10 / GC-R48 (Home ↔ Blog, Variant A) was ACCEPTED AS IS — CLOSED &
+PUBLISHED on 2026-10-16 (`7f0fe5c`); the owner
 accepted the existing 4:1 cover crop.
 WP-10 / Slice 3 (tablet) and the D-09 Editorial Batch (iPhone 15 vs Galaxy
 S24, MacBook Air M3) were CLOSED and published on 2026-10-16 with owner USER VISUAL + FUNCTIONAL PASS; checks NOT

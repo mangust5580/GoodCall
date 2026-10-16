@@ -82,9 +82,9 @@ const CORPUS: readonly BlogArticle[] = [
   },
   {
     slug: 'goodcall-spring-sale',
-    title: 'Весенние скидки в GOODCALL',
+    title: 'Весенние скидки в GOODCALL — архивный демо-анонс',
     excerpt:
-      'Собрали для вас лучшие предложения этой недели. Успейте выгодно обновить свою технику!',
+      'Архивная демонстрационная карточка 2024 года. GOODCALL — демо-магазин: реальные продажи и скидочные акции здесь не проводятся.',
     category: 'promotions',
     publishedAt: '2024-04-30',
     cover: BLOG_COVER_MEDIA.goodcallSpringSale,
