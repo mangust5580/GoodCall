@@ -5,7 +5,7 @@ import productPhone from '../../assets/products/product-phone.svg';
 import { formatUnitCount } from '../../commerce/cart';
 import type { FavoriteItem } from '../../commerce/favorites';
 import { formatPrice } from '../../commerce/format';
-import { EmptyState } from '../../components/feedback';
+import { ConfirmationDialog, EmptyState } from '../../components/feedback';
 import { Breadcrumbs, Container } from '../../components/layout';
 import { ProductCard } from '../../components/product';
 import { Chip } from '../../components/ui';
@@ -20,6 +20,7 @@ export interface FavoritesPageProps {
   readonly items: readonly FavoriteItem[];
   readonly cart: FavoritesCartSeam;
   readonly onRemove: (item: FavoriteItem) => void;
+  readonly onClear: () => void;
   readonly productHref: (slug: string) => string | undefined;
   readonly homeHref: string;
   readonly catalogHref: string;
@@ -32,19 +33,30 @@ export function FavoritesPage({
   items,
   cart,
   onRemove,
+  onClear,
   productHref,
   homeHref,
   catalogHref,
 }: FavoritesPageProps) {
   const [announcement, setAnnouncement] = useState('');
+  const [confirmingClear, setConfirmingClear] = useState(false);
   const itemCount = items.length;
   const previousItemCount = useRef(itemCount);
+  const focusAfterClear = useRef(false);
+
+  if (confirmingClear && itemCount === 0) {
+    setConfirmingClear(false);
+  }
 
   useEffect(() => {
-    if (itemCount < previousItemCount.current && document.activeElement === document.body) {
+    if (
+      itemCount < previousItemCount.current &&
+      (focusAfterClear.current || document.activeElement === document.body)
+    ) {
       document.getElementById(TITLE_ID)?.focus();
     }
 
+    focusAfterClear.current = false;
     previousItemCount.current = itemCount;
   }, [itemCount]);
 
@@ -57,14 +69,28 @@ export function FavoritesPage({
         />
 
         <header className="favorites-page__heading">
-          <div className="favorites-page__title-row">
-            <h1 className="favorites-page__title" id={TITLE_ID} tabIndex={-1}>
-              Избранное
-            </h1>
-            {itemCount === 0 ? null : <Chip>{formatUnitCount(itemCount)}</Chip>}
+          <div className="favorites-page__intro">
+            <div className="favorites-page__title-row">
+              <h1 className="favorites-page__title" id={TITLE_ID} tabIndex={-1}>
+                Избранное
+              </h1>
+              {itemCount === 0 ? null : <Chip>{formatUnitCount(itemCount)}</Chip>}
+            </div>
+            {itemCount === 0 ? null : (
+              <p className="favorites-page__lead">Товары, которые вы добавили в избранное.</p>
+            )}
           </div>
           {itemCount === 0 ? null : (
-            <p className="favorites-page__lead">Товары, которые вы добавили в избранное.</p>
+            <button
+              className="ui-button ui-button--secondary favorites-page__clear"
+              onClick={(event) => {
+                event.currentTarget.focus();
+                setConfirmingClear(true);
+              }}
+              type="button"
+            >
+              Очистить все
+            </button>
           )}
         </header>
 
@@ -140,6 +166,19 @@ export function FavoritesPage({
       <p className="ui-visually-hidden" role="status">
         {announcement}
       </p>
+      <ConfirmationDialog
+        cancelLabel="Отмена"
+        confirmLabel="Очистить"
+        message={`Из избранного будут удалены все товары: ${String(itemCount)}.`}
+        onConfirm={() => {
+          focusAfterClear.current = true;
+          onClear();
+          setAnnouncement('Избранное очищено');
+        }}
+        onOpenChange={setConfirmingClear}
+        open={confirmingClear && itemCount > 0}
+        title="Очистить избранное?"
+      />
     </main>
   );
 }

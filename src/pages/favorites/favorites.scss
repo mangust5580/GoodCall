@@ -10,9 +10,22 @@
 
   &__heading {
     display: flex;
+    flex-wrap: wrap;
+    gap: 16px 24px;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: h.fluid(24, 16);
+  }
+
+  &__intro {
+    display: flex;
     flex-direction: column;
     gap: 8px;
-    margin-bottom: h.fluid(24, 16);
+    min-width: 0;
+  }
+
+  &__clear {
+    flex: none;
   }
 
   &__title-row {

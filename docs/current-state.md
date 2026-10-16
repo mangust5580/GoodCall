@@ -147,9 +147,31 @@ Technically complete:
 Active visual slice: none. Active implementation milestone: none. WP-01 and
 WP-01B stay open; no next slice is approved.
 
+- **WP-08 / GC-R24 Favourites «Очистить все» — USER VISUAL + FUNCTIONAL
+  PASS on 2026-10-16 (owner), CLOSED and published on 2026-10-16.** The
+  latest published code milestone; one bounded WP-08 slice. WP-08 stays open.
+  - A non-empty `#/favorites` shows a secondary «Очистить все» in the page
+    header; it is absent when the list is empty. It only opens the shared
+    `ConfirmationDialog` (D-07): «Очистить избранное?» / «Из избранного
+    будут удалены все товары: N.» / «Отмена» · «Очистить», N live.
+  - Confirm calls `clearFavorites()` once (`commit([])` in the favourites
+    store: persistence, subscribers and the existing cross-tab `storage`
+    sync; `goodcall.favorites.v1` unchanged), announces «Избранное очищено»
+    and focuses the page `h1` «Избранное» — not the empty-state `h2`,
+    which `EmptyState` does not make focusable. Cancel / Escape keep the
+    list and return focus to the button. The dialog closes without action
+    when the list empties in another tab.
+  - Files: `favoritesStore.ts`, favourites `index.ts`, `FavoritesRoute.tsx`
+    (`onClear`), `FavoritesPage.tsx`, `favorites.scss` (header row mirrors
+    `compare__header`). `ConfirmationDialog`, `EmptyState`, cards, shell
+    badge, Cart and Compare are unchanged.
+  - Automated checks (tests, typecheck, lint, build, screenshots, pixel
+    diff): NOT RUN, by owner decision. Acceptance rests on the owner's
+    manual pass only.
+
 - **WP-08 / GC-R19 Compare horizontal scroll shadows — USER VISUAL +
-  FUNCTIONAL PASS on 2026-10-16, CLOSED and published on 2026-10-16.** The
-  latest published code milestone; one bounded WP-08 slice; the only code
+  FUNCTIONAL PASS on 2026-10-16, CLOSED and published on 2026-10-16.** One
+  bounded WP-08 slice; the only code
   change is `src/pages/compare/compare.scss`. WP-08 stays open.
   - CSS-only: `.compare__scroll` paints two 16px `--alpha-black-24` edge
     gradients (`background-attachment: scroll`) under two
@@ -2243,7 +2265,7 @@ in `favorites.scss`, loaded through `global.scss`. The page shows:
   1440, 3 at 1024, 2 at 768 and 1 at 390/320.
 
 Each card shows the snapshot title, image, price and old price, a pressed ♥
-(the only remove affordance) and the shared-cart action and stepper. The
+(the per-card remove affordance) and the shared-cart action and stepper. The
 iPhone specimen title links to its product page.
 
 **Cart integration.** `FavoritesRoute` holds a small adapter over the Commerce
@@ -2261,11 +2283,13 @@ adding to the cart keeps the favourite.
 - Removing a card moves focus to the `h1` when focus would fall to `body`, as
   in the Cart precedent.
 - One polite `role="status"` announces removals and cart adds.
+- Since WP-08 / GC-R24 (closed and published 2026-10-16) a
+  confirmed «Очистить все» clears the list; see the GC-R24 entry above.
 
 **Raster normalization (documented omissions).**
 
 - The account sidebar is omitted; there is no account system.
-- Omitted controls: `Поделиться списком`, `Очистить избранное`, select-all,
+- Omitted controls: `Поделиться списком`, select-all,
   bulk delete, sort, per-card checkbox, the red `Удалить` link (the ♥ removes),
   `В наличии`, `Показать ещё` and `Рекомендуем вам`.
 - The first lead sentence is kept; «Цены и наличие обновляются регулярно» is
@@ -6129,11 +6153,14 @@ requested.
 
 ## Project closeout state
 
-WP-08 / GC-R19 (compare horizontal scroll shadows) is the last published code
-milestone, CLOSED and published on 2026-10-16 with USER VISUAL + FUNCTIONAL
-PASS; automated checks NOT RUN by owner decision. WP-08 / GC-R21
+WP-08 / GC-R24 (favourites «Очистить все») is the last published code
+milestone, CLOSED and published on 2026-10-16 with owner USER VISUAL +
+FUNCTIONAL PASS; automated checks NOT RUN by owner decision.
+WP-08 / GC-R19 (compare horizontal scroll shadows) was CLOSED and published
+on 2026-10-16 with USER VISUAL + FUNCTIONAL PASS; automated checks NOT RUN
+by owner decision. WP-08 / GC-R21
 (compare-add feedback notice) was CLOSED and published on 2026-10-15. WP-08 stays open
-(GC-R20 / D-06, GC-R24, GC-R25, AUD-09). WP-08 / AUD-10 (bulk cart and
+(GC-R20 / D-06, GC-R25, AUD-09). WP-08 / AUD-10 (bulk cart and
 compare confirmations) was CLOSED and published on 2026-10-13.
 WP-01B / AUD-15 B1 (non-dialable production demo phone) was CLOSED and
 published on 2026-10-13. WP-01B /

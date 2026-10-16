@@ -5,7 +5,7 @@ import {
   setCartLineQuantity,
   useCartLineList,
 } from '../../commerce/cart';
-import { removeFavorite, useFavoriteItems } from '../../commerce/favorites';
+import { clearFavorites, removeFavorite, useFavoriteItems } from '../../commerce/favorites';
 import { FavoritesPage } from '../../pages/favorites';
 import type { FavoritesCartSeam } from '../../pages/favorites';
 import { ProductionShell } from '../ProductionShell';
@@ -47,6 +47,7 @@ export function FavoritesRoute() {
         catalogHref={hashHref(CATALOG_SMARTPHONES_PATH)}
         homeHref={hashHref(HOME_PATH)}
         items={items}
+        onClear={clearFavorites}
         onRemove={(item) => {
           removeFavorite(item.slug);
         }}

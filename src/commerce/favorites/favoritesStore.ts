@@ -208,6 +208,14 @@ export function removeFavorite(slug: string): void {
   commit(currentItems().filter((item) => item.slug !== slug));
 }
 
+export function clearFavorites(): void {
+  if (currentItems().length === 0) {
+    return;
+  }
+
+  commit([]);
+}
+
 export function toggleFavorite(item: FavoriteItem, pressed: boolean): void {
   if (pressed) {
     addFavorite(item);
