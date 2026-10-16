@@ -2,6 +2,7 @@ import type { ComponentType } from 'react';
 
 import { BLOG_ARTICLES } from './blogArticles';
 import type { BlogArticle } from './blogArticles';
+import { ExtendSmartphoneBatteryLifeBody } from './ExtendSmartphoneBatteryLifeBody';
 import { HowToChooseSmartphone2024Body } from './HowToChooseSmartphone2024Body';
 
 export interface BlogArticleDetail {
@@ -26,6 +27,15 @@ const BLOG_ARTICLE_DETAILS: Readonly<Record<string, BlogArticleDetailEntry>> = {
       'extend-smartphone-battery-life',
     ],
     Body: HowToChooseSmartphone2024Body,
+  },
+  'extend-smartphone-battery-life': {
+    readingMinutes: 6,
+    relatedSlugs: [
+      'how-to-choose-smartphone-2024',
+      'best-smartphones-under-30000',
+      'how-to-choose-wireless-earbuds',
+    ],
+    Body: ExtendSmartphoneBatteryLifeBody,
   },
 };
 

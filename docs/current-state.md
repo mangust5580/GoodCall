@@ -106,7 +106,9 @@ Accepted:
   See the Commerce A section below.
 - **Blog B / Article Details — user visual PASS on 2026-09-28 (desktop and
   mobile ~390px), CLOSED and published.** `#/blog/how-to-choose-smartphone-2024`
-  is the only Blog detail page. See the Blog B section below.
+  was the only Blog detail page at Blog B; WP-10 / Slice 1 published
+  `#/blog/extend-smartphone-battery-life` on 2026-10-16. See the Blog B
+  section below.
 - **Blog A / Blog Listing — user visual PASS on 2026-09-28 (desktop and
   mobile), CLOSED and published.** `#/blog` renders the accepted Blog listing.
   See the Blog A section below.
@@ -147,6 +149,22 @@ Technically complete:
 Active visual slice: none. Active implementation milestone: none. WP-01 and
 WP-01B stay open; no next slice is approved.
 
+- **WP-10 / Slice 1 Battery Article — USER VISUAL + FUNCTIONAL PASS on
+  2026-10-16 (owner, manual), CLOSED and published on 2026-10-16.** The
+  latest published code milestone. `#/blog/extend-smartphone-battery-life`
+  is a published registered detail page: new
+  `ExtendSmartphoneBatteryLifeBody.tsx`, registered only in
+  `blogArticleDetails.ts` (6 minutes, existing related slugs). The Blog now
+  has 2 published full articles among 9 records; 7 have no detail body. Its
+  card, related and Latest links
+  appear through the existing `blogArticleHref`; other unregistered
+  articles stay unlinked and missing slugs still render the designed 404.
+  Blog A/B visuals, routes and link policy are unchanged; the corpus date
+  2024-05-02 and the existing cover are kept (an archived preview completed,
+  not a 2026 republication; no new imagery). Home and About are unchanged;
+  D-09 beyond this slice, GC-R46, GC-R49 and GC-R54 stay open. WP-10 stays
+  open. Checks, browser and screenshots NOT RUN; CI / Pages NOT VERIFIED.
+
 - **WP-07 / GC-R08 and GC-R09 — each ACCEPTED AS IS on 2026-10-16 (owner
   USER VISUAL + FUNCTIONAL PASS, manual), CLOSED and published on
   2026-10-16 (docs only).** GC-R08: Catalog filter and favourite/compare presentation
@@ -157,7 +175,7 @@ WP-01B stay open; no next slice is approved.
   are unchanged; automated checks NOT RUN.
 - **WP-07 / GC-R16 Search favourites + compare (D-05 Variant B) — USER
   VISUAL + FUNCTIONAL PASS on 2026-10-16 (owner, manual), CLOSED and
-  published on 2026-10-16.** The latest published code milestone. `#/search`
+  published on 2026-10-16.** `#/search`
   shows the existing favourite and compare
   actions on mobile (< 1024, `ProductCard layout="horizontal"`) and desktop
   (≥ 1024, `SearchResultRow`, buttons over the 136px media), wired through
@@ -6334,12 +6352,15 @@ requested.
 
 ## Project closeout state
 
+WP-10 / Slice 1 (battery article) is the last published code milestone,
+CLOSED and published on 2026-10-16 with owner USER VISUAL + FUNCTIONAL PASS;
+automated checks NOT RUN; 2 of 9 Blog records have full articles; WP-10
+stays open.
 WP-07 / GC-R08 and GC-R09 are ACCEPTED AS IS — CLOSED and published (docs
 only) on 2026-10-16 with owner USER VISUAL + FUNCTIONAL PASS (no code
 change). D-05 Variant B is implemented as WP-07 / GC-R16 (Search favourite +
 compare), accepted by owner USER VISUAL + FUNCTIONAL PASS on 2026-10-16;
-GC-R16 is the last published code milestone, and GC-R16 and WP-07 are CLOSED
-and published on 2026-10-16.
+GC-R16 and WP-07 are CLOSED and published on 2026-10-16.
 WP-09 / GC-R04 (mobile SiteFooter) is ACCEPTED AS IS — CLOSED and published
 (docs only) on 2026-10-16 by owner visual decision; no code change,
 automated checks NOT RUN.
