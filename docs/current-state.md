@@ -149,6 +149,17 @@ Technically complete:
 Active visual slice: none. Active implementation milestone: none. WP-01 and
 WP-01B stay open; no next slice is approved.
 
+- **WP-10 / GC-R47 — OWNER FINAL CLOSEOUT GO 2026-10-16; CLOSED &
+  PUBLISHED 2026-10-16.** WP-10 closed; GC-R47 resolved. All 9/9 Blog articles are published and
+  owner-accepted; every preview slug has a registered full body and a route
+  link. The final read-only repository review at `2389cbb` found no
+  blockers, and the earlier owner visual/functional PASS evidence stands.
+  Agent checks NOT RUN; CI/GitHub Pages NOT VERIFIED. The final docs-only
+  closeout was published on 2026-10-16; the last published code milestone
+  remains Article 9 (`2389cbb`). D-09 (broader editorial decisions), AUD-16
+  (2024-content decision) and GC-R54 (deferred imagery) stay independently
+  tracked and are not closed by WP-10.
+
 - **WP-10 / GC-R47 — Article 9/9 (`new-apple-watch-changes`) — OWNER USER
   VISUAL + FUNCTIONAL PASS 2026-10-16; CLOSED & PUBLISHED 2026-10-16.** The
   latest published code milestone. New `NewAppleWatchChangesBody.tsx` (~740 words; archival
@@ -173,10 +184,11 @@ WP-01B stay open; no next slice is approved.
   Blog, «Новости» and search; Popular and Latest contracts; related
   navigation and 404; 320/390/768/1024/1440 and keyboard; Home and
   `?reference=home`); the agent ran no browser or automated checks; CI/Pages
-  NOT VERIFIED. **9/9 full articles published.** Final WP-10 completion
-  still needs a separate final remote verification and an explicit owner
-  closeout decision. Article 8 (`60c58ee`) is the previous published code
-  milestone. WP-10 open; GC-R47 awaiting final owner closeout; D-09 and AUD-16 open overall; GC-R48
+  NOT VERIFIED. **9/9 full articles published.** At this publication
+  final WP-10 completion still needed a final verification and an explicit
+  owner closeout decision (since given; see the closeout entry above).
+  Article 8 (`60c58ee`) is the previous published code milestone. WP-10
+  then open; GC-R47 then awaiting final owner closeout; D-09 and AUD-16 open overall; GC-R48
   published (crop accepted as is); GC-R54 deferred.
 
 - **WP-10 / GC-R47 — Article 8/9 (`goodcall-spring-sale`) — OWNER USER
@@ -6549,12 +6561,15 @@ requested.
 
 ## Project closeout state
 
+WP-10 / GC-R47 are CLOSED & PUBLISHED on 2026-10-16 by the owner's explicit
+final GO (9/9 articles published and accepted; docs-only closeout
+published). D-09, AUD-16 and GC-R54 remain independent.
 WP-10 / Article 9/9 (`new-apple-watch-changes`) is the last published code
 milestone, CLOSED & PUBLISHED on 2026-10-16 with owner USER VISUAL +
 FUNCTIONAL PASS; all 9/9 Blog records now have full bodies in the
-repository; agent checks NOT RUN, CI/Pages NOT VERIFIED. WP-10 and GC-R47
-stay open pending a separate final remote verification and explicit owner
-sign-off.
+repository; agent checks NOT RUN, CI/Pages NOT VERIFIED. At its publication
+WP-10 and GC-R47 stayed open pending final verification and owner sign-off
+(since given; see above).
 WP-10 / Article 8/9 (`goodcall-spring-sale`) was CLOSED & PUBLISHED on
 2026-10-16 (`60c58ee`) with owner USER VISUAL +
 FUNCTIONAL PASS (8/9 published; WP-10 requires 9/9; Apple Watch remains).
