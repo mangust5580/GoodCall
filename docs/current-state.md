@@ -146,13 +146,14 @@ Technically complete:
   owned by React Router using a GitHub Pages-safe hash strategy. See the
   Current routes section below.
 
-Active visual slice: none. Active implementation milestone: none; the
-locally accepted M2 + GC-R48 correction below awaits a separate publication
-GO. WP-01 and WP-01B stay open; no next slice is approved.
+Active visual slice: none. Active implementation milestone: none; the M2 +
+GC-R48 correction publication cycle below is closed, and the next milestone
+is to be chosen with the owner. WP-01 and WP-01B stay open; no next slice is
+approved.
 
 - **D-13 / RTK — OWNER DECISION 2026-10-16. M2 (RTK Foundation + Favorites)
-  LOCAL ACCEPTED 2026-10-17 — owner-reported USER VISUAL + FUNCTIONAL PASS;
-  NOT PUBLISHED (no commit, push, CI or Pages).** GoodCall is a portfolio
+  — CLOSED & PUBLISHED 2026-10-17** (owner-reported USER VISUAL + FUNCTIONAL
+  PASS and live-site PASS; publication record below). GoodCall is a portfolio
   project: Redux Toolkit is mandatory in the target architecture and must
   own real production domain state, not sit as a decorative dependency.
   - M2 added `@reduxjs/toolkit` and `react-redux` under its owner GO.
@@ -174,9 +175,10 @@ GO. WP-01 and WP-01B stay open; no next slice is approved.
     undecided and not authorized. WP-13's broader Architecture & Design
     System assessment stays open.
 
-- **WP-06 / GC-R48 — Blog lazy-boundary correction — LOCAL ACCEPTED
-  2026-10-17 (owner-reported USER VISUAL + FUNCTIONAL PASS); NOT
-  PUBLISHED.** A correction after the published WP-06 and GC-R48 closeouts,
+- **WP-06 / GC-R48 — Blog lazy-boundary correction — CLOSED & PUBLISHED
+  2026-10-17** (owner-reported USER VISUAL + FUNCTIONAL PASS and live-site
+  PASS; publication record below). A correction after the published WP-06 and
+  GC-R48 closeouts,
   not a reopening of other WP-06 work. The GC-R48 Home teasers imported the
   full `pages/blog` barrel, which pulled every Blog page and article body
   into the entry.
@@ -210,12 +212,16 @@ GO. WP-01 and WP-01B stay open; no next slice is approved.
     (mock build); network, LCP and INP were not measured.
   - `scripts/verify/suites/blog.mjs` now matches WP-10's nine linked
     articles (navigation step and listing assertion only).
-  - Open, outside these slices: whole-repo `format:check` drift in 12
-    unchanged files; an intermittent dev-server MIME mismatch for
+  - Publication record: application commit `2cb480c`
+    (`2cb480c0cea55a8a925e78715f0e333221ed29b6`); CI recovery commit
+    `3b046d8` (`3b046d831cad0381fdba5ba309ccebc1b36a3d0f`: the four Account
+    Stylelint selectors rewritten with identical compiled CSS, plus
+    formatting-only Prettier normalization of the 12 previously drifting
+    files). GitHub Actions CI #176 green and Pages deploy #176 succeeded for
+    `3b046d8`; the owner reported a live-site PASS on 2026-10-17.
+  - Open, outside these slices: an intermittent dev-server MIME mismatch for
     `teasers.ts` (served as `image/gif`) observed on 2026-10-17, cause not
     found and not reproduced since.
-  - Next: a separately authorized publication (commit, push, CI, Pages)
-    after review of the final `AUDIT.md`.
 
 - **WP-01B / Demo E-mail, production non-mailto — OWNER USER VISUAL +
   FUNCTIONAL PASS 2026-10-16; CLOSED & PUBLISHED 2026-10-16.** The six
