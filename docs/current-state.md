@@ -222,7 +222,7 @@ GO. WP-01 and WP-01B stay open; no next slice is approved.
   production e-mail elements (Footer, Contacts, shared Delivery/FAQ/Warranty
   support, Privacy, Offer ×2) now pass `informational` to the existing
   `DemoContactLink`, rendering an accessible `<button type="button"
-  aria-haspopup="dialog">` with no `href`/`mailto:` that opens the existing
+aria-haspopup="dialog">` with no `href`/`mailto:` that opens the existing
   dimmed demo `InfoDialog`; the production phone was already non-dialable.
   Addresses, wording, styles, routes, media, the shared component contract,
   `STOREFRONT_SUPPORT` and the `?reference=` fixtures (native `mailto:`
@@ -422,8 +422,7 @@ GO. WP-01 and WP-01B stay open; no next slice is approved.
   `publishedAt: '2024-05-10'` and cover are unchanged — an archived preview
   completed, not a 2026 republication. The listing card and existing related
   cards link through `blogArticleHref`; Popular stays unlinked by contract,
-  records without detail stay unlinked and unknown slugs keep the designed
-  404. At Slice 2 the Blog had 3 published full articles among 9 records.
+  records without detail stay unlinked and unknown slugs keep the designed 404. At Slice 2 the Blog had 3 published full articles among 9 records.
   Blog A/B, routes, Home, About and
   media are unchanged. WP-10 stays open; GC-R47 partial; GC-R46 / GC-R49
   stay published; GC-R48, AUD-16, GC-R54 and the rest of D-09 unchanged.

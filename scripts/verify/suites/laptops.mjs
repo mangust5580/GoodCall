@@ -1326,8 +1326,8 @@ const legion = await pdp.evaluate(() => ({
     railLabel: document.querySelector('.product-related__rail')?.getAttribute('aria-label'),
     allHref: document.querySelector('.product-related__all')?.getAttribute('href'),
     items: document.querySelectorAll('.product-related__item').length,
-    hrefs: [...document.querySelectorAll('.product-related__item a[href^="#/product/"]')].map(
-      (a) => a.getAttribute('href'),
+    hrefs: [...document.querySelectorAll('.product-related__item a[href^="#/product/"]')].map((a) =>
+      a.getAttribute('href'),
     ),
     navLabels: [...document.querySelectorAll('.product-related__nav')].map((b) =>
       b.getAttribute('aria-label'),
