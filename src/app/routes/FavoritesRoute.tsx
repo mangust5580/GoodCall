@@ -5,15 +5,17 @@ import {
   setCartLineQuantity,
   useCartLineList,
 } from '../../commerce/cart';
-import { clearFavorites, removeFavorite, useFavoriteItems } from '../../commerce/favorites';
+import { favoriteRemoved, favoritesCleared, selectFavoriteItems } from '../../commerce/favorites';
 import { FavoritesPage } from '../../pages/favorites';
 import type { FavoritesCartSeam } from '../../pages/favorites';
 import { ProductionShell } from '../ProductionShell';
+import { useAppDispatch, useAppSelector } from '../hooks';
 import { CATALOG_SMARTPHONES_PATH, HOME_PATH, hashHref, productDetailsHref } from '../routePaths';
 import { useDocumentTitle } from '../useDocumentTitle';
 
 export function FavoritesRoute() {
-  const items = useFavoriteItems();
+  const items = useAppSelector(selectFavoriteItems);
+  const dispatch = useAppDispatch();
   const cartLines = useCartLineList();
   useDocumentTitle('Избранное');
 
@@ -47,9 +49,11 @@ export function FavoritesRoute() {
         catalogHref={hashHref(CATALOG_SMARTPHONES_PATH)}
         homeHref={hashHref(HOME_PATH)}
         items={items}
-        onClear={clearFavorites}
+        onClear={() => {
+          dispatch(favoritesCleared());
+        }}
         onRemove={(item) => {
-          removeFavorite(item.slug);
+          dispatch(favoriteRemoved(item.slug));
         }}
         productHref={productDetailsHref}
       />

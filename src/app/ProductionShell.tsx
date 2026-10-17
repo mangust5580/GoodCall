@@ -3,13 +3,14 @@ import type { ReactNode } from 'react';
 import { useAccountSignedIn } from '../commerce/account';
 import { useCartUnitCount } from '../commerce/cart';
 import { useCompareCount } from '../commerce/compare';
-import { useFavoritesCount } from '../commerce/favorites';
+import { selectFavoritesCount } from '../commerce/favorites';
 import {
   STOREFRONT_DEMO_CONTACT,
   STOREFRONT_PAYMENT_MARKS,
   STOREFRONT_SUPPORT,
 } from '../commerce/storefront';
 import { MobileActionBar, NewsletterBand, SiteFooter, SiteHeader } from '../components/shell';
+import { useAppSelector } from './hooks';
 import {
   ABOUT_PATH,
   ACCOUNT_PATH,
@@ -67,7 +68,7 @@ interface ProductionShellProps {
 
 export function ProductionShell({ children }: ProductionShellProps) {
   const cartCount = useCartUnitCount();
-  const favoritesCount = useFavoritesCount();
+  const favoritesCount = useAppSelector(selectFavoritesCount);
   const comparisonCount = useCompareCount();
   const handleSearchSubmit = useSearchNavigation();
   const home = hashHref(HOME_PATH);

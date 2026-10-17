@@ -1,3 +1,14 @@
-export { clearFavorites, isFavorite, removeFavorite, toggleFavorite } from './favoritesStore';
-export type { FavoriteImage, FavoriteItem } from './favoritesStore';
-export { useFavoriteItems, useFavoritesCount } from './useFavorites';
+export { FAVORITES_STORAGE_KEY, parseStoredFavorites, serializeFavorites } from './favoritesModel';
+export type { FavoriteImage, FavoriteItem } from './favoritesModel';
+export {
+  favoriteAdded,
+  favoriteRemoved,
+  favoriteToggled,
+  favoritesCleared,
+  favoritesHydrated,
+  favoritesReducer,
+  selectFavoriteItems,
+  selectFavoritesCount,
+  selectIsFavorite,
+} from './favoritesSlice';
+export type { FavoriteToggle, FavoritesRootState, FavoritesState } from './favoritesSlice';

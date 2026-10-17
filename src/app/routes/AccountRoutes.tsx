@@ -15,7 +15,7 @@ import {
   useDefaultAccountAddressId,
 } from '../../commerce/account';
 import { useCompareCount } from '../../commerce/compare';
-import { useFavoritesCount } from '../../commerce/favorites';
+import { selectFavoritesCount } from '../../commerce/favorites';
 import { findStore } from '../../commerce/shops';
 import {
   AccountAddressesPage,
@@ -29,6 +29,7 @@ import { CHECKOUT_PAYMENT_METHODS } from '../../pages/checkout';
 import { readDemoOrder } from '../../pages/order-confirmation';
 import type { DemoOrder } from '../../pages/order-confirmation';
 import { ProductionShell } from '../ProductionShell';
+import { useAppSelector } from '../hooks';
 import {
   ACCOUNT_ADDRESSES_PATH,
   ACCOUNT_ORDERS_PATH,
@@ -218,7 +219,7 @@ export function AccountRoute() {
   const addresses = useAccountAddresses();
   const defaultAddressId = useDefaultAccountAddressId();
   const defaultAddress = addresses.find((address) => address.id === defaultAddressId);
-  const favoritesCount = useFavoritesCount();
+  const favoritesCount = useAppSelector(selectFavoritesCount);
   const compareCount = useCompareCount();
   const [order] = useState(() => recentOrder(readDemoOrder()));
   useDocumentTitle(gate === null ? 'Личный кабинет' : undefined);

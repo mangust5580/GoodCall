@@ -1,6 +1,7 @@
-import { toggleFavorite, useFavoriteItems } from '../../commerce/favorites';
+import { favoriteToggled, selectFavoriteItems } from '../../commerce/favorites';
 import type { FavoriteItem } from '../../commerce/favorites';
 import type { CatalogFavoritesSeam, CatalogProduct } from '../../pages/catalog';
+import { useAppDispatch, useAppSelector } from '../hooks';
 
 function catalogFavoriteItem(product: CatalogProduct): FavoriteItem {
   return {
@@ -16,7 +17,8 @@ function catalogFavoriteItem(product: CatalogProduct): FavoriteItem {
 }
 
 export function useCatalogFavoritesSeam(liveProducts: boolean): CatalogFavoritesSeam | undefined {
-  const favoriteItems = useFavoriteItems();
+  const favoriteItems = useAppSelector(selectFavoriteItems);
+  const dispatch = useAppDispatch();
 
   if (!liveProducts) {
     return undefined;
@@ -25,7 +27,7 @@ export function useCatalogFavoritesSeam(liveProducts: boolean): CatalogFavorites
   return {
     isFavorite: (product) => favoriteItems.some((item) => item.slug === product.id),
     toggle: (product, pressed) => {
-      toggleFavorite(catalogFavoriteItem(product), pressed);
+      dispatch(favoriteToggled({ item: catalogFavoriteItem(product), pressed }));
     },
   };
 }

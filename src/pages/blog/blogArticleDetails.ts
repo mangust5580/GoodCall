@@ -1,7 +1,12 @@
 import type { ComponentType } from 'react';
 
-import { BLOG_ARTICLES } from './blogArticles';
 import type { BlogArticle } from './blogArticles';
+import {
+  BLOG_ARTICLE_DETAIL_METADATA,
+  findBlogArticle,
+  isBlogArticleDetailSlug,
+} from './blogArticleRegistry';
+import type { BlogArticleDetailSlug } from './blogArticleRegistry';
 import { BestSmartphonesUnder30000Body } from './BestSmartphonesUnder30000Body';
 import { ExtendSmartphoneBatteryLifeBody } from './ExtendSmartphoneBatteryLifeBody';
 import { GoodcallSpringSaleBody } from './GoodcallSpringSaleBody';
@@ -19,116 +24,37 @@ export interface BlogArticleDetail {
   readonly Body: ComponentType;
 }
 
-interface BlogArticleDetailEntry {
-  readonly readingMinutes: number;
-  readonly relatedSlugs: readonly string[];
-  readonly Body: ComponentType;
-}
-
-const BLOG_ARTICLE_DETAILS: Readonly<Record<string, BlogArticleDetailEntry>> = {
-  'how-to-choose-smartphone-2024': {
-    readingMinutes: 8,
-    relatedSlugs: [
-      'how-to-choose-wireless-earbuds',
-      'new-apple-watch-changes',
-      'extend-smartphone-battery-life',
-    ],
-    Body: HowToChooseSmartphone2024Body,
-  },
-  'extend-smartphone-battery-life': {
-    readingMinutes: 6,
-    relatedSlugs: [
-      'how-to-choose-smartphone-2024',
-      'best-smartphones-under-30000',
-      'how-to-choose-wireless-earbuds',
-    ],
-    Body: ExtendSmartphoneBatteryLifeBody,
-  },
-  'how-to-choose-wireless-earbuds': {
-    readingMinutes: 6,
-    relatedSlugs: [
-      'how-to-choose-smartphone-2024',
-      'extend-smartphone-battery-life',
-      'tablet-for-work-and-study',
-    ],
-    Body: HowToChooseWirelessEarbudsBody,
-  },
-  'tablet-for-work-and-study': {
-    readingMinutes: 6,
-    relatedSlugs: [
-      'how-to-choose-smartphone-2024',
-      'how-to-choose-wireless-earbuds',
-      'macbook-air-m3-review',
-    ],
-    Body: TabletForWorkAndStudyBody,
-  },
-  'iphone-vs-samsung-2024': {
-    readingMinutes: 6,
-    relatedSlugs: [
-      'how-to-choose-smartphone-2024',
-      'extend-smartphone-battery-life',
-      'how-to-choose-wireless-earbuds',
-    ],
-    Body: IphoneVsSamsung2024Body,
-  },
-  'macbook-air-m3-review': {
-    readingMinutes: 5,
-    relatedSlugs: [
-      'tablet-for-work-and-study',
-      'how-to-choose-smartphone-2024',
-      'how-to-choose-wireless-earbuds',
-    ],
-    Body: MacbookAirM3Body,
-  },
-  'best-smartphones-under-30000': {
-    readingMinutes: 6,
-    relatedSlugs: [
-      'how-to-choose-smartphone-2024',
-      'extend-smartphone-battery-life',
-      'iphone-vs-samsung-2024',
-    ],
-    Body: BestSmartphonesUnder30000Body,
-  },
-  'goodcall-spring-sale': {
-    readingMinutes: 6,
-    relatedSlugs: [
-      'best-smartphones-under-30000',
-      'how-to-choose-smartphone-2024',
-      'iphone-vs-samsung-2024',
-    ],
-    Body: GoodcallSpringSaleBody,
-  },
-  'new-apple-watch-changes': {
-    readingMinutes: 6,
-    relatedSlugs: [
-      'iphone-vs-samsung-2024',
-      'how-to-choose-wireless-earbuds',
-      'extend-smartphone-battery-life',
-    ],
-    Body: NewAppleWatchChangesBody,
-  },
+const BLOG_ARTICLE_BODIES: Readonly<Record<BlogArticleDetailSlug, ComponentType>> = {
+  'how-to-choose-smartphone-2024': HowToChooseSmartphone2024Body,
+  'extend-smartphone-battery-life': ExtendSmartphoneBatteryLifeBody,
+  'how-to-choose-wireless-earbuds': HowToChooseWirelessEarbudsBody,
+  'tablet-for-work-and-study': TabletForWorkAndStudyBody,
+  'iphone-vs-samsung-2024': IphoneVsSamsung2024Body,
+  'macbook-air-m3-review': MacbookAirM3Body,
+  'best-smartphones-under-30000': BestSmartphonesUnder30000Body,
+  'goodcall-spring-sale': GoodcallSpringSaleBody,
+  'new-apple-watch-changes': NewAppleWatchChangesBody,
 };
 
-function findArticle(slug: string): BlogArticle | undefined {
-  return BLOG_ARTICLES.find((article) => article.slug === slug);
-}
-
 export function blogArticleDetail(slug: string): BlogArticleDetail | undefined {
-  const entry = Object.hasOwn(BLOG_ARTICLE_DETAILS, slug) ? BLOG_ARTICLE_DETAILS[slug] : undefined;
-  const article = findArticle(slug);
-
-  if (entry === undefined || article === undefined) {
+  if (!isBlogArticleDetailSlug(slug)) {
     return undefined;
   }
 
+  const article = findBlogArticle(slug);
+
+  if (article === undefined) {
+    return undefined;
+  }
+
+  const metadata = BLOG_ARTICLE_DETAIL_METADATA[slug];
+
   return {
     article,
-    readingMinutes: entry.readingMinutes,
-    relatedArticles: entry.relatedSlugs.flatMap((relatedSlug) => findArticle(relatedSlug) ?? []),
-    Body: entry.Body,
+    readingMinutes: metadata.readingMinutes,
+    relatedArticles: metadata.relatedSlugs.flatMap(
+      (relatedSlug) => findBlogArticle(relatedSlug) ?? [],
+    ),
+    Body: BLOG_ARTICLE_BODIES[slug],
   };
-}
-
-export function hasBlogArticleDetail(slug: string): boolean {
-  return blogArticleDetail(slug) !== undefined;
 }

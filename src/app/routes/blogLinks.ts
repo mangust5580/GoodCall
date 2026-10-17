@@ -1,4 +1,4 @@
-import { hasBlogArticleDetail } from '../../pages/blog';
+import { hasBlogArticleDetail } from '../../pages/blog/teasers';
 import { blogArticlePath, hashHref } from '../routePaths';
 
 export function blogArticleHref(slug: string): string | undefined {

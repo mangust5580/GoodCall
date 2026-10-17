@@ -33,15 +33,20 @@ function fakeWindow(localStorage) {
     addEventListener: (type, handler) => {
       if (type === 'storage') handlers.push(handler);
     },
+    removeEventListener: (type, handler) => {
+      const index = handlers.indexOf(handler);
+      if (type === 'storage' && index !== -1) handlers.splice(index, 1);
+    },
   };
 }
 
 let n = 0;
-async function openTab(win, url) {
+async function openTab(win, store) {
   globalThis.window = win;
   const before = win.handlers.length;
   n += 1;
-  const module = await import(`${url}?tab=${n}`);
+  const module =
+    store.open === undefined ? await import(`${store.url}?tab=${n}`) : await store.open(win);
   return { module, handlers: win.handlers.slice(before) };
 }
 
@@ -50,6 +55,31 @@ function deliver(tab, event) {
 }
 
 const src = (path) => new URL(`../../../src/commerce/${path}`, import.meta.url).href;
+const app = (path) => new URL(`../../../src/app/${path}`, import.meta.url).href;
+
+async function openFavoritesTab(win) {
+  const [{ createAppStore }, { startFavoritesStorageSync }, favorites] = await Promise.all([
+    import(app('store.ts')),
+    import(app('favoritesPersistence.ts')),
+    import(src('favorites/index.ts')),
+  ]);
+  const storage = win?.localStorage;
+  const store = createAppStore(storage);
+  const stop = startFavoritesStorageSync(store.dispatch, win, storage);
+  return { store, stop, favorites };
+}
+
+const favoriteItem = (slug, price) => ({
+  slug,
+  title: slug.toUpperCase(),
+  image: { kind: 'catalog-fallback' },
+  price,
+});
+const favoriteSlugs = (tab) =>
+  tab.store
+    .getState()
+    .favorites.items.map((item) => item.slug)
+    .join();
 const STORES = [
   {
     name: 'cart',
@@ -82,21 +112,15 @@ const STORES = [
   },
   {
     name: 'favorites',
-    url: src('favorites/favoritesStore.ts'),
+    open: openFavoritesTab,
     key: 'goodcall.favorites.v1',
-    subscribe: (m, l) => m.subscribeFavorites(l),
-    read: (m) =>
-      m
-        .getFavoriteItems()
-        .map((item) => item.slug)
-        .join(),
-    snapshot: (m) => m.getFavoriteItems(),
+    subscribe: (m, l) => m.store.subscribe(l),
+    read: favoriteSlugs,
+    snapshot: (m) => m.store.getState().favorites.items,
     empty: '',
-    first: (m) =>
-      m.addFavorite({ slug: 'a', title: 'A', image: { kind: 'catalog-fallback' }, price: 100 }),
+    first: (m) => m.store.dispatch(m.favorites.favoriteAdded(favoriteItem('a', 100))),
     firstValue: 'a',
-    second: (m) =>
-      m.addFavorite({ slug: 'b', title: 'B', image: { kind: 'catalog-fallback' }, price: 200 }),
+    second: (m) => m.store.dispatch(m.favorites.favoriteAdded(favoriteItem('b', 200))),
     secondValue: 'b,a',
     invalid: [
       ['malformed JSON', '{bad'],
@@ -164,8 +188,8 @@ for (const store of STORES) {
   const storage = fakeStorage();
   const session = fakeStorage();
   const win = fakeWindow(storage);
-  const a = await openTab(win, store.url);
-  const b = await openTab(win, store.url);
+  const a = await openTab(win, store);
+  const b = await openTab(win, store);
   const event = (key, newValue, storageArea = storage) => ({ key, newValue, storageArea });
 
   check(
@@ -296,8 +320,8 @@ for (const store of STORES) {
 {
   const storage = fakeStorage();
   const win = fakeWindow(storage);
-  const a = await openTab(win, src('account/accountStore.ts'));
-  const b = await openTab(win, src('account/accountStore.ts'));
+  const a = await openTab(win, { url: src('account/accountStore.ts') });
+  const b = await openTab(win, { url: src('account/accountStore.ts') });
   a.module.signInDemoAccount();
   const canonical = storage.data['goodcall.account.v1'];
   const padded = JSON.stringify({ ...JSON.parse(canonical), profile: { unknown: true } });
@@ -326,7 +350,10 @@ for (const store of STORES) {
   try {
     for (const store of STORES) {
       n += 1;
-      const module = await import(`${store.url}?nowindow=${n}`);
+      const module =
+        store.open === undefined
+          ? await import(`${store.url}?nowindow=${n}`)
+          : await store.open(undefined);
       store.read(module);
     }
   } catch {
@@ -347,6 +374,103 @@ for (const store of STORES) {
     threw = true;
   }
   check('stores load when window has no addEventListener', !threw);
+}
+
+{
+  const KEY = 'goodcall.favorites.v1';
+  const stored = [favoriteItem('b', 200), { ...favoriteItem('a', 100), oldPrice: 150 }];
+  const storage = fakeStorage({ [KEY]: JSON.stringify({ items: stored }), unrelated: 'keep' });
+  const win = fakeWindow(storage);
+  const tab = await openTab(win, { open: openFavoritesTab });
+  const { favoriteAdded, favoriteRemoved, favoriteToggled, favoritesCleared } =
+    tab.module.favorites;
+  const dispatch = (action) => tab.module.store.dispatch(action);
+  check(
+    'favorites: preloads valid v1 data in stored order without rewriting it',
+    favoriteSlugs(tab.module) === 'b,a' &&
+      tab.module.store.getState().favorites.items[1].oldPrice === 150 &&
+      storage.log.set === 0 &&
+      storage.log.removed.length === 0,
+  );
+
+  dispatch(favoriteAdded(favoriteItem('a', 100)));
+  dispatch(favoriteRemoved('missing'));
+  dispatch(favoriteToggled({ item: favoriteItem('b', 200), pressed: true }));
+  check('favorites: no-op actions write nothing', storage.log.set === 0, `${storage.log.set}`);
+
+  dispatch(favoriteToggled({ item: favoriteItem('c', 300), pressed: true }));
+  check(
+    'favorites: toggle on prepends once and writes the exact v1 envelope',
+    favoriteSlugs(tab.module) === 'c,b,a' &&
+      storage.log.set === 1 &&
+      storage.data[KEY] === JSON.stringify({ items: [favoriteItem('c', 300), ...stored] }),
+    storage.data[KEY],
+  );
+
+  dispatch(favoriteToggled({ item: favoriteItem('b', 200), pressed: false }));
+  dispatch(favoriteRemoved('c'));
+  check(
+    'favorites: toggle off and remove drop only the given slug',
+    favoriteSlugs(tab.module) === 'a' && storage.log.set === 3,
+  );
+
+  dispatch(favoritesCleared());
+  dispatch(favoritesCleared());
+  check(
+    'favorites: clear empties once and persists an empty envelope; repeated clear is a no-op',
+    favoriteSlugs(tab.module) === '' &&
+      storage.log.set === 4 &&
+      storage.data[KEY] === JSON.stringify({ items: [] }) &&
+      storage.data.unrelated === 'keep',
+  );
+
+  tab.module.stop();
+  check('favorites: stopping sync removes its storage listener', win.handlers.length === 0);
+  const before = favoriteSlugs(tab.module);
+  storage.data[KEY] = JSON.stringify({ items: [favoriteItem('z', 1)] });
+  for (const handler of win.handlers) handler({ key: KEY, newValue: null, storageArea: storage });
+  check(
+    'favorites: a stopped store ignores later storage events',
+    favoriteSlugs(tab.module) === before,
+  );
+}
+
+for (const [name, raw] of [
+  ['duplicate slug', JSON.stringify({ items: [favoriteItem('a', 1), favoriteItem('a', 2)] })],
+  ['malformed item', JSON.stringify({ items: [{ slug: 'a', title: 'A', price: 0 }] })],
+  ['foreign shape', JSON.stringify({ lines: [] })],
+  ['malformed JSON', '{bad'],
+]) {
+  const KEY = 'goodcall.favorites.v1';
+  const storage = fakeStorage({ [KEY]: raw, unrelated: 'keep' });
+  const tab = await openTab(fakeWindow(storage), { open: openFavoritesTab });
+  check(
+    `favorites: invalid stored ${name} at start → empty state, only the favorites key removed`,
+    favoriteSlugs(tab.module) === '' &&
+      !(KEY in storage.data) &&
+      storage.log.removed.join() === KEY &&
+      storage.data.unrelated === 'keep',
+  );
+}
+
+{
+  const blocked = () => {
+    throw new Error('blocked');
+  };
+  const storage = { getItem: blocked, setItem: blocked, removeItem: blocked };
+  let threw = false;
+  let slugs = '';
+  try {
+    const tab = await openTab(fakeWindow(storage), { open: openFavoritesTab });
+    tab.module.store.dispatch(tab.module.favorites.favoriteAdded(favoriteItem('a', 100)));
+    slugs = favoriteSlugs(tab.module);
+  } catch {
+    threw = true;
+  }
+  check(
+    'favorites: storage access failure does not crash; in-memory state still works',
+    !threw && slugs === 'a',
+  );
 }
 
 report(results);

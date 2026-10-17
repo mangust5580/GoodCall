@@ -1,6 +1,9 @@
-import { Suspense, lazy } from 'react';
+import { Suspense, lazy, useEffect, useState } from 'react';
+import { Provider } from 'react-redux';
 
+import { startFavoritesStorageSync } from './favoritesPersistence';
 import { ProductionRouter } from './ProductionRouter';
+import { browserLocalStorage, createAppStore } from './store';
 
 const ReferenceSurface = lazy(() => import('../reference/ReferenceSurface'));
 
@@ -18,11 +21,27 @@ function ReferenceLoading() {
   );
 }
 
+function ProductionApp() {
+  const [{ store, storage }] = useState(() => {
+    const localStorage = browserLocalStorage();
+
+    return { store: createAppStore(localStorage), storage: localStorage };
+  });
+
+  useEffect(() => startFavoritesStorageSync(store.dispatch, window, storage), [store, storage]);
+
+  return (
+    <Provider store={store}>
+      <ProductionRouter />
+    </Provider>
+  );
+}
+
 export function App() {
   const reference = currentReference();
 
   if (reference === null) {
-    return <ProductionRouter />;
+    return <ProductionApp />;
   }
 
   return (

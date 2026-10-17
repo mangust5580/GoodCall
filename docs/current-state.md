@@ -146,24 +146,76 @@ Technically complete:
   owned by React Router using a GitHub Pages-safe hash strategy. See the
   Current routes section below.
 
-Active visual slice: none. Active implementation milestone: none. WP-01 and
-WP-01B stay open; no next slice is approved.
+Active visual slice: none. Active implementation milestone: none; the
+locally accepted M2 + GC-R48 correction below awaits a separate publication
+GO. WP-01 and WP-01B stay open; no next slice is approved.
 
-- **D-13 / RTK — OWNER DECISION 2026-10-16; DECIDED, IMPLEMENTATION
-  PENDING.** GoodCall is a portfolio project: Redux Toolkit is mandatory in
-  the target architecture and must own real production domain state, not
-  sit as a decorative dependency. The read-only WP-13 state-ownership review
-  named RTK Foundation + Favorites as the first candidate bounded slice;
-  Compare, Cart and Account are later separate slices and GOs. That review
-  does not close WP-13's broader Architecture & Design System assessment.
-  Invariants: `goodcall.*.v1` keys and wire formats, WP-05 cross-tab sync
-  with last-write-wins, the session-only `goodcall.lastOrder.v1` handoff,
-  accepted UI/accessibility/visuals and current module ownership; form, URL
-  and ephemeral UI state stay local by default; City is a separate decision.
-  RTK Query is neither approved nor required here. M1 is docs-only: no
-  dependency or code change; tests/build/browser NOT RUN, CI/Pages NOT
-  VERIFIED. M2 needs an explicit owner GO, including adding
-  `@reduxjs/toolkit` and `react-redux`.
+- **D-13 / RTK — OWNER DECISION 2026-10-16. M2 (RTK Foundation + Favorites)
+  LOCAL ACCEPTED 2026-10-17 — owner-reported USER VISUAL + FUNCTIONAL PASS;
+  NOT PUBLISHED (no commit, push, CI or Pages).** GoodCall is a portfolio
+  project: Redux Toolkit is mandatory in the target architecture and must
+  own real production domain state, not sit as a decorative dependency.
+  - M2 added `@reduxjs/toolkit` and `react-redux` under its owner GO.
+    Favorites is the only Redux-owned domain: `src/app/store.ts`
+    (`configureStore`), typed hooks in `src/app/hooks.ts`, and the slice,
+    selectors and v1 model in `src/commerce/favorites/`. The former
+    module-level Favorites store is removed.
+  - `src/app/favoritesPersistence.ts` keeps `goodcall.favorites.v1` and its
+    `{"items":[…]}` format. Valid stored data hydrates unchanged and is not
+    rewritten; invalid data removes only that key. A listener middleware
+    writes through on real changes only (no hydrate write-back, no no-op
+    writes). One `storage` listener re-reads other-tab changes, key deletion
+    and `clear()` (WP-05 last-write-wins).
+  - `<Provider>` wraps only the production router; `?reference=` stays
+    store-free. Cart, Compare, Account, City and the session-only
+    `goodcall.lastOrder.v1` handoff are not migrated. Favorites markup, copy
+    and styles are unchanged.
+  - Compare, Cart and Account slices each need a separate GO; RTK Query is
+    undecided and not authorized. WP-13's broader Architecture & Design
+    System assessment stays open.
+
+- **WP-06 / GC-R48 — Blog lazy-boundary correction — LOCAL ACCEPTED
+  2026-10-17 (owner-reported USER VISUAL + FUNCTIONAL PASS); NOT
+  PUBLISHED.** A correction after the published WP-06 and GC-R48 closeouts,
+  not a reopening of other WP-06 work. The GC-R48 Home teasers imported the
+  full `pages/blog` barrel, which pulled every Blog page and article body
+  into the entry.
+  - `src/pages/blog/teasers.ts` is the one other Blog entrypoint, documented
+    in `AGENTS.md` and narrowly allowed by `noDeepPages` in
+    `eslint.config.js`. Home and `app/routes/blogLinks.ts` read
+    `BLOG_ARTICLES` and `hasBlogArticleDetail` from it.
+    `blogArticleRegistry.ts` is the single detail registry;
+    `blogArticleDetails.ts` maps it to the nine bodies through an exhaustive
+    typed map. Lazy Blog routes keep the full `index.ts` API.
+  - Only `blogArticles.ts`, `blogArticleRegistry.ts`, `teasers.ts` and
+    `blogLinks.ts` are eager; all bodies, pages, listing and Blog route
+    modules sit in the lazy Blog chunk. Home teasers, links and order are
+    unchanged.
+
+- **Combined local verification 2026-10-17 (mock env, one run):** typecheck
+  and lint PASS; targeted Prettier PASS on the 24 changed code, config and
+  test files; `npm run verify`: chunks 99/99, blog 28/28, home-cart 67/67,
+  storage-sync 75/75, favorites 55/55, account 200/200, search 186/186,
+  laptops 340/340, product-details 718/718. The owner acceptances above are
+  owner-reported manual checks, not proven by automation.
+  - Owner-approved `chunks` contract: the four light Blog modules are the
+    only eager Blog modules. Initial JS may be the entry plus at most two
+    shared common chunks (the pre-existing `shell` and M2's RTK/shell chunk),
+    each also imported by a lazy chunk and preloaded exactly. Initial CSS may
+    be split across the entry and one shared chunk, linked in dependency
+    order, and must equal the same-run HEAD build's CSS byte for byte apart
+    from one trailing newline per file — not a computed-style or visual
+    check.
+  - Entry JS 113.77 → 85.03 kB gzip-9 against the same-run HEAD reference
+    (mock build); network, LCP and INP were not measured.
+  - `scripts/verify/suites/blog.mjs` now matches WP-10's nine linked
+    articles (navigation step and listing assertion only).
+  - Open, outside these slices: whole-repo `format:check` drift in 12
+    unchanged files; an intermittent dev-server MIME mismatch for
+    `teasers.ts` (served as `image/gif`) observed on 2026-10-17, cause not
+    found and not reproduced since.
+  - Next: a separately authorized publication (commit, push, CI, Pages)
+    after review of the final `AUDIT.md`.
 
 - **WP-01B / Demo E-mail, production non-mailto — OWNER USER VISUAL +
   FUNCTIONAL PASS 2026-10-16; CLOSED & PUBLISHED 2026-10-16.** The six

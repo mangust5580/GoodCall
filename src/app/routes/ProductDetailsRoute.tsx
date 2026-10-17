@@ -3,7 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 
 import { addCartLine, cartLineId } from '../../commerce/cart';
 import type { CartLineImage } from '../../commerce/cart';
-import { toggleFavorite, useFavoriteItems } from '../../commerce/favorites';
+import { favoriteToggled, selectIsFavorite } from '../../commerce/favorites';
 import { ActionNotice, RouteStatus } from '../../components/feedback';
 import { fetchCatalogProducts } from '../../pages/catalog';
 import type { CatalogProduct } from '../../pages/catalog';
@@ -20,6 +20,7 @@ import type {
   ProductDetailsView,
 } from '../../pages/product-details';
 import { ProductionShell } from '../ProductionShell';
+import { useAppDispatch, useAppSelector } from '../hooks';
 import {
   CATALOG_LAPTOPS_PATH,
   CATALOG_SMARTPHONES_PATH,
@@ -167,7 +168,10 @@ export function ProductDetailsRoute() {
   const { slug } = useParams();
   const content = slug === undefined ? undefined : getProductDetailsContent(slug);
   const [settled, setSettled] = useState<SettledProductRead>();
-  const favoriteItems = useFavoriteItems();
+  const favoritePressed = useAppSelector(
+    (state) => slug !== undefined && selectIsFavorite(state, slug),
+  );
+  const dispatch = useAppDispatch();
   const [relatedCatalogs, setRelatedCatalogs] = useState<
     Partial<Record<RelatedCategory, readonly CatalogProduct[] | null>>
   >({});
@@ -253,17 +257,19 @@ export function ProductDetailsRoute() {
           categoryHref={view.categoryHref}
           homeHref={hashHref(HOME_PATH)}
           favorite={{
-            pressed: favoriteItems.some((item) => item.slug === slug),
+            pressed: favoritePressed,
             onToggle: (pressed) => {
-              toggleFavorite(
-                {
-                  slug,
-                  title: view.product.title,
-                  image: { kind: 'catalog-fallback' },
-                  price: view.product.priceValue,
-                  oldPrice: view.product.oldPriceValue,
-                },
-                pressed,
+              dispatch(
+                favoriteToggled({
+                  item: {
+                    slug,
+                    title: view.product.title,
+                    image: { kind: 'catalog-fallback' },
+                    price: view.product.priceValue,
+                    oldPrice: view.product.oldPriceValue,
+                  },
+                  pressed,
+                }),
               );
             },
           }}

@@ -6,6 +6,17 @@ import { appBase, reportCounts } from '../lib/suite.mjs';
 const BASE = appBase();
 const ARTICLE_SLUG = 'how-to-choose-smartphone-2024';
 const ARTICLE_HASH = `#/blog/${ARTICLE_SLUG}`;
+const PAGE_ONE_SLUGS = [
+  'iphone-vs-samsung-2024',
+  'how-to-choose-wireless-earbuds',
+  'best-smartphones-under-30000',
+  'new-apple-watch-changes',
+  'tablet-for-work-and-study',
+  'extend-smartphone-battery-life',
+  'goodcall-spring-sale',
+  'how-to-choose-smartphone-2024',
+];
+const PAGE_ONE_LINKED_CARDS = PAGE_ONE_SLUGS.map((slug) => [`#/blog/${slug}`, `#/blog/${slug}`]);
 const FLOW_CHUNK = /\/assets\/BlogFlowRoutes-[\w-]+\.js$/;
 const FAILURE_TITLE = 'Страница временно недоступна';
 
@@ -79,10 +90,9 @@ check(
 );
 check(
   listed.cards === 8 &&
-    listed.linkedCards.length === 1 &&
-    listed.linkedCards[0].every((href) => href === ARTICLE_HASH) &&
+    JSON.stringify(listed.linkedCards) === JSON.stringify(PAGE_ONE_LINKED_CARDS) &&
     JSON.stringify(listed.pressed) === JSON.stringify(['Все статьи']),
-  `listing: 8 cards on page 1, only the article with a detail page is linked ${JSON.stringify(listed)}`,
+  `listing: 8 cards on page 1 in publication order, each cover and title linked to its own article ${JSON.stringify(listed)}`,
 );
 await page.reload();
 await page.waitForFunction(ready);
@@ -213,7 +223,7 @@ check(
 
 await entry(page, '#/blog');
 await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
-await page.click('.blog-grid .blog-card a[href]');
+await page.click(`.blog-grid .blog-card a[href="${ARTICLE_HASH}"]`);
 await page.waitForFunction((hash) => location.hash === hash, ARTICLE_HASH);
 await page.waitForFunction(ready);
 check(

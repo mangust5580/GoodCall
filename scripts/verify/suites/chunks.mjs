@@ -1,4 +1,4 @@
-import { readFileSync, readdirSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import { gzipSync } from 'node:zlib';
 
@@ -34,6 +34,15 @@ const BLOG_FLOW_SEAMS = [
   'src/app/routes/BlogArticleRoute.tsx',
   'src/app/routes/blogLinks.ts',
 ];
+const BLOG_HOME_TEASER_MODULES = [
+  'src/pages/blog/blogArticles.ts',
+  'src/pages/blog/blogArticleRegistry.ts',
+  'src/pages/blog/teasers.ts',
+  'src/app/routes/blogLinks.ts',
+];
+const isBlogHomeTeaserModule = (id) => BLOG_HOME_TEASER_MODULES.includes(id);
+const MAX_INITIAL_SHARED_CHUNKS = 2;
+const MAX_INITIAL_SHARED_CSS_CHUNKS = 1;
 
 let passed = 0;
 const failures = [];
@@ -66,6 +75,34 @@ function staticClosure(report, entry) {
   return [...seen.values()];
 }
 
+function initialCssOrder(report, entry) {
+  const byFile = new Map(report.chunks.map((chunk) => [chunk.fileName, chunk]));
+  const visited = new Set();
+  const order = [];
+  const visit = (chunk) => {
+    if (visited.has(chunk.fileName)) return;
+    visited.add(chunk.fileName);
+    for (const file of chunk.imports) visit(byFile.get(file));
+    for (const css of chunk.importedCss) if (!order.includes(css)) order.push(css);
+  };
+  visit(entry);
+  return order;
+}
+
+function linkedFiles(source, rel, fileNames) {
+  return [...source.matchAll(/<link\b[^>]*>/g)]
+    .map(([tag]) => ({
+      rel: tag.match(/\brel="([^"]*)"/)?.[1],
+      href: tag.match(/\bhref="([^"]*)"/)?.[1] ?? '',
+    }))
+    .filter((link) => link.rel === rel)
+    .map((link) => fileNames.find((fileName) => link.href.endsWith(`/${fileName}`)) ?? link.href);
+}
+
+const withoutFinalNewline = (bytes) => (bytes.at(-1) === 0x0a ? bytes.subarray(0, -1) : bytes);
+const effectiveCss = (dir, files) =>
+  Buffer.concat(files.map((file) => withoutFinalNewline(readFileSync(path.join(dir, file)))));
+
 function moduleBytes(chunks, matches) {
   return chunks
     .flatMap((chunk) => chunk.modules)
@@ -86,17 +123,42 @@ const heavyFieldBytes = (chunks) => moduleBytes(chunks, isHeavyFieldModule);
 const app = readReport(appChunksFile());
 const reference = readReport(referenceChunksFile());
 const html = readFileSync(path.join(appDir(), 'index.html'), 'utf8');
+const referenceAppDir = path.join(path.dirname(referenceChunksFile()), 'reference-app');
+const referenceHtml = readFileSync(path.join(referenceAppDir, 'index.html'), 'utf8');
 
 const entries = app.chunks.filter((chunk) => chunk.isEntry);
 check(entries.length === 1, `exactly one entry chunk (found ${entries.length})`);
 const [entry] = entries;
 const initial = staticClosure(app, entry);
 const initialFiles = new Set(initial.map((chunk) => chunk.fileName));
+const initialShared = initial.filter((chunk) => chunk !== entry);
+const initialSharedFiles = initialShared.map((chunk) => chunk.fileName);
 check(
-  initial.length === 1,
-  `the entry has no statically imported shared chunks (initial JS files: ${initial.map((chunk) => chunk.fileName).join(', ')})`,
+  initialShared.length <= MAX_INITIAL_SHARED_CHUNKS &&
+    initialShared.every((chunk) => !chunk.isEntry && !chunk.isDynamicEntry && !chunk.facadeModule),
+  `the entry statically imports at most ${MAX_INITIAL_SHARED_CHUNKS} shared chunks and no route chunk (initial JS files: ${initial.map((chunk) => chunk.fileName).join(', ')})`,
 );
-check(!html.includes('modulepreload'), 'index.html has no modulepreload links');
+check(
+  initialShared.every(
+    (chunk) =>
+      entry.imports.includes(chunk.fileName) &&
+      app.chunks.some(
+        (other) => !initialFiles.has(other.fileName) && other.imports.includes(chunk.fileName),
+      ),
+  ),
+  `each initial shared chunk is a direct entry import that a lazy chunk also imports (${initialSharedFiles.join(', ')})`,
+);
+const preloads = linkedFiles(
+  html,
+  'modulepreload',
+  app.chunks.map((chunk) => chunk.fileName),
+);
+check(
+  preloads.length === new Set(preloads).size &&
+    JSON.stringify([...preloads].sort()) === JSON.stringify([...initialSharedFiles].sort()) &&
+    preloads.every((file) => existsSync(path.join(appDir(), file))),
+  `index.html modulepreloads exactly the initial shared chunks (preloads: ${preloads.join(', ')}; initial shared: ${initialSharedFiles.join(', ')})`,
+);
 
 const initialInfo = initial.flatMap((chunk) =>
   chunk.modules.filter((module) => isInfoModule(module.id)).map((module) => module.id),
@@ -205,9 +267,10 @@ check(
 const initialBlogFlow = initial.flatMap((chunk) =>
   chunk.modules.filter((module) => isBlogFlowModule(module.id)).map((module) => module.id),
 );
+const unexpectedInitialBlogFlow = initialBlogFlow.filter((id) => !isBlogHomeTeaserModule(id));
 check(
-  initialBlogFlow.length === 0,
-  `no Blog module in the entry or its static imports (found ${initialBlogFlow.join(', ')})`,
+  unexpectedInitialBlogFlow.length === 0,
+  `only the Home teaser Blog modules are in the entry or its static imports (unexpected ${unexpectedInitialBlogFlow.join(', ')}; found ${initialBlogFlow.join(', ')})`,
 );
 const blogFlowSources = [
   BLOG_FLOW_MODULE,
@@ -216,7 +279,7 @@ const blogFlowSources = [
     .filter((file) => /\.tsx?$/.test(file))
     .map((file) => `${BLOG_PAGES_DIR}${file}`),
 ];
-for (const id of blogFlowSources) {
+for (const id of blogFlowSources.filter((source) => !isBlogHomeTeaserModule(source))) {
   check(lazyModuleIds.has(id), `${id} is in a lazily loaded chunk`);
 }
 const blogFlowChunk = app.chunks.find((chunk) => chunk.facadeModule === BLOG_FLOW_MODULE);
@@ -267,11 +330,33 @@ check(
 );
 
 const cssAssets = app.assets.filter((asset) => asset.fileName.endsWith('.css'));
-const linkedCss = cssAssets.filter((asset) => html.includes(asset.fileName));
+const linkedCss = linkedFiles(
+  html,
+  'stylesheet',
+  cssAssets.map((asset) => asset.fileName),
+);
+const expectedInitialCss = initialCssOrder(app, entry);
 check(
-  linkedCss.length === 1 &&
-    JSON.stringify(entry.importedCss) === JSON.stringify([linkedCss[0].fileName]),
-  `index.html links exactly the entry CSS (${linkedCss.map((asset) => asset.fileName).join(', ')})`,
+  linkedCss.length > 0 &&
+    JSON.stringify(linkedCss) === JSON.stringify(expectedInitialCss) &&
+    entry.importedCss.every((file) => linkedCss.includes(file)) &&
+    linkedCss.every((file) => existsSync(path.join(appDir(), file))),
+  `index.html links exactly the initial chunks' CSS in dependency order (linked: ${linkedCss.join(', ')}; expected: ${expectedInitialCss.join(', ')})`,
+);
+const initialSharedCssChunks = initialShared.filter((chunk) => chunk.importedCss.length > 0);
+check(
+  initialSharedCssChunks.length <= MAX_INITIAL_SHARED_CSS_CHUNKS,
+  `at most ${MAX_INITIAL_SHARED_CSS_CHUNKS} initial shared chunk carries CSS (${initialSharedCssChunks.map((chunk) => chunk.fileName).join(', ')})`,
+);
+const referenceLinkedCss = linkedFiles(
+  referenceHtml,
+  'stylesheet',
+  reference.assets.map((asset) => asset.fileName).filter((file) => file.endsWith('.css')),
+);
+check(
+  referenceLinkedCss.length > 0 &&
+    effectiveCss(appDir(), linkedCss).equals(effectiveCss(referenceAppDir, referenceLinkedCss)),
+  `initial CSS in link order is byte-identical to the reference build, excluding one trailing newline per file (app: ${linkedCss.join(', ')}; reference: ${referenceLinkedCss.join(', ')})`,
 );
 check(
   infoChunks.every((chunk) => chunk.importedCss.length === 0),
@@ -279,7 +364,10 @@ check(
 );
 check(
   app.chunks.every(
-    (chunk) => chunk === entry || chunk.importedCss.length === 0 || referenceChunks.includes(chunk),
+    (chunk) =>
+      initialFiles.has(chunk.fileName) ||
+      chunk.importedCss.length === 0 ||
+      referenceChunks.includes(chunk),
   ),
   'only the reference chunk carries lazy CSS',
 );

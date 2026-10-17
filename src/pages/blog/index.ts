@@ -1,4 +1,5 @@
-export { blogArticleDetail, hasBlogArticleDetail } from './blogArticleDetails';
+export { blogArticleDetail } from './blogArticleDetails';
+export { hasBlogArticleDetail } from './blogArticleRegistry';
 export { BLOG_ARTICLES } from './blogArticles';
 export type { BlogCategoryId } from './blogArticles';
 export { BlogArticlePage } from './BlogArticlePage';
