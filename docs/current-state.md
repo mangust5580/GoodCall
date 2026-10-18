@@ -182,14 +182,15 @@ approved.
   not a reopening of other WP-06 work. The GC-R48 Home teasers imported the
   full `pages/blog` barrel, which pulled every Blog page and article body
   into the entry.
-  - `src/pages/blog/teasers.ts` is the one other Blog entrypoint, documented
+  - `src/pages/blog/articleSummaries.ts` is the one other Blog entrypoint
+    (renamed from `teasers.ts` on 2026-10-18, see the last bullet), documented
     in `AGENTS.md` and narrowly allowed by `noDeepPages` in
     `eslint.config.js`. Home and `app/routes/blogLinks.ts` read
     `BLOG_ARTICLES` and `hasBlogArticleDetail` from it.
     `blogArticleRegistry.ts` is the single detail registry;
     `blogArticleDetails.ts` maps it to the nine bodies through an exhaustive
     typed map. Lazy Blog routes keep the full `index.ts` API.
-  - Only `blogArticles.ts`, `blogArticleRegistry.ts`, `teasers.ts` and
+  - Only `blogArticles.ts`, `blogArticleRegistry.ts`, `articleSummaries.ts` and
     `blogLinks.ts` are eager; all bodies, pages, listing and Blog route
     modules sit in the lazy Blog chunk. Home teasers, links and order are
     unchanged.
@@ -219,9 +220,15 @@ approved.
     formatting-only Prettier normalization of the 12 previously drifting
     files). GitHub Actions CI #176 green and Pages deploy #176 succeeded for
     `3b046d8`; the owner reported a live-site PASS on 2026-10-17.
-  - Open, outside these slices: an intermittent dev-server MIME mismatch for
-    `teasers.ts` (served as `image/gif`) observed on 2026-10-17, cause not
-    found and not reproduced since.
+  - Local dev workaround (2026-10-18): in
+    Chrome and Edge, `npm run dev` received a 43-byte `image/gif`
+    (`max-age=300`) for `teasers.ts`, while `curl.exe` got `text/javascript`
+    from Vite. Vite and its plugins cannot emit that response. A filter
+    outside the repo that matches `teaser` in the URL is the most likely cause,
+    but it is not proved, and no specific program was identified. The
+    entrypoint was renamed to `articleSummaries.ts` with identical content and
+    exports. The owner reports that the local page then appeared to work; this
+    is not a confirmed root cause or a full browser PASS.
 
 - **WP-01B / Demo E-mail, production non-mailto — OWNER USER VISUAL +
   FUNCTIONAL PASS 2026-10-16; CLOSED & PUBLISHED 2026-10-16.** The six

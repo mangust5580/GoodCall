@@ -28,9 +28,9 @@ const noDeepCommerce = {
   message: 'Import a commerce module through its index.ts (e.g. commerce/cart).',
 };
 const noDeepPages = {
-  regex: '^(\\.\\./)+pages/(?!blog/teasers$)[^/]+/',
+  regex: '^(\\.\\./)+pages/(?!blog/articleSummaries$)[^/]+/',
   message:
-    'Import a route family through its index.ts (e.g. pages/catalog); pages/blog/teasers is the only other entrypoint.',
+    'Import a route family through its index.ts (e.g. pages/catalog); pages/blog/articleSummaries is the only other entrypoint.',
 };
 
 function boundaries(...patterns) {

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-import { BLOG_ARTICLES } from '../../pages/blog/teasers';
+import { BLOG_ARTICLES } from '../../pages/blog/articleSummaries';
 import { HomePage, fetchHomeData } from '../../pages/home';
 import type { HomeCategoryTile, HomePageProps, HomeProduct } from '../../pages/home';
 import { ProductionShell } from '../ProductionShell';

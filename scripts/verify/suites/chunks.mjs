@@ -37,7 +37,7 @@ const BLOG_FLOW_SEAMS = [
 const BLOG_HOME_TEASER_MODULES = [
   'src/pages/blog/blogArticles.ts',
   'src/pages/blog/blogArticleRegistry.ts',
-  'src/pages/blog/teasers.ts',
+  'src/pages/blog/articleSummaries.ts',
   'src/app/routes/blogLinks.ts',
 ];
 const isBlogHomeTeaserModule = (id) => BLOG_HOME_TEASER_MODULES.includes(id);

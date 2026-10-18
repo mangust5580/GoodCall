@@ -58,10 +58,10 @@ Dependencies point down: `app → pages → commerce → components`. Enforced b
   its `index.ts`; `commerce/format.ts` is a standalone module. Inside `commerce`,
   `compare/compareStore.ts` imports `cart/cartStore.ts` directly so the store
   graph stays free of UI.
-- `src/pages/blog/teasers.ts` is the one other page-family entrypoint. `app`
-  imports Blog teaser data (`BLOG_ARTICLES`, `hasBlogArticleDetail`) from it, so
-  the eager Home route and `app/routes/blogLinks.ts` stay free of Blog pages and
-  article bodies. Lazy Blog routes import the full API from
+- `src/pages/blog/articleSummaries.ts` is the one other page-family entrypoint.
+  `app` imports Blog teaser data (`BLOG_ARTICLES`, `hasBlogArticleDetail`) from
+  it, so the eager Home route and `app/routes/blogLinks.ts` stay free of Blog
+  pages and article bodies. Lazy Blog routes import the full API from
   `src/pages/blog/index.ts`.
 
 Inside a module, use relative imports and never import the module's own
