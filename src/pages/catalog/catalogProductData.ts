@@ -7,6 +7,7 @@ import type { Database } from '../../lib/supabase/database.types';
 import { withReadDeadline } from '../../lib/supabase/readDeadline';
 import type { CatalogProduct } from './catalogProduct';
 import { CATALOG_PRODUCTS } from './catalogProducts';
+import { catalogRemotePicture } from './catalogRemotePicture';
 
 type ProductRow = Database['public']['Tables']['products']['Row'];
 type ProductImageRow = Database['public']['Tables']['product_images']['Row'];
@@ -116,11 +117,9 @@ function mapCatalogProduct(
   const presentation =
     categorySlug === 'smartphones' ? fixturePresentationBySlug.get(product.slug) : undefined;
   const primaryImage = images[0];
-  const publicImage =
-    primaryImage === undefined
-      ? undefined
-      : client.storage.from(CATALOG_MEDIA_BUCKET).getPublicUrl(primaryImage.storage_path).data
-          .publicUrl;
+  const publicUrl = (objectKey: string) =>
+    client.storage.from(CATALOG_MEDIA_BUCKET).getPublicUrl(objectKey).data.publicUrl;
+  const publicImage = primaryImage === undefined ? undefined : publicUrl(primaryImage.storage_path);
   const oldPriceValue = finiteNumber(product.old_price);
   const rating = finiteNumber(product.rating);
 
@@ -129,9 +128,9 @@ function mapCatalogProduct(
     title: product.name,
     imageSrc: publicImage,
     image:
-      publicImage === undefined
+      primaryImage === undefined
         ? (productThumbnail(product.slug) ?? CATEGORY_FALLBACK_IMAGE[categorySlug])
-        : undefined,
+        : catalogRemotePicture(primaryImage.storage_path, publicUrl),
     imageAlt:
       primaryImage?.alt.trim() ||
       presentation?.imageAlt ||

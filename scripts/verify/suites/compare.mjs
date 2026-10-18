@@ -280,22 +280,72 @@ await evaluate(
 await sleep(300);
 await shot('catalog-compare-1440', false);
 
+const searchCompareControls = (itemSelector, titleSelector, buttonSelector) =>
+  evaluate(
+    `[...document.querySelectorAll(${JSON.stringify(itemSelector)})].map((item) => {
+      const buttons = item.querySelectorAll('.product-action--compare');
+      const b = item.querySelector(${JSON.stringify(buttonSelector)});
+      return {
+        title: item.querySelector(${JSON.stringify(titleSelector)})?.textContent.trim(),
+        count: buttons.length,
+        tag: b?.tagName,
+        type: b?.type,
+        pressed: b?.getAttribute('aria-pressed'),
+        disabled: b?.disabled,
+        label: b?.getAttribute('aria-label'),
+      };
+    })`,
+  );
+const SEARCH_COMPARE_EXPECTED = {
+  'Apple iPhone 15 Pro 128 ГБ, Натуральный титан': {
+    pressed: 'true',
+    disabled: false,
+    label: 'Убрать из сравнения: Apple iPhone 15 Pro 128 ГБ, Натуральный титан',
+  },
+  'Apple iPhone 15 128 ГБ, Розовый': {
+    pressed: 'false',
+    disabled: true,
+    label: 'Сравнение заполнено (4 из 4): Apple iPhone 15 128 ГБ, Розовый',
+  },
+};
+const searchCompareMatches = (controls) =>
+  controls.length === Object.keys(SEARCH_COMPARE_EXPECTED).length &&
+  controls.every((control) => {
+    const expected = SEARCH_COMPARE_EXPECTED[control.title];
+    return (
+      expected !== undefined &&
+      control.count === 1 &&
+      control.tag === 'BUTTON' &&
+      control.type === 'button' &&
+      control.pressed === expected.pressed &&
+      control.disabled === expected.disabled &&
+      control.label === expected.label
+    );
+  });
+
 await go('#/search?q=Apple');
 await sleep(900);
+const desktopSearchCompare = await searchCompareControls(
+  '.search-row',
+  '.search-row__title',
+  '.search-row__compare',
+);
 check(
-  'Search desktop rows: no compare control leaks',
-  (await evaluate(
-    `document.querySelectorAll('.product-card__compare, .product-action--compare').length`,
-  )) === 0 && (await evaluate(`document.querySelectorAll('.search-row').length`)) > 0,
+  'Search desktop rows: one accessible compare toggle per row reflecting compare state (GC-R16)',
+  searchCompareMatches(desktopSearchCompare),
+  JSON.stringify(desktopSearchCompare),
 );
 await viewport(390, 844, true);
 await reload();
+const mobileSearchCompare = await searchCompareControls(
+  '.search-results .product-card',
+  '.product-card__title',
+  '.product-card__compare',
+);
 check(
-  'Search mobile ProductCards: no compare control leaks',
-  (await evaluate(
-    `document.querySelectorAll('.product-card__compare, .product-action--compare').length`,
-  )) === 0 &&
-    (await evaluate(`document.querySelectorAll('.search-results .product-card').length`)) > 0,
+  'Search mobile ProductCards: one accessible compare toggle per card reflecting compare state (GC-R16)',
+  searchCompareMatches(mobileSearchCompare),
+  JSON.stringify(mobileSearchCompare),
 );
 await viewport(1440, 900, false);
 await reload();

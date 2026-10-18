@@ -116,11 +116,31 @@ for (const route of ROUTES) {
   const main = await mainText(page);
   check(!INACTIVE_ACCOUNT.test(main), `${tag}: no Account/Auth/bonus claims in page body`);
   check(main.includes(SUPPORT_PHONE), `${tag}: canonical support phone in page`);
+  const supportContacts = await page.evaluate(() => ({
+    values: [...document.querySelectorAll('main .info-support__contact-value')].map((node) => ({
+      tag: node.tagName,
+      type: node.getAttribute('type'),
+      popup: node.getAttribute('aria-haspopup'),
+      href: node.getAttribute('href'),
+      text: node.textContent.trim(),
+    })),
+    tel: document.querySelectorAll('main [href^="tel:"]').length,
+    mailto: document.querySelectorAll('main [href^="mailto:"]').length,
+  }));
   check(
-    (await page.count('main button.info-support__contact-value')) >= 1 &&
-      (await page.count('main [href^="tel:"]')) === 0 &&
-      (await page.count('main a[href="mailto:support@goodcall.example"]')) >= 1,
-    `${tag}: support phone button (no tel: target) and e-mail link`,
+    JSON.stringify(supportContacts.values) ===
+      JSON.stringify(
+        [SUPPORT_PHONE, 'support@goodcall.example'].map((text) => ({
+          tag: 'BUTTON',
+          type: 'button',
+          popup: 'dialog',
+          href: null,
+          text,
+        })),
+      ) &&
+      supportContacts.tel === 0 &&
+      supportContacts.mailto === 0,
+    `${tag}: support phone and e-mail are demo dialog buttons (no tel:/mailto: target) ${JSON.stringify(supportContacts)}`,
   );
   check(facts.sectionHeadings.length >= 2, `${tag}: section headings ${facts.sectionHeadings}`);
 }

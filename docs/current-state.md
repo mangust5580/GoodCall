@@ -6270,6 +6270,51 @@ Integration A succeeded, the compiled Pages artifact was verified to contain the
 Supabase project URL and publishable key, and the production Catalog live
 configuration gate is closed.
 
+### WP-11 catalog hero `<picture>` pilot
+
+Status: Storage 9/9 objects published and verified. Local code ready, not
+deployed. `product_images` INSERT pending, after the deploy and a separate owner
+GO. Real-browser verification and OWNER VISUAL PASS pending. Scope is one
+product: `iphone-15-pro-128`, from the accepted B1 master
+`apple-iphone-15-pro--natural-titanium`.
+
+- **Delivery contract.** A catalog hero is nine immutable objects in
+  `catalog-media`: `<base>-{320,640,1024}.{avif,webp,png}`, where `<base>` is
+  `products/<category>/<model>/<colour>/hero-v<n>`. PNG is the mandatory
+  fallback. `product_images.storage_path` names the `<base>-640.png` object. A
+  new image version gets a new `hero-v<n>`; published objects are never
+  overwritten.
+- **Offline conversion.** The converter takes one square RGBA master:
+
+  ```sh
+  node scripts/build-catalog-media.mjs --master <png> --key <base> --out <dir>
+  ```
+
+  It converts with Sharp and never touches the master. It refuses a non-empty
+  output directory and writes
+  `manifest.json` (bytes, dimensions, alpha, SHA-256, object key, content type,
+  cache control, QA checks) plus a light `#F5F5F5` / dark `#181818` comparison
+  sheet. Pilot output lives in the ignored
+  `design-assets/product-images/delivery/pilot-iphone-15-pro-natural-titanium/`.
+
+- **Rendering.** `src/pages/catalog/catalogRemotePicture.ts` maps a strictly
+  validated `…/hero-v<n>-640.png` storage path to a `PictureSource`: AVIF and
+  WebP `srcset` 320/640/1024, then an `<img>` with the 640 PNG `src`, a PNG
+  `srcset` and intrinsic 640×640. `PictureSource.img` gained an optional
+  `srcset`, which the shared `Picture` renders; vite-imagetools sources are
+  unchanged. Any other storage path keeps the previous plain `<img>`, and
+  products without rows keep their local thumbnail.
+- **Persisted URLs.** `imageSrc` stays the public URL of the row's object (the
+  640 PNG), so cart, favourites, compare and order `kind: 'url'` entries are
+  unchanged. Home is not wired; the pilot product is not on Home.
+- **Missing objects.** As with the previous plain remote `<img>`, there is no
+  runtime fallback for a 404. The publication order (objects before the row)
+  prevents it.
+- **Gate.** `npm run verify -- catalog-media` checks the adapter, the SSR
+  markup, and the built catalog with mocked Storage: AVIF → WebP → PNG order,
+  `srcset`/`sizes`/`width`/`height`/`alt`, AVIF selection, the legacy-path and
+  local-thumbnail paths, the cart URL and the missing-object case.
+
 ### Home Supabase read path
 
 Supabase also exposes `home_popular_products(position, product_id)` for the Home

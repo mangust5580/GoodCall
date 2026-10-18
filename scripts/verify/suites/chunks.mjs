@@ -114,6 +114,8 @@ const infoBytes = (chunks) => moduleBytes(chunks, isInfoModule);
 const referenceBytes = (chunks) => moduleBytes(chunks, isReferenceModule);
 const accountFlowBytes = (chunks) => moduleBytes(chunks, isAccountFlowModule);
 const blogFlowBytes = (chunks) => moduleBytes(chunks, isBlogFlowModule);
+const lazyBlogFlowBytes = (chunks) =>
+  moduleBytes(chunks, (id) => isBlogFlowModule(id) && !isBlogHomeTeaserModule(id));
 const packageOf = (id) => id.match(/node_modules\/((?:@[^/]+\/)?[^/]+)\//)?.[1];
 const isHeavyFieldModule = (id) =>
   HEAVY_FIELD_MODULES.includes(id) ||
@@ -387,7 +389,7 @@ if (
   referenceBytes(referenceInitial) > 0 ||
   accountFlowBytes(referenceInitial) > 0 ||
   heavyFieldBytes(referenceInitial) > 0 ||
-  blogFlowBytes(referenceInitial) > 0
+  lazyBlogFlowBytes(referenceInitial) > 0
 ) {
   check(
     entry.bytes < referenceEntry.bytes,

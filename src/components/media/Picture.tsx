@@ -1,6 +1,9 @@
 import type { Picture as GeneratedPicture } from 'vite-imagetools';
 
-export type PictureSource = GeneratedPicture;
+export interface PictureSource {
+  readonly sources: GeneratedPicture['sources'];
+  readonly img: GeneratedPicture['img'] & { readonly srcset?: string };
+}
 
 export interface PictureProps {
   readonly source: PictureSource;
@@ -35,6 +38,7 @@ export function Picture({
         loading={loading}
         sizes={sizes}
         src={source.img.src}
+        srcSet={source.img.srcset}
         width={source.img.w}
       />
     </picture>
